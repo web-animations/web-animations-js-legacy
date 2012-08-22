@@ -86,7 +86,6 @@ var TimedItem = Class.create({
 		} else {
 			this.iterationDuration = this.intrinsicDuration();
 		}
-		console.log(this.iterationDuration, this.timing.iterationCount);
 		// section 6.7
 		var repeatedDuration = this.iterationDuration * this.timing.iterationCount;
 		if (repeatedDuration == Infinity || this.timing.speed == 0) {
@@ -482,7 +481,6 @@ var AnimListMixin = {
 var AnimGroup = Class.create(TimedItem, AnimListMixin, {
 	initialize: function($super, type, template, properties, startTime, parentGroup) {
 		this.type = type || "par"; // used by TimedItem via intrinsicDuration(), so needs to be set before initializing super.
-		console.log("AnimGroup", properties);
 		this.initListMixin(this._assertNotLive, this._childrenStateModified);
 		var completedProperties = completeProperties(properties);
 		$super(completedProperties.timing, startTime, parentGroup);
@@ -524,10 +522,8 @@ var AnimGroup = Class.create(TimedItem, AnimListMixin, {
 		// TODO
 	},
 	intrinsicDuration: function() {
-		console.log("intrinsicDuration");
 		if (this.type == "par") {
 			var dur = Math.max.apply(undefined, this.children.map(function(a) { return a.endTime; }));
-			console.log(dur);
 			return dur;
 		} else if (this.type == "seq") {
 			var result = 0;
