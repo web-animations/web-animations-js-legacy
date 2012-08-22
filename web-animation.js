@@ -781,7 +781,7 @@ var requestAnimationFrame = window.webkitRequestAnimationFrame || window.mozRequ
 
 var ticker = function(_time) {
 	var time = _time - _startTime;
-	if (DEFAULT_GROUP._tick(time)) {
+	if (DEFAULT_GROUP._tick(time / 1000)) {
 		rAFNo = requestAnimationFrame(ticker);
 	} else {
 		rAFNo = undefined;

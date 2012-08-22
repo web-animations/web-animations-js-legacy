@@ -88,17 +88,16 @@ var groups = [];
 
 for (var i = 0; i < directions.length; i++) {
 	var dir = directions[i];
-	var group = new ParAnimGroup({startDelay: 1000, iterationDuration: 5000, iterationCount: 3, 
-								 speed: 2, direction: dir}, undefined, 1000);
+	var group = new ParAnimGroup({startDelay: 1, iterationDuration: 5, iterationCount: 3, speed: 2, direction: dir}, undefined, 1);
 	groups.push(group);
 }
 
 for (var i = 0; i < fills.length; i++) {
 	var divs = document.querySelectorAll(categories[i]);
 	for (var j = 0; j < divs.length; j++) {
-		var anim = new Anim(divs[j], {startDelay: 1000, iterationDuration: 1000, iterationCount: 2, fill: fills[i], prop: "left", from: 100, to: 200, speed: 0.8}, groups[j], 1000);
-		new Anim(divs[j], {startDelay: 1000, iterationDuration: 1000, iterationCount: 2, fill: fills[i], 
-			animFunc: loggerAnimFunction, speed: 0.8}, groups[j], 1000);
+		var anim = new Anim(divs[j], {startDelay: 1, iterationDuration: 1, iterationCount: 2, fill: fills[i], prop: "left", from: 100, to: 200, speed: 0.8}, groups[j], 1);
+		new Anim(divs[j], {startDelay: 1, iterationDuration: 1, iterationCount: 2, fill: fills[i], 
+			animFunc: loggerAnimFunction, speed: 0.8}, groups[j], 1);
 	}
 }
 // .bDDa
