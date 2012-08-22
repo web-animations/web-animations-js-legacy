@@ -67,20 +67,20 @@ function keyframesFor(property, startVal, endVal) {
 var anim = new Anim(document.querySelector(".anim"), {startDelay: 2000, iterationDuration: 4000, prop: "left", from: 100, to: 200}, undefined, 1000);
 
 
-var up = new AnimTemplate(keyframesFor("top", 200, 0), new Timing(0, 1000), "selector: .top");
-var right = new AnimTemplate(keyframesFor("left", 0, 200), new Timing(500, 1000), "selector: .right");
-var down = new AnimTemplate(keyframesFor("top", 0, 200), new Timing(1000, 1000), "selector: .down");
+var up = new AnimTemplate({animFunc: keyframesFor("top", 200, 0), timing: new Timing(0, 1000)}, "selector: .top");
+var right = new AnimTemplate({animFunc: keyframesFor("left", 0, 200), timing: new Timing(500, 1000)}, "selector: .right");
+var down = new AnimTemplate({animFunc: keyframesFor("top", 0, 200), timing: new Timing(1000, 1000)}, "selector: .down");
 
-var group = new AnimGroupTemplate("par", new Timing());
+var group = new ParAnimGroupTemplate({});
 group.add(up, right, down);
 
 
 group.animate(document.querySelector(".group"), 0);
 
-var group = new AnimGroupTemplate("seq", new Timing());
-group.add(new AnimTemplate(keyframesFor("left", 100, 150), new Timing(0, 1000), "target: a"));
-group.add(new AnimTemplate(keyframesFor("left", 100, 150), new Timing(0, 1000), "target: b"));
-group.add(new AnimTemplate(keyframesFor("left", 100, 150), new Timing(0, 1000), "target: c"));
+var group = new SeqAnimGroupTemplate({});
+group.add(new AnimTemplate({animFunc: keyframesFor("left", 100, 150), timing: new Timing(0, 1000)}, "target: a"));
+group.add(new AnimTemplate({animFunc: keyframesFor("left", 100, 150), timing: new Timing(0, 1000)}, "target: b"));
+group.add(new AnimTemplate({animFunc: keyframesFor("left", 100, 150), timing: new Timing(0, 1000)}, "target: c"));
 
 group.animate([], 0);
 
