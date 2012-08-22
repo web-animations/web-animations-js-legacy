@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<style>
+.animContainer {
+	position: absolute;
+	left: 0px;
+	height: 100px;
+}
+
+.anim {
+	left: 0px;
+	width: 100px;
+	height: 25px;
+	background-color: #FAA;
+	position: relative;
+}
+
+.a {
+	top: 0px
+}
+
+.b {
+	top: 0px;
+}
+
+.c {
+	top: 0px;
+}
+
+.d {
+	top: 0px;
+}
+
+#ca {
+	top: 0px;
+}
+
+#cb {
+	top: 100px;
+}
+
+#cc {
+	top: 200px;
+}
+
+
+#cd {
+	top: 300px;
+}
+</style>
+
+<div class="animContainer" id="ca">
+	<div class="anim a"></div>
+	<div class="anim b"></div>
+	<div class="anim c"></div>
+	<div class="anim d"></div>
+	<par startDelay="1000" iterationDuration="5000" iterationCount="3" speed="2" direction="normal" startTime="1000">
+		<animation startDelay="1000" iterationDuration="1000" iterationCount="2" fill="none" prop="left" from="100px" to="200px" speed="0.8" startTime="1000" resolutionStrategy="selector: .a"></animation>		
+		<animation startDelay="1000" iterationDuration="1000" iterationCount="2" fill="backwards" prop="left" from="100px" to="200px" speed="0.8"startTime="1000" resolutionStrategy="selector: .b"></animation>
+		<animation startDelay="1000" iterationDuration="1000" iterationCount="2" fill="forwards" prop="left" from="100px" to="200px" speed="0.8" startTime="1000" resolutionStrategy="selector: .c"></animation>		
+		<animation startDelay="1000" iterationDuration="1000" iterationCount="2" fill="both" prop="left" from="100px" to="200px" speed="0.8" startTime="1000" resolutionStrategy="selector: .d"></animation>
+	</par>
+</div>
+
+<div class="animContainer" id="cb">
+	<div class="anim a"></div>
+	<div class="anim b"></div>
+	<div class="anim c"></div>
+	<div class="anim d"></div>
+	<par startDelay="1000" iterationDuration="5000" iterationCount="3" speed="2" direction="reverse" startTime="1000">
+		<animation startDelay="1000" iterationDuration="1000" iterationCount="2" fill="none" prop="left" from="100px" to="200px" speed="0.8" startTime="1000" resolutionStrategy="selector: .a"></animation>		
+		<animation startDelay="1000" iterationDuration="1000" iterationCount="2" fill="backwards" prop="left" from="100px" to="200px" speed="0.8"startTime="1000" resolutionStrategy="selector: .b"></animation>
+		<animation startDelay="1000" iterationDuration="1000" iterationCount="2" fill="forwards" prop="left" from="100px" to="200px" speed="0.8" startTime="1000" resolutionStrategy="selector: .c"></animation>		
+		<animation startDelay="1000" iterationDuration="1000" iterationCount="2" fill="both" prop="left" from="100px" to="200px" speed="0.8" startTime="1000" resolutionStrategy="selector: .d"></animation>
+	</par>
+</div>
+
+<div class="animContainer" id="cc">
+	<div class="anim a"></div>
+	<div class="anim b"></div>
+	<div class="anim c"></div>
+	<div class="anim d"></div>
+	<par startDelay="1000" iterationDuration="5000" iterationCount="3" speed="2" direction="alternate" startTime="1000">
+		<animation startDelay="1000" iterationDuration="1000" iterationCount="2" fill="none" prop="left" from="100px" to="200px" speed="0.8" startTime="1000" resolutionStrategy="selector: .a"></animation>		
+		<animation startDelay="1000" iterationDuration="1000" iterationCount="2" fill="backwards" prop="left" from="100px" to="200px" speed="0.8"startTime="1000" resolutionStrategy="selector: .b"></animation>
+		<animation startDelay="1000" iterationDuration="1000" iterationCount="2" fill="forwards" prop="left" from="100px" to="200px" speed="0.8" startTime="1000" resolutionStrategy="selector: .c"></animation>		
+		<animation startDelay="1000" iterationDuration="1000" iterationCount="2" fill="both" prop="left" from="100px" to="200px" speed="0.8" startTime="1000" resolutionStrategy="selector: .d"></animation>
+	</par>
+</div>
+
+<div class="animContainer" id="cd">
+	<div class="anim a"></div>
+	<div class="anim b"></div>
+	<div class="anim c"></div>
+	<div class="anim d"></div>
+	<par startDelay="1000" iterationDuration="5000" iterationCount="3" speed="2" direction="alternate-reverse" startTime="1000">
+		<animation startDelay="1000" iterationDuration="1000" iterationCount="2" fill="none" prop="left" from="100px" to="200px" speed="0.8" startTime="1000" resolutionStrategy="selector: .a"></animation>		
+		<animation startDelay="1000" iterationDuration="1000" iterationCount="2" fill="backwards" prop="left" from="100px" to="200px" speed="0.8"startTime="1000" resolutionStrategy="selector: .b"></animation>
+		<animation startDelay="1000" iterationDuration="1000" iterationCount="2" fill="forwards" prop="left" from="100px" to="200px" speed="0.8" startTime="1000" resolutionStrategy="selector: .c"></animation>		
+		<animation startDelay="1000" iterationDuration="1000" iterationCount="2" fill="both" prop="left" from="100px" to="200px" speed="0.8" startTime="1000" resolutionStrategy="selector: .d"></animation>
+	</par>
+</div>
+
+<script src="prototype.js"></script>
+<script src="web-animation.js"></script>
+<script>
+
+var fills = ["none", "backwards", "forwards", "both"];
+var categories = [".a", ".b", ".c", ".d"]
+
+var directions = ["normal", "reverse", "alternate", "alternate-reverse"]
+
+</script>
+<script>
+function attrAsNumber(element, attribute, defaultValue) {
+	if (element.hasAttribute(attribute)) {
+		return Number(element.getAttribute(attribute));
+	}
+	return defaultValue;
+}
+
+function attrAsText(element, attribute, defaultValue) {
+	if (element.hasAttribute(attribute)) {
+		return element.getAttribute(attribute);
+	}
+	return defaultValue;
+}
+
+function attrAsPixelValue(element, attribute, defaultValue) {
+	if (element.hasAttribute(attribute)) {
+		var s = element.getAttribute(attribute);
+		return Number(s.substring(0, s.length - 2));
+	}
+	return defaultValue;
+}
+
+function resolveProperties(elem) {
+	var startDelay = attrAsNumber(elem, "startDelay");
+	var iterationDuration = attrAsNumber(elem, "iterationDuration");
+	var iterationCount = attrAsNumber(elem, "iterationCount");
+	var fill = attrAsText(elem, "fill");
+	var prop = attrAsText(elem, "prop");
+	var from = attrAsPixelValue(elem, "from"); // TODO fixme for property-aware parsing
+	var to = attrAsPixelValue(elem, "to");
+	var speed = attrAsNumber(elem, "speed");
+	var startTime = attrAsNumber(elem, "startTime");
+	var direction = attrAsText(elem, "direction");
+	var resolutionStrategy = attrAsText(elem, "resolutionStrategy");
+	return {startDelay: startDelay, iterationDuration: iterationDuration, iterationCount: iterationCount, 
+					  fill: fill, prop: prop, from: from, to: to, speed: speed, direction: direction, startTime: startTime,
+					  resolutionStrategy: resolutionStrategy};
+}
+
+function instantiateElem(elem) {
+	var properties = resolveProperties(elem);
+	var instantiator = elem.tagName == "ANIMATION" ? AnimTemplate : (elem.tagName == "PAR" ? ParAnimGroupTemplate : SeqAnimGroupTemplate);
+	elem.template = new instantiator(properties, properties.resolutionStrategy);
+	return properties.startTime;
+}
+
+var animations = document.querySelectorAll("animation");
+for (var i = 0; i < animations.length; i++) {
+	var animation = animations[i];
+	if (animation.parentElement.tagName == "SEQ" || animation.parentElement.tagName == "PAR") {
+		continue;
+	}
+	var startTime = instantiateElem(animation);
+	animation.template.animate(animation.parentElement, startTime);
+}
+
+function instantiateTree(elem) {
+	var startTime = instantiateElem(elem);
+	for (var i = 0; i < elem.children.length; i++) {
+		instantiateTree(elem.children[i]);
+		elem.template.add(elem.children[i].template);
+	} 
+	return startTime;
+}
+
+var groups = document.querySelectorAll("seq, par");
+for (var i = 0; i < groups.length; i++) {
+	var group = groups[i];
+	if (group.parentElement.tagName == "SEQ" || group.parentElement.tagName == "PAR") {
+		continue;
+	}
+	var startTime = instantiateTree(group);
+	group.template.animate(group.parentElement, startTime);
+}
+</script>

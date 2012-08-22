@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<style>
+.anim {
+	left: 0px;
+	width: 100px;
+	height: 100px;
+	background-color: #FAA;
+	position: absolute;
+}
+
+#a {
+	top: 0px
+}
+
+#b {
+	top: 100px;
+}
+
+#c {
+	top: 200px;
+}
+
+#d {
+	top: 300px;
+}
+
+</style>
+
+<div>
+	<div id="a" class="anim"></div>
+	<div id="b" class="anim"></div>
+	<div id="c" class="anim"></div>
+	<div id="d" class="anim"></div>
+</div>
+
+<script src="prototype.js"></script>
+<script src="web-animation.js"></script>
+<script>
+
+var fills = ["none", "backwards", "forwards", "both"];
+var divs = document.querySelectorAll(".anim");
+
+var group = new ParAnimGroup({startDelay: 1000, iterationDuration: 4000}, undefined, 1000);
+
+for (var i = 0; i < fills.length; i++) {
+	var anim = new Anim(divs[i], {startDelay: 1000, iterationDuration: 1000, fill: fills[i], prop: "left", from: 100, to: 200}, group, 1000);
+}
+
+</script>

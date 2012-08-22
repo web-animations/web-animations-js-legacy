@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<style>
+.animContainer {
+	position: absolute;
+	left: 0px;
+	height: 100px;
+}
+
+.anim {
+	left: 0px;
+	width: 100px;
+	height: 25px;
+	background-color: #FAA;
+	position: relative;
+}
+
+.a {
+	top: 0px
+}
+
+.b {
+	top: 0px;
+}
+
+.c {
+	top: 0px;
+}
+
+.d {
+	top: 0px;
+}
+
+#ca {
+	top: 0px;
+}
+
+#cb {
+	top: 100px;
+}
+
+#cc {
+	top: 200px;
+}
+
+
+#cd {
+	top: 300px;
+}
+</style>
+
+<div class="animContainer" id="ca">
+	<div class="anim a"></div>
+	<div class="anim b"></div>
+	<div class="anim c"></div>
+	<div class="anim d"></div>
+</div>
+
+<div class="animContainer" id="cb">
+	<div class="anim a"></div>
+	<div class="anim b"></div>
+	<div class="anim c"></div>
+	<div class="anim d"></div>
+</div>
+
+<div class="animContainer" id="cc">
+	<div class="anim a"></div>
+	<div class="anim b"></div>
+	<div class="anim c"></div>
+	<div class="anim d"></div>
+</div>
+
+<div class="animContainer" id="cd">
+	<div class="anim a"></div>
+	<div class="anim b"></div>
+	<div class="anim c"></div>
+	<div class="anim d"></div>
+</div>
+
+<script src="prototype.js"></script>
+<script src="web-animation.js"></script>
+<script>
+
+var fills = ["none", "backwards", "forwards", "both"];
+var categories = [".a", ".b", ".c", ".d"]
+
+var directions = ["normal", "reverse", "alternate", "alternate-reverse"]
+var groups = [];
+
+for (var i = 0; i < directions.length; i++) {
+	var dir = directions[i];
+	var group = new ParAnimGroup({startDelay: 1000, iterationDuration: 5000, iterationCount: 3, 
+								 speed: 2, direction: dir}, undefined, 1000);
+	groups.push(group);
+}
+
+for (var i = 0; i < fills.length; i++) {
+	var divs = document.querySelectorAll(categories[i]);
+	for (var j = 0; j < divs.length; j++) {
+		var anim = new Anim(divs[j], {startDelay: 1000, iterationDuration: 1000, iterationCount: 2, fill: fills[i], prop: "left", from: 100, to: 200, speed: 0.8}, groups[j], 1000);
+		new Anim(divs[j], {startDelay: 1000, iterationDuration: 1000, iterationCount: 2, fill: fills[i], 
+			animFunc: loggerAnimFunction, speed: 0.8}, groups[j], 1000);
+	}
+}
+// .bDDa
+</script>

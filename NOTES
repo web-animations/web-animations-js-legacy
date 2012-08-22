@@ -1,0 +1,4 @@
+6.11 unscaled iteration time should be null if adjusted animation time is null.
+6.11.3 time fraction should be null if iteration time is null.
+6.11.4 current iteration should be null if iteration time is null.
+6.11.2 3. 4. should be other way around (forward if d % 2 == 0)
