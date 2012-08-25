@@ -95,7 +95,7 @@ for (var i = 0; i < directions.length; i++) {
 for (var i = 0; i < fills.length; i++) {
 	var divs = document.querySelectorAll(categories[i]);
 	for (var j = 0; j < divs.length; j++) {
-		var anim = new Anim(divs[j], {startDelay: 1, iterationDuration: 1, iterationCount: 2, fill: fills[i], prop: "left", from: 100, to: 200, speed: 0.8}, groups[j], 1);
+		var anim = new Anim(divs[j], {startDelay: 1, iterationDuration: 1, iterationCount: 2, fill: fills[i], prop: "left", from: "100px", to: "200px", speed: 0.8}, groups[j], 1);
 		new Anim(divs[j], {startDelay: 1, iterationDuration: 1, iterationCount: 2, fill: fills[i], 
 			animFunc: loggerAnimFunction, speed: 0.8}, groups[j], 1);
 	}

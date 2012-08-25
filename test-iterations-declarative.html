@@ -131,8 +131,8 @@ function resolveProperties(elem) {
 	var iterationCount = attrAsNumber(elem, "iterationCount");
 	var fill = attrAsText(elem, "fill");
 	var prop = attrAsText(elem, "prop");
-	var from = attrAsPixelValue(elem, "from"); // TODO fixme for property-aware parsing
-	var to = attrAsPixelValue(elem, "to");
+	var from = attrAsText(elem, "from");
+	var to = attrAsText(elem, "to");
 	var speed = attrAsNumber(elem, "speed");
 	var startTime = attrAsNumber(elem, "startTime");
 	var direction = attrAsText(elem, "direction");

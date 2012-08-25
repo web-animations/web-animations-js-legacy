@@ -712,7 +712,7 @@ var KeyframesAnimFunction = Class.create(AnimFunction, {
 		// TODO: apply time function
 		var localTimeFraction = (timeFraction - beforeFrame.offset) / (afterFrame.offset - beforeFrame.offset);
 		// TODO: property-based interpolation for things that aren't simple
-		var animationValue = afterFrame.value * localTimeFraction + beforeFrame.value * (1 - localTimeFraction);
+		var animationValue = interpolate(this.property, beforeFrame.value, afterFrame.value, localTimeFraction);
 		setValue(target, this.property, animationValue);
 	},
 	zeroPoint: function(target, underlyingValue) {
@@ -768,15 +768,39 @@ var AnimFrameList = Class.create({
 	}
 })
 
+function interpolate(property, from, to, f) {
+	from = fromCssValue(property, from);
+	to = fromCssValue(property, to);
+	switch (property) {
+		case "left":
+		case "top":
+			return toCssValue(property, [to[0] * f + from[0] * (1 - f), "px"]);
+	}
+}
+
+function toCssValue(property, value) {
+	switch (property) {
+		case "left":
+		case "top":
+			return value[0] + value[1];
+	}
+}
+
+function fromCssValue(property, value) {
+	switch (property) {
+		case "left":
+		case "top":
+			return [Number(value.substring(0, value.length - 2)), "px"];
+	}
+}
+
 function setValue(target, property, value) {
-	// TODO: correct property-based units generation
-	target.style[property] = value + "px";
+	target.style[property] = value;
 }
 
 function getValue(target, property) {
 	// TODO: correct property-based units extraction
-	var s = window.getComputedStyle(target)[property];
-	return Number(s.substring(0, s.length - 2));
+	return  window.getComputedStyle(target)[property];
 }
 
 
