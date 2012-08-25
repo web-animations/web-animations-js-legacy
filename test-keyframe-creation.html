@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<style>
+.anim {
+	left: 50px;
+	width: 100px;
+	height: 100px;
+	background-color: #FAA;
+	position: absolute;
+}
+
+#a {
+	top: 0px
+}
+
+#b {
+	top: 100px;
+}
+
+
+</style>
+
+<div>
+	<div id="a" class="anim"></div>
+	<div id="b" class="anim"></div>
+</div>
+
+<script src="prototype.js"></script>
+<script src="web-animation.js"></script>
+<script>
+
+new Anim(document.querySelector("#a"), {startDelay: 1, iterationDuration: 1, prop: "left", from: 100, to: 200});
+new Anim(document.querySelector("#b"), {startDelay: 1, iterationDuration: 1, prop: "left", to: 200});
+
+</script>

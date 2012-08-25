@@ -233,7 +233,9 @@ var TimedItem = Class.create({
 
 function keyframesFor(property, startVal, endVal) {
 	var animFun = new KeyframesAnimFunction(property);
-	animFun.frames.add(new AnimFrame(startVal, 0));
+	if (startVal) {
+		animFun.frames.add(new AnimFrame(startVal, 0));
+	}
 	animFun.frames.add(new AnimFrame(endVal, 1));
 	return animFun;
 }
@@ -773,8 +775,8 @@ function setValue(target, property, value) {
 
 function getValue(target, property) {
 	// TODO: correct property-based units extraction
-	var s = target.style[property];
-	return Number(s.substring(s.length - 2));
+	var s = window.getComputedStyle(target)[property];
+	return Number(s.substring(0, s.length - 2));
 }
 
 
