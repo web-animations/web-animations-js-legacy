@@ -768,13 +768,20 @@ var AnimFrameList = Class.create({
 	}
 })
 
+function _interp(from, to, f) {
+	return to * f + from * (1 - f);
+}
+
 function interpolate(property, from, to, f) {
 	from = fromCssValue(property, from);
 	to = fromCssValue(property, to);
 	switch (property) {
 		case "left":
 		case "top":
-			return toCssValue(property, [to[0] * f + from[0] * (1 - f), "px"]);
+			return toCssValue(property, [_interp(from[0], to[0], f), "px"]);
+		case "-webkit-transform":
+			return toCssValue(property, [{t: "rotateY", d:_interp(from[0].d, to[0].d, f)}])
+
 	}
 }
 
@@ -783,6 +790,10 @@ function toCssValue(property, value) {
 		case "left":
 		case "top":
 			return value[0] + value[1];
+		case "-webkit-transform":
+			// TODO: fix this :)
+			return "rotateY(" + value[0].d + "deg)";
+
 	}
 }
 
@@ -791,6 +802,10 @@ function fromCssValue(property, value) {
 		case "left":
 		case "top":
 			return [Number(value.substring(0, value.length - 2)), "px"];
+		case "-webkit-transform":
+			// TODO: fix this :)
+			var deg = /rotateY\((.*)\)/.exec(value)[1]
+			return [{t: "rotateY", d: deg.substring(0, deg.length - 3)}];
 	}
 }
 

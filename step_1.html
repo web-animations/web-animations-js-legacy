@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<style>
+.door {
+
+	background-color: gray;
+	border: 1px solid black;
+	line-height: 200px;
+	width: 100px;
+}
+
+.doorSpacer {
+	width: 200px;
+	-webkit-transform: rotateY(0deg);
+	-webkit-transform-style: preserve-3d;
+}
+
+.doorContainer {
+	-webkit-transform-style: preserve-3d;
+	-webkit-perspective: 1000px;
+	left: 50px;
+	top: 50px;
+	width: 200px;
+	height: 200px;
+	position: absolute;
+	-webkit-perspective-origin: right center;
+}
+
+#a {
+	top: 0px
+}
+
+#b {
+	top: 100px;
+}
+
+
+</style>
+
+<div class="doorContainer">
+	<div class="doorSpacer">
+		<div class="door">
+		&nbsp;o
+		</div>
+	</div>
+</div>
+
+<script src="prototype.js"></script>
+<script src="web-animation.js"></script>
+<script>
+
+new Anim(document.querySelector(".doorSpacer"), {startDelay: 1, iterationDuration: 2, 
+					prop: "-webkit-transform", from: "rotateY(0deg)", to: "rotateY(90deg)"});
+
+</script>
