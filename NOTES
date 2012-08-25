@@ -2,3 +2,5 @@
 6.11.3 time fraction should be null if iteration time is null.
 6.11.4 current iteration should be null if iteration time is null.
 6.11.2 3. 4. should be other way around (forward if d % 2 == 0)
+
+What happens when a 20s animation is added to a 5s par group that is about to finish is that the iteration time of the par group is say 4.9s, so the start time of the animation is set to 4.9s and the iteration duration of the par group is updated to 24.9s. OTOH, if the par group is just finished then the iteration time is undefined and the animation will start playing 5.1s in. Is this what we want?

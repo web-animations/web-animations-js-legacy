@@ -63,16 +63,27 @@ function exists(val) {
 var TimedItem = Class.create({
 	initialize: function(timing, startTime, parentGroup) {
 		this.timing = timing;
-		this.startTime = startTime | 0;
+		this.startTime = startTime;
 		this.updateIterationDuration();
 		this.currentIteration = null;
 		this.iterationTime = null;
 		this.animationTime = null;
+
 		if (parentGroup === undefined) {
 			this.parentGroup = DEFAULT_GROUP;
 		} else {
 			this.parentGroup = parentGroup;			
 		}
+		
+		if (startTime == undefined) {
+			if (this.parentGroup) {
+				this.startTime = this.parentGroup.iterationTime || 0;
+			} else {
+				this.startTime = 0;
+			}
+		}
+
+		this.endTime = this.startTime + this.animationDuration + this.timing.startDelay;
 		if (this.parentGroup) {
 			this.parentGroup.add(this);
 		}
@@ -494,6 +505,7 @@ var AnimGroup = Class.create(TimedItem, AnimListMixin, {
 	_childrenStateModified: function() {
 		this.updateIterationDuration();
 		this._updateChildStartTimes();
+		this.updateTimeMarkers();
 		if (this.parentGroup) {
 			this.parentGroup._childrenStateModified();
 		} else {
@@ -774,6 +786,9 @@ DEFAULT_GROUP._tick = function(time) {
 		this.children.forEach(function(child) {child._tick(time); }.bind(this));
 		return this._timeFraction != null;
 }
+
+// massive hack to allow things to be added to the parent group and start playing. Maybe this is right though?
+DEFAULT_GROUP.__defineGetter__("iterationTime", function() {return (Date.now() - _startTime) / 1000})
 
 var _startTime = Date.now();
 
