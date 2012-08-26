@@ -164,7 +164,6 @@ var TimedItem = Class.create({
 						var unscaledIterationTime = adjustedAnimationTime % this.iterationDuration;
 					}
 				}
-				// TODO scale iteration time here
 				var scaledIterationTime = unscaledIterationTime;
 				if (this.timing.direction == "normal") {
 					var currentDirection = 1;
@@ -180,6 +179,10 @@ var TimedItem = Class.create({
 				}
 				this.iterationTime = currentDirection == 1 ? scaledIterationTime : this.iterationDuration - scaledIterationTime;
 				this._timeFraction = this.iterationTime / this.iterationDuration;
+				if (this.timing.timingFunction) {
+					this._timeFraction = Math.max(0, Math.min(1, this.timing.timingFunction.scaleTime(this._timeFraction)));
+					this.iterationTime = this._timeFraction * this.iterationDuration;
+				} 				
 			}
 		} else {
 			this.animationTime = null;
@@ -251,7 +254,6 @@ function completeProperties(properties) {
 	if (properties.animFunc) {
 		result.animFunc = properties.animFunc;
 	} else {
-		// TODO: deal with optional from value.
 		result.animFunc = keyframesFor(properties.prop, properties.from, properties.to);
 	}
 	return result;
@@ -413,13 +415,13 @@ var AnimListMixin = {
 	clear: function() {
 		this.beforeListChange();
 		this._clear();
+		this.onListChange();
 	},
 	_clear: function() {
 		this.children = [];
 		var oldLength = this.length;
 		this.length = 0;
 		this._deleteIdxAccessors(0, oldLength);
-		this.onListChange
 		// TODO: call cancel on children? Update timing?
 	},
 	_createIdxAccessors: function(start, end) {
@@ -766,7 +768,43 @@ var AnimFrameList = Class.create({
 		}
 		return result;
 	}
-})
+});
+
+var presetTimings = {
+	"ease-in" : [0.42, 0, 1.0, 1.0],
+	"ease-out" : [0, 0, 0.58, 1.0]
+}
+
+var TimingFunction = Class.create({
+	initialize: function(spec) {
+		if (spec.length == 4) {
+			this.params = spec;
+		} else {
+			this.params = presetTimings[spec];
+		}
+		this.map = []
+		for (var ii = 0; ii <= 100; ii += 1) {
+			var i = ii / 100;
+			this.map.push([3*i*(1-i)*(1-i)*this.params[0] + 3*i*i*(1-i)*this.params[2] + i*i*i,
+							 3*i*(1-i)*(1-i)*this.params[1] + 3*i*i*(1-i)*this.params[3] + i*i*i])
+		}
+
+		console.log(this.map)
+	},
+	scaleTime: function(fraction) {
+		var fst = 0;
+		while (fst != 100 && fraction > this.map[fst][0]) {
+			fst += 1;
+		}
+		if (fraction == this.map[fst][0]) {
+			return this.map[fst][1];
+		}
+		var yDiff = this.map[fst][1] - this.map[fst - 1][1];
+		var xDiff = this.map[fst][0] - this.map[fst - 1][0];
+		var p = (fraction - this.map[fst - 1][0]) / xDiff;
+		return this.map[fst - 1][1] + p * yDiff;
+	}
+});
 
 function _interp(from, to, f) {
 	return to * f + from * (1 - f);
@@ -836,7 +874,6 @@ function getValue(target, property) {
 		return window.getComputedStyle(target)[property];
 	}
 }
-
 
 var rAFNo = undefined;
 

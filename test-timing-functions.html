@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<style>
+.anim {
+	left: 50px;
+	width: 100px;
+	height: 100px;
+	background-color: #FAA;
+	position: absolute;
+}
+
+#a {
+	top: 0px
+}
+
+#b {
+	top: 100px;
+}
+
+#c {
+	top: 200px
+}
+
+#d {
+	top: 300px;
+}
+
+</style>
+
+<div>
+	<div id="a" class="anim"></div>
+	<div id="b" class="anim"></div>
+	<div id="c" class="anim"></div>
+	<div id="d" class="anim"></div>
+</div>
+
+<script src="prototype.js"></script>
+<script src="web-animation.js"></script>
+<script>
+
+new Anim(document.querySelector("#a"), {fill: "forwards", startDelay: 1, iterationDuration: 2, prop: "left", to: "200px"});
+new Anim(document.querySelector("#b"), {fill: "forwards", startDelay: 1, iterationDuration: 2, prop: "left", timingFunction: new TimingFunction("ease-in"), to: "200px"});
+new Anim(document.querySelector("#c"), {fill: "forwards", startDelay: 1, iterationDuration: 2, prop: "left", timingFunction: new TimingFunction("ease-out"), to: "200px"});
+new Anim(document.querySelector("#d"), {fill: "forwards", startDelay: 1, iterationDuration: 2, prop: "left", timingFunction: new TimingFunction([0, 0.2, 0.8, 1]), to: "200px"});
+
+
+</script>
