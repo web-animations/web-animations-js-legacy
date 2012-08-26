@@ -108,7 +108,7 @@ var TimedItem = Class.create({
 
 	},
 	updateTimeMarkers: function(time) {
-		this.endTime = this.startTime + this.animationDuration + this.timing.startDelay;
+		this.endTime = this.startTime + this.animationDuration + this.timing.startDelay - this.timeDrift;
 		if (this.parentGroup) {
 			this.itemTime = this.parentGroup.iterationTime - this.startTime + this.timeDrift;
 		} else if (time) {
@@ -218,6 +218,18 @@ var TimedItem = Class.create({
 	cancel: function() {
 		// TODO
 	},
+	play: function() {
+		if (this.itemTime > this.animationDuration + this.timing.startDelay + this.timeDrift) {
+			// this.itemTime = this.parentGroup.iterationTime - this.startTime + this.timeDrift;
+			// want to adjust itemTime to startDelay
+			// this.parentGroup.iterationTime - this.startTime + this.timeDrift = this.timeDelay;
+			// this.timeDrift = this.timeDelay + this.startTime - this.parentGroup.iterationTime;
+			this.timeDrift = this.timing.startDelay + this.startTime - this.parentGroup.iterationTime;
+			this.updateTimeMarkers();
+			maybeRestartAnimation();
+		}
+	},
+	// TODO: move this to run on modification of startTime (I think)
 	start: function(timeFromNow) {
 		if (!this.parentGroup) {
 			// TODO: Check spec correctness. Should this be Data.now() + timeFromNow?
@@ -317,6 +329,7 @@ var Anim = Class.create(TimedItem, {
 	},
 	_tick: function(time) {
 		this.updateTimeMarkers();
+		console.log(time, this.startTime, this._timeFraction);
 		var rc = 0;
 		if (this._timeFraction != null) {
 			rc |= RC_SET_VALUE;
@@ -556,10 +569,20 @@ var AnimGroup = Class.create(TimedItem, AnimListMixin, {
 		this.updateTimeMarkers();
 		if (this._timeFraction == null) {
 			this._zero();
-			return false;
+			return RC_ANIMATION_FINISHED;
 		} else {
-			this.children.forEach(function(child) {child._tick(time - this.startTime - this.timing.startDelay); }.bind(this));
-			return true;
+			var set = 0;
+			var end = RC_ANIMATION_FINISHED;
+			this.children.forEach(function(child) {
+				var r = child._tick(time - this.startTime - this.timing.startDelay); 
+				if (!(r & RC_ANIMATION_FINISHED)) {
+					end = 0;
+				}
+				if (r & RC_SET_VALUE) {
+					set = RC_SET_VALUE;
+				}
+			}.bind(this));
+			return set | end;
 		}
 	}
 });
@@ -788,8 +811,6 @@ var TimingFunction = Class.create({
 			this.map.push([3*i*(1-i)*(1-i)*this.params[0] + 3*i*i*(1-i)*this.params[2] + i*i*i,
 							 3*i*(1-i)*(1-i)*this.params[1] + 3*i*i*(1-i)*this.params[3] + i*i*i])
 		}
-
-		console.log(this.map)
 	},
 	scaleTime: function(fraction) {
 		var fst = 0;
@@ -810,20 +831,6 @@ function _interp(from, to, f) {
 	return to * f + from * (1 - f);
 }
 
-function interpolate(property, from, to, f) {
-	from = fromCssValue(property, from);
-	to = fromCssValue(property, to);
-	switch (property) {
-		case "left":
-		case "top":
-		case "cx":
-			return toCssValue(property, [_interp(from[0], to[0], f), "px"]);
-		case "-webkit-transform":
-			return toCssValue(property, [{t: "rotateY", d:_interp(from[0].d, to[0].d, f)}])
-
-	}
-}
-
 function propertyIsLength(property) {
 	return ["left", "top", "cx"].indexOf(property) != -1;
 }
@@ -836,24 +843,44 @@ function propertyIsSVGAttrib(property) {
 	return ["cx"].indexOf(property) != -1;
 }
 
+function interpolate(property, from, to, f) {
+	from = fromCssValue(property, from);
+	to = fromCssValue(property, to);
+	if (propertyIsLength(property)) {
+			return toCssValue(property, [_interp(from[0], to[0], f), "px"]);
+	} else if (propertyIsTransform(property)) {
+			return toCssValue(property, [{t: from[0].t, d:_interp(from[0].d, to[0].d, f)}])
+	} else {
+		throw "UnsupportedProperty";
+	}
+}
+
 function toCssValue(property, value) {
 	if (propertyIsLength(property)) {
 		return value[0] + value[1];
 	} else if (propertyIsTransform(property)) {
 		// TODO: fix this :)
-		return "rotateY(" + value[0].d + "deg)";
+		return value[0].t + "(" + value[0].d + "deg)";
 	} else {
 		throw "UnsupportedProperty";
 	}
 }
+
+function extractDeg(deg) { return Number(deg[1].substring(0, deg[1].length - 3))}
+var transformREs = [[/rotateY\((.*)\)/, extractDeg, "rotateY"], [/rotate\((.*)\)/, extractDeg, "rotate"]]
 
 function fromCssValue(property, value) {
 	if (propertyIsLength(property)) {
 		return [Number(value.substring(0, value.length - 2)), "px"];
 	} else if (propertyIsTransform(property)) {
 		// TODO: fix this :)
-		var deg = /rotateY\((.*)\)/.exec(value)[1]
-		return [{t: "rotateY", d: deg.substring(0, deg.length - 3)}];
+		for (var i = 0; i < transformREs.length; i++) {
+			var reSpec = transformREs[i];
+			var r = reSpec[0].exec(value);
+			if (r) {
+				return [{t: reSpec[2], d: reSpec[1](r)}];
+			}
+		}
 	} else {
 		throw "UnsupportedProperty";
 	}
@@ -880,8 +907,14 @@ var rAFNo = undefined;
 var DEFAULT_GROUP = new AnimGroup("par", undefined, {}, 0, undefined);
 DEFAULT_GROUP._tick = function(time) {
 		this.updateTimeMarkers(time);
-		this.children.forEach(function(child) {child._tick(time); }.bind(this));
-		return this._timeFraction != null;
+		var allFinished = true;
+		this.children.forEach(function(child) {
+			var r = child._tick(time); 
+			if (!(r & RC_ANIMATION_FINISHED)) {
+				allFinished = false;
+			}
+		}.bind(this));
+		return !allFinished;
 }
 
 // massive hack to allow things to be added to the parent group and start playing. Maybe this is right though?

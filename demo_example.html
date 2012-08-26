@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<style>
+.door {
+
+	background-color: gray;
+	border: 1px solid black;
+	line-height: 200px;
+	width: 100px;
+}
+
+.doorSpacer {
+	width: 200px;
+	-webkit-transform: rotateY(0deg);
+	-webkit-transform-style: preserve-3d;
+}
+
+.doorContainer {
+	-webkit-transform-style: preserve-3d;
+	-webkit-perspective: 1000px;
+	left: 50px;
+	top: 50px;
+	width: 200px;
+	height: 200px;
+	position: absolute;
+	-webkit-perspective-origin: right center;
+}
+
+#picture {
+	position: absolute;
+	left: 200px;
+	top: 70px;
+	width: 100px;
+	height: 75px;
+	border: solid 1px black;
+	-webkit-transform: rotate(0deg);
+}
+
+</style>
+
+<div class="doorContainer">
+	<div class="doorSpacer">
+		<div class="door">
+		&nbsp;o
+		</div>
+	</div>
+</div>
+
+<div id="picture"></div>
+
+<svg>
+	<circle cx="100px" cy="100px" r="20px"/>
+	<circle cx="200px" cy="120px" r="15px"/>
+	<circle cx="130px" cy="315px" r="25px"/>
+	<circle cx="220px" cy="300px" r="20px"/>
+</svg>
+
+<script src="prototype.js"></script>
+<script src="web-animation.js"></script>
+<script>
+
+// STEP 1
+
+var a = undefined;
+
+function first() {
+	a = new Anim(document.querySelector(".doorSpacer"), {iterationDuration: 2, fill: "forwards",
+					prop: "-webkit-transform", from: "rotateY(0deg)", to: "rotateY(100deg)"});
+}
+
+function second() {
+	animate(document.querySelectorAll("circle"), {iterationDuration: 3, prop: "cx", to: "400px"});
+}
+
+// STEP 2
+
+function third() {
+	a.timing.timingFunction = new TimingFunction('ease-in');
+	a.play();
+}
+
+function fourth() {
+	a.timing.timingFunction = new TimingFunction([0, 0.2,0.8, 1]);
+	a.play();
+}
+
+// STEP 3
+
+function fifth() {
+	var picture = document.querySelector("#picture");
+	var pictureTilting = new Anim(picture, {iterationDuration: 0.5, prop: "-webkit-transform", from: "rotate(0deg)", to: "rotate(-30deg)"});
+	var group = new SeqAnimGroup({})
+	group.add(a);
+	group.add(pictureTilting);
+}
+
+</script>

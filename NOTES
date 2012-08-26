@@ -6,3 +6,7 @@
 What happens when a 20s animation is added to a 5s par group that is about to finish is that the iteration time of the par group is say 4.9s, so the start time of the animation is set to 4.9s and the iteration duration of the par group is updated to 24.9s. OTOH, if the par group is just finished then the iteration time is undefined and the animation will start playing 5.1s in. Is this what we want?
 
 timingFunctions should apply to the time fraction rather than the iteration time.
+
+Need to subtract timeDrift from endTime calculation. Should describe play() in terms of changes to timeDrift.
+
+What's the interaction between timeDrift and container durations?
