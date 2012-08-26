@@ -44,11 +44,20 @@
 	</div>
 </div>
 
+<svg>
+	<circle cx="100px" cy="100px" r="20px"/>
+	<circle cx="200px" cy="120px" r="15px"/>
+	<circle cx="130px" cy="315px" r="25px"/>
+	<circle cx="220px" cy="300px" r="20px"/>
+</svg>
+
 <script src="prototype.js"></script>
 <script src="web-animation.js"></script>
 <script>
 
-new Anim(document.querySelector(".doorSpacer"), {startDelay: 1, iterationDuration: 2, 
-					prop: "-webkit-transform", from: "rotateY(0deg)", to: "rotateY(90deg)"});
+new Anim(document.querySelector(".doorSpacer"), {startDelay: 1, iterationDuration: 2, fill: "forwards",
+					prop: "-webkit-transform", from: "rotateY(0deg)", to: "rotateY(100deg)"});
+
+animate(document.querySelectorAll("circle"), {iterationDuration: 3, prop: "cx", to: "400px"});
 
 </script>

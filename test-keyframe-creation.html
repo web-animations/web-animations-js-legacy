@@ -16,12 +16,21 @@
 	top: 100px;
 }
 
+#c {
+	top: 200px
+}
+
+#d {
+	top: 300px;
+}
 
 </style>
 
 <div>
 	<div id="a" class="anim"></div>
 	<div id="b" class="anim"></div>
+	<div id="c" class="anim"></div>
+	<div id="d" class="anim"></div>
 </div>
 
 <script src="prototype.js"></script>
@@ -30,5 +39,8 @@
 
 new Anim(document.querySelector("#a"), {startDelay: 1, iterationDuration: 1, prop: "left", from: "100px", to: "200px"});
 new Anim(document.querySelector("#b"), {startDelay: 1, iterationDuration: 1, prop: "left", to: "200px"});
+new Anim(document.querySelector("#c"), {iterationDuration: 2, prop: "left", from: "100px", to: "200px"});
+new Anim(document.querySelector("#d"), {iterationDuration: 2, prop: "left", to: "200px"});
+
 
 </script>

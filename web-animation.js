@@ -382,7 +382,7 @@ var AnimTemplate = Class.create(TimedTemplate, {
 });
 
 // TODO: lose this now?
-function animate(targets, startTime, animFunction, timing) {
+function animate(targets, properties, startTime) {
 	var unwrapOnReturn = false;
 	if (!targets.length) {
 		targets = [targets];
@@ -392,8 +392,8 @@ function animate(targets, startTime, animFunction, timing) {
 	var instances = [];
 
 	[].forEach.call(targets, function(target) {
-		instances.push(new Anim(target, {animFunc: animFunction, timing: timing}, DEFAULT_GROUP, startTime));
-		DEFAULT_GROUP.append(instances[instances.length - 1]);
+		instances.push(new Anim(target, properties, DEFAULT_GROUP, startTime));
+		DEFAULT_GROUP.add(instances[instances.length - 1]);
 	});
 
 	if (unwrapOnReturn) {
@@ -778,6 +778,7 @@ function interpolate(property, from, to, f) {
 	switch (property) {
 		case "left":
 		case "top":
+		case "cx":
 			return toCssValue(property, [_interp(from[0], to[0], f), "px"]);
 		case "-webkit-transform":
 			return toCssValue(property, [{t: "rotateY", d:_interp(from[0].d, to[0].d, f)}])
@@ -785,37 +786,55 @@ function interpolate(property, from, to, f) {
 	}
 }
 
-function toCssValue(property, value) {
-	switch (property) {
-		case "left":
-		case "top":
-			return value[0] + value[1];
-		case "-webkit-transform":
-			// TODO: fix this :)
-			return "rotateY(" + value[0].d + "deg)";
+function propertyIsLength(property) {
+	return ["left", "top", "cx"].indexOf(property) != -1;
+}
 
+function propertyIsTransform(property) {
+	return ["-webkit-transform"].indexOf(property) != -1;
+}
+
+function propertyIsSVGAttrib(property) {
+	return ["cx"].indexOf(property) != -1;
+}
+
+function toCssValue(property, value) {
+	if (propertyIsLength(property)) {
+		return value[0] + value[1];
+	} else if (propertyIsTransform(property)) {
+		// TODO: fix this :)
+		return "rotateY(" + value[0].d + "deg)";
+	} else {
+		throw "UnsupportedProperty";
 	}
 }
 
 function fromCssValue(property, value) {
-	switch (property) {
-		case "left":
-		case "top":
-			return [Number(value.substring(0, value.length - 2)), "px"];
-		case "-webkit-transform":
-			// TODO: fix this :)
-			var deg = /rotateY\((.*)\)/.exec(value)[1]
-			return [{t: "rotateY", d: deg.substring(0, deg.length - 3)}];
+	if (propertyIsLength(property)) {
+		return [Number(value.substring(0, value.length - 2)), "px"];
+	} else if (propertyIsTransform(property)) {
+		// TODO: fix this :)
+		var deg = /rotateY\((.*)\)/.exec(value)[1]
+		return [{t: "rotateY", d: deg.substring(0, deg.length - 3)}];
+	} else {
+		throw "UnsupportedProperty";
 	}
 }
 
 function setValue(target, property, value) {
-	target.style[property] = value;
+	if (propertyIsSVGAttrib(property)) {
+		target.setAttribute(property, value);
+	} else {
+		target.style[property] = value;
+	}
 }
 
 function getValue(target, property) {
-	// TODO: correct property-based units extraction
-	return  window.getComputedStyle(target)[property];
+	if (propertyIsSVGAttrib(property)) {
+		return target.getAttribute(property);
+	} else {
+		return window.getComputedStyle(target)[property];
+	}
 }
 
 
