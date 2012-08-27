@@ -123,4 +123,29 @@ function sixth() {
 	console.log(DEFAULT_GROUP.currentState());
 }
 
+// STEP 4
+
+function audioAnimFunction(sample) {
+	return new JavaScriptAnimFunction(
+		function(elem) { return 0; },
+		function() { },
+		function(tf, iter, elem, underlying) {
+			// TODO: fix this
+			console.log(sample);
+		}
+	);
+}
+
+function seventh() {
+	var doorCreakAnim = new Anim(null, { iterationDuration: 2, animFunc: new audioAnimFunction("CREEEEEEAAAAKKK")});
+	var closeAnim = new ParAnimGroup({fill: "forwards"});
+	closeAnim.add(a);
+	closeAnim.add(doorCreakAnim);
+	closeAnim.timing.timingFunction = a.timing.timingFunction;
+	a.timing.timingFunction = null;
+	group.splice(0, 0, closeAnim);
+	group.play();
+	console.log(DEFAULT_GROUP.currentState());
+}
+
 </script>

@@ -518,11 +518,14 @@ var AnimListMixin = {
 	},
 	splice: function() {
 		this.beforeListChange();
-		this.children.splice.apply(arguments);
+		for (var i = 2; i < arguments.length; i++) {
+			arguments[i].reparent(this);
+		}
+		this.children.splice.apply(this.children, arguments);
 		var oldLength = this.length;
 		this.length = this.children.length;
 		this._createIdxAccessors(oldLength, this.length);
-		this.onListChange
+		this.onListChange();
 	},
 	remove: function(removedItem) {
 		this.beforeListChange();
