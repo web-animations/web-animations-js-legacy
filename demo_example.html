@@ -87,8 +87,9 @@ function fourth() {
 
 function fifth() {
 	var picture = document.querySelector("#picture");
-	var pictureTilting = new Anim(picture, {iterationDuration: 0.5, prop: "-webkit-transform", from: "rotate(0deg)", to: "rotate(-30deg)"});
-	var group = new SeqAnimGroup({})
+	var pictureTilting = new Anim(picture, {iterationDuration: 0.5, prop: "-webkit-transform", from: "rotate(0deg)", to: "rotate(-30deg)", 
+											fill: "forwards"});
+	var group = new SeqAnimGroup({fill: "forwards"})
 	group.add(a);
 	group.add(pictureTilting);
 }

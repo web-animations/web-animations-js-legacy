@@ -90,6 +90,11 @@ var TimedItem = Class.create({
 		this.paused = false;
 		this.timeDrift = 0;
 	},
+	reparent: function(parentGroup) {
+		this.parentGroup.remove(this);
+		this.parentGroup = parentGroup;
+		this.timeDrift = 0;
+	},
 	// TODO: take timing.iterationStart into account. Spec needs to as well.
 	updateIterationDuration: function() {
 		if (exists(this.timing.iterationDuration) && this.timing.iterationDuration >= 0) {
@@ -329,7 +334,6 @@ var Anim = Class.create(TimedItem, {
 	},
 	_tick: function(time) {
 		this.updateTimeMarkers();
-		console.log(time, this.startTime, this._timeFraction);
 		var rc = 0;
 		if (this._timeFraction != null) {
 			rc |= RC_SET_VALUE;
@@ -451,6 +455,7 @@ var AnimListMixin = {
 	add: function() {
 		this.beforeListChange();
 		for (var i = 0; i < arguments.length; i++) {
+			arguments[i].reparent(this);
 			this.children.push(arguments[i]);
 		}
 		var oldLength = this.length;
