@@ -1,5 +1,10 @@
 <!DOCTYPE html>
 <style>
+.scene {
+	position: absolute;
+	left: 50px;
+}
+
 .door {
 
 	background-color: gray;
@@ -17,7 +22,6 @@
 .doorContainer {
 	-webkit-transform-style: preserve-3d;
 	-webkit-perspective: 1000px;
-	left: 50px;
 	top: 50px;
 	width: 200px;
 	height: 200px;
@@ -25,9 +29,14 @@
 	-webkit-perspective-origin: right center;
 }
 
-#picture {
+.right {
+	left: 450px;
+	visibility: hidden;
+}
+
+.picture {
 	position: absolute;
-	left: 200px;
+	left: 150px;
 	top: 70px;
 	width: 100px;
 	height: 75px;
@@ -35,9 +44,9 @@
 	-webkit-transform: rotate(0deg);
 }
 
-#dust {
+.dust {
 	position: absolute;
-	left: 25px;
+	left: -25px;
 	width: 150px;
 	border-radius: 15px;
 	height: 30px;
@@ -48,16 +57,30 @@
 
 </style>
 
-<div class="doorContainer">
-	<div class="doorSpacer">
-		<div class="door">
-		&nbsp;o
+<div class="scene">
+	<div class="doorContainer">
+		<div class="doorSpacer">
+			<div class="door">
+			&nbsp;o
+			</div>
 		</div>
 	</div>
-</div>
-<div id="dust"></div>
+	<div class="dust"></div>
 
-<div id="picture"></div>
+	<div class="picture"></div>
+</div>
+
+<div class="scene right">
+	<div class="doorContainer" left="50">
+		<div class="doorSpacer">
+			<div class="door">
+			&nbsp;o
+			</div>
+		</div>
+	</div>
+	<div class="dust"></div>
+	<div class="picture"></div>
+</div>
 
 <svg>
 	<circle cx="100px" cy="100px" r="20px"/>
@@ -103,7 +126,7 @@ var group = undefined;
 var pictureTilting = undefined;
 
 function fifth() {
-	var picture = document.querySelector("#picture");
+	var picture = document.querySelector(".picture");
 	pictureTilting = new Anim(picture, {iterationDuration: 0.5, prop: "-webkit-transform", from: "rotate(0deg)", to: "rotate(-30deg)", 
 											fill: "forwards"});
 	group = new SeqAnimGroup({fill: "forwards"})
@@ -113,7 +136,7 @@ function fifth() {
 }
 
 function sixth() {
-	var dust = document.querySelector("#dust");
+	var dust = document.querySelector(".dust");
 	var dustPuff = new Anim(dust, { iterationDuration: 0.3, prop: "opacity", values: ["0", "0.4", "0"]});
 	var reactionGroup = new ParAnimGroup({fill: "forwards"});
 	reactionGroup.add(pictureTilting);
@@ -146,6 +169,21 @@ function seventh() {
 	group.splice(0, 0, closeAnim);
 	group.play();
 	console.log(DEFAULT_GROUP.currentState());
+}
+
+// STEP 5
+
+function eighth() {
+	document.querySelector(".right").style["visibility"] = "visible"
+}
+
+function ninth() {
+	var template = group.templatize();
+	console.log(template);
+	template.children[0].children[0].resolutionStrategy = "selector: .door";
+	template.children[1].children[0].resolutionStrategy = "selector: .picture";
+	template.children[1].children[1].resolutionStrategy = "selector: .dust";
+	template.animate(document.querySelector(".right"));
 }
 
 </script>

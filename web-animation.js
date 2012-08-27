@@ -340,7 +340,7 @@ var Anim = Class.create(TimedItem, {
 	},
 	templatize: function() {
 		if (this.template) {
-			return;
+			return this.template;
 		}
 		// TODO: What resolution strategy, if any, should be employed here?
 		var template = new AnimTemplate(this.func.clone(), this.timing.clone());
@@ -383,6 +383,9 @@ var AnimTemplate = Class.create(TimedTemplate, {
 		$super(completedProperties.timing);
 		this.func = completedProperties.animFunc;
 		this.resolutionStrategy = resolutionStrategy;
+	},
+	reparent: function(parentGroup) {
+		// TODO: does anything need to happen here?
 	},
 	__animate: function($super, isLive, targets, parentGroup, startTime) {
 		if (this.resolutionStrategy) {
@@ -555,6 +558,18 @@ var AnimGroup = Class.create(TimedItem, AnimListMixin, {
 			throw "Can't modify tree of AnimGroupInstances with templates"
 		}
 	},
+	templatize: function() {
+		if (!this.template) {
+			var properties = {timing: this.timing.clone()};
+			var template = this.type == "par" ? new ParAnimGroupTemplate(properties) : new SeqAnimGroupTemplate(properties);
+			this.timing = new TimingProxy(template.timing);
+			for (var i = 0; i < this.children.length; i++) {
+				template.add(this.children[i].templatize());
+			}
+			this.template = template;
+		}
+		return this.template;
+	},
 	_childrenStateModified: function() {
 		this.updateIterationDuration();
 		this._updateChildStartTimes();
@@ -648,6 +663,9 @@ var AnimGroupTemplate = Class.create(TimedTemplate, AnimListMixin, {
 		this.type = type;
 		this.resolutionStrategy = resolutionStrategy;
 		this.initListMixin(function() {}, function() {});
+	},
+	reparent: function(parentGroup) {
+		// TODO: does anything need to happen here?
 	},
 	__animate: function($super, isLive, targets, parentGroup, startTime) {
 		var instances = [];
