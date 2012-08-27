@@ -10,3 +10,10 @@ timingFunctions should apply to the time fraction rather than the iteration time
 Need to subtract timeDrift from endTime calculation. Should describe play() in terms of changes to timeDrift.
 
 What's the interaction between timeDrift and container durations?
+
+startTime calculation should be deferred until a tick. Otherwise:
+var a = new Anim(target, {..}) // a.startTime calculated as now() against global container
+var b = new ParAnimGroup({..}) // b.startTime == a.startTime
+v.add(a) // a starts well after everything else, but should start at 0.
+Other alternative: when reparenting Animations "stay put" in global time terms (difficult though)
+

@@ -60,6 +60,10 @@ function exists(val) {
 	return val != undefined;
 }
 
+var ST_MANUAL = 0;
+var ST_AUTO = 1;
+var ST_FORCED = 2;
+
 var TimedItem = Class.create({
 	initialize: function(timing, startTime, parentGroup) {
 		this.timing = timing;
@@ -74,15 +78,18 @@ var TimedItem = Class.create({
 		} else {
 			this.parentGroup = parentGroup;			
 		}
-		
+
 		if (startTime == undefined) {
+			this.startTimeMode = ST_AUTO;
 			if (this.parentGroup) {
 				this.startTime = this.parentGroup.iterationTime || 0;
 			} else {
 				this.startTime = 0;
 			}
-		}
-
+		} else {
+			this.startTimeMode = ST_MANUAL;
+			this.startTime = startTime;
+		}		
 		this.endTime = this.startTime + this.animationDuration + this.timing.startDelay;
 		if (this.parentGroup) {
 			this.parentGroup.add(this);
@@ -94,6 +101,14 @@ var TimedItem = Class.create({
 		this.parentGroup.remove(this);
 		this.parentGroup = parentGroup;
 		this.timeDrift = 0;
+		if (this.startTimeMode == ST_FORCED) {
+			this.startTime = this.stashedStartTime;;
+			this.startTimeMode = this.stashedStartTimeMode;
+		}
+		if (this.startTimeMode == ST_AUTO) {
+			this.startTime = this.parentGroup.iterationTime || 0;
+			this.updateTimeMarkers();
+		} 
 	},
 	// TODO: take timing.iterationStart into account. Spec needs to as well.
 	updateIterationDuration: function() {
@@ -224,7 +239,7 @@ var TimedItem = Class.create({
 		// TODO
 	},
 	play: function() {
-		if (this.itemTime > this.animationDuration + this.timing.startDelay + this.timeDrift) {
+		if (this.itemTime > this.animationDuration + this.timing.startDelay) {
 			// this.itemTime = this.parentGroup.iterationTime - this.startTime + this.timeDrift;
 			// want to adjust itemTime to startDelay
 			// this.parentGroup.iterationTime - this.startTime + this.timeDrift = this.timeDelay;
@@ -260,6 +275,14 @@ function keyframesFor(property, startVal, endVal) {
 	return animFun;
 }
 
+function keyframesForValues(property, values) {
+	var animFun = new KeyframesAnimFunction(property);
+	for (var i = 0; i < values.length; i++) {
+		animFun.frames.add(new AnimFrame(values[i], i / (values.length - 1)));
+	}
+	return animFun;
+}
+
 function completeProperties(properties) {
 	var result = {};
 	if (properties.timing) {
@@ -270,8 +293,10 @@ function completeProperties(properties) {
 	}
 	if (properties.animFunc) {
 		result.animFunc = properties.animFunc;
-	} else {
+	} else if (properties.to) {
 		result.animFunc = keyframesFor(properties.prop, properties.from, properties.to);
+	} else if (properties.values) {
+		result.animFunc = keyframesForValues(properties.prop, properties.values);
 	}
 	return result;
 }
@@ -346,6 +371,9 @@ var Anim = Class.create(TimedItem, {
 			rc |= RC_ANIMATION_FINISHED;
 		}
 		return rc;
+	},
+	toString: function() {
+		return "Anim " + this.startTime + "-" + this.endTime + " (" + this.timeDrift+ ") " + this.func.toString();
 	}
 });
 
@@ -538,7 +566,10 @@ var AnimGroup = Class.create(TimedItem, AnimListMixin, {
 		if (this.type == "seq") {
 			var cumulativeStartTime = 0;
 			this.children.forEach(function(child) {
+				child.stashedStartTime = child.startTime;
+				child.stashedStartTimeMode = child.startTimeMode;
 				child.startTime = cumulativeStartTime;
+				child.startTimeMode = ST_FORCED;
 				child.updateTimeMarkers();
 				cumulativeStartTime += Math.max(0, child.timing.startDelay + child.animationDuration);
 			}.bind(this));
@@ -579,7 +610,7 @@ var AnimGroup = Class.create(TimedItem, AnimListMixin, {
 			var set = 0;
 			var end = RC_ANIMATION_FINISHED;
 			this.children.forEach(function(child) {
-				var r = child._tick(time - this.startTime - this.timing.startDelay); 
+				var r = child._tick(time - this.startTime - this.timing.startDelay + this.timeDrift); 
 				if (!(r & RC_ANIMATION_FINISHED)) {
 					end = 0;
 				}
@@ -589,6 +620,9 @@ var AnimGroup = Class.create(TimedItem, AnimListMixin, {
 			}.bind(this));
 			return set | end;
 		}
+	},
+	toString: function() {
+		return this.type + " " + this.startTime + "-" + this.endTime + " (" + this.timeDrift+ ") " + " [" + this.children.map(function(a) { return a.toString(); }) + "]"
 	}
 });
 
@@ -755,6 +789,9 @@ var KeyframesAnimFunction = Class.create(AnimFunction, {
 		var result = new KeyframesAnimFunction(this.property, this.operation, this.accumulateOperation);
 		result.frames = this.frames.clone();
 		return result;
+	},
+	toString: function() {
+		return this.property;
 	}
 });
 
@@ -836,6 +873,10 @@ function _interp(from, to, f) {
 	return to * f + from * (1 - f);
 }
 
+function propertyIsNumber(property) {
+	return ["opacity"].indexOf(property) != -1;
+}
+
 function propertyIsLength(property) {
 	return ["left", "top", "cx"].indexOf(property) != -1;
 }
@@ -851,7 +892,9 @@ function propertyIsSVGAttrib(property) {
 function interpolate(property, from, to, f) {
 	from = fromCssValue(property, from);
 	to = fromCssValue(property, to);
-	if (propertyIsLength(property)) {
+	if (propertyIsNumber(property)) {
+		return toCssValue(property, _interp(from, to, f));
+	} else if (propertyIsLength(property)) {
 			return toCssValue(property, [_interp(from[0], to[0], f), "px"]);
 	} else if (propertyIsTransform(property)) {
 			return toCssValue(property, [{t: from[0].t, d:_interp(from[0].d, to[0].d, f)}])
@@ -861,7 +904,9 @@ function interpolate(property, from, to, f) {
 }
 
 function toCssValue(property, value) {
-	if (propertyIsLength(property)) {
+	if (propertyIsNumber(property)) {
+		return value + "";
+	} else if (propertyIsLength(property)) {
 		return value[0] + value[1];
 	} else if (propertyIsTransform(property)) {
 		// TODO: fix this :)
@@ -875,7 +920,9 @@ function extractDeg(deg) { return Number(deg[1].substring(0, deg[1].length - 3))
 var transformREs = [[/rotateY\((.*)\)/, extractDeg, "rotateY"], [/rotate\((.*)\)/, extractDeg, "rotate"]]
 
 function fromCssValue(property, value) {
-	if (propertyIsLength(property)) {
+	if (propertyIsNumber(property)) {
+		return Number(value);
+	} else if (propertyIsLength(property)) {
 		return [Number(value.substring(0, value.length - 2)), "px"];
 	} else if (propertyIsTransform(property)) {
 		// TODO: fix this :)
@@ -921,6 +968,9 @@ DEFAULT_GROUP._tick = function(time) {
 		}.bind(this));
 		return !allFinished;
 }
+DEFAULT_GROUP.currentState = function() {
+	return this.iterationTime + " " + (rAFNo != undefined ? "ticking" : "stopped") + " " + this.toString();
+}.bind(DEFAULT_GROUP);
 
 // massive hack to allow things to be added to the parent group and start playing. Maybe this is right though?
 DEFAULT_GROUP.__defineGetter__("iterationTime", function() {return (Date.now() - _startTime) / 1000})

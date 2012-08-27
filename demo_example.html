@@ -35,6 +35,17 @@
 	-webkit-transform: rotate(0deg);
 }
 
+#dust {
+	position: absolute;
+	left: 25px;
+	width: 150px;
+	border-radius: 15px;
+	height: 30px;
+	top: 230px;
+	background-color: #555;
+	opacity: 0;
+}
+
 </style>
 
 <div class="doorContainer">
@@ -44,6 +55,7 @@
 		</div>
 	</div>
 </div>
+<div id="dust"></div>
 
 <div id="picture"></div>
 
@@ -76,22 +88,39 @@ function second() {
 function third() {
 	a.timing.timingFunction = new TimingFunction('ease-in');
 	a.play();
+	console.log(DEFAULT_GROUP.currentState());	
 }
 
 function fourth() {
 	a.timing.timingFunction = new TimingFunction([0, 0.2,0.8, 1]);
 	a.play();
+	console.log(DEFAULT_GROUP.currentState());	
 }
 
 // STEP 3
 
+var group = undefined;
+var pictureTilting = undefined;
+
 function fifth() {
 	var picture = document.querySelector("#picture");
-	var pictureTilting = new Anim(picture, {iterationDuration: 0.5, prop: "-webkit-transform", from: "rotate(0deg)", to: "rotate(-30deg)", 
+	pictureTilting = new Anim(picture, {iterationDuration: 0.5, prop: "-webkit-transform", from: "rotate(0deg)", to: "rotate(-30deg)", 
 											fill: "forwards"});
-	var group = new SeqAnimGroup({fill: "forwards"})
+	group = new SeqAnimGroup({fill: "forwards"})
 	group.add(a);
 	group.add(pictureTilting);
+	console.log(DEFAULT_GROUP.currentState());
+}
+
+function sixth() {
+	var dust = document.querySelector("#dust");
+	var dustPuff = new Anim(dust, { iterationDuration: 0.3, prop: "opacity", values: ["0", "0.4", "0"]});
+	var reactionGroup = new ParAnimGroup({fill: "forwards"});
+	reactionGroup.add(pictureTilting);
+	reactionGroup.add(dustPuff);
+	group.add(reactionGroup);
+	group.play();
+	console.log(DEFAULT_GROUP.currentState());
 }
 
 </script>
