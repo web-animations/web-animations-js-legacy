@@ -177,13 +177,26 @@ function eighth() {
 	document.querySelector(".right").style["visibility"] = "visible"
 }
 
+var template = undefined;
+var door2 = undefined;
+
 function ninth() {
-	var template = group.templatize();
-	console.log(template);
-	template.children[0].children[0].resolutionStrategy = "selector: .door";
+	template = group.templatize();
+
+	template.children[0].children[0].resolutionStrategy = "selector: .doorSpacer";
 	template.children[1].children[0].resolutionStrategy = "selector: .picture";
 	template.children[1].children[1].resolutionStrategy = "selector: .dust";
-	template.animate(document.querySelector(".right"));
+	door2 = template.animateLive(document.querySelector(".right"));
 }
 
+function tenth() {
+	group.play();
+	door2.play();
+}
+
+function eleventh() {
+	template.timing.speed = 2;
+	group.play();
+	door2.play();
+}
 </script>

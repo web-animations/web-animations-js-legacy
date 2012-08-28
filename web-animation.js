@@ -14,23 +14,43 @@ var Timing = Class.create({
 	}
 })
 
+function ImmutableTimingProxy(timing) {
+	return new TimingProxy(timing, function(v) { throw "can't modify timing properties of templated Animation Instances"});
+}
+
 var TimingProxy = Class.create({
-	initialize: function(timing) {
+	initialize: function(timing, setter) {
 		this.timing = timing;
 		["startDelay", "iterationDuration", "iterationCount", "iterationStart", "speed", "direction", "timingFunction", "fill"].forEach(function(s) {
 			this.__defineGetter__(s, function() { return timing[s]; });
-			this.__defineSetter__(s, function(v) { throw "can't modify timing properties of templated Animation Instances"});			
+			this.__defineSetter__(s, function(v) { var old = timing[s]; timing[s] = v; try { setter(v); } catch (e) { timing[s] = old; throw e;}});			
 		}.bind(this));
 	},
 	extractMutableTiming: function() {
 		return new Timing(this.timing.startDelay, this.timing.iterationDuration, this.timing.iterationCount, this.timing.iterationStart, this.timing.speed,
 						  this.timing.direction, this.timing.timingFunction, this.timing.fill);
+	},
+	clone: function() {
+		return this.timing.clone();
 	}
 })
 
 var TimedTemplate = Class.create({
 	initialize: function(timing) {
-		this.timing = timing || new Timing();
+		this.timing = new TimingProxy(timing || new Timing(), function() { this.updateTiming()}.bind(this));
+		this.linkedAnims = [];
+	},
+	addLinkedAnim: function(anim) {
+		this.linkedAnims.push(anim);
+	},
+	removeLinkedAnim: function(anim) {
+		var i = this.linkedAnims.indexOf(anim);
+		if (i >= 0) {
+			this.linkedAnims.splice(i, 1);
+		}
+	},
+	updateTiming: function() {
+		this.linkedAnims.forEach(function(a) { a.updateIterationDuration(); });
 	},
 	_animate: function(isLive, targets, parentGroup, startTime) {
 		if (!targets.length) {
@@ -66,7 +86,7 @@ var ST_FORCED = 2;
 
 var TimedItem = Class.create({
 	initialize: function(timing, startTime, parentGroup) {
-		this.timing = timing;
+		this.timing = new TimingProxy(timing, function() {this.updateIterationDuration()}.bind(this));
 		this.startTime = startTime;
 		this.updateIterationDuration();
 		this.currentIteration = null;
@@ -92,7 +112,7 @@ var TimedItem = Class.create({
 		}		
 		this.endTime = this.startTime + this.animationDuration + this.timing.startDelay;
 		if (this.parentGroup) {
-			this.parentGroup.add(this);
+			this.parentGroup._addChild(this);
 		}
 		this.paused = false;
 		this.timeDrift = 0;
@@ -136,7 +156,8 @@ var TimedItem = Class.create({
 		} else {
 			this.itemTime = null;
 		}
-		if (this.itemTime) {
+		//console.log(this.name + ": endTime, itemTime", this.endTime, this.itemTime);
+		if (this.itemTime != null) {
 			if (this.itemTime < this.timing.startDelay) {
 				if (this.timing.fill == "backwards" || this.timing.fill == "both") {
 					this.animationTime = 0;
@@ -200,9 +221,9 @@ var TimedItem = Class.create({
 				this.iterationTime = currentDirection == 1 ? scaledIterationTime : this.iterationDuration - scaledIterationTime;
 				this._timeFraction = this.iterationTime / this.iterationDuration;
 				if (this.timing.timingFunction) {
-					this._timeFraction = Math.max(0, Math.min(1, this.timing.timingFunction.scaleTime(this._timeFraction)));
+					this._timeFraction = this.timing.timingFunction.scaleTime(this._timeFraction);
 					this.iterationTime = this._timeFraction * this.iterationDuration;
-				} 				
+				} 		
 			}
 		} else {
 			this.animationTime = null;
@@ -239,6 +260,7 @@ var TimedItem = Class.create({
 		// TODO
 	},
 	play: function() {
+		this.updateTimeMarkers();
 		if (this.itemTime > this.animationDuration + this.timing.startDelay) {
 			// this.itemTime = this.parentGroup.iterationTime - this.startTime + this.timeDrift;
 			// want to adjust itemTime to startDelay
@@ -306,8 +328,9 @@ function completeProperties(properties) {
 // -----------
 
 function LinkedAnim(target, template, parentGroup, startTime) {
-	var anim = new Anim(target, {timing: new TimingProxy(template.timing), animFunc: template.func}, parentGroup, startTime);
+	var anim = new Anim(target, {timing: new ImmutableTimingProxy(template.timing), animFunc: template.func}, parentGroup, startTime);
 	anim.template = template;
+	template.addLinkedAnim(anim);
 	return anim;
 }
 
@@ -323,10 +346,14 @@ var Anim = Class.create(TimedItem, {
 		var completedProperties = completeProperties(properties);
 		$super(completedProperties.timing, startTime, parentGroup);
 		this.func = completedProperties.animFunc;
+		if (!this.func) {
+			try { throw "Anim Without Animation Function!" } catch (e) { console.log(e.stack); throw e; }
+		}
 		// TODO: correctly extract the underlying value from the element
 		this.underlyingValue = this.func.getValue(target);
 		this.template = null;
 		this.targetElement = target;
+		this.name = properties.name || "<anon>";
 	},
 	unlink: function() {
 		var result = this.template;
@@ -334,6 +361,7 @@ var Anim = Class.create(TimedItem, {
 			this.timing = this.timing.extractMutableTiming();
 			// TODO: Does func need to have a FuncProxy too?
 			this.func = this.func.clone();
+			this.template.removeLinkedAnim(this);
 		}
 		this.template = null;
 		return result;
@@ -343,10 +371,11 @@ var Anim = Class.create(TimedItem, {
 			return this.template;
 		}
 		// TODO: What resolution strategy, if any, should be employed here?
-		var template = new AnimTemplate(this.func.clone(), this.timing.clone());
+		var template = new AnimTemplate({animFunc: this.func.clone(), timing: this.timing.clone()});
 		this.template = template;
 		this.func = template.func;
-		this.timing = new TimingProxy(template.timing);
+		this.timing = new ImmutableTimingProxy(template.timing);
+		this.template.addLinkedAnim(this);
 		return template;
 	},
 	intrinsicDuration: function() {
@@ -382,6 +411,9 @@ var AnimTemplate = Class.create(TimedTemplate, {
 		var completedProperties = completeProperties(properties);
 		$super(completedProperties.timing);
 		this.func = completedProperties.animFunc;
+		if (!this.func) {
+			try { throw "AnimTemplate Without Animation Function!" } catch (e) { console.log(e.stack); throw e; }			
+		}
 		this.resolutionStrategy = resolutionStrategy;
 	},
 	reparent: function(parentGroup) {
@@ -496,6 +528,13 @@ var AnimListMixin = {
 		return arguments;
 		// TODO: Remove newItem from other group. Update timing?
 	},
+	// Specialized add method so that templated groups can still have children added by the library.
+	_addChild: function(child) {
+		this.children.push(child);
+		this._createIdxAccessors(this.length, this.length + 1);
+		this.length = this.children.length;
+		this.onListChange();
+	},
 	insertBefore: function(newItem, refItem) {
 		this.beforeListChange();
 		for (var i = 0; i < this.children.length; i++) {
@@ -552,6 +591,10 @@ var AnimGroup = Class.create(TimedItem, AnimListMixin, {
 		var completedProperties = completeProperties(properties);
 		$super(completedProperties.timing, startTime, parentGroup);
 		this.template = template;
+		if (template) {
+			template.addLinkedAnim(this);
+		}
+		this.name = properties.name || "<anon>";
 	},
 	_assertNotLive: function() {
 		if (this.template) {
@@ -562,11 +605,12 @@ var AnimGroup = Class.create(TimedItem, AnimListMixin, {
 		if (!this.template) {
 			var properties = {timing: this.timing.clone()};
 			var template = this.type == "par" ? new ParAnimGroupTemplate(properties) : new SeqAnimGroupTemplate(properties);
-			this.timing = new TimingProxy(template.timing);
+			this.timing = new ImmutableTimingProxy(template.timing);
 			for (var i = 0; i < this.children.length; i++) {
 				template.add(this.children[i].templatize());
 			}
 			this.template = template;
+			this.template.addLinkedAnim(this);
 		}
 		return this.template;
 	},
@@ -595,6 +639,10 @@ var AnimGroup = Class.create(TimedItem, AnimListMixin, {
 	},
 	unlink: function() {
 		var acted = this.template != null;
+		if (this.template) {
+			this.template.removeLinkedAnim(this);
+			this.timing = template.timing.clone();
+		}
 		this.template = null;
 		return acted;
 	},
@@ -659,7 +707,7 @@ var SeqAnimGroup = Class.create(AnimGroup, {
 var AnimGroupTemplate = Class.create(TimedTemplate, AnimListMixin, {
 	initialize: function($super, type, properties, resolutionStrategy) {
 		var completedProperties = completeProperties(properties);
-		this.timing = completedProperties.timing;
+		$super(completedProperties.timing);
 		this.type = type;
 		this.resolutionStrategy = resolutionStrategy;
 		this.initListMixin(function() {}, function() {});
@@ -726,7 +774,10 @@ var JavaScriptAnimFunction = Class.create(AnimFunction, {
 		this.sample = sample;
 	},
 	clone: function() {
-		return new JavaScriptAnimFunction(this.zeroPoint, this.sample, this.operation, this.accumulateOperation);
+		return new JavaScriptAnimFunction(this.getValue, this.zeroPoint, this.sample, this.operation, this.accumulateOperation);
+	},
+	toString: function() {
+		return "CustomJS!";
 	}
 });
 
@@ -880,7 +931,7 @@ var TimingFunction = Class.create({
 		while (fst != 100 && fraction > this.map[fst][0]) {
 			fst += 1;
 		}
-		if (fraction == this.map[fst][0]) {
+		if (fraction == this.map[fst][0] || fst == 0) {
 			return this.map[fst][1];
 		}
 		var yDiff = this.map[fst][1] - this.map[fst - 1][1];
@@ -987,6 +1038,8 @@ DEFAULT_GROUP._tick = function(time) {
 				allFinished = false;
 			}
 		}.bind(this));
+		if (allFinished && this.children.length > 0) {
+		}
 		return !allFinished;
 }
 DEFAULT_GROUP.currentState = function() {
