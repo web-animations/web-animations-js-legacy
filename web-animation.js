@@ -663,7 +663,15 @@ var AnimGroup = Class.create(TimedItem, AnimListMixin, {
 		return result;
 	},
 	getAnimationsForElement: function(elem) {
-		// TODO
+		var result = [];
+		for (var i = 0; i < this.children.length; i++) {
+			if (this.children[i].getAnimationsForElement) {
+				result = result.concat(this.children[i].getAnimationsForElement(elem));
+			} else if (this.children[i].targetElement == elem) {
+				result.push(this.children[i]);
+			}
+		}
+		return result;
 	},
 	intrinsicDuration: function() {
 		if (this.type == "par") {
