@@ -92,6 +92,7 @@ var TimedItem = Class.create({
 		this.currentIteration = null;
 		this.iterationTime = null;
 		this.animationTime = null;
+		this._reversing = false;
 
 		if (parentGroup === undefined) {
 			this.parentGroup = DEFAULT_GROUP;
@@ -116,6 +117,17 @@ var TimedItem = Class.create({
 		}
 		this.paused = false;
 		this.timeDrift = 0;
+		this.__defineGetter__("currentTime", function() {
+			return this.itemTime;
+		});
+		this.__defineSetter__("currentTime", function(seekTime) {
+			if (this.parentGroup == null || this.parentGroup.iterationTime == null) {
+				throw "InvalidStateError";
+			}
+			this.timeDrift = this.parentGroup.iterationTime - this.startTime - seekTime;
+			this.updateTimeMarkers();
+			maybeRestartAnimation();
+		});
 	},
 	reparent: function(parentGroup) {
 		this.parentGroup.remove(this);
@@ -148,9 +160,9 @@ var TimedItem = Class.create({
 
 	},
 	updateTimeMarkers: function(time) {
-		this.endTime = this.startTime + this.animationDuration + this.timing.startDelay - this.timeDrift;
+		this.endTime = this.startTime + this.animationDuration + this.timing.startDelay + this.timeDrift;
 		if (this.parentGroup) {
-			this.itemTime = this.parentGroup.iterationTime - this.startTime + this.timeDrift;
+			this.itemTime = this.parentGroup.iterationTime - this.startTime - this.timeDrift;
 		} else if (time) {
 			this.itemTime = time;
 		} else {
@@ -159,7 +171,9 @@ var TimedItem = Class.create({
 		//console.log(this.name + ": endTime, itemTime", this.endTime, this.itemTime);
 		if (this.itemTime != null) {
 			if (this.itemTime < this.timing.startDelay) {
-				if (this.timing.fill == "backwards" || this.timing.fill == "both") {
+				if (((this.timing.fill == "backwards") && (this._reversing == false)) 
+					|| this.timing.fill == "both" 
+					|| ((this.timing.fill == "forwards") && this._reversing)) {
 					this.animationTime = 0;
 				} else {
 					this.animationTime = null;
@@ -167,7 +181,9 @@ var TimedItem = Class.create({
 			} else if (this.itemTime < this.timing.startDelay + this.animationDuration) {
 				this.animationTime = this.itemTime - this.timing.startDelay;
 			} else {
-				if (this.timing.fill == "forwards" || this.timing.fill == "both") {
+				if (((this.timing.fill == "forwards") && (this._reversing == false))
+					|| this.timing.fill == "both" 
+					|| ((this.timing.fill == "backwards") && this._reversing)) {
 					this.animationTime = this.animationDuration;
 				} else {
 					this.animationTime = null;
@@ -182,10 +198,11 @@ var TimedItem = Class.create({
 				var iterationStart = Math.max(0, Math.min(this.timing.iterationStart, this.timing.iterationCount));
 				var iterationCount = Math.max(0, this.timing.iterationCount);
 				var startOffset = iterationStart * this.iterationDuration;
-				if (this.timing.speed < 0) {
-					var adjustedAnimationTime = (this.animationTime - this.animationDuration) * this.timing.speed + startOffset;
+				var effectiveSpeed = this._reversing ? -this.timing.speed : this.timing.speed;
+				if (effectiveSpeed < 0) {
+					var adjustedAnimationTime = (this.animationTime - this.animationDuration) * effectiveSpeed + startOffset;
 				} else {
-					var adjustedAnimationTime = this.animationTime * this.timing.speed + startOffset;
+					var adjustedAnimationTime = this.animationTime * effectiveSpeed + startOffset;
 				}
 				if (adjustedAnimationTime == 0) {
 					this.currentIteration = 0;
@@ -254,21 +271,26 @@ var TimedItem = Class.create({
 		// TODO: perform compensatory seek
 	},
 	reverse: function() {
-		// TODO
+		if (this.currentTime == null) {
+			var seekTime = 0;
+		} else if (this.currentTime < this.timing.startDelay) {
+			var seekTime = this.timing.startDelay + this.animationDuration;
+		} else if (this.currentTime > this.timing.startDelay + this.animationDuration) {
+			var seekTime = this.timing.startDelay;
+		} else {
+			var seekTime = this.animationDuration - this.currentTime - this.startDelay;
+		}
+
+		this.currentTime = seekTime;
+		this._reversing = !(this._reversing);
 	},
 	cancel: function() {
 		// TODO
 	},
 	play: function() {
 		this.updateTimeMarkers();
-		if (this.itemTime > this.animationDuration + this.timing.startDelay) {
-			// this.itemTime = this.parentGroup.iterationTime - this.startTime + this.timeDrift;
-			// want to adjust itemTime to startDelay
-			// this.parentGroup.iterationTime - this.startTime + this.timeDrift = this.timeDelay;
-			// this.timeDrift = this.timeDelay + this.startTime - this.parentGroup.iterationTime;
-			this.timeDrift = this.timing.startDelay + this.startTime - this.parentGroup.iterationTime;
-			this.updateTimeMarkers();
-			maybeRestartAnimation();
+		if (this.currentTime > this.animationDuration + this.timing.startDelay && this.timing.speed >= 0) {
+			this.currentTime = this.timing.startDelay;
 		}
 	},
 	// TODO: move this to run on modification of startTime (I think)
@@ -697,7 +719,7 @@ var AnimGroup = Class.create(TimedItem, AnimListMixin, {
 			var set = 0;
 			var end = RC_ANIMATION_FINISHED;
 			this.children.forEach(function(child) {
-				var r = child._tick(time - this.startTime - this.timing.startDelay + this.timeDrift); 
+				var r = child._tick(time - this.startTime - this.timing.startDelay - this.timeDrift); 
 				if (!(r & RC_ANIMATION_FINISHED)) {
 					end = 0;
 				}
