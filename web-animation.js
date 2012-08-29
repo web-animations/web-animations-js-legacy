@@ -647,7 +647,20 @@ var AnimGroup = Class.create(TimedItem, AnimListMixin, {
 		return acted;
 	},
 	getActiveAnimations: function() {
-		// TODO
+		var result = [];
+		if (this._timeFraction == null) {
+			return result;
+		}
+		for (var i = 0; i < this.children.length; i++) {
+			if (this.children[i]._timeFraction != null) {
+				if (this.children[i].getActiveAnimations) {
+					result = result.concat(this.children[i].getActiveAnimations());
+				} else {
+					result.push(this.children[i]);
+				}
+			}
+		}
+		return result;
 	},
 	getAnimationsForElement: function(elem) {
 		// TODO
@@ -1028,7 +1041,7 @@ function getValue(target, property) {
 
 var rAFNo = undefined;
 
-var DEFAULT_GROUP = new AnimGroup("par", undefined, {}, 0, undefined);
+var DEFAULT_GROUP = new AnimGroup("par", undefined, {fill: "forwards"}, 0, undefined);
 DEFAULT_GROUP._tick = function(time) {
 		this.updateTimeMarkers(time);
 		var allFinished = true;
