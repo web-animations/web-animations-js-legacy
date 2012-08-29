@@ -248,7 +248,8 @@ var TimedItem = Class.create({
 			this.currentIteration = null;
 			this._timeFraction = null;
 		}
-		//console.log("start end item anim iter currentIter tf", this.startTime, this.endTime, this.itemTime, this.animationTime, this.iterationTime, this.currentIteration, this._timeFraction);
+		var chillen = (!this.children) || this.children.length == 0 ? "NONE" : this.children.map(function(a) { return a.name; }).reduce(function(a, b) { return a + ", " + b});
+		//console.log("name parent children start end item anim iter currentIter tf:", this.name, this.parentGroup ? this.parentGroup.name : "NONE", chillen, this.startTime, this.endTime, this.itemTime, this.animationTime, this.iterationTime, this.currentIteration, this._timeFraction);
 	},
 	pause: function() {
 		this.paused = true;
@@ -278,7 +279,6 @@ var TimedItem = Class.create({
 		} else if (this.currentTime > this.timing.startDelay + this.animationDuration) {
 			var seekTime = this.timing.startDelay;
 		} else {
-			console.log(this.timing.startDelay, this.animationDuration, this.currentTime);
 			var seekTime = this.timing.startDelay + this.animationDuration - this.currentTime;
 		}
 
@@ -351,7 +351,7 @@ function completeProperties(properties) {
 // -----------
 
 function LinkedAnim(target, template, parentGroup, startTime) {
-	var anim = new Anim(target, {timing: new ImmutableTimingProxy(template.timing), animFunc: template.func}, parentGroup, startTime);
+	var anim = new Anim(target, {timing: new ImmutableTimingProxy(template.timing), animFunc: template.func, name: template.name}, parentGroup, startTime);
 	anim.template = template;
 	template.addLinkedAnim(anim);
 	return anim;
@@ -376,7 +376,7 @@ var Anim = Class.create(TimedItem, {
 		this.underlyingValue = this.func.getValue(target);
 		this.template = null;
 		this.targetElement = target;
-		this.name = properties.name || "<anon>";
+		this.name = properties.name || (target ? target.id : "<untargeted>") || "<anon>";
 	},
 	unlink: function() {
 		var result = this.template;
@@ -438,6 +438,7 @@ var AnimTemplate = Class.create(TimedTemplate, {
 			try { throw "AnimTemplate Without Animation Function!" } catch (e) { console.log(e.stack); throw e; }			
 		}
 		this.resolutionStrategy = resolutionStrategy;
+		this.name = properties.name;
 	},
 	reparent: function(parentGroup) {
 		// TODO: does anything need to happen here?
@@ -664,7 +665,7 @@ var AnimGroup = Class.create(TimedItem, AnimListMixin, {
 		var acted = this.template != null;
 		if (this.template) {
 			this.template.removeLinkedAnim(this);
-			this.timing = template.timing.clone();
+			this.timing = this.template.timing.clone();
 		}
 		this.template = null;
 		return acted;
@@ -715,10 +716,10 @@ var AnimGroup = Class.create(TimedItem, AnimListMixin, {
 		this.updateTimeMarkers();
 		if (this._timeFraction == null) {
 			this._zero();
-			return RC_ANIMATION_FINISHED;
+			return time > this.endTime ? RC_ANIMATION_FINISHED : 0;
 		} else {
 			var set = 0;
-			var end = RC_ANIMATION_FINISHED;
+			var end = time > this.endTime ? RC_ANIMATION_FINISHED : 0;
 			this.children.forEach(function(child) {
 				var r = child._tick(time - this.startTime - this.timing.startDelay - this.timeDrift); 
 				if (!(r & RC_ANIMATION_FINISHED)) {
@@ -755,6 +756,7 @@ var AnimGroupTemplate = Class.create(TimedTemplate, AnimListMixin, {
 		this.type = type;
 		this.resolutionStrategy = resolutionStrategy;
 		this.initListMixin(function() {}, function() {});
+		this.name = properties.name;
 	},
 	reparent: function(parentGroup) {
 		// TODO: does anything need to happen here?
@@ -762,7 +764,7 @@ var AnimGroupTemplate = Class.create(TimedTemplate, AnimListMixin, {
 	__animate: function($super, isLive, targets, parentGroup, startTime) {
 		var instances = [];
 		for (var i = 0; i < targets.length; i++) {
-			var instance = new AnimGroup(this.type, this, {timing: this.timing}, startTime, parentGroup);
+			var instance = new AnimGroup(this.type, this, {timing: this.timing, name: this.name}, startTime, parentGroup);
 			if (!isLive) {
 				instance.unlink();
 			}
@@ -1072,7 +1074,7 @@ function getValue(target, property) {
 
 var rAFNo = undefined;
 
-var DEFAULT_GROUP = new AnimGroup("par", undefined, {fill: "forwards"}, 0, undefined);
+var DEFAULT_GROUP = new AnimGroup("par", undefined, {fill: "forwards", name: "DEFAULT"}, 0, undefined);
 DEFAULT_GROUP._tick = function(time) {
 		this.updateTimeMarkers(time);
 		var allFinished = true;
