@@ -278,7 +278,8 @@ var TimedItem = Class.create({
 		} else if (this.currentTime > this.timing.startDelay + this.animationDuration) {
 			var seekTime = this.timing.startDelay;
 		} else {
-			var seekTime = this.animationDuration - this.currentTime - this.startDelay;
+			console.log(this.timing.startDelay, this.animationDuration, this.currentTime);
+			var seekTime = this.timing.startDelay + this.animationDuration - this.currentTime;
 		}
 
 		this.currentTime = seekTime;
