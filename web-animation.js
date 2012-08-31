@@ -726,8 +726,11 @@ var AnimGroup = Class.create(TimedItem, AnimListMixin, {
 		} else {
 			var set = 0;
 			var end = time > this.endTime ? RC_ANIMATION_FINISHED : 0;
+			if (this.timing.speed != 1) {
+				console.log(time, this.startTime, this.endTime)
+			}
 			this.children.forEach(function(child) {
-				var r = child._tick(time - this.startTime - this.timing.startDelay - this.timeDrift); 
+				var r = child._tick((time - this.startTime - this.timing.startDelay - this.timeDrift) * this.timing.speed); 
 				if (!(r & RC_ANIMATION_FINISHED)) {
 					end = 0;
 				}
@@ -1090,8 +1093,7 @@ DEFAULT_GROUP._tick = function(time) {
 				allFinished = false;
 			}
 		}.bind(this));
-		if (allFinished && this.children.length > 0) {
-		}
+
 		return !allFinished;
 }
 DEFAULT_GROUP.currentState = function() {
