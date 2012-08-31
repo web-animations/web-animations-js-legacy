@@ -30,7 +30,7 @@ visRoot.appendChild(default_rect);
 
 DEFAULT_GROUP._vis = default_rect;
 
-function updateRects(anim, startP, widthP, y, speedMultiplier) {
+function updateRects(anim, startP, widthP, y) {
 	var rect = anim._vis;
 	if (!rect) {
 		anim._vis = createRect("5%", "10%", "90%", "20px");
@@ -49,13 +49,13 @@ function updateRects(anim, startP, widthP, y, speedMultiplier) {
 		var myLength = end - anim.startTime - anim.timeDrift;		
 		for (var i = 0; i < anim.children.length; i++) {
 			var child = anim.children[i];
-			var childLength = Math.min(end - start, (child.timing.startDelay + child.animationDuration) / speedMultiplier);
+			var childLength = Math.min(end - start, (child.timing.startDelay + child.animationDuration) / anim.timing.speed);
 			var childWidth = childLength / myLength * widthP;
-			var childStart = (anim.timing.startDelay + child.startTime + child.timeDrift) / myLength * widthP / speedMultiplier + startP;
+			var childStart = (anim.timing.startDelay + child.startTime + child.timeDrift) / myLength * widthP / anim.timing.speed + startP;
 			if (isNaN(childStart) || childStart == Infinity) {
 				continue;
 			}
-			var results = updateRects(child, childStart, childWidth, childY, speedMultiplier * child.timing.speed);
+			var results = updateRects(child, childStart, childWidth, childY);
 			height += results[0];
 			childY = results[1];
 		}
@@ -68,6 +68,6 @@ function updateRects(anim, startP, widthP, y, speedMultiplier) {
 }
 
 function webAnimVisUpdateAnims() {
-	updateRects(DEFAULT_GROUP, 5, 90, 10, DEFAULT_GROUP.timing.speed);
+	updateRects(DEFAULT_GROUP, 5, 90, 10);
 }
 
