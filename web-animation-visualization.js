@@ -25,6 +25,17 @@ function createRect(x, y, width, height) {
 	return rect;
 }
 
+function createVLine(x, y1, y2) {
+	var line = createSVGElement("line");
+	line.setAttribute("x1", x);
+	line.setAttribute("x2", x);
+	line.setAttribute("y1", y1);
+	line.setAttribute("y2", y2);
+	line.setAttribute("stroke", "black");
+	line.setAttribute("stroke-width", "1px");
+	return line;
+}
+
 var default_rect = createRect("5%", "10px", "90%", "20px");
 visRoot.appendChild(default_rect);
 
@@ -64,10 +75,23 @@ function updateRects(anim, startP, widthP, y) {
 	y += height;
 
 	rect.setAttribute("height", height + "px");
-	return [height, y];	
+	return [height, y, myLength];	
 }
 
+var line;
+
 function webAnimVisUpdateAnims() {
-	updateRects(DEFAULT_GROUP, 5, 90, 10);
+	var results = updateRects(DEFAULT_GROUP, 5, 90, 10);
+	var height = results[0];
+	var length = results[2];
+	var xPos = DEFAULT_GROUP.iterationTime / length * 90 + 5;
+	if (line == undefined) {
+		line = createVLine(xPos + "%", "0px", (height + 20) + "px");
+		visRoot.appendChild(line);
+	} else {
+		line.setAttribute("x1", xPos + "%");
+		line.setAttribute("x2", xPos + "%");
+		line.setAttribute("y2", (height + 20) + "px");
+	}
 }
 
