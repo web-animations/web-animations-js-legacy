@@ -1,7 +1,7 @@
 var visRoot = document.querySelector("#webAnimVisualizeHere");
 
 if (!visRoot) {
-	throw "No Visualization Root :( Provide an element with an id of webAnimVisualizeHere."
+	visRoot = document.querySelector("body");
 }
 
 function createSVGElement(tagName) {
