@@ -1098,8 +1098,15 @@ DEFAULT_GROUP.currentState = function() {
 	return this.iterationTime + " " + (rAFNo != undefined ? "ticking" : "stopped") + " " + this.toString();
 }.bind(DEFAULT_GROUP);
 
+var now = undefined;
+
 // massive hack to allow things to be added to the parent group and start playing. Maybe this is right though?
-DEFAULT_GROUP.__defineGetter__("iterationTime", function() {return (Date.now() - _startTime) / 1000})
+DEFAULT_GROUP.__defineGetter__("iterationTime", function() {
+	if (now == undefined) {
+		now = Date.now();
+		window.setTimeout(function() { now = undefined; }, 0);
+	}
+	return (now - _startTime) / 1000})
 
 var _startTime = Date.now();
 
