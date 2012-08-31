@@ -1,3 +1,5 @@
+var webAnimVisUpdateAnims = undefined;
+
 var Timing = Class.create({
 	initialize: function(startDelay, iterationDuration, iterationCount, iterationStart, speed, direction, timingFunction, fill) {
 		this.startDelay = startDelay || 0;
@@ -126,6 +128,7 @@ var TimedItem = Class.create({
 			}
 			this.timeDrift = this.parentGroup.iterationTime - this.startTime - seekTime;
 			this.updateTimeMarkers();
+			this.parentGroup._childrenStateModified();
 			maybeRestartAnimation();
 		});
 	},
@@ -247,6 +250,9 @@ var TimedItem = Class.create({
 			this.iterationTime = null;
 			this.currentIteration = null;
 			this._timeFraction = null;
+		}
+		if (webAnimVisUpdateAnims) {
+			webAnimVisUpdateAnims();
 		}
 		var chillen = (!this.children) || this.children.length == 0 ? "NONE" : this.children.map(function(a) { return a.name; }).reduce(function(a, b) { return a + ", " + b});
 		//console.log("name parent children start end item anim iter currentIter tf:", this.name, this.parentGroup ? this.parentGroup.name : "NONE", chillen, this.startTime, this.endTime, this.itemTime, this.animationTime, this.iterationTime, this.currentIteration, this._timeFraction);
