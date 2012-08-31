@@ -59,15 +59,15 @@
 
 <div class="scene">
 	<div class="doorContainer">
-		<div class="doorSpacer">
+		<div class="doorSpacer" id="door">
 			<div class="door">
 			&nbsp;o
 			</div>
 		</div>
 	</div>
-	<div class="dust"></div>
+	<div class="dust" id="dust"></div>
 
-	<div class="picture"></div>
+	<div class="picture" id="picture"></div>
 </div>
 
 <div class="scene right">
@@ -131,7 +131,7 @@ function fifth() {
 	var picture = document.querySelector(".picture");
 	pictureTilting = new Anim(picture, {iterationDuration: 0.5, prop: "-webkit-transform", from: "rotate(0deg)", to: "rotate(-30deg)", 
 											fill: "forwards"});
-	group = new SeqAnimGroup({fill: "forwards"})
+	group = new SeqAnimGroup({fill: "forwards", name: "group"})
 	group.add(a);
 	group.add(pictureTilting);
 	console.log(DEFAULT_GROUP.currentState());

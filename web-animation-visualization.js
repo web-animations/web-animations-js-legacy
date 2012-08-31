@@ -36,22 +36,43 @@ function createVLine(x, y1, y2) {
 	return line;
 }
 
+function createText(x, y, data) {
+	var text = createSVGElement("text");
+	text.setAttribute("x", x);
+	text.setAttribute("y", y);
+	text.setAttribute("font-family", "Verdana");
+	text.setAttribute("font-size", "10");
+	text.appendChild(document.createTextNode(data));
+	return text;
+}
+
+/*
 var default_rect = createRect("5%", "10px", "90%", "20px");
 visRoot.appendChild(default_rect);
 
 DEFAULT_GROUP._vis = default_rect;
+*/
 
 function updateRects(anim, startP, widthP, y) {
 	var rect = anim._vis;
 	if (!rect) {
-		anim._vis = createRect("5%", "10%", "90%", "20px");
+		anim._vis = createRect("5%", "10px", "90%", "20px");
+		anim._label = createText("5%", "10px", anim.name)
 		visRoot.appendChild(anim._vis);
+		visRoot.appendChild(anim._label);
 	}
 	rect = anim._vis;
+	var text = anim._label;
 	rect.setAttribute("x", startP + "%");
 	rect.setAttribute("y", y + "px");
 	rect.setAttribute("width", widthP + "%");
+
+	text.setAttribute("x", startP + "%");
+	text.setAttribute("y", (y + 9) + "px");
+	text.replaceChild(document.createTextNode(anim.name), text.firstChild);
+
 	var height = 0;
+	y += 10;
 
 	if (anim.children) {
 		var childY = y;
@@ -72,7 +93,7 @@ function updateRects(anim, startP, widthP, y) {
 		}
 	}
 	height += 20;
-	y += height;
+	y += height - 10;
 
 	rect.setAttribute("height", height + "px");
 	return [height, y, myLength];	
