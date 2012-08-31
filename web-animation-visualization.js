@@ -84,7 +84,7 @@ function updateRects(anim, startP, widthP, y) {
 			var childLength = Math.min(end - start, (child.timing.startDelay + child.animationDuration) / anim.timing.speed);
 			var childWidth = childLength / myLength * widthP;
 			var childStart = (anim.timing.startDelay + child.startTime + child.timeDrift) / myLength * widthP / anim.timing.speed + startP;
-			if (isNaN(childStart) || childStart == Infinity) {
+			if (isNaN(childStart) || childStart == Infinity || childStart == -Infinity|| isNaN(childWidth) || childWidth == Infinity || childWidth == -Infinity) {
 				continue;
 			}
 			var results = updateRects(child, childStart, childWidth, childY);
@@ -100,19 +100,47 @@ function updateRects(anim, startP, widthP, y) {
 }
 
 var line;
+var startText;
+var endText;
+
+function round(num) {
+	return Math.floor(num * 1000) / 1000;
+}
 
 function webAnimVisUpdateAnims() {
-	var results = updateRects(DEFAULT_GROUP, 5, 90, 10);
+	var earliestStart = Infinity;
+	for (var i = 0; i < DEFAULT_GROUP.children.length; i++) {
+		var child = DEFAULT_GROUP.children[i];
+		if (child.timeDrift + child.startTime < earliestStart) {
+			earliestStart = child.timeDrift + child.startTime;
+		}
+	}
+	// want to set the zero point such that earliestStart is at 5%, and width s.t. 90% represents the distance between earliestStart and endTime.
+	var length = DEFAULT_GROUP.endTime;
+	var width = 90 * length / (length - earliestStart);
+	var left = 90 - width + 5;
+
+	if (isNaN(width)) {
+		return;
+	}
+
+	var results = updateRects(DEFAULT_GROUP, left, width, 10);
 	var height = results[0];
 	var length = results[2];
-	var xPos = DEFAULT_GROUP.iterationTime / length * 90 + 5;
-	if (line == undefined) {
+	var xPos = (DEFAULT_GROUP.iterationTime - earliestStart) / (length - earliestStart) * 90 + 5;
+	if (line == undefined && !isNaN(xPos)) {
 		line = createVLine(xPos + "%", "0px", (height + 20) + "px");
 		visRoot.appendChild(line);
-	} else {
+		startText = createText("5%", "9px", round(earliestStart) + "s");
+		visRoot.appendChild(startText);
+		endText = createText("95%", "9px", round(length) + "s");
+		visRoot.appendChild(endText);
+	} else if (!isNaN(xPos)) {
 		line.setAttribute("x1", xPos + "%");
 		line.setAttribute("x2", xPos + "%");
 		line.setAttribute("y2", (height + 20) + "px");
+		startText.replaceChild(document.createTextNode(round(earliestStart) + "s"), startText.firstChild);
+		endText.replaceChild(document.createTextNode(round(length) + "s"), endText.firstChild);
 	}
 }
 

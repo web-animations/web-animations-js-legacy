@@ -726,9 +726,6 @@ var AnimGroup = Class.create(TimedItem, AnimListMixin, {
 		} else {
 			var set = 0;
 			var end = time > this.endTime ? RC_ANIMATION_FINISHED : 0;
-			if (this.timing.speed != 1) {
-				console.log(time, this.startTime, this.endTime)
-			}
 			this.children.forEach(function(child) {
 				var r = child._tick((time - this.startTime - this.timing.startDelay - this.timeDrift) * this.timing.speed); 
 				if (!(r & RC_ANIMATION_FINISHED)) {
