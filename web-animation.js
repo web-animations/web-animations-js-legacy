@@ -1006,7 +1006,7 @@ function propertyIsLength(property) {
 }
 
 function propertyIsTransform(property) {
-	return ["-webkit-transform"].indexOf(property) != -1;
+	return ["-webkit-transform", "transform"].indexOf(property) != -1;
 }
 
 function propertyIsSVGAttrib(property) {
