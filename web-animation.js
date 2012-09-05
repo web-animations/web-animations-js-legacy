@@ -434,8 +434,9 @@ var Anim = Class.create(TimedItem, {
 		this.underlyingValue = this.animFunc.getValue(target);
 		this.template = null;
 		this.targetElement = target;
-		// XXX Fix this
-		// this.name = properties.name || (target ? target.id : "<untargeted>") || "<anon>";
+		this.name = this.animFunc instanceof KeyframeAnimFunc
+		          ? this.animFunc.property
+		          : "<anon>";
 	},
 	unlink: function() {
 		var result = this.template;
