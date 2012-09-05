@@ -1057,7 +1057,8 @@ function toCssValue(property, value, svgMode) {
 		switch (value[0].t) {
 			case "rotate":
 			case "rotateY":
-				return value[0].t + "(" + value[0].d + "deg)";
+				var unit = svgMode ? "" : "deg";
+				return value[0].t + "(" + value[0].d + unit + ")";
 			case "translate":
 				var unit = svgMode ? "" : "px";
 				if (value[0].d[1] === 0) {
