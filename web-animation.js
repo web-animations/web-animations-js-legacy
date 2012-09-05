@@ -1099,17 +1099,23 @@ function _interp(from, to, f) {
 	if (Array.isArray(from) || Array.isArray(to)) {
 		return _interpArray(from, to, f);
 	}
+	to   = to   || 0.0;
+	from = from || 0.0;
 	return to * f + from * (1 - f);
 }
 
 function _interpArray(from, to, f) {
-	console.assert(Array.isArray(from), "From is not an array");
-	console.assert(Array.isArray(to), "To is not an array");
-	console.assert(from.length === to.length, "Arrays differ in length");
+	console.assert(Array.isArray(from) || from === null,
+		"From is not an array or null");
+	console.assert(Array.isArray(to) || to === null,
+		"To is not an array or null");
+	console.assert(from === null || to === null || from.length === to.length,
+		"Arrays differ in length");
+	var length = from ? from.length : to.length;
 
 	var result = [];
-	for (var i = 0; i < from.length; i++) {
-		result[i] = _interp(from[i], to[i], f);
+	for (var i = 0; i < length; i++) {
+		result[i] = _interp(from ? from[i] : 0.0, to ? to[i] : 0.0, f);
 	}
 	return result;
 }
@@ -1157,8 +1163,12 @@ function interpolate(property, target, from, to, f) {
 	} else if (propertyIsLength(property)) {
 		return toCssValue(property, [_interp(from[0], to[0], f), "px"], svgMode);
 	} else if (propertyIsTransform(property)) {
+		console.assert(from[0].t === to[0].t || from[0].t === null ||
+			to[0].t === null,
+			"Transform types should match or one should be the underlying value");
+		var type = from[0].t ? from[0].t : to[0].t;
 		return toCssValue(property,
-			[{t: from[0].t, d:_interp(from[0].d, to[0].d, f)}], svgMode)
+			[{t: type, d:_interp(from[0].d, to[0].d, f)}], svgMode)
 	} else {
 		throw "UnsupportedProperty";
 	}
@@ -1171,19 +1181,24 @@ function toCssValue(property, value, svgMode) {
 		return value[0] + value[1];
 	} else if (propertyIsTransform(property)) {
 		// TODO: fix this :)
+		console.assert(value[0].t, "transform type should be resolved by now");
 		switch (value[0].t) {
 			case "rotate":
 			case "rotateY":
+			{
 				var unit = svgMode ? "" : "deg";
 				return value[0].t + "(" + value[0].d + unit + ")";
+			}
 			case "translate":
+			{
 				var unit = svgMode ? "" : "px";
 				if (value[0].d[1] === 0) {
 					return value[0].t + "(" + value[0].d[0] + unit + ")";
 				} else {
 					return value[0].t + "(" + value[0].d[0] + unit + ", " +
-					       value[0].d[1] + unit + ")";
+								 value[0].d[1] + unit + ")";
 				}
+			}
 		}
 	} else {
 		throw "UnsupportedProperty";
@@ -1221,9 +1236,11 @@ var transformREs =
 
 function fromCssValue(property, value) {
 	if (propertyIsNumber(property)) {
-		return Number(value);
+		return value !== "" ? Number(value) : null;
 	} else if (propertyIsLength(property)) {
-		return [Number(value.substring(0, value.length - 2)), "px"];
+		return value !== ""
+		       ? [Number(value.substring(0, value.length - 2)), "px"]
+		       : [null, null];
 	} else if (propertyIsTransform(property)) {
 		// TODO: fix this :)
 		for (var i = 0; i < transformREs.length; i++) {
@@ -1233,6 +1250,7 @@ function fromCssValue(property, value) {
 				return [{t: reSpec[2], d: reSpec[1](r)}];
 			}
 		}
+		return [{t: null, d: null}];
 	} else {
 		throw "UnsupportedProperty";
 	}
