@@ -3,7 +3,7 @@ var webAnimVisUpdateAnims = undefined;
 var Timing = Class.create({
 	initialize: function(timingDict) {
 		this.startDelay = timingDict.startDelay || 0;
-		this.iterationDuration = timingDict.iterationDuration;
+		this.duration = timingDict.duration;
 		this.iterationCount = timingDict.iterationCount || 1.0;
 		this.iterationStart = timingDict.iterationStart || 0.0;
 		this.speed = timingDict.speed || 1;
@@ -20,7 +20,7 @@ var Timing = Class.create({
 	clone: function() {
 		return new Timing(
 			{ startDelay: this.startDelay,
-				iterationDuration: this.iterationDuration,
+				duration: this.duration,
 				iterationCount: this.iterationCount,
 				iterationStart: this.iterationStart,
 				speed: this.speed,
@@ -38,7 +38,7 @@ function ImmutableTimingProxy(timing) {
 var TimingProxy = Class.create({
 	initialize: function(timing, setter) {
 		this.timing = timing;
-		["startDelay", "iterationDuration", "iterationCount", "iterationStart", "speed", "direction", "timingFunc", "fill"].forEach(function(s) {
+		["startDelay", "duration", "iterationCount", "iterationStart", "speed", "direction", "timingFunc", "fill"].forEach(function(s) {
 			this.__defineGetter__(s, function() { return timing[s]; });
 			this.__defineSetter__(s, function(v) { var old = timing[s]; timing[s] = v; try { setter(v); } catch (e) { timing[s] = old; throw e;}});			
 		}.bind(this));
@@ -46,7 +46,7 @@ var TimingProxy = Class.create({
 	extractMutableTiming: function() {
 		return new Timing(
 			{ startDelay: this.timing.startDelay,
-				iterationDuration: this.timing.iterationDuration,
+				duration: this.timing.duration,
 				iterationCount: this.timing.iterationCount,
 				iterationStart: this.timing.iterationStart,
 				speed: this.timing.speed,
@@ -170,13 +170,13 @@ var TimedItem = Class.create({
 	},
 	// TODO: take timing.iterationStart into account. Spec needs to as well.
 	updateIterationDuration: function() {
-		if (exists(this.timing.iterationDuration) && this.timing.iterationDuration >= 0) {
-			this.iterationDuration = this.timing.iterationDuration;
+		if (exists(this.timing.duration) && this.timing.duration >= 0) {
+			this.duration = this.timing.duration;
 		} else {
-			this.iterationDuration = this.intrinsicDuration();
+			this.duration = this.intrinsicDuration();
 		}
 		// section 6.7
-		var repeatedDuration = this.iterationDuration * this.timing.iterationCount;
+		var repeatedDuration = this.duration * this.timing.iterationCount;
 		if (repeatedDuration == Infinity || this.timing.speed == 0) {
 			this.animationDuration = Infinity;
 		} else {
@@ -223,7 +223,7 @@ var TimedItem = Class.create({
 			} else {
 				var iterationStart = Math.max(0, Math.min(this.timing.iterationStart, this.timing.iterationCount));
 				var iterationCount = Math.max(0, this.timing.iterationCount);
-				var startOffset = iterationStart * this.iterationDuration;
+				var startOffset = iterationStart * this.duration;
 				var effectiveSpeed = this._reversing ? -this.timing.speed : this.timing.speed;
 				if (effectiveSpeed < 0) {
 					var adjustedAnimationTime = (this.animationTime - this.animationDuration) * effectiveSpeed + startOffset;
@@ -232,20 +232,20 @@ var TimedItem = Class.create({
 				}
 				if (adjustedAnimationTime == 0) {
 					this.currentIteration = 0;
-				} else if (this.iterationDuration == 0) {
+				} else if (this.duration == 0) {
 					this.currentIteration = Math.floor(iterationCount);
 				} else {
-					this.currentIteration = Math.floor(adjustedAnimationTime / this.iterationDuration);
+					this.currentIteration = Math.floor(adjustedAnimationTime / this.duration);
 				}
-				if (this.iterationDuration == 0) {
+				if (this.duration == 0) {
 					var unscaledIterationTime = 0;
 				} else {
-					var repeatedDuration = this.iterationDuration * this.timing.iterationCount;
+					var repeatedDuration = this.duration * this.timing.iterationCount;
 					// TODO: ???
 					if (adjustedAnimationTime - startOffset == repeatedDuration && (iterationCount - iterationStart) % 1 == 0) {
-						var unscaledIterationTime = this.iterationDuration;
+						var unscaledIterationTime = this.duration;
 					} else {
-						var unscaledIterationTime = adjustedAnimationTime % this.iterationDuration;
+						var unscaledIterationTime = adjustedAnimationTime % this.duration;
 					}
 				}
 				var scaledIterationTime = unscaledIterationTime;
@@ -261,11 +261,11 @@ var TimedItem = Class.create({
 					// TODO: 6.11.2 step 3. wtf?
 					var currentDirection = d % 2 == 0 ? 1 : -1;
 				}
-				this.iterationTime = currentDirection == 1 ? scaledIterationTime : this.iterationDuration - scaledIterationTime;
-				this._timeFraction = this.iterationTime / this.iterationDuration;
+				this.iterationTime = currentDirection == 1 ? scaledIterationTime : this.duration - scaledIterationTime;
+				this._timeFraction = this.iterationTime / this.duration;
 				if (this.timing.timingFunc) {
 					this._timeFraction = this.timing.timingFunc.scaleTime(this._timeFraction);
-					this.iterationTime = this._timeFraction * this.iterationDuration;
+					this.iterationTime = this._timeFraction * this.duration;
 				} 		
 			}
 		} else {
@@ -364,7 +364,7 @@ function completeProperties(properties) {
 	} else {
 		result.timing = new Timing(
 			{ startDelay: properties.startDelay,
-				iterationDuration: properties.iterationDuration,
+				duration: properties.duration,
 				iterationCount: properties.iterationCount,
 				iterationStart: properties.iterationStart,
 				speed: properties.speed,
@@ -419,7 +419,7 @@ var Anim = Class.create(TimedItem, {
 		if (timing instanceof Timing) {
 			this.timing = timing;
 		} else if (typeof(timing) === "number") {
-			this.timing = new Timing({iterationDuration: timing});
+			this.timing = new Timing({duration: timing});
 		} else if (typeof(timing) === "object") {
 			this.timing = new Timing(timing);
 		} else {
@@ -427,7 +427,7 @@ var Anim = Class.create(TimedItem, {
 				throw new Error("TypeError");
 			} catch (e) { console.log(e.stack); throw e; }
 		}
-		
+
 		$super(this.timing, startTime, parentGroup);
 
 		// TODO: correctly extract the underlying value from the element
