@@ -6,7 +6,7 @@ var Timing = Class.create({
 		this.duration = timingDict.duration;
 		this.iterationCount = timingDict.iterationCount || 1.0;
 		this.iterationStart = timingDict.iterationStart || 0.0;
-		this.speed = timingDict.speed || 1;
+		this.playbackRate = timingDict.playbackRate || 1;
 		this.direction = timingDict.direction || "normal";
 		if (typeof timingDict.timingFunc === "string") {
 			// TODO: Write createFromString
@@ -23,7 +23,7 @@ var Timing = Class.create({
 				duration: this.duration,
 				iterationCount: this.iterationCount,
 				iterationStart: this.iterationStart,
-				speed: this.speed,
+				playbackRate: this.playbackRate,
 				direction: this.direction,
 				timingFunc: this.timingFunc.clone(),
 				fill: this.fill
@@ -38,7 +38,7 @@ function ImmutableTimingProxy(timing) {
 var TimingProxy = Class.create({
 	initialize: function(timing, setter) {
 		this.timing = timing;
-		["startDelay", "duration", "iterationCount", "iterationStart", "speed", "direction", "timingFunc", "fill"].forEach(function(s) {
+		["startDelay", "duration", "iterationCount", "iterationStart", "playbackRate", "direction", "timingFunc", "fill"].forEach(function(s) {
 			this.__defineGetter__(s, function() { return timing[s]; });
 			this.__defineSetter__(s, function(v) { var old = timing[s]; timing[s] = v; try { setter(v); } catch (e) { timing[s] = old; throw e;}});			
 		}.bind(this));
@@ -49,7 +49,7 @@ var TimingProxy = Class.create({
 				duration: this.timing.duration,
 				iterationCount: this.timing.iterationCount,
 				iterationStart: this.timing.iterationStart,
-				speed: this.timing.speed,
+				playbackRate: this.timing.playbackRate,
 				direction: this.timing.direction,
 				timingFunc: this.timing.timingFunc.clone(),
 				fill: this.timing.fill
@@ -177,10 +177,10 @@ var TimedItem = Class.create({
 		}
 		// section 6.7
 		var repeatedDuration = this.duration * this.timing.iterationCount;
-		if (repeatedDuration == Infinity || this.timing.speed == 0) {
+		if (repeatedDuration == Infinity || this.timing.playbackRate == 0) {
 			this.animationDuration = Infinity;
 		} else {
-			this.animationDuration = repeatedDuration / Math.abs(this.timing.speed);
+			this.animationDuration = repeatedDuration / Math.abs(this.timing.playbackRate);
 		}
 		this.updateTimeMarkers();
 
@@ -224,7 +224,7 @@ var TimedItem = Class.create({
 				var iterationStart = Math.max(0, Math.min(this.timing.iterationStart, this.timing.iterationCount));
 				var iterationCount = Math.max(0, this.timing.iterationCount);
 				var startOffset = iterationStart * this.duration;
-				var effectiveSpeed = this._reversing ? -this.timing.speed : this.timing.speed;
+				var effectiveSpeed = this._reversing ? -this.timing.playbackRate : this.timing.playbackRate;
 				if (effectiveSpeed < 0) {
 					var adjustedAnimationTime = (this.animationTime - this.animationDuration) * effectiveSpeed + startOffset;
 				} else {
@@ -296,8 +296,8 @@ var TimedItem = Class.create({
 	seek: function(itemTime) {
 		// TODO
 	},
-	changeSpeed: function(speed) {
-		timing.speed = speed;
+	changePlaybackRate: function(playbackRate) {
+		timing.playbackRate = playbackRate;
 		// TODO: perform compensatory seek
 	},
 	reverse: function() {
@@ -319,7 +319,7 @@ var TimedItem = Class.create({
 	},
 	play: function() {
 		this.updateTimeMarkers();
-		if (this.currentTime > this.animationDuration + this.timing.startDelay && this.timing.speed >= 0) {
+		if (this.currentTime > this.animationDuration + this.timing.startDelay && this.timing.playbackRate >= 0) {
 			this.currentTime = this.timing.startDelay;
 		}
 	},
@@ -367,7 +367,7 @@ function completeProperties(properties) {
 				duration: properties.duration,
 				iterationCount: properties.iterationCount,
 				iterationStart: properties.iterationStart,
-				speed: properties.speed,
+				playbackRate: properties.playbackRate,
 				direction: properties.direction,
 				timingFunc: properties.timingFunc,
 				fill: properties.fill
@@ -780,7 +780,7 @@ var AnimGroup = Class.create(TimedItem, AnimListMixin, {
 			var set = 0;
 			var end = time > this.endTime ? RC_ANIMATION_FINISHED : 0;
 			this.children.forEach(function(child) {
-				var r = child._tick((time - this.startTime - this.timing.startDelay - this.timeDrift) * this.timing.speed); 
+				var r = child._tick((time - this.startTime - this.timing.startDelay - this.timeDrift) * this.timing.playbackRate); 
 				if (!(r & RC_ANIMATION_FINISHED)) {
 					end = 0;
 				}
