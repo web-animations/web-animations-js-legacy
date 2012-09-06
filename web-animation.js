@@ -424,11 +424,17 @@ RC_ANIMATION_FINISHED = 2;
 var Anim = Class.create(TimedItem, {
 	initialize: function($super, target, animFunc, timing, parentGroup, startTime) {
 		// Interpret animFunc
-		if (animFunc instanceof AnimFunc || animFunc instanceof JavaScriptAnimFunc)
-		{
+		if (animFunc instanceof AnimFunc) {
 			this.animFunc = animFunc;
 		} else if (typeof(animFunc) === "object") {
-			this.animFunc = AnimFunc.createFromProperties(animFunc);
+			// Test if the object is actually a CustomAnimFunc
+			// (how does WebIDL actually differentiate different callback interfaces?)
+			if (animFunc.hasOwnProperty("sample") &&
+				  typeof(animFunc.sample) === "function") {
+				this.animFunc = animFunc;
+			} else {
+				this.animFunc = AnimFunc.createFromProperties(animFunc);
+			}
 		} else {
 			try {
 				throw new Error("TypeError");
@@ -441,7 +447,9 @@ var Anim = Class.create(TimedItem, {
 		$super(this.timing, startTime, parentGroup);
 
 		// TODO: correctly extract the underlying value from the element
-		this.underlyingValue = this.animFunc.getValue(target);
+		this.underlyingValue = this.animFunc instanceof AnimFunc
+			                   ? this.animFunc.getValue(target)
+												 : null;
 		this.template = null;
 		this.targetElement = target;
 		this.name = this.animFunc instanceof KeyframeAnimFunc
@@ -476,7 +484,9 @@ var Anim = Class.create(TimedItem, {
 		return Infinity;
 	},
 	_zero: function() {
-		this.animFunc.zeroPoint(this.targetElement, this.underlyingValue);
+	  if (this.animFunc instanceof AnimFunc) {
+			this.animFunc.zeroPoint(this.targetElement, this.underlyingValue);
+		}
 		//this.targetElement.innerHTML = "ZERO"
 	},
 	_tick: function(time) {
@@ -484,7 +494,11 @@ var Anim = Class.create(TimedItem, {
 		var rc = 0;
 		if (this._timeFraction != null) {
 			rc |= RC_SET_VALUE;
-			this.animFunc.sample(this._timeFraction, this.currentIteration, this.targetElement, this.underlyingValue);
+			if (this.animFunc instanceof AnimFunc) {
+				this.animFunc.sample(this._timeFraction, this.currentIteration, this.targetElement, this.underlyingValue);
+			} else {
+				this.animFunc.sample.call(this.animFunc, this._timeFraction, this.currentIteration, this.targetElement);
+			}
 			//this.targetElement.innerHTML = this._timeFraction + ": " + this.currentIteration;
 		} else {
 			this._zero();
@@ -495,7 +509,10 @@ var Anim = Class.create(TimedItem, {
 		return rc;
 	},
 	toString: function() {
-		return "Anim " + this.startTime + "-" + this.endTime + " (" + this.timeDrift+ ") " + this.animFunc.toString();
+		var funcDescr = this.animFunc instanceof AnimFunc
+			? this.animFunc.toString()
+			: "Custom scripted function";
+		return "Anim " + this.startTime + "-" + this.endTime + " (" + this.timeDrift+ ") " + funcDescr;
 	}
 });
 
