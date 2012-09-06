@@ -15,7 +15,7 @@ var Timing = Class.create({
 		} else {
 			this.timingFunc = timingDict.timingFunc;
 		}
-		this.fill = timingDict.fill || "none";
+		this.fill = timingDict.fill || "forwards";
 	},
 	clone: function() {
 		return new Timing(
