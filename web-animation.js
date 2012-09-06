@@ -975,6 +975,10 @@ var KeyframeAnimFunc = Class.create(AnimFunc, {
 		var i = 0;
 		while (i < frames.length) {
 			if (frames[i].offset == timeFraction) {
+				// TODO: This should probably call fromCssValue and toCssValue for cases
+				// where we have to massage the data before setting e.g. 'rotate(45deg)'
+				// is valid, but for UAs that don't support CSS Transforms syntax on SVG
+				// content we have to convert that to 'rotate(45)' before setting.
 				setValue(target, this.property, frames[i].value);
 				return;
 			}
@@ -1232,7 +1236,7 @@ function extractTranslationValues(lengths) {
 
 var transformREs =
 	[
-		[/rotate\(([+-]?(?:\d+|\d*\.\d+))(deg|grad|rad|turn)\)/, extractDeg, "rotate"],
+		[/rotate\(([+-]?(?:\d+|\d*\.\d+))(deg|grad|rad|turn)?\)/, extractDeg, "rotate"],
 		[/rotateY\(([+-]?(?:\d+|\d*\.\d+))(deg|grad|rad|turn)\)/, extractDeg, "rotateY"],
 		[/translate\(([+-]?(?:\d+|\d*\.\d+))(px)?(?:\s*,\s*(-?(?:\d+|\d*\.\d+))(px)?)?\)/,
 		 extractTranslationValues, "translate"]
