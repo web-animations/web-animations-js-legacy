@@ -22,7 +22,10 @@ doorOpen.play();
 // Close it
 doorOpen.reverse();
 
-var doorClose = new Anim($('door'), { transform: [ 'rotateY(-110deg)', 'rotate(0deg)' ] }, { duration: 2, timingFunc: new TimingFunction([0.9, 0, 1, 1])});
+// And open it again
+doorOpen.reverse();
+
+var doorClose = new Anim($('door'), { transform: [ 'rotateY(-110deg)', 'rotate(0deg)' ] }, { duration: 2, timingFunc: new TimingFunc([0.9, 0, 1, 1])});
 var pictureTilting = new Anim($('picture'), { transform: 'rotate(-10)' }, 0.15);
 
 var closeSequence = new SeqAnimGroup([doorClose, pictureTilting]);
@@ -58,7 +61,7 @@ function DoorCreakAnimFunc() {
     prevFrequency: null,
    
     sample: function(timeFraction, currentIteration, target) {
-      if (timeFraction === null || timeFraction >= 1) {
+      if (timeFraction === null || timeFraction >= 1 || timeFraction <= 0) {
         this.prevFrequency = null;
         return;
       }
@@ -111,27 +114,37 @@ function DoorCreakAnimFunc() {
 var doorCreak = new Anim(null, new DoorCreakAnimFunc(), 2);
 
 // Now combine with the doorOpen animation
-doorOpen.reverse();
-var group = new ParAnimGroup([doorOpen, doorCreak]);
+var doorOpen = new Anim($('door'), { transform: ['rotateY(0deg)', 'rotateY(-110deg)'] }, { duration: 2 });
+var doorOpenEffect = new ParAnimGroup([doorOpen, doorCreak]);
 
 // Move the easing effect to the group
-group.timing.timingFunc = doorOpen.timing.timingFunc;
-doorOpen.timing.timingFunc = null;
-group.play();
+doorOpenEffect.timing.timingFunc = new TimingFunc([0, 0, 0.1, 1]);
+doorOpenEffect.play();
 
 // And backwards
-group.reverse();
+doorOpenEffect.reverse();
 
 // Templates
-// Sunflower animation
-//   -- make one grow
-//   -- call templatize()
-//   -- apply to another
-//   -- apply to a selector (i.e. all sunflowers)
-//   -- iterate over and adjust start times
-//   -- put them in a group
-//   -- create a door open sequence
-// Go back to dust puff and explain???
+
+// Open the door
+doorOpenEffect.reverse();
+
+// Grow a sunflower
+var growSunflower = new Anim($('sunflower1'),
+                             { transform: ['scale(0)', 'scale(1)'] },
+                             { duration: 0.4, timingFunc: new TimingFunc([0, 0, 0.8, 1.4])});
+
+// How about another
+var sunflowerTemplate = growSunflower.templatize();
+sunflowerTemplate.animate($('sunflower2'));
+
+// And the rest
+var allTheFlowers = sunflowerTemplate.animate(document.querySelectorAll('.sunflower'));
+
+// XXX Remove previous animations
+
+// Put it all together
+var openSequence = new SeqAnimGroup([doorOpenEffect, new ParAnimGroup(allTheFlowers)]);
 
 // Animation group templates
 // -- reveal mouse door
@@ -140,6 +153,14 @@ group.reverse();
 // -- hide mouse door
 
 // Run the whole thing
+
+var reverseCreak = new Anim(null, new DoorCreakAnimFunc(), { duration: 2, direction: "reverse" });
+closeSequence.splice(0, 0, new ParAnimGroup([doorClose, reverseCreak]));
+closeSequence.timing.startDelay = 1;
+// XXX Get the door animations to stop colliding
+
+var wholeAnim = new SeqAnimGroup([openSequence, closeSequence]);
+wholeAnim.play();
 
 // Show visualisation
 
