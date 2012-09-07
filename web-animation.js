@@ -1110,7 +1110,7 @@ var presetTimings = {
 	"ease-out" : [0, 0, 0.58, 1.0]
 }
 
-var TimingFunction = Class.create({
+var TimingFunc = Class.create({
 	initialize: function(spec) {
 		if (spec.length == 4) {
 			this.params = spec;
