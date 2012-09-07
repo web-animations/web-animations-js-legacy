@@ -156,7 +156,9 @@ var TimedItem = Class.create({
 		});
 	},
 	reparent: function(parentGroup) {
-		this.parentGroup.remove(this);
+		if (this.parentGroup) {
+			this.parentGroup.remove(this.parentGroup.indexOf(this), 1);
+		}
 		this.parentGroup = parentGroup;
 		this.timeDrift = 0;
 		if (this.startTimeMode == ST_FORCED) {
@@ -317,7 +319,11 @@ var TimedItem = Class.create({
 		this._reversing = !(this._reversing);
 	},
 	cancel: function() {
-		// TODO
+		if (this.parentGroup) {
+			this.parentGroup.remove(this.parentGroup.indexOf(this), 1);
+		}
+		// TODO: Throw an exception if we're part of a template group?
+		// How this should work is still unresolved in the spec
 	},
 	play: function() {
 		this.updateTimeMarkers();
@@ -666,7 +672,7 @@ var AnimListMixin = {
 	},
 	indexOf: function(item) {
 		for (var i = 0; i < this.children.length; i++) {
-			if (this.children[i] == item) {
+			if (this.children[i] === item) {
 				return i;
 			}
 		}
@@ -674,27 +680,61 @@ var AnimListMixin = {
 	},
 	splice: function() {
 		this.beforeListChange();
-		for (var i = 2; i < arguments.length; i++) {
-			arguments[i].reparent(this);
-		}
-		this.children.splice.apply(this.children, arguments);
-		var oldLength = this.length;
-		this.length = this.children.length;
-		this._createIdxAccessors(oldLength, this.length);
-		this.onListChange();
-	},
-	remove: function(removedItem) {
-		this.beforeListChange();
-		for (var i = 0; i < this.children.length; i++) {
-			if (this.children[i] == removedItem) {
-				this.children.splice(i, 1);
-				this.length = this.children.length;
-				this._deleteIdxAccessors(this.length, this.length + 1);
-				return removedItem;
+
+		// Read params
+		var start = arguments[0];
+		var deleteCount = arguments[1];
+		var newItems = [];
+		if (Array.isArray(arguments[2])) {
+			newItems = arguments[2];
+		} else {
+			for (var i = 2; i < arguments.length; i++) {
+				newItems.push(arguments[i]);
 			}
 		}
+
+		var removedItems = new Array();
+		var len = this.length;
+
+		// Interpret params
+		var actualStart = start < 0
+		                ? Math.max(len + start, 0)
+		                : Math.min(start, len);
+		var actualDeleteCount =
+			Math.min(Math.max(deleteCount, 0), len - actualStart);
+
+		// Reparent items
+		for (var i = 0; i < newItems.length; i++) {
+			newItems[i].reparent(this);
+		}
+
+		// Delete stage
+		if (actualDeleteCount) {
+			removedItems = this.children.splice(actualStart, actualDeleteCount);
+			for (var i = 0; i < removedItems.length; i++) {
+				removedItems[i].parentGroup = null;
+			}
+			this._deleteIdxAccessors(actualStart, actualStart + actualDeleteCount);
+		}
+
+		// Add stage
+		if (newItems.length) {
+			for (var i = 0; i < newItems.length; i++) {
+				this.children.splice(actualStart+i, 0, newItems[i]);
+			}
+			this._createIdxAccessors(actualStart, actualStart + newItems.length);
+		}
+
+		this.length = this.children.length;
 		this.onListChange();
-		return null;
+
+		return removedItems;
+	},
+	remove: function(index, count) {
+		if (typeof count === "undefined") {
+			count = 1;
+		}
+		return this.splice(index, count);
 	}
 }
 
