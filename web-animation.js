@@ -1025,10 +1025,26 @@ var KeyframeAnimFunc = Class.create(AnimFunc, {
 			i++;
 		}
 		if (afterFrameNum == 0) {
-			beforeFrameNum = -1;
+			// In the case where we have a negative time fraction and a keyframe at
+			// offset 0, the expected behavior is to extrapolate the interval that
+			// starts at 0, rather than to use the underlying value.
+			if (frames[0].offset === 0) {
+				afterFrameNum = frames.length > 1 ? 1 : frames.length;
+				beforeFrameNum = 0;
+			} else {
+				beforeFrameNum = -1;
+			}
 		} else if (afterFrameNum == null) {
-			beforeFrameNum = frames.length - 1;
-			afterFrameNum = frames.length;
+			// In the case where we have a time fraction greater than 1 and a keyframe
+			// at 1, the expected behavior is to extrapolate the interval that ends at
+			// 1, rather than to use the underlying value.
+			if (frames[frames.length-1].offset === 1) {
+				afterFrameNum = frames.length - 1;
+				beforeFrameNum = frames.length > 1 ? frames.length - 2 : -1;
+			} else {
+				beforeFrameNum = frames.length - 1;
+				afterFrameNum = frames.length;
+			}
 		} else {
 			beforeFrameNum = afterFrameNum - 1;
 		}
@@ -1243,6 +1259,12 @@ function toCssValue(property, value, svgMode) {
 								 value[0].d[1] + unit + ")";
 				}
 			}
+			case "scale":
+				if (value[0].d[0] === value[0].d[1]) {
+					return value[0].t + "(" + value[0].d[0] + ")";
+				} else {
+					return value[0].t + "(" + value[0].d[0] + ", " + value[0].d[1] + ")";
+				}
 		}
 	} else {
 		throw "UnsupportedProperty";
@@ -1270,12 +1292,19 @@ function extractTranslationValues(lengths) {
 	return [length1, length2];
 }
 
+function extractScaleValues(scales) {
+	var scaleX = Number(scales[1]);
+	var scaleY = scales[2] ? Number(lengths[2]) : scaleX;
+	return [scaleX, scaleY];
+}
+
 var transformREs =
 	[
 		[/rotate\(([+-]?(?:\d+|\d*\.\d+))(deg|grad|rad|turn)?\)/, extractDeg, "rotate"],
 		[/rotateY\(([+-]?(?:\d+|\d*\.\d+))(deg|grad|rad|turn)\)/, extractDeg, "rotateY"],
-		[/translate\(([+-]?(?:\d+|\d*\.\d+))(px)?(?:\s*,\s*(-?(?:\d+|\d*\.\d+))(px)?)?\)/,
-		 extractTranslationValues, "translate"]
+		[/translate\(([+-]?(?:\d+|\d*\.\d+))(px)?(?:\s*,\s*([+-]?(?:\d+|\d*\.\d+))(px)?)?\)/,
+		 extractTranslationValues, "translate"],
+		[/scale\((\d+|\d*\.\d+)(?:\s*,\s*(\d+|\d*.\d+))?\)/, extractScaleValues, "scale"]
 	];
 
 function fromCssValue(property, value) {
