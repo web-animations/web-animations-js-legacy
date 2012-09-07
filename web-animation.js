@@ -25,7 +25,7 @@ var Timing = Class.create({
 				iterationStart: this.iterationStart,
 				playbackRate: this.playbackRate,
 				direction: this.direction,
-				timingFunc: this.timingFunc.clone(),
+				timingFunc: this.timingFunc ? this.timingFunc.clone() : null,
 				fill: this.fill
 			});
 	}
@@ -51,7 +51,8 @@ var TimingProxy = Class.create({
 				iterationStart: this.timing.iterationStart,
 				playbackRate: this.timing.playbackRate,
 				direction: this.timing.direction,
-				timingFunc: this.timing.timingFunc.clone(),
+				timingFunc: this.timing.timingFunc ?
+				            this.timing.timingFunc.clone() : null,
 				fill: this.timing.fill
 			});
 	},
@@ -78,9 +79,8 @@ var TimedTemplate = Class.create({
 		this.linkedAnims.forEach(function(a) { a.updateIterationDuration(); });
 	},
 	_animate: function(isLive, targets, parentGroup, startTime) {
-		if (!targets.length) {
-			targets = [targets];
-			return this.__animate(isLive, targets, parentGroup, startTime)[0];
+		if (!Array.isArray(targets) && !(targets instanceof NodeList)) {
+			return this.__animate(isLive, [targets], parentGroup, startTime)[0];
 		}
 		return this.__animate(isLive, targets, parentGroup, startTime);
 	},
@@ -359,11 +359,30 @@ function keyframesForValues(property, values) {
 	return animFun;
 }
 
+function _interpretAnimFunc(animFunc) {
+	if (animFunc instanceof AnimFunc) {
+		return animFunc;
+	} else if (typeof(animFunc) === "object") {
+		// Test if the object is actually a CustomAnimFunc
+		// (how does WebIDL actually differentiate different callback interfaces?)
+		if (animFunc.hasOwnProperty("sample") &&
+				typeof(animFunc.sample) === "function") {
+			return animFunc;
+		} else {
+			return AnimFunc.createFromProperties(animFunc);
+		}
+	} else {
+		try {
+			throw new Error("TypeError");
+		} catch (e) { console.log(e.stack); throw e; }
+	}
+}
+
 function _interpretTimingParam(timing) {
 	if (typeof(timing) === "undefined" || timing === null) {
 		return new Timing({});
 	}
-	if (timing instanceof Timing) {
+	if (timing instanceof Timing || timing instanceof TimingProxy) {
 		return timing;
 	}
 	if (typeof(timing) === "number") {
@@ -408,14 +427,17 @@ function completeProperties(properties) {
 // -----------
 
 function LinkedAnim(target, template, parentGroup, startTime) {
-	var anim = new Anim(target, {timing: new ImmutableTimingProxy(template.timing), animFunc: template.animFunc, name: template.name}, parentGroup, startTime);
+	var anim = new Anim(target, template.animFunc,
+	                    new ImmutableTimingProxy(template.timing),
+	                    parentGroup, startTime);
 	anim.template = template;
 	template.addLinkedAnim(anim);
 	return anim;
 }
 
 function ClonedAnim(target, cloneSource, parentGroup, startTime) {
-	var anim = new Anim(target, {timing: cloneSource.timing.clone(), animFunc: cloneSource.animFunc.clone()}, parentGroup, startTime);
+	var anim = new Anim(target, cloneSource.timing.clone(),
+	                    cloneSource.animFunc.clone(), parentGroup, startTime);
 }
 
 RC_SET_VALUE = 1;
@@ -423,33 +445,16 @@ RC_ANIMATION_FINISHED = 2;
 
 var Anim = Class.create(TimedItem, {
 	initialize: function($super, target, animFunc, timing, parentGroup, startTime) {
-		// Interpret animFunc
-		if (animFunc instanceof AnimFunc) {
-			this.animFunc = animFunc;
-		} else if (typeof(animFunc) === "object") {
-			// Test if the object is actually a CustomAnimFunc
-			// (how does WebIDL actually differentiate different callback interfaces?)
-			if (animFunc.hasOwnProperty("sample") &&
-				  typeof(animFunc.sample) === "function") {
-				this.animFunc = animFunc;
-			} else {
-				this.animFunc = AnimFunc.createFromProperties(animFunc);
-			}
-		} else {
-			try {
-				throw new Error("TypeError");
-			} catch (e) { console.log(e.stack); throw e; }
-		}
-
-		// Interpret timing
+		this.animFunc = _interpretAnimFunc(animFunc);
 		this.timing = _interpretTimingParam(timing);
 
 		$super(this.timing, startTime, parentGroup);
 
 		// TODO: correctly extract the underlying value from the element
-		this.underlyingValue = this.animFunc instanceof AnimFunc
-			                   ? this.animFunc.getValue(target)
-												 : null;
+		this.underlyingValue = null;
+		if (target && this.animFunc instanceof AnimFunc) {
+			this.underlyingValue = this.animFunc.getValue(target);
+		}
 		this.template = null;
 		this.targetElement = target;
 		this.name = this.animFunc instanceof KeyframeAnimFunc
@@ -472,7 +477,7 @@ var Anim = Class.create(TimedItem, {
 			return this.template;
 		}
 		// TODO: What resolution strategy, if any, should be employed here?
-		var template = new AnimTemplate({animFunc: this.animFunc.clone(), timing: this.timing.clone()});
+		var template = new AnimTemplate(this.animFunc.clone(), this.timing.clone());
 		this.template = template;
 		this.animFunc = template.animFunc;
 		this.timing = new ImmutableTimingProxy(template.timing);
@@ -496,7 +501,7 @@ var Anim = Class.create(TimedItem, {
 			rc |= RC_SET_VALUE;
 			if (this.animFunc instanceof AnimFunc) {
 				this.animFunc.sample(this._timeFraction, this.currentIteration, this.targetElement, this.underlyingValue);
-			} else {
+			} else if (this.animFunc) {
 				this.animFunc.sample.call(this.animFunc, this._timeFraction, this.currentIteration, this.targetElement);
 			}
 			//this.targetElement.innerHTML = this._timeFraction + ": " + this.currentIteration;
@@ -517,15 +522,13 @@ var Anim = Class.create(TimedItem, {
 });
 
 var AnimTemplate = Class.create(TimedTemplate, {
-	initialize: function($super, properties, resolutionStrategy) {
-		var completedProperties = completeProperties(properties);
-		$super(completedProperties.timing);
-		this.animFunc = completedProperties.animFunc;
-		if (!this.animFunc) {
-			try { throw "AnimTemplate Without Animation Function!" } catch (e) { console.log(e.stack); throw e; }			
-		}
+	initialize: function($super, animFunc, timing, resolutionStrategy) {
+		this.animFunc = _interpretAnimFunc(animFunc);
+		this.timing = _interpretTimingParam(timing);
+		$super(this.timing);
 		this.resolutionStrategy = resolutionStrategy;
-		this.name = properties.name;
+		// TODO: incorporate name into spec?
+		// this.name = properties.name;
 	},
 	reparent: function(parentGroup) {
 		// TODO: does anything need to happen here?
@@ -563,7 +566,7 @@ var AnimTemplate = Class.create(TimedTemplate, {
 		}
 
 		var instances = [];
-		targets.forEach(function(target) {
+		[].forEach.call(targets, function(target) {
 			var instance = LinkedAnim(target, this, parentGroup, startTime);
 			if (!isLive) {
 				instance.unlink();
@@ -1152,7 +1155,10 @@ var TimingFunc = Class.create({
 		var xDiff = this.map[fst][0] - this.map[fst - 1][0];
 		var p = (fraction - this.map[fst - 1][0]) / xDiff;
 		return this.map[fst - 1][1] + p * yDiff;
-	}
+	},
+	clone: function() {
+		return new TimingFunc(this.params);
+  }
 });
 
 function _interp(from, to, f) {
