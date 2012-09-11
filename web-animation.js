@@ -119,13 +119,13 @@ var TimedItem = Class.create({
 		this.animationTime = null;
 		this._reversing = false;
 
-		if (parentGroup === undefined) {
+		if (typeof parentGroup == "undefined") {
 			this.parentGroup = DEFAULT_GROUP;
 		} else {
 			this.parentGroup = parentGroup;
 		}
 
-		if (startTime === undefined) {
+		if (typeof startTime == "undefined") {
 			this._startTimeMode = ST_AUTO;
 			if (this.parentGroup) {
 				this._startTime = this.parentGroup.iterationTime || 0;
@@ -136,7 +136,7 @@ var TimedItem = Class.create({
 			this._startTimeMode = ST_MANUAL;
 			this._startTime = startTime;
 		}
-		this.endTime = this.startTime + this.animationDuration + this.timing.startDelay;
+		this.endTime = this._startTime + this.animationDuration + this.timing.startDelay;
 		if (this.parentGroup) {
 			this.parentGroup._addChild(this);
 		}
@@ -148,13 +148,14 @@ var TimedItem = Class.create({
 			  : 0;
 		});
 		this.__defineGetter__("currentTime", function() {
-			return this._effectiveParentTime - this.startTime - this.timeDrift;
+			return this._effectiveParentTime - this._startTime - this.timeDrift;
 		});
 		this.__defineSetter__("currentTime", function(seekTime) {
-			this.timeDrift = this._effectiveParentTime - this.startTime - seekTime;
+			this.timeDrift = this._effectiveParentTime - this._startTime - seekTime;
 			this.updateTimeMarkers();
-			this.parentGroup._childrenStateModified();
-			maybeRestartAnimation();
+			if (this.parentGroup) {
+				this.parentGroup._childrenStateModified();
+			}
 		});
 		this.__defineGetter__("startTime", function() {
 			return this._startTime;
@@ -206,9 +207,9 @@ var TimedItem = Class.create({
 		}
 	},
 	updateTimeMarkers: function(time) {
-		this.endTime = this.startTime + this.animationDuration + this.timing.startDelay + this.timeDrift;
+		this.endTime = this._startTime + this.animationDuration + this.timing.startDelay + this.timeDrift;
 		if (this.parentGroup) {
-			this.itemTime = this.parentGroup.iterationTime - this.startTime - this.timeDrift;
+			this.itemTime = this.parentGroup.iterationTime - this._startTime - this.timeDrift;
 		} else if (time) {
 			this.itemTime = time;
 		} else {
