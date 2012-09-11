@@ -142,14 +142,16 @@ var TimedItem = Class.create({
 		}
 		this.paused = false;
 		this.timeDrift = 0;
+		this.__defineGetter__("_effectiveParentTime", function() {
+			return this.parentGroup && this.parentGroup.iterationTime
+			  ? this.parentGroup.iterationTime
+			  : 0;
+		});
 		this.__defineGetter__("currentTime", function() {
-			return this.itemTime;
+			return this._effectiveParentTime - this.startTime - this.timeDrift;
 		});
 		this.__defineSetter__("currentTime", function(seekTime) {
-			if (this.parentGroup == null || this.parentGroup.iterationTime == null) {
-				throw "InvalidStateError";
-			}
-			this.timeDrift = this.parentGroup.iterationTime - this.startTime - seekTime;
+			this.timeDrift = this._effectiveParentTime - this.startTime - seekTime;
 			this.updateTimeMarkers();
 			this.parentGroup._childrenStateModified();
 			maybeRestartAnimation();
@@ -319,7 +321,7 @@ var TimedItem = Class.create({
 		// TODO: perform compensatory seek
 	},
 	reverse: function() {
-		if (this.currentTime == null) {
+		if (this.currentTime === null) {
 			var seekTime = 0;
 		} else if (this.currentTime < this.timing.startDelay) {
 			var seekTime = this.timing.startDelay + this.animationDuration;
