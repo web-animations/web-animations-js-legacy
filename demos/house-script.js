@@ -2,13 +2,20 @@
  * Web Animations 'house' demo, SVG Open 2012, Zurich
  */
 
-var a = new Anim($('wave'), { transform: 'translate(-60)' }, 2);
-a.timing.iterationCount = 3;
-a.timing.duration = 0.4;
+// 1. SIMPLE ANIMATIONS AND TIMING
 
-// XXX This is generating errors for some values
-var sun = new Anim($('sun'), { transform: 'rotate(-40deg)' }, { iterationCount: 6, duration: 0.5 });
+// Simple animation
+var wave = new Anim($('wave'), { transform: 'translate(-60)' }, 2);
 
+// Adjust timing parameters on the fly
+wave.timing.duration = 0.4;
+wave.play();
+
+// Set timing parameters up front
+var sun = new Anim($('sun'), { transform: 'rotate(-40)' }, { duration: 0.5, iterationCount: 6 });
+sun.timing.iterationCount = wave.timing.iterationCount = Infinity;
+
+// Apply animations to anything
 var doorOpen = new Anim($('door'), { transform: 'rotateY(-110deg)' }, 2);
 
 // Ease it in
@@ -25,11 +32,18 @@ doorOpen.reverse();
 // And open it again
 doorOpen.reverse();
 
-var doorClose = new Anim($('door'), { transform: [ 'rotateY(-110deg)', 'rotate(0deg)' ] }, { duration: 2, timingFunc: new TimingFunc([0.9, 0, 1, 1])});
+// 2. ANIMATION GROUPS
+
+// What about a synchronized combination of animations
+// Start with two separate animations
+var doorClose = new Anim($('door'), { transform: [ 'rotateY(-110deg)', 'rotateY(0deg)' ] }, { duration: 2, timingFunc: new TimingFunc([0.9, 0, 1, 1])});
 var pictureTilting = new Anim($('picture'), { transform: 'rotate(-10)' }, 0.15);
 
+// Put them together in sequence
 var closeSequence = new SeqAnimGroup([doorClose, pictureTilting]);
 
+// But what if some parts of the animation should happen together
+// E.g. a dust puff
 var dustPuff = new Anim($('smoke'), { opacity: [0, 0.8, 0] }, 0.2);
 
 // Put it all together
@@ -37,12 +51,13 @@ var doorReaction = new ParAnimGroup([pictureTilting, dustPuff]);
 closeSequence.add(doorReaction);
 closeSequence.play();
 
-// Make picture tilting a bit of a delay reaction
-pictureTilting.timing.startDelay = 0.3;
+// We can adjust the timing of the parts with delays
+// e.g. Make picture tilting a bit of a delayed reaction
+pictureTilting.timing.startDelay = 0.4;
 closeSequence.play();
 
-// Use a custom anim func
-//
+// 3. ANIMATING ANYTHING
+
 // The audio part of the following is based on:
 // https://wiki.mozilla.org/Audio_Data_API
 function DoorCreakAnimFunc() {
@@ -114,17 +129,17 @@ function DoorCreakAnimFunc() {
 var doorCreak = new Anim(null, new DoorCreakAnimFunc(), 2);
 
 // Now combine with the doorOpen animation
-var doorOpen = new Anim($('door'), { transform: ['rotateY(0deg)', 'rotateY(-110deg)'] }, { duration: 2 });
 var doorOpenEffect = new ParAnimGroup([doorOpen, doorCreak]);
 
 // Move the easing effect to the group
-doorOpenEffect.timing.timingFunc = new TimingFunc([0, 0, 0.1, 1]);
+doorOpenEffect.timing.timingFunc = doorOpen.timing.timingFunc;
+doorOpen.timing.timingFunc = null;
 doorOpenEffect.play();
 
 // And backwards
 doorOpenEffect.reverse();
 
-// Templates
+// 4. TEMPLATES
 
 // Open the door
 doorOpenEffect.reverse();
@@ -132,16 +147,17 @@ doorOpenEffect.reverse();
 // Grow a sunflower
 var growSunflower = new Anim($('sunflower1'),
                              { transform: ['scale(0)', 'scale(1)'] },
-                             { duration: 0.4, timingFunc: new TimingFunc([0, 0, 0.8, 1.4])});
+                             { duration: 0.4, timingFunc: new TimingFunc([0, 0, 0.8, 1.4]), fill: "both" });
 
 // How about another
 var sunflowerTemplate = growSunflower.templatize();
-sunflowerTemplate.animate($('sunflower2'));
+var growSunflower2 = sunflowerTemplate.animate($('sunflower2'));
 
 // And the rest
 var allTheFlowers = sunflowerTemplate.animate(document.querySelectorAll('.sunflower'));
 
 // XXX Remove previous animations
+growSunflower.cancel();
 
 // Put it all together
 var openSequence = new SeqAnimGroup([doorOpenEffect, new ParAnimGroup(allTheFlowers)]);
@@ -161,7 +177,3 @@ closeSequence.timing.startDelay = 1;
 
 var wholeAnim = new SeqAnimGroup([openSequence, closeSequence]);
 wholeAnim.play();
-
-// Show visualisation
-
-// Declarative syntax for the whole thing
