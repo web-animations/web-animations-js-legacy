@@ -12,7 +12,7 @@ wave.timing.duration = 0.4;
 wave.play();
 
 // Set timing parameters up front
-var sun = new Anim($('sun'), { transform: 'rotate(-40)' }, { duration: 0.5, iterationCount: 6 });
+var sun = new Anim($('sun'), { transform: 'rotate(-40)' }, 0.5);
 sun.timing.iterationCount = wave.timing.iterationCount = Infinity;
 
 // Apply animations to anything
@@ -154,26 +154,21 @@ var sunflowerTemplate = growSunflower.templatize();
 var growSunflower2 = sunflowerTemplate.animate($('sunflower2'));
 
 // And the rest
-var allTheFlowers = sunflowerTemplate.animate(document.querySelectorAll('.sunflower'));
-
-// XXX Remove previous animations
 growSunflower.cancel();
+growSunflower2.cancel();
+var allTheFlowers =
+  sunflowerTemplate.animate(document.querySelectorAll('.sunflower'));
 
 // Put it all together
-var openSequence = new SeqAnimGroup([doorOpenEffect, new ParAnimGroup(allTheFlowers)]);
-
-// Animation group templates
-// -- reveal mouse door
-// -- generate template from doorOpen to open the mouse door
-// -- generate template from doorClose sequence and apply to mouse door?
-// -- hide mouse door
+var openSequence =
+  new SeqAnimGroup([doorOpenEffect,
+                    new ParAnimGroup(allTheFlowers, { fill: "both" })]);
 
 // Run the whole thing
 
 var reverseCreak = new Anim(null, new DoorCreakAnimFunc(), { duration: 2, direction: "reverse" });
 closeSequence.splice(0, 0, new ParAnimGroup([doorClose, reverseCreak]));
 closeSequence.timing.startDelay = 1;
-// XXX Get the door animations to stop colliding
 
 var wholeAnim = new SeqAnimGroup([openSequence, closeSequence]);
 wholeAnim.play();
