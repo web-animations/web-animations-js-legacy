@@ -11,11 +11,11 @@ var wave = new Anim($('wave'), { transform: 'translate(-60)' }, 2);
 wave.timing.duration = 0.4;
 wave.play();
 
-// Set timing parameters up front
+// And another
 var sun = new Anim($('sun'), { transform: 'rotate(-40)' }, 0.5);
 sun.timing.iterationCount = wave.timing.iterationCount = Infinity;
 
-// Apply animations to anything
+// More interesting example
 var doorOpen = new Anim($('door'), { transform: 'rotateY(-110deg)' }, 2);
 
 // Ease it in
@@ -34,15 +34,18 @@ doorOpen.reverse();
 
 // 2. ANIMATION GROUPS
 
-// What about a synchronized combination of animations
+// What about a synchronized combination of animations?
 // Start with two separate animations
-var doorClose = new Anim($('door'), { transform: [ 'rotateY(-110deg)', 'rotateY(0deg)' ] }, { duration: 2, timingFunc: new TimingFunc([0.9, 0, 1, 1])});
-var pictureTilting = new Anim($('picture'), { transform: 'rotate(-10)' }, 0.15);
+var doorClose =
+  new Anim($('door'), { transform: [ 'rotateY(-110deg)', 'rotateY(0deg)' ] },
+                      { duration: 2, timingFunc: new TimingFunc([0.9, 0, 1, 1])});
+var pictureTilting =
+  new Anim($('picture'), { transform: 'rotate(-10)' }, 0.15);
 
 // Put them together in sequence
 var closeSequence = new SeqAnimGroup([doorClose, pictureTilting]);
 
-// But what if some parts of the animation should happen together
+// But what if some parts of the animation should happen together?
 // E.g. a dust puff
 var dustPuff = new Anim($('smoke'), { opacity: [0, 0.8, 0] }, 0.2);
 
@@ -146,12 +149,12 @@ doorOpenEffect.reverse();
 
 // Grow a sunflower
 var growSunflower = new Anim($('sunflower1'),
-                             { transform: ['scale(0)', 'scale(1)'] },
-                             { duration: 0.4, timingFunc: new TimingFunc([0, 0, 0.8, 1.4]), fill: "both" });
+        { transform: ['scale(0)', 'scale(1)'] },
+        { duration: 0.4, timingFunc: new TimingFunc([0, 0, 0.8, 1.4])});
 
 // How about another
 var sunflowerTemplate = growSunflower.templatize();
-var growSunflower2 = sunflowerTemplate.animate($('sunflower2'));
+var growSunflower2    = sunflowerTemplate.animate($('sunflower2'));
 
 // And the rest
 growSunflower.cancel();
@@ -161,12 +164,13 @@ var allTheFlowers =
 
 // Put it all together
 var openSequence =
-  new SeqAnimGroup([doorOpenEffect,
-                    new ParAnimGroup(allTheFlowers, { fill: "both" })]);
+  new SeqAnimGroup([doorOpenEffect, new ParAnimGroup(allTheFlowers)]);
 
 // Run the whole thing
 
-var reverseCreak = new Anim(null, new DoorCreakAnimFunc(), { duration: 2, direction: "reverse" });
+var reverseCreak =
+  new Anim(null, new DoorCreakAnimFunc(),
+           { duration: 2, direction: "reverse" });
 closeSequence.splice(0, 0, new ParAnimGroup([doorClose, reverseCreak]));
 closeSequence.timing.startDelay = 1;
 
