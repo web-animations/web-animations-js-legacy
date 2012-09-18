@@ -38,7 +38,7 @@ doorOpen.reverse();
 // Start with two separate animations
 var doorClose =
   new Anim($('door'), { transform: [ 'rotateY(-110deg)', 'rotateY(0deg)' ] },
-                      { duration: 2, timingFunc: new TimingFunc([0.9, 0, 1, 1])});
+           { duration: 2, timingFunc: new TimingFunc([0.9, 0, 1, 1])});
 var pictureTilting =
   new Anim($('picture'), { transform: 'rotate(-10)' }, 0.15);
 
@@ -65,10 +65,10 @@ closeSequence.play();
 // https://wiki.mozilla.org/Audio_Data_API
 function DoorCreakAnimFunc() {
   var sampleRate = 44100;
-  
+
   var audio = new Audio();
   audio.mozSetup(1, sampleRate);
-  
+
   return {
     audio: audio,
     tail: null,
@@ -77,17 +77,18 @@ function DoorCreakAnimFunc() {
     prebufferSize: sampleRate / 5,
     tailPosition: 0,
     prevFrequency: null,
-   
+
     sample: function(timeFraction, currentIteration, target) {
       if (timeFraction === null || timeFraction >= 1 || timeFraction <= 0) {
         this.prevFrequency = null;
         return;
       }
-      
+
       var written;
       // Check if some data was not written in previous attempts.
       if (this.tail) {
-        written = this.audio.mozWriteAudio(this.tail.subarray(this.tailPosition));
+        written =
+          this.audio.mozWriteAudio(this.tail.subarray(this.tailPosition));
         this.currentWritePosition += written;
         this.tailPosition += written;
         if (this.tailPosition < this.tail.length) {
@@ -121,7 +122,8 @@ function DoorCreakAnimFunc() {
       var to = frequency;
       var k = 2 * Math.PI * to / sampleRate;
       for (var i=0, size=soundData.length; i<size; i++) {
-        var k = 2 * Math.PI * (from + (to - from) * i / (size - 1)) / sampleRate;
+        var k =
+          2 * Math.PI * (from + (to - from) * i / (size - 1)) / sampleRate;
         soundData[i] = Math.sin(k * this.currentSoundSample++);
       }
       this.currentSoundSample = this.currentSoundSample % (sampleRate / to);
