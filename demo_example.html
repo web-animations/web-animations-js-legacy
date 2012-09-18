@@ -98,24 +98,25 @@
 var a = undefined;
 
 function first() {
-	a = new Anim(document.querySelector(".doorSpacer"), {iterationDuration: 2, fill: "forwards",
-					prop: "-webkit-transform", from: "rotateY(0deg)", to: "rotateY(100deg)"});
+	a = new Anim(document.querySelector(".doorSpacer"),
+		{ '-webkit-transform': [ 'rotateY(0deg)', 'rotateY(100deg)' ] }, 2);
 }
 
 function second() {
-	animate(document.querySelectorAll("circle"), {iterationDuration: 3, prop: "cx", to: "400px"});
+	(new AnimTemplate({ cx: '400px' }, 3))
+		.animate(document.querySelectorAll("circle"));
 }
 
 // STEP 2
 
 function third() {
-	a.timing.timingFunction = new TimingFunction('ease-in');
+	a.timing.timingFunc = new TimingFunc('ease-in');
 	a.play();
 	console.log(DEFAULT_GROUP.currentState());	
 }
 
 function fourth() {
-	a.timing.timingFunction = new TimingFunction([0, 0.2,0.8, 1]);
+	a.timing.timingFunc = new TimingFunc([0, 0.2,0.8, 1]);
 	a.play();
 	console.log(DEFAULT_GROUP.currentState());	
 }
@@ -127,45 +128,38 @@ var pictureTilting = undefined;
 
 function fifth() {
 	var picture = document.querySelector(".picture");
-	pictureTilting = new Anim(picture, {iterationDuration: 0.5, prop: "-webkit-transform", from: "rotate(0deg)", to: "rotate(-30deg)", 
-											fill: "forwards"});
-	group = new SeqAnimGroup({fill: "forwards", name: "group"})
-	group.add(a);
-	group.add(pictureTilting);
+	pictureTilting =
+		new Anim(picture,
+			{ '-webkit-transform': [ 'rotate(0deg)', 'rotate(-30deg)' ] }, 0.5);
+	group = new SeqAnimGroup([a, pictureTilting]);
 	console.log(DEFAULT_GROUP.currentState());
 }
 
 function sixth() {
 	var dust = document.querySelector(".dust");
-	var dustPuff = new Anim(dust, { iterationDuration: 0.3, prop: "opacity", values: ["0", "0.4", "0"]});
-	var reactionGroup = new ParAnimGroup({fill: "forwards"});
-	reactionGroup.add(pictureTilting);
-	reactionGroup.add(dustPuff);
-	group.add(reactionGroup);
+	var dustPuff = new Anim(dust, { opacity: ["0", "0.4", "0"] }, 0.3);
+	group.add(new ParAnimGroup([ pictureTilting, dustPuff ]));
 	group.play();
 	console.log(DEFAULT_GROUP.currentState());
 }
 
 // STEP 4
 
-function audioAnimFunction(sample) {
-	return new JavaScriptAnimFunction(
-		function(elem) { return 0; },
-		function() { },
-		function(tf, iter, elem, underlying) {
+function audioAnimFunction() {
+	return {
+    sample: function(timeFraction, currentIteration, target) {
 			// TODO: fix this
-			console.log(sample);
+			console.log(timeFraction);
 		}
-	);
+	};
 }
 
 function seventh() {
-	var doorCreakAnim = new Anim(null, { iterationDuration: 2, animFunc: new audioAnimFunction("CREEEEEEAAAAKKK")});
-	var closeAnim = new ParAnimGroup({fill: "forwards"});
-	closeAnim.add(a);
-	closeAnim.add(doorCreakAnim);
-	closeAnim.timing.timingFunction = a.timing.timingFunction;
-	a.timing.timingFunction = null;
+	var doorCreakAnim =
+		new Anim(null, new audioAnimFunction("CREEEEEEAAAAKKK"), 2);
+	var closeAnim = new ParAnimGroup([ a, doorCreakAnim ]);
+	closeAnim.timing.timingFunc = a.timing.timingFunc;
+	a.timing.timingFunc = null;
 	group.splice(0, 0, closeAnim);
 	group.play();
 	console.log(DEFAULT_GROUP.currentState());
