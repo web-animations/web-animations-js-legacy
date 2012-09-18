@@ -593,28 +593,6 @@ var AnimTemplate = Class.create(TimedTemplate, {
 	}
 });
 
-// TODO: lose this now?
-function animate(targets, properties, startTime) {
-	var unwrapOnReturn = false;
-	if (!targets.length) {
-		targets = [targets];
-		unwrapOnReturn = true;
-	}
-
-	var instances = [];
-
-	[].forEach.call(targets, function(target) {
-		instances.push(new Anim(target, properties, DEFAULT_GROUP, startTime));
-		DEFAULT_GROUP.add(instances[instances.length - 1]);
-	});
-
-	if (unwrapOnReturn) {
-		return instances[0];
-	}
-
-	return instances;
-}
-
 // To use this, need to have children and length member variables.
 var AnimListMixin = {
 	initListMixin: function(beforeListChange, onListChange) {
