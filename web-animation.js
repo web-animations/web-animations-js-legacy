@@ -410,32 +410,6 @@ function _interpretTimingParam(timing) {
 	} catch (e) { console.log(e.stack); throw e; }
 }
 
-function completeProperties(properties) {
-	var result = {};
-	if (properties.timing) {
-		result.timing = properties.timing;
-	} else {
-		result.timing = new Timing(
-			{ startDelay: properties.startDelay,
-				duration: properties.duration,
-				iterationCount: properties.iterationCount,
-				iterationStart: properties.iterationStart,
-				playbackRate: properties.playbackRate,
-				direction: properties.direction,
-				timingFunc: properties.timingFunc,
-				fill: properties.fill
-			} );
-	}
-	if (properties.animFunc) {
-		result.animFunc = properties.animFunc;
-	} else if (properties.to) {
-		result.animFunc = keyframesFor(properties.prop, properties.from, properties.to);
-	} else if (properties.values) {
-		result.animFunc = keyframesForValues(properties.prop, properties.values);
-	}
-	return result;
-}
-
 // -----------
 // Anim Object
 // -----------
@@ -488,7 +462,11 @@ var Anim = Class.create(TimedItem, {
 			return this.template;
 		}
 		// TODO: What resolution strategy, if any, should be employed here?
-		var template = new AnimTemplate(this.animFunc.clone(), this.timing.clone());
+		var animFunc = this.animFunc
+			? this.animFunc.hasOwnProperty('clone')
+				? this.animFunc.clone() : this.animFunc
+			: null;
+		var template = new AnimTemplate(animFunc, this.timing.clone());
 		this.template = template;
 		this.animFunc = template.animFunc;
 		this.timing = new ImmutableTimingProxy(template.timing);
@@ -556,13 +534,15 @@ var AnimTemplate = Class.create(TimedTemplate, {
 			switch (strategy[0]) {
 				case "selector":
 					[].forEach.call(targets, function(target) {
+						var id;
+						var removeId;
 						if (target.id) {
-							var id = target.id;
-							var removeId = false;
+							id = target.id;
+							removeId = false;
 						} else {
-							var id = "___special_id_for_resolution_0xd3adb33f";
+							id = "___special_id_for_resolution_0xd3adb33f";
 							target.id = id;
-							var removeId = true;
+							removeId = true;
 						}
 						selector = "#" + id + " " + strategy[1];
 						var selectResult = document.querySelectorAll(selector);
@@ -734,8 +714,10 @@ var AnimGroup = Class.create(TimedItem, AnimListMixin, {
 	},
 	templatize: function() {
 		if (!this.template) {
-			var properties = {timing: this.timing.clone()};
-			var template = this.type == "par" ? new ParAnimGroupTemplate(properties) : new SeqAnimGroupTemplate(properties);
+			var timing = this.timing.clone();
+			var template = this.type == "par"
+				? new ParAnimGroupTemplate(null, timing)
+				: new SeqAnimGroupTemplate(null, timing);
 			this.timing = new ImmutableTimingProxy(template.timing);
 			for (var i = 0; i < this.children.length; i++) {
 				template.add(this.children[i].templatize());
@@ -847,13 +829,16 @@ var SeqAnimGroup = Class.create(AnimGroup, {
 });
 
 var AnimGroupTemplate = Class.create(TimedTemplate, AnimListMixin, {
-	initialize: function($super, type, properties, resolutionStrategy) {
-		var completedProperties = completeProperties(properties);
-		$super(completedProperties.timing);
+	initialize: function($super, type, children, timing, resolutionStrategy) {
+		$super(timing);
 		this.type = type;
 		this.resolutionStrategy = resolutionStrategy;
 		this.initListMixin(function() {}, function() {});
-		this.name = properties.name;
+		if (children && Array.isArray(children)) {
+			for (var i = 0; i < children.length; i++) {
+				this.add(children[i]);
+			}
+		}
 	},
 	reparent: function(parentGroup) {
 		// TODO: does anything need to happen here?
@@ -861,7 +846,7 @@ var AnimGroupTemplate = Class.create(TimedTemplate, AnimListMixin, {
 	__animate: function($super, isLive, targets, parentGroup, startTime) {
 		var instances = [];
 		for (var i = 0; i < targets.length; i++) {
-			var instance = new AnimGroup(this.type, this, {timing: this.timing, name: this.name}, startTime, parentGroup);
+			var instance = new AnimGroup(this.type, this, [], this.timing, startTime, parentGroup);
 			if (!isLive) {
 				instance.unlink();
 			}
@@ -879,14 +864,14 @@ var AnimGroupTemplate = Class.create(TimedTemplate, AnimListMixin, {
 });
 
 var ParAnimGroupTemplate = Class.create(AnimGroupTemplate, {
-	initialize: function($super, properties, resolutionStrategy) {
-		$super("par", properties, resolutionStrategy);
+	initialize: function($super, children, timing, resolutionStrategy) {
+		$super("par", children, timing, resolutionStrategy);
 	}
 });
 
 var SeqAnimGroupTemplate = Class.create(AnimGroupTemplate, {
-	initialize: function($super, properties, resolutionStrategy) {
-		$super("seq", properties, resolutionStrategy);
+	initialize: function($super, children, properties, resolutionStrategy) {
+		$super("seq", children, properties, resolutionStrategy);
 	}
 });
 
@@ -1354,7 +1339,7 @@ function getValue(target, property) {
 
 var rAFNo = undefined;
 
-var DEFAULT_GROUP = new AnimGroup("par", undefined, {fill: "forwards", name: "DEFAULT"}, 0, undefined);
+var DEFAULT_GROUP = new AnimGroup("par", null, [], {fill: "forwards", name: "DEFAULT"}, 0, undefined);
 
 DEFAULT_GROUP.oldFuncs = new Array();
 
