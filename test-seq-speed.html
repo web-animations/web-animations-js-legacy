@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<style>
+.anim {
+	left: 0px;
+	width: 100px;
+	height: 100px;
+	background-color: #FAA;
+	position: absolute;
+}
+
+#a {
+	top: 0px
+}
+
+#b {
+	top: 100px;
+}
+
+#c {
+	top: 200px;
+}
+
+#d {
+	top: 300px;
+}
+
+</style>
+
+<div>
+	<div id="a" class="anim a"></div>
+	<div id="b" class="anim b"></div>
+</div>
+
+<div id="fromTemplate">
+	<div id="c" class="anim a"></div>
+	<div id="d" class="anim b"></div>
+</div>
+
+<script src="prototype.js"></script>
+<script src="web-animation.js"></script>
+<script>
+
+var sgroup = new SeqAnimGroup({name: "s"});
+var pgroup1 = new ParAnimGroup({name: "p1"}, sgroup);
+var pgroup2 = new ParAnimGroup({name: "p2"}, sgroup);
+new Anim(document.querySelector("#a"), {iterationDuration: 0.6, prop: "left", from: "100px", to: "200px"}, pgroup1);
+new Anim(document.querySelector("#b"), {iterationDuration: 0.5, prop: "left", from: "100px", to: "200px"}, pgroup1);
+new Anim(document.querySelector("#c"), {iterationDuration: 0.5, prop: "left", from: "100px", to: "200px"}, pgroup2);
+new Anim(document.querySelector("#d"), {iterationDuration: 0.3, prop: "left", from: "100px", to: "200px"}, pgroup2);
+
+window.setTimeout(function() {
+	sgroup.timing.speed = 2;
+	sgroup.play();
+}, 2000);
+</script>
