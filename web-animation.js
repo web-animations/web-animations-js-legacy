@@ -960,16 +960,9 @@ AnimFunc._createKeyframeFunc = function(property, value) {
 
 	if (typeof value === "string") {
 		func.frames.add(new Keyframe(value, 1));
-	} else if (typeof value === "number") {
-		// TODO: This is not in the spec, should it be?
-		func.frames.add(new Keyframe(String(value), 1));
 	} else if (Array.isArray(value)) {
 		for (var i = 0; i < value.length; i++) {
-			if (typeof value[i] === "number") {
-				// TODO: This is not in the spec, should it be?
-				value[i] = String(value[i]);
-
-			} else if (typeof value[i] !== "string") {
+			if (typeof value[i] !== "string") {
 				try {
 					throw new Error("TypeError");
 				} catch (e) { console.log(e.stack); throw e; }
