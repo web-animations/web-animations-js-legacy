@@ -318,18 +318,18 @@ var TimedItem = Class.create({
 });
 
 function keyframesFor(property, startVal, endVal) {
-	var animFun = new KeyframesAnimFunction(property);
+	var animFun = new KeyframeAnimFunc(property);
 	if (startVal) {
-		animFun.frames.add(new AnimFrame(startVal, 0));
+		animFun.frames.add(new Keyframe(startVal, 0));
 	}
-	animFun.frames.add(new AnimFrame(endVal, 1));
+	animFun.frames.add(new Keyframe(endVal, 1));
 	return animFun;
 }
 
 function keyframesForValues(property, values) {
-	var animFun = new KeyframesAnimFunction(property);
+	var animFun = new KeyframeAnimFunc(property);
 	for (var i = 0; i < values.length; i++) {
-		animFun.frames.add(new AnimFrame(values[i], i / (values.length - 1)));
+		animFun.frames.add(new Keyframe(values[i], i / (values.length - 1)));
 	}
 	return animFun;
 }
@@ -841,11 +841,11 @@ var loggerAnimFunction = new JavaScriptAnimFunction(
 			else {elem.innerHTML = underlying;}}
 	);
 
-var KeyframesAnimFunction = Class.create(AnimFunction, {
+var KeyframeAnimFunc = Class.create(AnimFunction, {
 	initialize: function($super, property, operation, accumulateOperation) {
 		$super(operation, accumulateOperation);
 		this.property = property;
-		this.frames = new AnimFrameList();
+		this.frames = new KeyframeList();
 	},
 	sortedFrames: function() {
 		this.frames.frames.sort(function(a, b) {
@@ -910,7 +910,7 @@ var KeyframesAnimFunction = Class.create(AnimFunction, {
 		return getValue(target, this.property);
 	},
 	clone: function() {
-		var result = new KeyframesAnimFunction(this.property, this.operation, this.accumulateOperation);
+		var result = new KeyframeAnimFunc(this.property, this.operation, this.accumulateOperation);
 		result.frames = this.frames.clone();
 		return result;
 	},
@@ -919,7 +919,7 @@ var KeyframesAnimFunction = Class.create(AnimFunction, {
 	}
 });
 
-var AnimFrame = Class.create({
+var Keyframe = Class.create({
 	initialize: function(value, offset, timingFunction) {
 		this.value = value;
 		this.offset = offset;
@@ -927,7 +927,7 @@ var AnimFrame = Class.create({
 	}
 });
 
-var AnimFrameList = Class.create({
+var KeyframeList = Class.create({
 	initialize: function() {
 		this.frames = [];
 		this.__defineGetter__("length", function() {return this.frames.length; });
@@ -951,9 +951,9 @@ var AnimFrameList = Class.create({
 		return frame;
 	},
 	clone: function() {
-		var result = new AnimFrameList();
+		var result = new KeyframeList();
 		for (var i = 0; i < this.frames.length; i++) {
-			result.add(new AnimFrame(this.frames[i].value, this.frames[i].offset, this.frames[i].timingFunction));
+			result.add(new Keyframe(this.frames[i].value, this.frames[i].offset, this.frames[i].timingFunction));
 		}
 		return result;
 	}
