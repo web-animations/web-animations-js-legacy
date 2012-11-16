@@ -127,7 +127,7 @@ var ST_FORCED = 2;
 var TimedItem = Class.create({
 	initialize: function(timing, startTime, parentGroup) {
 		this.timing = new TimingProxy(timing, function() {this.updateIterationDuration()}.bind(this));
-		this.startTime = startTime;
+		this._startTime = startTime;
 		this.updateIterationDuration();
 		this.currentIteration = null;
 		this.iterationTime = null;
@@ -137,20 +137,20 @@ var TimedItem = Class.create({
 		if (parentGroup === undefined) {
 			this.parentGroup = DEFAULT_GROUP;
 		} else {
-			this.parentGroup = parentGroup;			
+			this.parentGroup = parentGroup;
 		}
 
-		if (startTime == undefined) {
-			this.startTimeMode = ST_AUTO;
+		if (startTime === undefined) {
+			this._startTimeMode = ST_AUTO;
 			if (this.parentGroup) {
-				this.startTime = this.parentGroup.iterationTime || 0;
+				this._startTime = this.parentGroup.iterationTime || 0;
 			} else {
-				this.startTime = 0;
+				this._startTime = 0;
 			}
 		} else {
-			this.startTimeMode = ST_MANUAL;
-			this.startTime = startTime;
-		}		
+			this._startTimeMode = ST_MANUAL;
+			this._startTime = startTime;
+		}
 		this.endTime = this.startTime + this.animationDuration + this.timing.startDelay;
 		if (this.parentGroup) {
 			this.parentGroup._addChild(this);
@@ -169,6 +169,20 @@ var TimedItem = Class.create({
 			this.parentGroup._childrenStateModified();
 			maybeRestartAnimation();
 		});
+		this.__defineGetter__("startTime", function() {
+			return this._startTime;
+		});
+		this.__defineSetter__("startTime", function(newStartTime) {
+			if (this.parentGroup && this.parentGroup.type === "seq") {
+				throw "NoModificationAllowedError";
+			}
+			this._startTime = newStartTime;
+			this._startTimeMode = ST_MANUAL;
+			this.updateTimeMarkers();
+			if (this.parentGroup) {
+				this.parentGroup._childrenStateModified();
+			}
+		});
 	},
 	reparent: function(parentGroup) {
 		if (this.parentGroup) {
@@ -176,14 +190,15 @@ var TimedItem = Class.create({
 		}
 		this.parentGroup = parentGroup;
 		this.timeDrift = 0;
-		if (this.startTimeMode == ST_FORCED) {
-			this.startTime = this.stashedStartTime;;
-			this.startTimeMode = this.stashedStartTimeMode;
+		if (this._startTimeMode == ST_FORCED &&
+			  (!parentGroup || parentGroup != "seq")) {
+			this._startTime = this._stashedStartTime;
+			this._startTimeMode = this._stashedStartTimeMode;
 		}
-		if (this.startTimeMode == ST_AUTO) {
-			this.startTime = this.parentGroup.iterationTime || 0;
-			this.updateTimeMarkers();
-		} 
+		if (this._startTimeMode == ST_AUTO) {
+			this._startTime = this.parentGroup.iterationTime || 0;
+		}
+		this.updateTimeMarkers();
 	},
 	// TODO: take timing.iterationStart into account. Spec needs to as well.
 	updateIterationDuration: function() {
@@ -346,21 +361,6 @@ var TimedItem = Class.create({
 			this.currentTime = this.timing.startDelay;
 		}
 	},
-	// TODO: move this to run on modification of startTime (I think)
-	start: function(timeFromNow) {
-		if (!this.parentGroup) {
-			// TODO: Check spec correctness. Should this be Data.now() + timeFromNow?
-			this.startTime = timeFromNow;
-		} else if (this.parentGroup.type == "seq") {
-			throw "NoModificationAllowedError";
-		} else {
-			this.startTime = this.parentGroup.iterationTime + timeFromNow;
-		}
-		this.updateTimeMarkers();
-	},
-	stop: function(timeFromNow) {
-		// TODO: implement
-	}
 });
 
 function keyframesFor(property, startVal, endVal) {
@@ -804,10 +804,12 @@ var AnimGroup = Class.create(TimedItem, AnimListMixin, {
 		if (this.type == "seq") {
 			var cumulativeStartTime = 0;
 			this.children.forEach(function(child) {
-				child.stashedStartTime = child.startTime;
-				child.stashedStartTimeMode = child.startTimeMode;
-				child.startTime = cumulativeStartTime;
-				child.startTimeMode = ST_FORCED;
+				if (child._startTimeMode != ST_FORCED) {
+					child._stashedStartTime = child._startTime;
+					child._stashedStartTimeMode = child._startTimeMode;
+					child._startTime = cumulativeStartTime;
+					child._startTimeMode = ST_FORCED;
+				}
 				child.updateTimeMarkers();
 				cumulativeStartTime += Math.max(0, child.timing.startDelay + child.animationDuration);
 			}.bind(this));
@@ -866,7 +868,7 @@ var AnimGroup = Class.create(TimedItem, AnimListMixin, {
 	},
 	_tick: function(time) {
 		this.updateTimeMarkers();
-		if (this._timeFraction == null) {
+		if (this._timeFraction === null) {
 			this._zero();
 			return time > this.endTime ? RC_ANIMATION_FINISHED : 0;
 		} else {
