@@ -185,8 +185,6 @@ var TimedItem = Class.create({
 	},
 	// TODO: take timing.iterationStart into account. Spec needs to as well.
 	updateIterationDuration: function() {
-		var finished = this.parentGroup &&
-		               this.parentGroup.iterationTime > this.endTime;
 		if (exists(this.timing.duration) && this.timing.duration >= 0) {
 			this.duration = this.timing.duration;
 		} else {
@@ -200,9 +198,6 @@ var TimedItem = Class.create({
 			this.animationDuration = repeatedDuration / Math.abs(this.timing.playbackRate);
 		}
 		this.updateTimeMarkers();
-		if (finished) {
-			maybeRestartAnimation();
-		}
 	},
 	updateTimeMarkers: function(time) {
 		this.endTime = this.startTime + this.animationDuration + this.timing.startDelay + this.timeDrift;
