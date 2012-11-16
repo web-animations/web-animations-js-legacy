@@ -56,38 +56,37 @@
    </g>
   </defs>
   <g transform="translate(135 330) scale(0.47)">
-   <use xlink:href="#sunflower" id="sunflower5"/>
+   <use xlink:href="#sunflower" transform="scale(0)" class="sunflower"/>
    <use xlink:href="#tuft"/>
   </g>
   <g transform="translate(304 319) scale(0.58)">
-   <use xlink:href="#sunflower" id="sunflower6"/>
+   <use xlink:href="#sunflower" transform="scale(0)" class="sunflower"/>
    <use xlink:href="#tuft"/>
   </g>
   <g transform="translate(251 331) scale(0.67)">
-   <use xlink:href="#sunflower" id="sunflower4"/>
+   <use xlink:href="#sunflower" transform="scale(0)" class="sunflower"/>
    <use xlink:href="#tuft"/>
   </g>
   <g transform="translate(205 357) scale(0.73)">
-   <use xlink:href="#sunflower" id="sunflower3"/>
+   <use xlink:href="#sunflower" transform="scale(0)" class="sunflower"/>
    <use xlink:href="#tuft"/>
   </g>
   <g transform="translate(275 398) scale(0.89)">
-   <use xlink:href="#sunflower" id="sunflower2"/>
+   <use xlink:href="#sunflower" id="sunflower2" transform="scale(0)"
+     class="sunflower"/>
    <use xlink:href="#tuft"/>
   </g>
   <g transform="translate(229 413) scale(0.82)">
-   <use xlink:href="#sunflower" id="sunflower7"/>
+   <use xlink:href="#sunflower" transform="scale(0)" class="sunflower"/>
    <use xlink:href="#tuft"/>
   </g>
   <g transform="translate(159 370) scale(0.78)">
-   <use xlink:href="#sunflower" id="sunflower8"/>
+   <use xlink:href="#sunflower" transform="scale(0)" class="sunflower"/>
    <use xlink:href="#tuft"/>
   </g>
   <g transform="translate(160 446)">
-   <use xlink:href="#sunflower" id="sunflower1">
-    <animateTransform attributeName="transform" type="scale"
-     from="0" to="1" dur="0.4s"/>
-   </use>
+   <use xlink:href="#sunflower" id="sunflower1" transform="scale(0)"
+     class="sunflower"/>
    <use xlink:href="#tuft"/>
   </g>
  </g>
