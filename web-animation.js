@@ -900,7 +900,7 @@ var KeyframesAnimFunction = Class.create(AnimFunction, {
 		// TODO: apply time function
 		var localTimeFraction = (timeFraction - beforeFrame.offset) / (afterFrame.offset - beforeFrame.offset);
 		// TODO: property-based interpolation for things that aren't simple
-		var animationValue = interpolate(this.property, beforeFrame.value, afterFrame.value, localTimeFraction);
+		var animationValue = interpolate(this.property, target, beforeFrame.value, afterFrame.value, localTimeFraction);
 		setValue(target, this.property, animationValue);
 	},
 	zeroPoint: function(target, underlyingValue) {
@@ -994,7 +994,22 @@ var TimingFunction = Class.create({
 });
 
 function _interp(from, to, f) {
+	if (Array.isArray(from) || Array.isArray(to)) {
+		return _interpArray(from, to, f);
+	}
 	return to * f + from * (1 - f);
+}
+
+function _interpArray(from, to, f) {
+	console.assert(Array.isArray(from), "From is not an array");
+	console.assert(Array.isArray(to), "To is not an array");
+	console.assert(from.length === to.length, "Arrays differ in length");
+
+	var result = [];
+	for (var i = 0; i < from.length; i++) {
+		result[i] = _interp(from[i], to[i], f);
+	}
+	return result;
 }
 
 function propertyIsNumber(property) {
@@ -1009,39 +1024,96 @@ function propertyIsTransform(property) {
 	return ["-webkit-transform", "transform"].indexOf(property) != -1;
 }
 
-function propertyIsSVGAttrib(property) {
-	return ["cx"].indexOf(property) != -1;
+function propertyIsSVGAttrib(property, target) {
+	// For browsers that support transform as a style attribute on SVG we can
+	// remove transform from the list below
+	return target.namespaceURI == "http://www.w3.org/2000/svg" &&
+	       ["cx", "transform"].indexOf(property) != -1;
 }
 
-function interpolate(property, from, to, f) {
+/**
+ * Interpolate the given property name (f*100)% of the way from 'from' to 'to'.
+ * 'from' and 'to' are both CSS value strings.
+ * requires the target element to be able to determine whether the given property
+ * is an SVG attribute or not, as this impacts the conversion of the interpolated
+ * value back into a CSS value string for transform translations.
+ * e.g. interpolate("transform", elem, "rotate(40deg)", "rotate(50deg)", 0.3);
+ *   will return "rotate(43deg)".
+ */
+function interpolate(property, target, from, to, f) {
+	var svgMode = propertyIsSVGAttrib(property, target);
 	from = fromCssValue(property, from);
 	to = fromCssValue(property, to);
 	if (propertyIsNumber(property)) {
-		return toCssValue(property, _interp(from, to, f));
+		return toCssValue(property, _interp(from, to, f), svgMode);
 	} else if (propertyIsLength(property)) {
-			return toCssValue(property, [_interp(from[0], to[0], f), "px"]);
+		return toCssValue(property, [_interp(from[0], to[0], f), "px"], svgMode);
 	} else if (propertyIsTransform(property)) {
-			return toCssValue(property, [{t: from[0].t, d:_interp(from[0].d, to[0].d, f)}])
+		return toCssValue(property,
+			[{t: from[0].t, d:_interp(from[0].d, to[0].d, f)}], svgMode)
 	} else {
 		throw "UnsupportedProperty";
 	}
 }
 
-function toCssValue(property, value) {
+/**
+ * Convert the provided interpolable value for the provided property to a CSS value
+ * string. Note that SVG transforms do not require units for translate transform values
+ * while CSS properties require 'px' units.
+ */
+function toCssValue(property, value, svgMode) {
 	if (propertyIsNumber(property)) {
 		return value + "";
 	} else if (propertyIsLength(property)) {
 		return value[0] + value[1];
 	} else if (propertyIsTransform(property)) {
 		// TODO: fix this :)
-		return value[0].t + "(" + value[0].d + "deg)";
+		switch (value[0].t) {
+			case "rotate":
+			case "rotateY":
+				return value[0].t + "(" + value[0].d + "deg)";
+			case "translate":
+				var unit = svgMode ? "" : "px";
+				if (value[0].d[1] === 0) {
+					return value[0].t + "(" + value[0].d[0] + unit + ")";
+				} else {
+					return value[0].t + "(" + value[0].d[0] + unit + ", " +
+					       value[0].d[1] + unit + ")";
+				}
+		}
 	} else {
 		throw "UnsupportedProperty";
 	}
 }
 
-function extractDeg(deg) { return Number(deg[1].substring(0, deg[1].length - 3))}
-var transformREs = [[/rotateY\((.*)\)/, extractDeg, "rotateY"], [/rotate\((.*)\)/, extractDeg, "rotate"]]
+function extractDeg(deg) {
+	var num  = Number(deg[1]);
+	switch (deg[2]) {
+	case "grad":
+		return num / 400 * 360;
+	case "rad":
+		return num / 2 / Math.PI * 360;
+	case "turn":
+		return num * 360;
+	default:
+		return num;
+	}
+}
+
+function extractTranslationValues(lengths) {
+	// XXX Assuming all lengths are px for now
+	var length1 = Number(lengths[1]);
+	var length2 = lengths[3] ? Number(lengths[3]) : 0;
+	return [length1, length2];
+}
+
+var transformREs =
+	[
+		[/rotate\(([+-]?(?:\d+|\d*\.\d+))(deg|grad|rad|turn)\)/, extractDeg, "rotate"],
+		[/rotateY\(([+-]?(?:\d+|\d*\.\d+))(deg|grad|rad|turn)\)/, extractDeg, "rotateY"],
+		[/translate\(([+-]?(?:\d+|\d*\.\d+))(px)?(?:\s*,\s*(-?(?:\d+|\d*\.\d+))(px)?)?\)/,
+		 extractTranslationValues, "translate"]
+	];
 
 function fromCssValue(property, value) {
 	if (propertyIsNumber(property)) {
@@ -1063,7 +1135,7 @@ function fromCssValue(property, value) {
 }
 
 function setValue(target, property, value) {
-	if (propertyIsSVGAttrib(property)) {
+	if (propertyIsSVGAttrib(property, target)) {
 		target.setAttribute(property, value);
 	} else {
 		target.style[property] = value;
@@ -1071,7 +1143,7 @@ function setValue(target, property, value) {
 }
 
 function getValue(target, property) {
-	if (propertyIsSVGAttrib(property)) {
+	if (propertyIsSVGAttrib(property, target)) {
 		return target.getAttribute(property);
 	} else {
 		return window.getComputedStyle(target)[property];
