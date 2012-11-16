@@ -183,73 +183,81 @@
   </body>
  </foreignObject>
  <!-- Picture -->
- <g id="picture">
-  <!-- Frame -->
-  <rect height="123" width="167" stroke="#603813" stroke-miterlimit="10" y="135"
-        x="468" stroke-width="2" fill="#A67C52"/>
-  <defs>
-   <clipPath id="pictureRegion">
-    <rect y="143" x="476" height="106" width="149"/>
-   </clipPath>
-  </defs>
-  <!-- Sky -->
-  <linearGradient id="sunsetSky" y2="142" gradientUnits="userSpaceOnUse"
-                  x2="551.5" y1="248" x1="551.5">
-   <stop stop-color="#FF9C15" offset=".4439"/>
-   <stop stop-color="#f00" offset="1"/>
-  </linearGradient>
-  <rect clip-path="url(#pictureRegion)" height="106" width="149" stroke="#000"
-        stroke-miterlimit="10" y="142" x="477" stroke-width="2"
-        fill="url(#sunsetSky)"/>
-  <!-- Sun -->
-  <g clip-path="url(#pictureRegion)">
-   <g transform="translate(553 216)" id="sun">
+ <g transform="translate(551.5 196.5)">
+  <g id="picture">
+   <g transform="translate(-551.5 -196.5)">
+    <!-- Frame -->
+    <rect x="468" y="135" width="167" height="123"
+          stroke="#603813" stroke-width="2" fill="#A67C52"/>
     <defs>
-     <radialGradient id="sunGrad" gradientUnits="userSpaceOnUse" cx="0" cy="0"
-      r="29.7">
-      <stop stop-color="#FBFFE3" offset="0"/>
-      <stop stop-color="#FFFF1B" offset="1"/>
-     </radialGradient>
+     <clipPath id="pictureRegion">
+      <rect y="143" x="476" height="106" width="149"/>
+     </clipPath>
     </defs>
-    <circle r="29.7" fill="url(#sunGrad)"/>
+    <!-- Sky -->
+    <linearGradient id="sunsetSky" y2="142" gradientUnits="userSpaceOnUse"
+                    x2="551.5" y1="248" x1="551.5">
+     <stop stop-color="#FF9C15" offset=".4439"/>
+     <stop stop-color="#f00" offset="1"/>
+    </linearGradient>
+    <rect clip-path="url(#pictureRegion)" height="106" width="149" stroke="#000"
+          stroke-miterlimit="10" y="142" x="477" stroke-width="2"
+          fill="url(#sunsetSky)"/>
+    <!-- Sun -->
+    <g clip-path="url(#pictureRegion)">
+     <g transform="translate(553 216)">
+      <!-- Splitting out the transforms on the sun for now since the shim
+           doesn't currently support additive animation for transforms of
+           different types. -->
+      <g id="sun">
+       <defs>
+        <radialGradient id="sunGrad" gradientUnits="userSpaceOnUse" cx="0" cy="0"
+         r="29.7">
+         <stop stop-color="#FBFFE3" offset="0"/>
+         <stop stop-color="#FFFF1B" offset="1"/>
+        </radialGradient>
+       </defs>
+       <circle r="29.7" fill="url(#sunGrad)"/>
+       <defs>
+        <radialGradient id="beamGrad" gradientUnits="userSpaceOnUse" cx="-21"
+         cy="0" r="40">
+         <stop stop-color="#FBFFE3" offset="0"/>
+         <stop stop-color="#FFFF1B" offset="1"/>
+        </radialGradient>
+        <rect x="-21" y="-8.5" width="42" height="17" rx="8.5"
+        fill="url(#beamGrad)" id="beam"/>
+       </defs>
+       <use xlink:href="#beam" transform="translate(56 0) rotate(8 -56 0)"/>
+       <use xlink:href="#beam" transform="translate(56 0) rotate(48 -56 0)"/>
+       <use xlink:href="#beam" transform="translate(56 0) rotate(88 -56 0)"/>
+       <use xlink:href="#beam" transform="translate(56 0) rotate(128 -56 0)"/>
+       <use xlink:href="#beam" transform="translate(56 0) rotate(168 -56 0)"/>
+       <use xlink:href="#beam" transform="translate(56 0) rotate(208 -56 0)"/>
+       <use xlink:href="#beam" transform="translate(56 0) rotate(248 -56 0)"/>
+       <use xlink:href="#beam" transform="translate(56 0) rotate(288 -56 0)"/>
+       <use xlink:href="#beam" transform="translate(56 0) rotate(328 -56 0)"/>
+      </g>
+     </g>
+    </g>
+    <!-- Wave -->
     <defs>
-     <radialGradient id="beamGrad" gradientUnits="userSpaceOnUse" cx="-21"
-      cy="0" r="40">
-      <stop stop-color="#FBFFE3" offset="0"/>
-      <stop stop-color="#FFFF1B" offset="1"/>
-     </radialGradient>
-     <rect x="-21" y="-8.5" width="42" height="17" rx="8.5"
-     fill="url(#beamGrad)" id="beam"/>
+     <linearGradient id="waveGrad" y2="217" gradientUnits="userSpaceOnUse"
+                     x2="576.5" y1="274" x1="576.5">
+      <stop stop-color="#5F4EFF" offset="0"/>
+      <stop stop-color="#1000A8" offset="1"/>
+     </linearGradient>
     </defs>
-    <use xlink:href="#beam" transform="translate(56 0) rotate(8 -56 0)"/>
-    <use xlink:href="#beam" transform="translate(56 0) rotate(48 -56 0)"/>
-    <use xlink:href="#beam" transform="translate(56 0) rotate(88 -56 0)"/>
-    <use xlink:href="#beam" transform="translate(56 0) rotate(128 -56 0)"/>
-    <use xlink:href="#beam" transform="translate(56 0) rotate(168 -56 0)"/>
-    <use xlink:href="#beam" transform="translate(56 0) rotate(208 -56 0)"/>
-    <use xlink:href="#beam" transform="translate(56 0) rotate(248 -56 0)"/>
-    <use xlink:href="#beam" transform="translate(56 0) rotate(288 -56 0)"/>
-    <use xlink:href="#beam" transform="translate(56 0) rotate(328 -56 0)"/>
-    <animateTransform attributeName="transform" type="rotate"
-     from="0" to="40" dur="0.5s" repeatCount="6" additive="sum"/>
+    <g clip-path="url(#pictureRegion)">
+     <path id="wave"
+           d="m693.1 230c0.17 0 0.26-0.48 0.26-0.71 0-2.89-5.06 0.87-8.15 0.29-15.02-2.83-13.96-12.37-29.29-12.37s-15.33 12.47-30.66 12.47c-15.33 0-15.33-12.48-30.65-12.48-15.33 0-15.33 12.47-30.65 12.47s-15.33-12.48-30.65-12.48-15.33 12.48-30.65 12.48c-13.69 0-16.5-12.12-27.65-12.67h-0.08-1.64-14.5v56.97h235v-44.01h-0.9z"
+           fill="url(#waveGrad)"/>
+    </g>
+    <!-- Picture contents border -->
+    <rect height="106" width="149" stroke="#000" y="143.5" x="476.5"
+      fill="none"/>
    </g>
   </g>
-  <!-- Wave -->
-  <defs>
-   <linearGradient id="waveGrad" y2="217" gradientUnits="userSpaceOnUse"
-                   x2="576.5" y1="274" x1="576.5">
-    <stop stop-color="#5F4EFF" offset="0"/>
-    <stop stop-color="#1000A8" offset="1"/>
-   </linearGradient>
-  </defs>
-  <g clip-path="url(#pictureRegion)">
-   <path id="wave"
-         d="m693.1 230c0.17 0 0.26-0.48 0.26-0.71 0-2.89-5.06 0.87-8.15 0.29-15.02-2.83-13.96-12.37-29.29-12.37s-15.33 12.47-30.66 12.47c-15.33 0-15.33-12.48-30.65-12.48-15.33 0-15.33 12.47-30.65 12.47s-15.33-12.48-30.65-12.48-15.33 12.48-30.65 12.48c-13.69 0-16.5-12.12-27.65-12.67h-0.08-1.64-14.5v56.97h235v-44.01h-0.9z"
-         fill="url(#waveGrad)"/>
-  </g>
-  <!-- Picture contents border -->
-  <rect height="106" width="149" stroke="#000" y="143.5" x="476.5"
-    fill="none"/></g>
+ </g>
  <!-- Mouse door -->
  <g opacity="0">
   <!-- Hole -->
@@ -344,19 +352,17 @@
   <clipPath id="smokeClip">
     <path d="M117 134h196v352h-196v50h300v-460h-300z"/>
   </clipPath>
-  <style>
-   .puff {
-    opacity: 0;
-   }
-  </style>
  </defs>
- <g id="smoke" fill="#fff" clip-path="url(#smokeClip)">
-  <circle opacity=".5" cx="339.5" cy="367.5" r="37.5" class="puff"/>
-  <circle opacity=".5" cx="346" cy="477" r="44" class="puff"/>
-  <circle opacity=".5" cx="354" cy="418" r="44" class="puff"/>
-  <circle opacity=".5" cx="351" cy="279" r="44" class="puff"/>
-  <circle opacity=".5" cx="334" cy="213" r="37" class="puff"/>
-  <circle opacity=".5" cx="354" cy="140" r="56" class="puff"/>
-  <circle opacity=".5" cx="338" cy="330" r="29.5" class="puff"/>
+ <g id="smoke" fill="#fff" style="opacity: 0">
+  <!-- Separate the clip path out to avoid an invalidation bug in Firefox -->
+  <g clip-path="url(#smokeClip)">
+   <circle opacity=".5" cx="339.5" cy="367.5" r="37.5"/>
+   <circle opacity=".5" cx="346" cy="477" r="44"/>
+   <circle opacity=".5" cx="354" cy="418" r="44"/>
+   <circle opacity=".5" cx="351" cy="279" r="44"/>
+   <circle opacity=".5" cx="334" cy="213" r="37"/>
+   <circle opacity=".5" cx="354" cy="140" r="56"/>
+   <circle opacity=".5" cx="338" cy="330" r="29.5"/>
+  </g>
  </g>
 </svg>
