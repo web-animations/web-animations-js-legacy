@@ -198,6 +198,9 @@ var TimedItem = Class.create({
 			this.animationDuration = repeatedDuration / Math.abs(this.timing.playbackRate);
 		}
 		this.updateTimeMarkers();
+		if (this.parentGroup) {
+			this.parentGroup._childrenStateModified();
+		}
 	},
 	updateTimeMarkers: function(time) {
 		this.endTime = this.startTime + this.animationDuration + this.timing.startDelay + this.timeDrift;
@@ -371,7 +374,28 @@ function keyframesForValues(property, values) {
 	return animFun;
 }
 
+<<<<<<< HEAD
 // TODO: Remove this function once AnimTemplate, AnimGroup, AnimGroupTemplate don't use it.
+=======
+function _interpretTimingParam(timing) {
+	if (typeof(timing) === "undefined" || timing === null) {
+		return new Timing({});
+	}
+	if (timing instanceof Timing) {
+		return timing;
+	}
+	if (typeof(timing) === "number") {
+		return new Timing({duration: timing});
+	}
+	if (typeof(timing) === "object") {
+		return new Timing(timing);
+	}
+	try {
+		throw new Error("TypeError");
+	} catch (e) { console.log(e.stack); throw e; }
+}
+
+>>>>>>> b25967a
 function completeProperties(properties) {
 	var result = {};
 	if (properties.timing) {
@@ -431,17 +455,7 @@ var Anim = Class.create(TimedItem, {
 		}
 
 		// Interpret timing
-		if (timing instanceof Timing) {
-			this.timing = timing;
-		} else if (typeof(timing) === "number") {
-			this.timing = new Timing({duration: timing});
-		} else if (typeof(timing) === "object") {
-			this.timing = new Timing(timing);
-		} else {
-			try {
-				throw new Error("TypeError");
-			} catch (e) { console.log(e.stack); throw e; }
-		}
+		this.timing = _interpretTimingParam(timing);
 
 		$super(this.timing, startTime, parentGroup);
 
@@ -685,17 +699,28 @@ var AnimListMixin = {
 }
 
 var AnimGroup = Class.create(TimedItem, AnimListMixin, {
-	initialize: function($super, type, template, properties, startTime, parentGroup) {
+	initialize: function($super, type, template, children, timing, startTime, parentGroup) {
 		this.type = type || "par"; // used by TimedItem via intrinsicDuration(), so needs to be set before initializing super.
 		this.initListMixin(this._assertNotLive, this._childrenStateModified);
+<<<<<<< HEAD
 		// TODO: Use 2 parameters for animFunc and timing, stop using completedProperties
 		var completedProperties = completeProperties(properties);
 		$super(completedProperties.timing, startTime, parentGroup);
+=======
+		var completedTiming = _interpretTimingParam(timing);
+		$super(completedTiming, startTime, parentGroup);
+>>>>>>> b25967a
 		this.template = template;
 		if (template) {
 			template.addLinkedAnim(this);
 		}
-		this.name = properties.name || "<anon>";
+		if (children && Array.isArray(children)) {
+			for (var i = 0; i < children.length; i++) {
+				this.add(children[i]);
+			}
+		}
+		// TODO: Work out where to expose name in the API
+		// this.name = properties.name || "<anon>";
 	},
 	_assertNotLive: function() {
 		if (this.template) {
@@ -815,14 +840,14 @@ var AnimGroup = Class.create(TimedItem, AnimListMixin, {
 });
 
 var ParAnimGroup = Class.create(AnimGroup, {
-	initialize: function($super, properties, parentGroup, startTime) {
-		$super("par", undefined, properties, startTime, parentGroup);
+	initialize: function($super, children, timing, parentGroup, startTime) {
+		$super("par", undefined, children, timing, startTime, parentGroup);
 	}
 });
 
 var SeqAnimGroup = Class.create(AnimGroup, {
-	initialize: function($super, properties, parentGroup, startTime) {
-		$super("seq", undefined, properties, startTime, parentGroup);
+	initialize: function($super, children, timing, parentGroup, startTime) {
+		$super("seq", undefined, children, timing, startTime, parentGroup);
 	}
 });
 
