@@ -958,29 +958,6 @@ AnimFunc._createKeyframeFunc = function(property, value) {
 	return func;
 }
 
-var JavaScriptAnimFunc = Class.create(AnimFunc, {
-	initialize: function($super, getValue, zero, sample, operation, accumulateOperation) {
-		$super(operation, accumulateOperation);
-		this.getValue = getValue;
-		this.zeroPoint = zero;
-		this.sample = sample;
-	},
-	clone: function() {
-		return new JavaScriptAnimFunc(this.getValue, this.zeroPoint, this.sample, this.operation, this.accumulateOperation);
-	},
-	toString: function() {
-		return "CustomJS!";
-	}
-});
-
-var loggerAnimFunc = new JavaScriptAnimFunc(
-		function(elem) {return elem.innerHTML;}, 
-		function(elem, underlying) {elem.innerHTML = underlying;},
-		function(tf, iter, elem, underlying) {
-			if (tf != undefined) {elem.innerHTML = iter + ": " + Math.floor(tf * 100) / 100;} 
-			else {elem.innerHTML = underlying;}}
-	);
-
 var KeyframeAnimFunc = Class.create(AnimFunc, {
 	initialize: function($super, property, operation, accumulateOperation) {
 		$super(operation, accumulateOperation);
