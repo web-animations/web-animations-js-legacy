@@ -56,9 +56,9 @@ limitations under the License.
 <script src="web-animation.js"></script>
 <script>
 
-var group = new ParAnimGroup({iterationDuration: 2});
-new Anim(document.querySelector(".a"), {iterationDuration: 2, prop: "left", from: "100px", to: "200px"}, group);
-new Anim(document.querySelector(".b"), {iterationDuration: 2, prop: "left", from: "100px", to: "200px"}, group);
+var a = new Anim(document.querySelector(".a"), {left: ["100px", "200px"]}, 2);
+var b = new Anim(document.querySelector(".b"), {left: ["100px", "200px"]}, 2);
+var group = new ParAnimGroup([a, b], 2); 
 
 var template = group.templatize();
 template.children[0].resolutionStrategy = "selector: .a";
