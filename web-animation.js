@@ -136,8 +136,10 @@ var TimedItem = Class.create({
 
 		if (typeof parentGroup == "undefined") {
 			this.parentGroup = DEFAULT_GROUP;
-		} else {
+		} else if (parentGroup instanceof TimedItem) {
 			this.parentGroup = parentGroup;
+		} else {
+			throw new TypeError("parentGroup is not a TimedItem");
 		}
 
 		if (typeof startTime == "undefined") {
@@ -177,7 +179,7 @@ var TimedItem = Class.create({
 		});
 		this.__defineSetter__("startTime", function(newStartTime) {
 			if (this.parentGroup && this.parentGroup.type === "seq") {
-				throw "NoModificationAllowedError";
+				throw new Error("NoModificationAllowedError");
 			}
 			this._startTime = newStartTime;
 			this._startTimeMode = ST_MANUAL;

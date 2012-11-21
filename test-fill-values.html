@@ -56,10 +56,10 @@ limitations under the License.
 var fills = ["none", "backwards", "forwards", "both"];
 var divs = document.querySelectorAll(".anim");
 
-var group = new ParAnimGroup({startDelay: 1, iterationDuration: 4}, undefined, 1);
+var group = new ParAnimGroup([], {startDelay: 1, duration: 4}, undefined, 1);
 
 for (var i = 0; i < fills.length; i++) {
-	var anim = new Anim(divs[i], {startDelay: 1, iterationDuration: 1, fill: fills[i], prop: "left", from: "100px", to: "200px"}, group, 1);
+	var anim = new Anim(divs[i], {left: ["100px", "200px"]}, {startDelay: 1, duration: 1, fill: fills[i]}, group, 1);
 }
 
 </script>
