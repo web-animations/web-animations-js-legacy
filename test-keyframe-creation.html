@@ -53,10 +53,10 @@ limitations under the License.
 <script src="web-animation.js"></script>
 <script>
 
-new Anim(document.querySelector("#a"), {startDelay: 1, iterationDuration: 1, prop: "left", from: "100px", to: "200px"});
-new Anim(document.querySelector("#b"), {startDelay: 1, iterationDuration: 1, prop: "left", to: "200px"});
-new Anim(document.querySelector("#c"), {iterationDuration: 2, prop: "left", from: "100px", to: "200px"});
-new Anim(document.querySelector("#d"), {iterationDuration: 2, prop: "left", to: "200px"});
+new Anim(document.querySelector("#a"), {left: ["100px", "200px"]}, {startDelay: 1, duration: 1});
+new Anim(document.querySelector("#b"), {left: "200px"}, {startDelay: 1, duration: 1});
+new Anim(document.querySelector("#c"), {left: ["100px", "200px"]}, {duration: 2});
+new Anim(document.querySelector("#d"), {left: "200px"}, {duration: 2});
 
 
 </script>
