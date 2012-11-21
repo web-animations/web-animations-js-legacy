@@ -56,16 +56,16 @@ limitations under the License.
 <script src="web-animation.js"></script>
 <script>
 
-var sgroup = new SeqAnimGroup({name: "s"});
-var pgroup1 = new ParAnimGroup({name: "p1"}, sgroup);
-var pgroup2 = new ParAnimGroup({name: "p2"}, sgroup);
-new Anim(document.querySelector("#a"), {iterationDuration: 0.6, prop: "left", from: "100px", to: "200px"}, pgroup1);
-new Anim(document.querySelector("#b"), {iterationDuration: 0.5, prop: "left", from: "100px", to: "200px"}, pgroup1);
-new Anim(document.querySelector("#c"), {iterationDuration: 0.5, prop: "left", from: "100px", to: "200px"}, pgroup2);
-new Anim(document.querySelector("#d"), {iterationDuration: 0.3, prop: "left", from: "100px", to: "200px"}, pgroup2);
+var a1 = new Anim(document.querySelector("#a"), {left: ["100px", "200px"]}, 0.6);
+var a2 = new Anim(document.querySelector("#b"), {left: ["100px", "200px"]}, 0.5);
+var a3 = new Anim(document.querySelector("#c"), {left: ["100px", "200px"]}, 0.5);
+var a4 = new Anim(document.querySelector("#d"), {left: ["100px", "200px"]}, 0.3);
+var pgroup1 = new ParAnimGroup([a1, a2], {name: "p1"});
+var pgroup2 = new ParAnimGroup([a3, a4], {name: "p2"});
+var sgroup = new SeqAnimGroup([pgroup1, pgroup2], {name: "s"});
 
 window.setTimeout(function() {
-	sgroup.timing.speed = 2;
+	sgroup.timing.playbackRate = 2;
 	sgroup.play();
 }, 2000);
 </script>
