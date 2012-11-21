@@ -43,7 +43,7 @@ var Timing = Class.create({
 				timingFunc: this.timingFunc ? this.timingFunc.clone() : null,
 				fill: this.fill
 			});
-	}
+	},
 })
 
 function ImmutableTimingProxy(timing) {
@@ -423,9 +423,7 @@ function _interpretTimingParam(timing) {
 	if (typeof(timing) === "object") {
 		return new Timing(timing);
 	}
-	try {
-		throw new Error("TypeError");
-	} catch (e) { console.log(e.stack); throw e; }
+	throw new TypeError("timing parameters must be undefined, Timing objects, numbers, or timing dictionaries; not \"" + timing + "\"");
 }
 
 // -----------

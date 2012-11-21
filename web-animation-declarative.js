@@ -35,29 +35,41 @@ function attrAsPixelValue(element, attribute, defaultValue) {
 	return defaultValue;
 }
 
-function resolveProperties(elem) {
-	var startDelay = attrAsNumber(elem, "startDelay");
-	var iterationDuration = attrAsNumber(elem, "iterationDuration");
-	var iterationCount = attrAsNumber(elem, "iterationCount");
-	var fill = attrAsText(elem, "fill");
+function resolveAnimProperties(elem) {
 	var prop = attrAsText(elem, "prop");
 	var from = attrAsText(elem, "from");
 	var to = attrAsText(elem, "to");
-	var speed = attrAsNumber(elem, "speed");
+	var result = {}
+	result[prop] = [from, to];
+	return result;
+}
+
+function resolveTimingProperties(elem) {
+	var startDelay = attrAsNumber(elem, "startDelay");
+	var duration = attrAsNumber(elem, "duration");
+	var iterationCount = attrAsNumber(elem, "iterationCount", 1);
+	var iterationStart = attrAsNumber(elem, "iterationStart", 0);
+	var fill = attrAsText(elem, "fill");
+	var playbackRate = attrAsNumber(elem, "playbackRate");
 	var startTime = attrAsNumber(elem, "startTime");
 	var direction = attrAsText(elem, "direction");
 	var resolutionStrategy = attrAsText(elem, "resolutionStrategy");
 	var name = elem.id;
-	return {startDelay: startDelay, iterationDuration: iterationDuration, iterationCount: iterationCount, 
-					  fill: fill, prop: prop, from: from, to: to, speed: speed, direction: direction, startTime: startTime,
-					  resolutionStrategy: resolutionStrategy, name: name};
+	return {startDelay: startDelay, duration: duration, iterationCount: iterationCount, iterationStart: iterationStart,
+		fill: fill, playbackRate: playbackRate, direction: direction, startTime: startTime, resolutionStrategy: resolutionStrategy, name: name};
 }
 
 function instantiateElem(elem) {
-	var properties = resolveProperties(elem);
-	var instantiator = elem.tagName == "ANIMATION" ? AnimTemplate : (elem.tagName == "PAR" ? ParAnimGroupTemplate : SeqAnimGroupTemplate);
-	elem.template = new instantiator(properties, properties.resolutionStrategy);
-	return properties.startTime;
+	var animFunc = resolveAnimProperties(elem);
+	var timing = resolveTimingProperties(elem);
+	if (elem.tagName == "ANIMATION") {
+		elem.template = new AnimTemplate(animFunc, timing, timing.resolutionStrategy);
+	} else if (elem.tagName == "PAR") {
+		elem.template = new ParAnimGroupTemplate([], timing, timing.resolutionStrategy);
+	} else {
+		elem.template = new SeqAnimGroupTemplate([], timing, timing.resolutionStrategy);
+	}
+	return timing.startTime;
 }
 
 var animations = document.querySelectorAll("animation");
