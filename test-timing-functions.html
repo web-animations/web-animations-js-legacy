@@ -53,10 +53,10 @@ limitations under the License.
 <script src="web-animation.js"></script>
 <script>
 
-new Anim(document.querySelector("#a"), {fill: "forwards", startDelay: 1, iterationDuration: 2, prop: "left", to: "200px"});
-new Anim(document.querySelector("#b"), {fill: "forwards", startDelay: 1, iterationDuration: 2, prop: "left", timingFunction: new TimingFunction("ease-in"), to: "200px"});
-new Anim(document.querySelector("#c"), {fill: "forwards", startDelay: 1, iterationDuration: 2, prop: "left", timingFunction: new TimingFunction("ease-out"), to: "200px"});
-new Anim(document.querySelector("#d"), {fill: "forwards", startDelay: 1, iterationDuration: 2, prop: "left", timingFunction: new TimingFunction([0, 0.2, 0.8, 1]), to: "200px"});
+new Anim(document.querySelector("#a"), {left: "200px"}, {fill: "forwards", startDelay: 1, duration: 2});
+new Anim(document.querySelector("#b"), {left: "200px"}, {fill: "forwards", startDelay: 1, duration: 2, timingFunc: new TimingFunc("ease-in")});
+new Anim(document.querySelector("#c"), {left: "200px"}, {fill: "forwards", startDelay: 1, duration: 2, timingFunc: new TimingFunc("ease-out")});
+new Anim(document.querySelector("#d"), {left: "200px"}, {fill: "forwards", startDelay: 1, duration: 2, timingFunc: new TimingFunc([0, 0.2, 0.8, 1])});
 
 
 </script>
