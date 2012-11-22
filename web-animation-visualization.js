@@ -96,9 +96,9 @@ function updateRects(anim, startP, widthP, y) {
 		var myLength = end - anim.startTime - anim.timeDrift;		
 		for (var i = 0; i < anim.children.length; i++) {
 			var child = anim.children[i];
-			var childLength = Math.min(end - start, (child.timing.startDelay + child.animationDuration) / anim.timing.speed);
+			var childLength = Math.min(end - start, (child.timing.startDelay + child.animationDuration) / anim.timing.playbackRate);
 			var childWidth = childLength / myLength * widthP;
-			var childStart = (anim.timing.startDelay + child.startTime + child.timeDrift) / myLength * widthP / anim.timing.speed + startP;
+			var childStart = (anim.timing.startDelay + child.startTime + child.timeDrift) / myLength * widthP / anim.timing.playbackRate + startP;
 			if (isNaN(childStart) || childStart == Infinity || childStart == -Infinity|| isNaN(childWidth) || childWidth == Infinity || childWidth == -Infinity) {
 				continue;
 			}
