@@ -52,24 +52,36 @@ limitations under the License.
 	<div class="anim a"></div>
 	<div class="anim b"></div>
 	<div class="anim c"></div>
+	<div class="anim d"></div>
+	<div class="anim e"></div>
+	<div class="anim f"></div>
 </div>
 
 <div class="animContainer" id="cb">
 	<div class="anim a"></div>
 	<div class="anim b"></div>
 	<div class="anim c"></div>
+	<div class="anim d"></div>
+	<div class="anim e"></div>
+	<div class="anim f"></div>
 </div>
 
 <div class="animContainer" id="cc">
 	<div class="anim a"></div>
 	<div class="anim b"></div>
 	<div class="anim c"></div>
+	<div class="anim d"></div>
+	<div class="anim e"></div>
+	<div class="anim f"></div>
 </div>
 
 <div class="animContainer" id="cd">
 	<div class="anim a"></div>
 	<div class="anim b"></div>
 	<div class="anim c"></div>
+	<div class="anim d"></div>
+	<div class="anim e"></div>
+	<div class="anim f"></div>
 </div>
 
 <script src="http://ajax.googleapis.com/ajax/libs/prototype/1.7.1.0/prototype.js"></script>
@@ -94,7 +106,14 @@ for (var i = 0; i < containers.length; i++) {
 	new Anim(container.getElementsByClassName("a")[0], {left: ["100px", "300px"]}, {duration: 1, iterationCount: 3.1, iterationStart: 0.3}, groups[i]);
 	<!-- Test that iterationStart has a lower bound of zero. -->
 	new Anim(container.getElementsByClassName("b")[0], {left: ["100px", "300px"]}, {duration: 1, iterationCount: 3.4, iterationStart: -0.2}, groups[i]);
+	<!-- Test that iterationStart has an upper bound of iterationCount. -->
+	<!-- TODO: Revisit this decision. -->
+	new Anim(container.getElementsByClassName("c")[0], {left: ["100px", "300px"]}, {duration: 1, iterationCount: 1.7, iterationStart: 1.8}, groups[i]);
 	<!-- Test that nothing odd happens when iterationCount is an integer. -->
-	new Anim(container.getElementsByClassName("c")[0], {left: ["100px", "300px"]}, {duration: 1, iterationCount: 3.0, iterationStart: 0.4}, groups[i]);
+	new Anim(container.getElementsByClassName("d")[0], {left: ["100px", "300px"]}, {duration: 1, iterationCount: 3.0, iterationStart: 0.4}, groups[i]);
+	<!-- Test that nothing odd happens when (iterationCount - iterationStart) is an integer. -->
+	new Anim(container.getElementsByClassName("e")[0], {left: ["100px", "300px"]}, {duration: 1, iterationCount: 3.2, iterationStart: 0.2}, groups[i]);
+	<!-- Test that nothing odd happens when (iterationCount + iterationStart) is an integer. -->
+	new Anim(container.getElementsByClassName("f")[0], {left: ["100px", "180px"]}, {duration: 1, iterationCount: 2.8, iterationStart: 0.2}, groups[i]);
 }
 </script>
