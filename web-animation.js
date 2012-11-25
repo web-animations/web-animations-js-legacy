@@ -358,8 +358,6 @@ mixin(TimedItem.prototype, {
           this.animationTime = null;
         }
       }
-      var effectiveIterationStart = Math.min(this.timing.iterationStart,
-          this.timing.iterationCount);
       if (this.animationTime === null) {
         this.iterationTime = null;
         this.currentIteration = null;
@@ -369,14 +367,14 @@ mixin(TimedItem.prototype, {
         var isAtEndOfIterations = (this.timing.iterationCount != 0) &&
             ((this.itemTime < this.timing.startDelay) == this._reversing);
         this.currentIteration = isAtEndOfIterations ?
-           this._floorWithOpenClosedRange(effectiveIterationStart +
+           this._floorWithOpenClosedRange(this.timing.iterationStart +
                this.timing.iterationCount, 1.0) :
-           this._floorWithClosedOpenRange(effectiveIterationStart, 1.0);
+           this._floorWithClosedOpenRange(this.timing.iterationStart, 1.0);
         // Equivalent to unscaledIterationTime below.
         var unscaledFraction = isAtEndOfIterations ?
-            this._modulusWithOpenClosedRange(effectiveIterationStart +
+            this._modulusWithOpenClosedRange(this.timing.iterationStart +
                 this.timing.iterationCount, 1.0) :
-            this._modulusWithClosedOpenRange(effectiveIterationStart, 1.0);
+            this._modulusWithClosedOpenRange(this.timing.iterationStart, 1.0);
         this._timeFraction = this._isCurrentDirectionForwards(
             this.timing.direction, this.currentIteration) ?
                 unscaledFraction :
@@ -386,7 +384,7 @@ mixin(TimedItem.prototype, {
               this._timeFraction);
         }
       } else {
-        var startOffset = effectiveIterationStart * this.duration;
+        var startOffset = this.timing.iterationStart * this.duration;
         var effectiveSpeed = this._reversing ?
             -this.timing.playbackRate : this.timing.playbackRate;
         if (effectiveSpeed < 0) {
