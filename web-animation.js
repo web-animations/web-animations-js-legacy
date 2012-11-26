@@ -1028,7 +1028,7 @@ var KeyframeAnimFunc = Class.create(AnimFunc, {
 				// where we have to massage the data before setting e.g. 'rotate(45deg)'
 				// is valid, but for UAs that don't support CSS Transforms syntax on SVG
 				// content we have to convert that to 'rotate(45)' before setting.
-				DEFAULT_GROUP.compositor.setAnimatedValue(target, this.property, new AnimatedResult(frames[i].value, this.operation));
+				DEFAULT_GROUP.compositor.setAnimatedValue(target, this.property, new AnimatedResult(frames[i].value, this.operation, timeFraction));
 				return;
 			}
 			if (frames[i].offset > timeFraction) {
@@ -1076,7 +1076,7 @@ var KeyframeAnimFunc = Class.create(AnimFunc, {
 		var localTimeFraction = (timeFraction - beforeFrame.offset) / (afterFrame.offset - beforeFrame.offset);
 		// TODO: property-based interpolation for things that aren't simple
 		var animationValue = interpolate(this.property, target, beforeFrame.value, afterFrame.value, localTimeFraction);
-		DEFAULT_GROUP.compositor.setAnimatedValue(target, this.property, new AnimatedResult(animationValue, this.operation));
+		DEFAULT_GROUP.compositor.setAnimatedValue(target, this.property, new AnimatedResult(animationValue, this.operation, timeFraction));
 	},
 	getValue: function(target) {
 		return getValue(target, this.property);
@@ -1400,9 +1400,10 @@ function fromCssValue(property, value) {
 }
 
 var AnimatedResult = Class.create({
-	initialize: function(value, operation) {
+	initialize: function(value, operation, fraction) {
 		this.value = value;
 		this.operation = operation;
+		this.fraction = fraction;
 	}
 });
 
@@ -1424,10 +1425,35 @@ var CompositedPropertyMap = Class.create({
 		for (var property in this.properties) {
 			resultList = this.properties[property];
 			if (resultList.length > 0) {
-				if (resultList[resultList.length - 1].operation != "replace") {
-					throw new Error("Compositing not implemented yet");
+				var i;
+				for (i = resultList.length - 1; i >= 0; i--) {
+					if (resultList[i].operation == "replace") {
+						break;
+					}
 				}
-				setValue(this.target, property, resultList[resultList.length - 1].value);
+				// the baseValue will either be retrieved after clearing the value or will
+				// be overwritten by a "replace".
+				var baseValue = undefined;
+				if (i == -1) {
+					clearValue(this.target, property);
+					baseValue = getValue(this.target, property);
+					i = 0;
+				}
+				for ( ; i < resultList.length; i++) {
+					switch (resultList[i].operation) {
+					case "replace":
+						baseValue = resultList[i].value;
+						continue;
+					case "add":
+						// TODO: implement generic adder
+						baseValue += resultList[i].value;
+						continue;
+					case "merge":
+						baseValue = interpolate(property, this.target, baseValue, resultList[i].value, resultList[i].fraction);
+						continue;
+					}
+				}	
+				setValue(this.target, property, baseValue);
 			}
 			this.properties[property] = [];
 		}
@@ -1459,6 +1485,14 @@ function setValue(target, property, value) {
 		target.setAttribute(property, value);
 	} else {
 		target.style[property] = value;
+	}
+}
+
+function clearValue(target, property) {
+	if (propertyIsSVGAttrib(property, target)) {
+		throw new Error("Clearing SVG attribute values not yet implemented");
+	} else {
+		target.style[property] = null;
 	}
 }
 
