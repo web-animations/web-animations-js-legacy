@@ -61,7 +61,7 @@ var divs = document.querySelectorAll(".anim");
 
 var group = new ParAnimGroup([], 2, undefined, 1);
 
-for (var i = 0; i < fills.length; i++) {
+for (var i = 0; i < divs.length; i++) {
 	var anim = new Anim(divs[i], {left: (100 * (i+1)) + "px"}, 2, group);
 }
 
