@@ -542,12 +542,6 @@ var Anim = Class.create(TimedItem, {
 		// section 6.6
 		return Infinity;
 	},
-	_zero: function() {
-	  if (this.animFunc instanceof AnimFunc) {
-			this.animFunc.zeroPoint(this.targetElement, this.underlyingValue);
-		}
-		//this.targetElement.innerHTML = "ZERO"
-	},
 	_getSampleFuncs: function() {
 		var prevTimeFraction = this._timeFraction;
 		this.updateTimeMarkers();
@@ -557,7 +551,6 @@ var Anim = Class.create(TimedItem, {
 
 		var rv = { startTime: this._parentToGlobalTime(this.startTime),
 			target: this.targetElement,
-			clearFunc: function() { this._zero(); }.bind(this),
 			sampleFunc:
 				function() {
 					if (this.animFunc instanceof AnimFunc) {
@@ -865,9 +858,6 @@ var AnimGroup = Class.create(TimedItem, AnimListMixin, {
 			throw "Unsupported type " + this.type;
 		}
 	},
-	_zero: function() {
-		this.children.forEach(function(child) { child._zero(); });
-	},
 	_getSampleFuncs: function() {
 		this.updateTimeMarkers();
 		var sampleFuncs = [];
@@ -947,9 +937,6 @@ var AnimFunc = Class.create({
 	},
 	sample: function(timeFraction, currentIteration, target, underlyingValue) {
 		throw "Unimplemented sample function";
-	},
-	zeroPoint: function(target) {
-		return;
 	},
 	getValue: function(target) {
 		return;
@@ -1090,9 +1077,6 @@ var KeyframeAnimFunc = Class.create(AnimFunc, {
 		// TODO: property-based interpolation for things that aren't simple
 		var animationValue = interpolate(this.property, target, beforeFrame.value, afterFrame.value, localTimeFraction);
 		DEFAULT_GROUP.compositor.setAnimatedValue(target, this.property, new AnimatedResult(animationValue, this.operation));
-	},
-	zeroPoint: function(target, underlyingValue) {
-		DEFAULT_GROUP.compositor.setAnimatedValue(target, this.property, new AnimatedResult(underlyingValue, "replace"));
 	},
 	getValue: function(target) {
 		return getValue(target, this.property);
@@ -1439,10 +1423,10 @@ var CompositedPropertyMap = Class.create({
 	applyAnimatedValues: function() {
 		for (var property in this.properties) {
 			resultList = this.properties[property];
-			if (resultList.length > 1 && resultList[resultList.length - 1].operation != "replace") {
-				throw new Error("Compositing not implemented yet");
-			}
 			if (resultList.length > 0) {
+				if (resultList[resultList.length - 1].operation != "replace") {
+					throw new Error("Compositing not implemented yet");
+				}
 				setValue(this.target, property, resultList[resultList.length - 1].value);
 			}
 			this.properties[property] = [];
@@ -1495,13 +1479,6 @@ DEFAULT_GROUP.compositor = new Compositor();
 
 DEFAULT_GROUP._tick = function(parentTime) {
 		this.updateTimeMarkers(parentTime);
-
-		// Clear old effect in reverse
-		for (var i = this.oldFuncs.length - 1; i >= 0; i--) {
-			if (this.oldFuncs[i].hasOwnProperty('clearFunc')) {
-				this.oldFuncs[i].clearFunc();
-			}
-		}
 
 		// Get animations for this sample
 		// TODO: Consider reverting to direct application of values and sorting inside the compositor.
