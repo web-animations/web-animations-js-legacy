@@ -233,7 +233,7 @@ var TimedItem = Class.create({
 		//console.log(this.name + ": endTime, itemTime", this.endTime, this.itemTime);
 		if (this.itemTime !== null) {
 			if (this.itemTime < this.timing.startDelay) {
-				if (((this.timing.fill == "backwards") && (this._reversing == false)) 
+				if (((this.timing.fill == "backwards") && !this._reversing) 
 					|| this.timing.fill == "both" 
 					|| ((this.timing.fill == "forwards") && this._reversing)) {
 					this.animationTime = 0;
@@ -243,7 +243,7 @@ var TimedItem = Class.create({
 			} else if (this.itemTime < this.timing.startDelay + this.animationDuration) {
 				this.animationTime = this.itemTime - this.timing.startDelay;
 			} else {
-				if (((this.timing.fill == "forwards") && (this._reversing == false))
+				if (((this.timing.fill == "forwards") && !this._reversing)
 					|| this.timing.fill == "both" 
 					|| ((this.timing.fill == "backwards") && this._reversing)) {
 					this.animationTime = this.animationDuration;
@@ -252,7 +252,6 @@ var TimedItem = Class.create({
 				}
 			}
 			if (this.animationTime === null) {
-				var adjustedAnimationTime = null;
 				this.iterationTime = null;
 				this.currentIteration = null;
 				this._timeFraction = null;
@@ -365,8 +364,7 @@ var TimedItem = Class.create({
 	_parentToGlobalTime: function(parentTime) {
 	  if (!this.parentGroup)
 			return parentTime;
-		return parentTime + DEFAULT_GROUP.currentTime -
-												this.parentGroup.iterationTime;
+		return parentTime + DEFAULT_GROUP.currentTime - this.parentGroup.iterationTime;
 	},
 });
 
