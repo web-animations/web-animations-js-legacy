@@ -17,11 +17,12 @@ var webAnimVisUpdateAnims = undefined;
 
 var Timing = Class.create({
 	initialize: function(timingDict) {
-		this.startDelay = timingDict.startDelay || 0;
+		this.startDelay = timingDict.startDelay || 0.0;
 		this.duration = timingDict.duration;
 		this.iterationCount = timingDict.iterationCount || 1.0;
 		this.iterationStart = timingDict.iterationStart || 0.0;
-		this.playbackRate = timingDict.playbackRate || 1;
+		this.playbackRate = exists(timingDict.playbackRate) ? timingDict.playbackRate : 1.0;
+		//this.playbackRate = timingDict.playbackRate || 1.0;
 		this.direction = timingDict.direction || "normal";
 		if (typeof timingDict.timingFunc === "string") {
 			// TODO: Write createFromString
@@ -212,13 +213,9 @@ var TimedItem = Class.create({
 		} else {
 			this.duration = this.intrinsicDuration();
 		}
-		// section 6.7
+		// Section 6.10: Calculating the intrinsic animation duration
 		var repeatedDuration = this.duration * this.timing.iterationCount;
-		if (repeatedDuration == Infinity || this.timing.playbackRate == 0) {
-			this.animationDuration = Infinity;
-		} else {
-			this.animationDuration = repeatedDuration / Math.abs(this.timing.playbackRate);
-		}
+		this.animationDuration = repeatedDuration / Math.abs(this.timing.playbackRate);
 		this.updateTimeMarkers();
 		if (this.parentGroup) {
 			this.parentGroup._childrenStateModified();
