@@ -1027,7 +1027,7 @@ var KeyframeAnimFunc = Class.create(AnimFunc, {
 		});
 		return this.frames.frames;
 	},
-	sample: function(timeFraction, currentIteration, target, underlyingValue) {
+	sample: function(timeFraction, currentIteration, target) {
 		var frames = this.sortedFrames();
 		if (frames.length == 0) {
 			return;
@@ -1053,7 +1053,7 @@ var KeyframeAnimFunc = Class.create(AnimFunc, {
 		if (afterFrameNum == 0) {
 			// In the case where we have a negative time fraction and a keyframe at
 			// offset 0, the expected behavior is to extrapolate the interval that
-			// starts at 0, rather than to use the underlying value.
+			// starts at 0, rather than to use the base value.
 			if (frames[0].offset === 0) {
 				afterFrameNum = frames.length > 1 ? 1 : frames.length;
 				beforeFrameNum = 0;
@@ -1063,7 +1063,7 @@ var KeyframeAnimFunc = Class.create(AnimFunc, {
 		} else if (afterFrameNum == null) {
 			// In the case where we have a time fraction greater than 1 and a keyframe
 			// at 1, the expected behavior is to extrapolate the interval that ends at
-			// 1, rather than to use the underlying value.
+			// 1, rather than to use the base value.
 			if (frames[frames.length-1].offset === 1) {
 				afterFrameNum = frames.length - 1;
 				beforeFrameNum = frames.length > 1 ? frames.length - 2 : -1;
@@ -1075,13 +1075,13 @@ var KeyframeAnimFunc = Class.create(AnimFunc, {
 			beforeFrameNum = afterFrameNum - 1;
 		}
 		if (beforeFrameNum == -1) {
-			beforeFrame = {value: underlyingValue, offset: 0};
+			beforeFrame = {value: zero(this.property, frames[afterFrameNum].value), offset: 0};
 		} else {
 			beforeFrame = frames[beforeFrameNum];
 		}
 
 		if (afterFrameNum == frames.length) {
-			afterFrame = {value: underlyingValue, offset: 1};
+			afterFrame = {value: zero(this.property, frames[beforeFrameNum].value), offset: 1};
 		} else {
 			afterFrame = frames[afterFrameNum];
 		}
@@ -1209,15 +1209,19 @@ function _interpArray(from, to, f) {
 	return result;
 }
 
+function _zeroIsNought() { return 0; }
+
+function transformZero(t) { throw "UNIMPLEMENTED"; }
+
 var supportedProperties = new Array();
-supportedProperties["opacity"] = { type: "number", isSVGAttrib: false };
-supportedProperties["left"]    = { type: "length", isSVGAttrib: false };
-supportedProperties["top"]     = { type: "length", isSVGAttrib: false };
-supportedProperties["cx"]      = { type: "length", isSVGAttrib: true };
+supportedProperties["opacity"] = { type: "number", isSVGAttrib: false, zero: _zeroIsNought };
+supportedProperties["left"]    = { type: "length", isSVGAttrib: false, zero: _zeroIsNought };
+supportedProperties["top"]     = { type: "length", isSVGAttrib: false, zero: _zeroIsNought };
+supportedProperties["cx"]      = { type: "length", isSVGAttrib: true, zero: _zeroIsNought };
 
 // For browsers that support transform as a style attribute on SVG we can
 // set isSVGAttrib to false
-supportedProperties["transform"] = { type: "transform", isSVGAttrib: true };
+supportedProperties["transform"] = { type: "transform", isSVGAttrib: true, zero: transformZero };
 supportedProperties["-webkit-transform"] =
 	{ type: "transform", isSVGAttrib: false };
 
@@ -1241,6 +1245,10 @@ function propertyIsSVGAttrib(property, target) {
 		return false;
 	var propDetails = supportedProperties[property];
 	return propDetails && propDetails.isSVGAttrib;
+}
+
+function zero(property, value) {
+	return supportedProperties[property].zero(value);
 }
 
 /**
@@ -1431,11 +1439,12 @@ var CompositedPropertyMap = Class.create({
 	applyAnimatedValues: function() {
 		for (var property in this.properties) {
 			resultList = this.properties[property];
-			console.log(resultList.length);
 			if (resultList.length > 1 && resultList[resultList.length - 1].operation != "replace") {
 				throw new Error("Compositing not implemented yet");
 			}
-			setValue(this.target, property, resultList[resultList.length - 1].value);
+			if (resultList.length > 0) {
+				setValue(this.target, property, resultList[resultList.length - 1].value);
+			}
 			this.properties[property] = [];
 		}
 	}
