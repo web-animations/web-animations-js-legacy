@@ -986,7 +986,9 @@ AnimFunc._createKeyframeFunc = function(property, value) {
 	var func = new KeyframeAnimFunc(property);
 
 	if (typeof value === "string") {
+		func.frames.add(new Keyframe(value, 0));
 		func.frames.add(new Keyframe(value, 1));
+		func.operation = "merge";
 	} else if (Array.isArray(value)) {
 		for (var i = 0; i < value.length; i++) {
 			if (typeof value[i] !== "string") {
