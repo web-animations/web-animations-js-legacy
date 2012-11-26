@@ -118,7 +118,7 @@ var TimedTemplate = Class.create({
 });
 
 function exists(val) {
-	return val != undefined;
+	return typeof val !== "undefined";
 }
 
 var ST_MANUAL = 0;
@@ -135,7 +135,7 @@ var TimedItem = Class.create({
 		this.animationTime = null;
 		this._reversing = false;
 
-		if (typeof parentGroup == "undefined") {
+		if (!exists(parentGroup)) {
 			this.parentGroup = DEFAULT_GROUP;
 		} else if (parentGroup instanceof TimedItem) {
 			this.parentGroup = parentGroup;
@@ -143,7 +143,7 @@ var TimedItem = Class.create({
 			throw new TypeError("parentGroup is not a TimedItem");
 		}
 
-		if (typeof startTime == "undefined") {
+		if (!exists(startTime)) {
 			this._startTimeMode = ST_AUTO;
 			if (this.parentGroup) {
 				this._startTime = this.parentGroup.iterationTime || 0;
@@ -225,7 +225,7 @@ var TimedItem = Class.create({
 		this.endTime = this._startTime + this.animationDuration + this.timing.startDelay + this.timeDrift;
 		if (this.parentGroup && this.parentGroup.iterationTime) {
 			this.itemTime = this.parentGroup.iterationTime - this._startTime - this.timeDrift;
-		} else if (typeof parentTime !== "undefined") {
+		} else if (exists(parentTime)) {
 			this.itemTime = parentTime;
 		} else {
 			this.itemTime = null;
@@ -407,7 +407,7 @@ function _interpretAnimFunc(animFunc) {
 }
 
 function _interpretTimingParam(timing) {
-	if (typeof(timing) === "undefined" || timing === null) {
+	if (!exists(timing) || timing === null) {
 		return new Timing({});
 	}
 	if (timing instanceof Timing || timing instanceof TimingProxy) {
@@ -694,7 +694,7 @@ var AnimListMixin = {
 		return removedItems;
 	},
 	remove: function(index, count) {
-		if (typeof count === "undefined") {
+		if (!exists(count)) {
 			count = 1;
 		}
 		return this.splice(index, count);
@@ -1373,14 +1373,14 @@ DEFAULT_GROUP._tick = function(parentTime) {
 		return !allFinished;
 }
 DEFAULT_GROUP.currentState = function() {
-	return this.iterationTime + " " + (rAFNo != undefined ? "ticking" : "stopped") + " " + this.toString();
+	return this.iterationTime + " " + (exists(rAFNo) ? "ticking" : "stopped") + " " + this.toString();
 }.bind(DEFAULT_GROUP);
 
 var now = undefined;
 
 // massive hack to allow things to be added to the parent group and start playing. Maybe this is right though?
 DEFAULT_GROUP.__defineGetter__("iterationTime", function() {
-	if (now == undefined) {
+	if (!exists(now)) {
 		now = Date.now();
 		window.setTimeout(function() { now = undefined; }, 0);
 	}
@@ -1400,7 +1400,7 @@ var ticker = function(_time) {
 };
 
 function maybeRestartAnimation() {
-	if (rAFNo != undefined) {
+	if (exists(rAFNo)) {
 		return;
 	}
 	rAFNo = requestAnimationFrame(ticker);
