@@ -277,11 +277,10 @@ var TimedItem = Class.create({
 					var unscaledIterationTime = 0;
 				} else {
 					var repeatedDuration = this.duration * this.timing.iterationCount;
-					// TODO: ???
-					if (adjustedAnimationTime - startOffset == repeatedDuration && (iterationCount - iterationStart) % 1 == 0) {
-						var unscaledIterationTime = this.duration;
-					} else {
-						var unscaledIterationTime = adjustedAnimationTime % this.duration;
+					var unscaledIterationTime = adjustedAnimationTime % this.duration;
+					// At the end of the set of iterations, unscaledIterationTime should not wrap to zero.
+					if (adjustedAnimationTime - startOffset == repeatedDuration && unscaledIterationTime == 0) {
+						unscaledIterationTime = this.duration;
 					}
 				}
 				var scaledIterationTime = unscaledIterationTime;
