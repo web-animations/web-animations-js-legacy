@@ -19,7 +19,7 @@ var Timing = Class.create({
 	initialize: function(timingDict) {
 		this.startDelay = timingDict.startDelay || 0.0;
 		this.duration = timingDict.duration;
-		this.iterationCount = timingDict.iterationCount || 1.0;
+		this.iterationCount = exists(timingDict.iterationCount) ? timingDict.iterationCount : 1.0;
 		this.iterationStart = timingDict.iterationStart || 0.0;
 		this.playbackRate = exists(timingDict.playbackRate) ? timingDict.playbackRate : 1.0;
 		//this.playbackRate = timingDict.playbackRate || 1.0;
@@ -279,7 +279,7 @@ var TimedItem = Class.create({
 					var repeatedDuration = this.duration * this.timing.iterationCount;
 					var unscaledIterationTime = adjustedAnimationTime % this.duration;
 					// At the end of the set of iterations, unscaledIterationTime should not wrap to zero.
-					if (adjustedAnimationTime - startOffset == repeatedDuration && unscaledIterationTime == 0) {
+					if (this.timing.iterationCount != 0 && adjustedAnimationTime - startOffset == repeatedDuration && unscaledIterationTime == 0) {
 						unscaledIterationTime = this.duration;
 					}
 				}
