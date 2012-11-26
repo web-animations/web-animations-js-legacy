@@ -1305,14 +1305,22 @@ function fromCssValue(property, value) {
 		       : [null, null];
 	} else if (propertyIsTransform(property)) {
 		// TODO: fix this :)
-		for (var i = 0; i < transformREs.length; i++) {
-			var reSpec = transformREs[i];
-			var r = reSpec[0].exec(value);
-			if (r) {
-				return [{t: reSpec[2], d: reSpec[1](r)}];
+		var result = []
+		while (value.length > 0) {
+			var r = undefined;
+			for (var i = 0; i < transformREs.length; i++) {
+				var reSpec = transformREs[i];
+				r = reSpec[0].exec(value);
+				if (r) {
+					result.push({t: reSpec[2], d: reSpec[1](r)});
+					value = value.substring(r[0].length);
+					break;
+				}
 			}
+			if (r === undefined)
+				return result;
 		}
-		return [{t: null, d: null}];
+		return result;
 	} else {
 		throw "UnsupportedProperty";
 	}
