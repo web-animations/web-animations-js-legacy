@@ -1206,12 +1206,21 @@ function interpolate(property, target, from, to, f) {
 	} else if (propertyIsLength(property)) {
 		return toCssValue(property, [_interp(from[0], to[0], f), "px"], svgMode);
 	} else if (propertyIsTransform(property)) {
-		console.assert(from[0].t === to[0].t || from[0].t === null ||
-			to[0].t === null,
-			"Transform types should match or one should be the underlying value");
-		var type = from[0].t ? from[0].t : to[0].t;
-		return toCssValue(property,
-			[{t: type, d:_interp(from[0].d, to[0].d, f)}], svgMode)
+		while (from.length < to.length) {
+			from.push({t: null, d: null});
+		}
+		while (to.length < from.length) {
+			to.push({t: null, d: null});
+		}
+		var out = []
+		for (var i = 0; i < from.length; i++) {
+			console.assert(from[i].t === to[i].t || from[i].t === null ||
+				to[i].t === null,
+				"Transform types should match or one should be the underlying value");
+			var type = from[i].t ? from[i].t : to[i].t;
+			out.push({t: type, d:_interp(from[i].d, to[i].d, f)});
+		}
+		return toCssValue(property, out, svgMode);
 	} else {
 		throw "UnsupportedProperty";
 	}
@@ -1229,31 +1238,40 @@ function toCssValue(property, value, svgMode) {
 		return value[0] + value[1];
 	} else if (propertyIsTransform(property)) {
 		// TODO: fix this :)
-		console.assert(value[0].t, "transform type should be resolved by now");
-		switch (value[0].t) {
-			case "rotate":
-			case "rotateY":
-			{
-				var unit = svgMode ? "" : "deg";
-				return value[0].t + "(" + value[0].d + unit + ")";
-			}
-			case "translate":
-			{
-				var unit = svgMode ? "" : "px";
-				if (value[0].d[1] === 0) {
-					return value[0].t + "(" + value[0].d[0] + unit + ")";
-				} else {
-					return value[0].t + "(" + value[0].d[0] + unit + ", " +
-								 value[0].d[1] + unit + ")";
+		var out = ""
+		for (var i = 0; i < value.length; i++) {
+			console.assert(value[i].t, "transform type should be resolved by now");
+			switch (value[i].t) {
+				case "rotate":
+				case "rotateY":
+				{
+					var unit = svgMode ? "" : "deg";
+					out += value[i].t + "(" + value[i].d + unit + ") ";
+					break;
+				}
+				case "translate":
+				{
+					var unit = svgMode ? "" : "px";
+					if (value[i].d[1] === 0) {
+						out += value[i].t + "(" + value[i].d[0] + unit + ") ";
+					} else {
+						out += value[i].t + "(" + value[i].d[0] + unit + ", " +
+									value[i].d[1] + unit + ") ";
+					}
+					break;
+					}
+				case "scale":
+				{
+					if (value[i].d[0] === value[i].d[1]) {
+						out += value[i].t + "(" + value[i].d[0] + ") ";
+					} else {
+						out += value[i].t + "(" + value[i].d[0] + ", " + value[i].d[1] + ") ";
+					}
+					break;
 				}
 			}
-			case "scale":
-				if (value[0].d[0] === value[0].d[1]) {
-					return value[0].t + "(" + value[0].d[0] + ")";
-				} else {
-					return value[0].t + "(" + value[0].d[0] + ", " + value[0].d[1] + ")";
-				}
 		}
+		return out.substring(0, out.length - 1);
 	} else {
 		throw "UnsupportedProperty";
 	}
@@ -1288,11 +1306,11 @@ function extractScaleValues(scales) {
 
 var transformREs =
 	[
-		[/rotate\(([+-]?(?:\d+|\d*\.\d+))(deg|grad|rad|turn)?\)/, extractDeg, "rotate"],
-		[/rotateY\(([+-]?(?:\d+|\d*\.\d+))(deg|grad|rad|turn)\)/, extractDeg, "rotateY"],
-		[/translate\(([+-]?(?:\d+|\d*\.\d+))(px)?(?:\s*,\s*([+-]?(?:\d+|\d*\.\d+))(px)?)?\)/,
+		[/^\s*rotate\(([+-]?(?:\d+|\d*\.\d+))(deg|grad|rad|turn)?\)/, extractDeg, "rotate"],
+		[/^\s*rotateY\(([+-]?(?:\d+|\d*\.\d+))(deg|grad|rad|turn)\)/, extractDeg, "rotateY"],
+		[/^\s*translate\(([+-]?(?:\d+|\d*\.\d+))(px)?(?:\s*,\s*([+-]?(?:\d+|\d*\.\d+))(px)?)?\)/,
 		 extractTranslationValues, "translate"],
-		[/scale\((\d+|\d*\.\d+)(?:\s*,\s*(\d+|\d*.\d+))?\)/, extractScaleValues, "scale"]
+		[/^\s*scale\((\d+|\d*\.\d+)(?:\s*,\s*(\d+|\d*.\d+))?\)/, extractScaleValues, "scale"]
 	];
 
 function fromCssValue(property, value) {
@@ -1304,14 +1322,22 @@ function fromCssValue(property, value) {
 		       : [null, null];
 	} else if (propertyIsTransform(property)) {
 		// TODO: fix this :)
-		for (var i = 0; i < transformREs.length; i++) {
-			var reSpec = transformREs[i];
-			var r = reSpec[0].exec(value);
-			if (r) {
-				return [{t: reSpec[2], d: reSpec[1](r)}];
+		var result = []
+		while (value.length > 0) {
+			var r = undefined;
+			for (var i = 0; i < transformREs.length; i++) {
+				var reSpec = transformREs[i];
+				r = reSpec[0].exec(value);
+				if (r) {
+					result.push({t: reSpec[2], d: reSpec[1](r)});
+					value = value.substring(r[0].length);
+					break;
+				}
 			}
+			if (r === undefined)
+				return result;
 		}
-		return [{t: null, d: null}];
+		return result;
 	} else {
 		throw "UnsupportedProperty";
 	}
