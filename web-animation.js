@@ -158,8 +158,13 @@ var TimedItem = Class.create({
 		if (this.parentGroup) {
 			this.parentGroup._addChild(this);
 		}
-		this.paused = false;
-		this.timeDrift = 0;
+		this._timeDrift = 0;
+		this.__defineGetter__("timeDrift", function() {
+			if (this.locallyPaused) {
+				return this._effectiveParentTime - this.startTime - this._pauseStartTime;
+			}
+			return this._timeDrift;
+		});
 		this.__defineGetter__("_effectiveParentTime", function() {
 			return this.parentGroup && this.parentGroup.iterationTime
 			  ? this.parentGroup.iterationTime
@@ -169,7 +174,11 @@ var TimedItem = Class.create({
 			return this._effectiveParentTime - this._startTime - this.timeDrift;
 		});
 		this.__defineSetter__("currentTime", function(seekTime) {
-			this.timeDrift = this._effectiveParentTime - this._startTime - seekTime;
+			if (this._locallyPaused) {
+				this._pauseStartTime = seekTime;
+			} else {
+				this._timeDrift = this._effectiveParentTime - this._startTime - seekTime;
+			}
 			this.updateTimeMarkers();
 			if (this.parentGroup) {
 				this.parentGroup._childrenStateModified();
@@ -189,13 +198,34 @@ var TimedItem = Class.create({
 				this.parentGroup._childrenStateModified();
 			}
 		});
+		this._locallyPaused = false;
+		this._pauseStartTime = 0;
+		this.__defineGetter__("locallyPaused", function() {
+			return this._locallyPaused;
+		});
+		this.__defineSetter__("locallyPaused", function(newVal) {
+			if (this._locallyPaused === newVal) {
+				return;
+			}
+			if (this._locallyPaused) {
+				this._timeDrift = this._effectiveParentTime - this.startTime - this._pauseStartTime;
+			} else {
+				this._pauseStartTime = this.currentTime;
+			}
+			this._locallyPaused = newVal;
+			this.updateTimeMarkers();
+		});
+		this.__defineGetter__("paused", function() {
+			return this.locallyPaused || (exists(this.parentGroup) && this.parentGroup.paused);
+		});
+				
 	},
 	reparent: function(parentGroup) {
 		if (this.parentGroup) {
 			this.parentGroup.remove(this.parentGroup.indexOf(this), 1);
 		}
 		this.parentGroup = parentGroup;
-		this.timeDrift = 0;
+		this._timeDrift = 0;
 		if (this._startTimeMode == ST_FORCED &&
 			  (!parentGroup || parentGroup != "seq")) {
 			this._startTime = this._stashedStartTime;
@@ -222,7 +252,11 @@ var TimedItem = Class.create({
 		}
 	},
 	updateTimeMarkers: function(parentTime) {
-		this.endTime = this._startTime + this.animationDuration + this.timing.startDelay + this.timeDrift;
+		if (this.locallyPaused) {
+			this.endTime = Infinity;
+		} else {
+			this.endTime = this._startTime + this.animationDuration + this.timing.startDelay + this.timeDrift;
+		}
 		if (this.parentGroup && this.parentGroup.iterationTime) {
 			this.itemTime = this.parentGroup.iterationTime - this._startTime - this.timeDrift;
 		} else if (exists(parentTime)) {
@@ -316,17 +350,7 @@ var TimedItem = Class.create({
 		//console.log("name parent children start end item anim iter currentIter tf:", this.name, this.parentGroup ? this.parentGroup.name : "NONE", chillen, this.startTime, this.endTime, this.itemTime, this.animationTime, this.iterationTime, this.currentIteration, this._timeFraction);
 	},
 	pause: function() {
-		this.paused = true;
-		// TODO: update timing parameters
-	},
-	unpause: function() {
-		this.paused = false;
-	},
-	getPauseState: function() {
-		return this.paused;
-	},
-	isPaused: function() {
-		return getPauseState() || this.parentGroup.isPaused();
+		this.locallyPaused = true;
 	},
 	seek: function(itemTime) {
 		// TODO
@@ -361,6 +385,7 @@ var TimedItem = Class.create({
 		if (this.currentTime > this.animationDuration + this.timing.startDelay && this.timing.playbackRate >= 0) {
 			this.currentTime = this.timing.startDelay;
 		}
+		this.locallyPaused = false;
 	},
 	_floorWithClosedOpenRange: function(x, range) {
 		return Math.floor(x / range);
@@ -535,7 +560,7 @@ var Anim = Class.create(TimedItem, {
 		var funcDescr = this.animFunc instanceof AnimFunc
 			? this.animFunc.toString()
 			: "Custom scripted function";
-		return "Anim " + this.startTime + "-" + this.endTime + " (" + this.timeDrift+ ") " + funcDescr;
+		return "Anim " + this.startTime + "-" + this.endTime + " (" + this.timeDrift + " @" + this.currentTime + ") " + funcDescr;
 	}
 });
 
@@ -836,7 +861,7 @@ var AnimGroup = Class.create(TimedItem, AnimListMixin, {
 		return sampleFuncs;
 	},
 	toString: function() {
-		return this.type + " " + this.startTime + "-" + this.endTime + " (" + this.timeDrift+ ") " + " [" + this.children.map(function(a) { return a.toString(); }) + "]"
+		return this.type + " " + this.startTime + "-" + this.endTime + " (" + this.timeDrift + " @" + this.currentTime + ") " + " [" + this.children.map(function(a) { return a.toString(); }) + "]"
 	}
 });
 
