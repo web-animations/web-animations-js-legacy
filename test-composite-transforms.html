@@ -1,0 +1,62 @@
+<!-- 
+Copyright 2012 Google Inc. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<!DOCTYPE html>
+<style>
+.anim {
+	left: 0px;
+	width: 100px;
+	height: 100px;
+	background-color: #FAA;
+	position: absolute;
+}
+
+#a {
+	top: 0px
+}
+
+#b {
+	top: 100px;
+}
+
+#c {
+	top: 200px;
+}
+
+#d {
+	top: 300px;
+}
+
+</style>
+
+<div>
+	<div id="a" class="anim"></div>
+	<div id="b" class="anim"></div>
+	<div id="c" class="anim"></div>
+	<div id="d" class="anim"></div>
+</div>
+
+<script src="http://ajax.googleapis.com/ajax/libs/prototype/1.7.1.0/prototype.js"></script>
+<script src="web-animation.js"></script>
+<script>
+
+var divs = document.querySelectorAll(".anim");
+
+new Anim(divs[0], {"-webkit-transform": ["translate(0px, 0px)", "translate(200px, 0px)"]}, 2);
+new Anim(divs[1], {"-webkit-transform": ["rotate(0deg)", "rotate(90deg)"]}, 2);
+new Anim(divs[2], {"-webkit-transform": ["translate(0px, 0px) rotate(0deg)", "translate(200px, 0px) rotate(90deg)"]}, 2);
+
+</script>
