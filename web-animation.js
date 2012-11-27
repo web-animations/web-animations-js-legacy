@@ -1260,8 +1260,8 @@ function toCssValue(property, value, svgMode) {
 									value[i].d[1] + unit + ") ";
 					}
 					break;
-			    	}
-			    	case "scale":
+					}
+				case "scale":
 				{
 					if (value[i].d[0] === value[i].d[1]) {
 						out += value[i].t + "(" + value[i].d[0] + ") ";
