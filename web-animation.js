@@ -1249,6 +1249,9 @@ function toCssValue(property, value, svgMode) {
 					out += value[i].t + "(" + value[i].d + unit + ") ";
 					break;
 				}
+				case "translateZ":
+					out += value[i].t + "(" + value[i].d + 'px' + ") ";
+					break;
 				case "translate":
 				{
 					var unit = svgMode ? "" : "px";
@@ -1298,6 +1301,11 @@ function extractTranslationValues(lengths) {
 	return [length1, length2];
 }
 
+function extractTranslateValue(length) {
+	// XXX Assuming px for now
+	return Number(length[1]);
+}
+
 function extractScaleValues(scales) {
 	var scaleX = Number(scales[1]);
 	var scaleY = scales[2] ? Number(lengths[2]) : scaleX;
@@ -1308,6 +1316,7 @@ var transformREs =
 	[
 		[/^\s*rotate\(([+-]?(?:\d+|\d*\.\d+))(deg|grad|rad|turn)?\)/, extractDeg, "rotate"],
 		[/^\s*rotateY\(([+-]?(?:\d+|\d*\.\d+))(deg|grad|rad|turn)\)/, extractDeg, "rotateY"],
+		[/^\s*translateZ\(([+-]?(?:\d+|\d*\.\d+))(px)?\)/, extractTranslateValue, "translateZ"],
 		[/^\s*translate\(([+-]?(?:\d+|\d*\.\d+))(px)?(?:\s*,\s*([+-]?(?:\d+|\d*\.\d+))(px)?)?\)/,
 		 extractTranslationValues, "translate"],
 		[/^\s*scale\((\d+|\d*\.\d+)(?:\s*,\s*(\d+|\d*.\d+))?\)/, extractScaleValues, "scale"]
