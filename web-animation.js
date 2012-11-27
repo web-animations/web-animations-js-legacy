@@ -1207,12 +1207,21 @@ function interpolate(property, target, from, to, f) {
 	} else if (propertyIsLength(property)) {
 		return toCssValue(property, [_interp(from[0], to[0], f), "px"], svgMode);
 	} else if (propertyIsTransform(property)) {
-		console.assert(from[0].t === to[0].t || from[0].t === null ||
-			to[0].t === null,
-			"Transform types should match or one should be the underlying value");
-		var type = from[0].t ? from[0].t : to[0].t;
-		return toCssValue(property,
-			[{t: type, d:_interp(from[0].d, to[0].d, f)}], svgMode)
+		while (from.length < to.length) {
+			from.push({t: null, d: null});
+		}
+		while (to.length < from.length) {
+			to.push({t: null, d: null});
+		}
+		var out = []
+		for (var i = 0; i < from.length; i++) {
+			console.assert(from[i].t === to[i].t || from[i].t === null ||
+				to[i].t === null,
+				"Transform types should match or one should be the underlying value");
+			var type = from[i].t ? from[i].t : to[i].t;
+			out.push({t: type, d:_interp(from[0].d, to[0].d, f)});
+		}
+		return toCssValue(property, out, svgMode);
 	} else {
 		throw "UnsupportedProperty";
 	}
