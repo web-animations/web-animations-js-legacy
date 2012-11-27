@@ -294,12 +294,27 @@ var TimedItem = Class.create({
 					this.animationTime = null;
 				}
 			}
+			var effectiveIterationStart = Math.min(this.timing.iterationStart, this.timing.iterationCount);
 			if (this.animationTime === null) {
 				this.iterationTime = null;
 				this.currentIteration = null;
 				this._timeFraction = null;
+			} else if (this.duration == 0) {
+				this.iterationTime = 0;
+				var isAtEndOfIterations = (this.timing.iterationCount != 0) && ((this.itemTime < this.timing.startDelay) == this._reversing);
+				this.currentIteration = isAtEndOfIterations
+					? this._floorWithOpenClosedRange(effectiveIterationStart + this.timing.iterationCount, 1.0)
+					: this._floorWithClosedOpenRange(effectiveIterationStart, 1.0);
+				// Equivalent to unscaledIterationTime below.
+				var unscaledFraction = isAtEndOfIterations
+					? this._modulusWithOpenClosedRange(effectiveIterationStart + this.timing.iterationCount, 1.0)
+					: this._modulusWithClosedOpenRange(effectiveIterationStart, 1.0);
+				this._timeFraction = this._isCurrentDirectionForwards(this.timing.direction, this.currentIteration)
+					? unscaledFraction : 1.0 - unscaledFraction;
+				if (this.timing.timingFunc) {
+					this._timeFraction = this.timing.timingFunc.scaleTime(this._timeFraction);
+				}
 			} else {
-				var effectiveIterationStart = Math.min(this.timing.iterationStart, this.timing.iterationCount);
 				var startOffset = effectiveIterationStart * this.duration;
 				var effectiveSpeed = this._reversing ? -this.timing.playbackRate : this.timing.playbackRate;
 				if (effectiveSpeed < 0) {
@@ -309,36 +324,15 @@ var TimedItem = Class.create({
 				}
 				var repeatedDuration = this.duration * this.timing.iterationCount;
 				var isAtEndOfIterations = (this.timing.iterationCount != 0) && (adjustedAnimationTime - startOffset == repeatedDuration);
-				if (adjustedAnimationTime == 0) {
-					this.currentIteration = 0;
-				} else if (this.duration == 0) {
-					this.currentIteration = Math.floor(this.timing.iterationCount);
-				} else {
-					this.currentIteration = isAtEndOfIterations
-						? this._floorWithOpenClosedRange(adjustedAnimationTime, this.duration)
-						: this._floorWithClosedOpenRange(adjustedAnimationTime, this.duration);
-				}
-				if (this.duration == 0) {
-					var unscaledIterationTime = 0;
-				} else {
-					var unscaledIterationTime = isAtEndOfIterations
-						? this._modulusWithOpenClosedRange(adjustedAnimationTime, this.duration)
-						: this._modulusWithClosedOpenRange(adjustedAnimationTime, this.duration);
-				}
+				this.currentIteration = isAtEndOfIterations
+					? this._floorWithOpenClosedRange(adjustedAnimationTime, this.duration)
+					: this._floorWithClosedOpenRange(adjustedAnimationTime, this.duration);
+				var unscaledIterationTime = isAtEndOfIterations
+					? this._modulusWithOpenClosedRange(adjustedAnimationTime, this.duration)
+					: this._modulusWithClosedOpenRange(adjustedAnimationTime, this.duration);
 				var scaledIterationTime = unscaledIterationTime;
-				if (this.timing.direction == "normal") {
-					var currentDirection = 1;
-				} else if (this.timing.direction == "reverse") {
-					var currentDirection = -1;
-				} else {
-					var d = this.currentIteration;
-					if (this.timing.direction == "alternate-reverse") {
-						d += 1;
-					}
-					// TODO: 6.11.2 step 3. wtf?
-					var currentDirection = d % 2 == 0 ? 1 : -1;
-				}
-				this.iterationTime = currentDirection == 1 ? scaledIterationTime : this.duration - scaledIterationTime;
+				this.iterationTime = this._isCurrentDirectionForwards(this.timing.direction, this.currentIteration)
+					? scaledIterationTime : this.duration - scaledIterationTime;
 				this._timeFraction = this.iterationTime / this.duration;
 				if (this.timing.timingFunc) {
 					this._timeFraction = this.timing.timingFunc.scaleTime(this._timeFraction);
@@ -407,6 +401,20 @@ var TimedItem = Class.create({
 	_modulusWithOpenClosedRange: function(x, range) {
 		var ret = this._modulusWithClosedOpenRange(x, range);
 		return ret == 0 ? range : ret;
+	},
+	_isCurrentDirectionForwards: function(direction, currentIteration) {
+		if (direction == "normal") {
+			return true;
+		}
+		if (direction == "reverse") {
+			return false;
+		}
+		var d = currentIteration;
+		if (direction == "alternate-reverse") {
+			d += 1;
+		}
+		// TODO: 6.13.3 step 3. wtf?
+		return d % 2 == 0;
 	},
 	_parentToGlobalTime: function(parentTime) {
 	  if (!this.parentGroup)
