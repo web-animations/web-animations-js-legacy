@@ -16,33 +16,61 @@ limitations under the License.
 
 <!DOCTYPE html>
 <style>
+.animContainer {
+	position: absolute;
+	left: 0px;
+	height: 100px;
+}
+
 .anim {
 	left: 0px;
 	width: 100px;
-	height: 100px;
+	height: 25px;
 	background-color: #FAA;
-	position: absolute;
+	position: relative;
 }
 
-#a {
-	top: 0px
+#ca {
+	top: 0px;
 }
 
-#b {
-	top: 100px;
+#cb {
+	top: 150px;
 }
 
-#c {
-	top: 200px;
-}
-
-#d {
+#cc {
 	top: 300px;
+}
+
+
+#cd {
+	top: 450px;
 }
 
 </style>
 
-<div>
+<div class="animContainer" id="ca">
+	<div id="a" class="anim"></div>
+	<div id="b" class="anim"></div>
+	<div id="c" class="anim"></div>
+	<div id="d" class="anim"></div>
+</div>
+
+<div class="animContainer" id="cb">
+	<div id="a" class="anim"></div>
+	<div id="b" class="anim"></div>
+	<div id="c" class="anim"></div>
+	<div id="d" class="anim"></div>
+</div>
+
+<div class="animContainer" id="cc">
+	<div id="a" class="anim"></div>
+	<div id="b" class="anim"></div>
+	<div id="c" class="anim"></div>
+	<div id="d" class="anim"></div>
+</div>
+
+<div class="animContainer" id="cd">
 	<div id="a" class="anim"></div>
 	<div id="b" class="anim"></div>
 	<div id="c" class="anim"></div>
@@ -53,13 +81,15 @@ limitations under the License.
 <script src="web-animation.js"></script>
 <script>
 
+var containers = ["ca", "cb", "cc", "cd"];
+var directions = ["normal", "reverse", "alternate", "alternate-reverse"];
 var fills = ["none", "backwards", "forwards", "both"];
-var divs = document.querySelectorAll(".anim");
 
-var group = new ParAnimGroup([], {startDelay: 1, duration: 4}, undefined, 1);
-
-for (var i = 0; i < fills.length; i++) {
-	var anim = new Anim(divs[i], {left: ["100px", "200px"]}, {startDelay: 1, duration: 1, fill: fills[i]}, group, 1);
+for (var i = 0; i < containers.length; i++) {
+	var divs = document.getElementById(containers[i]).getElementsByClassName('anim');
+	for (var j = 0; j < fills.length; j++) {
+		new Anim(divs[j], {left: ["100px", "200px"]}, {iterationCount: 4, direction: directions[i], duration: 1, fill: fills[j]}, undefined, 1);
+	}
 }
 
 </script>

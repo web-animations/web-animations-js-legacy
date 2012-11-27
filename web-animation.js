@@ -265,22 +265,23 @@ var TimedItem = Class.create({
 				} else {
 					var adjustedAnimationTime = this.animationTime * effectiveSpeed + startOffset;
 				}
+				var repeatedDuration = this.duration * this.timing.iterationCount;
+				var isAtEndOfIterations = (this.timing.iterationCount != 0) && (adjustedAnimationTime - startOffset == repeatedDuration);
 				if (adjustedAnimationTime == 0) {
 					this.currentIteration = 0;
 				} else if (this.duration == 0) {
 					this.currentIteration = Math.floor(iterationCount);
 				} else {
-					this.currentIteration = Math.floor(adjustedAnimationTime / this.duration);
+					this.currentIteration = isAtEndOfIterations
+						? this._floorWithOpenClosedRange(adjustedAnimationTime, this.duration)
+						: this._floorWithClosedOpenRange(adjustedAnimationTime, this.duration);
 				}
 				if (this.duration == 0) {
 					var unscaledIterationTime = 0;
 				} else {
-					var repeatedDuration = this.duration * this.timing.iterationCount;
-					var unscaledIterationTime = adjustedAnimationTime % this.duration;
-					// At the end of the set of iterations, unscaledIterationTime should not wrap to zero.
-					if (this.timing.iterationCount != 0 && adjustedAnimationTime - startOffset == repeatedDuration && unscaledIterationTime == 0) {
-						unscaledIterationTime = this.duration;
-					}
+					var unscaledIterationTime = isAtEndOfIterations
+						? this._modulusWithOpenClosedRange(adjustedAnimationTime, this.duration)
+						: this._modulusWithClosedOpenRange(adjustedAnimationTime, this.duration);
 				}
 				var scaledIterationTime = unscaledIterationTime;
 				if (this.timing.direction == "normal") {
@@ -360,6 +361,19 @@ var TimedItem = Class.create({
 		if (this.currentTime > this.animationDuration + this.timing.startDelay && this.timing.playbackRate >= 0) {
 			this.currentTime = this.timing.startDelay;
 		}
+	},
+	_floorWithClosedOpenRange: function(x, range) {
+		return Math.floor(x / range);
+	},
+	_floorWithOpenClosedRange: function(x, range) {
+		return Math.ceil(x / range) - 1;
+	},
+	_modulusWithClosedOpenRange: function(x, range) {
+		return x % range;
+	},
+	_modulusWithOpenClosedRange: function(x, range) {
+		var ret = this._modulusWithClosedOpenRange(x, range);
+		return ret == 0 ? range : ret;
 	},
 	_parentToGlobalTime: function(parentTime) {
 	  if (!this.parentGroup)
