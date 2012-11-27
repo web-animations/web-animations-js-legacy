@@ -1219,7 +1219,7 @@ function interpolate(property, target, from, to, f) {
 				to[i].t === null,
 				"Transform types should match or one should be the underlying value");
 			var type = from[i].t ? from[i].t : to[i].t;
-			out.push({t: type, d:_interp(from[0].d, to[0].d, f)});
+			out.push({t: type, d:_interp(from[i].d, to[i].d, f)});
 		}
 		return toCssValue(property, out, svgMode);
 	} else {
@@ -1239,31 +1239,40 @@ function toCssValue(property, value, svgMode) {
 		return value[0] + value[1];
 	} else if (propertyIsTransform(property)) {
 		// TODO: fix this :)
-		console.assert(value[0].t, "transform type should be resolved by now");
-		switch (value[0].t) {
-			case "rotate":
-			case "rotateY":
-			{
-				var unit = svgMode ? "" : "deg";
-				return value[0].t + "(" + value[0].d + unit + ")";
-			}
-			case "translate":
-			{
-				var unit = svgMode ? "" : "px";
-				if (value[0].d[1] === 0) {
-					return value[0].t + "(" + value[0].d[0] + unit + ")";
-				} else {
-					return value[0].t + "(" + value[0].d[0] + unit + ", " +
-								 value[0].d[1] + unit + ")";
+		var out = ""
+		for (var i = 0; i < value.length; i++) {
+			console.assert(value[i].t, "transform type should be resolved by now");
+			switch (value[i].t) {
+				case "rotate":
+				case "rotateY":
+				{
+					var unit = svgMode ? "" : "deg";
+					out += value[i].t + "(" + value[i].d + unit + ") ";
+					break;
+				}
+				case "translate":
+				{
+					var unit = svgMode ? "" : "px";
+					if (value[i].d[1] === 0) {
+						out += value[i].t + "(" + value[i].d[0] + unit + ") ";
+					} else {
+						out += value[i].t + "(" + value[i].d[0] + unit + ", " +
+									value[i].d[1] + unit + ") ";
+					}
+					break;
+			    	}
+			    	case "scale":
+				{
+					if (value[i].d[0] === value[i].d[1]) {
+						out += value[i].t + "(" + value[i].d[0] + ") ";
+					} else {
+						out += value[i].t + "(" + value[i].d[0] + ", " + value[i].d[1] + ") ";
+					}
+					break;
 				}
 			}
-			case "scale":
-				if (value[0].d[0] === value[0].d[1]) {
-					return value[0].t + "(" + value[0].d[0] + ")";
-				} else {
-					return value[0].t + "(" + value[0].d[0] + ", " + value[0].d[1] + ")";
-				}
 		}
+		return out.substring(0, out.length - 1);
 	} else {
 		throw "UnsupportedProperty";
 	}
