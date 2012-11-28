@@ -20,7 +20,13 @@ var Timing = Class.create({
 		this.startDelay = timingDict.startDelay || 0.0;
 		this.duration = timingDict.duration;
 		this.iterationCount = exists(timingDict.iterationCount) ? timingDict.iterationCount : 1.0;
+		if (this.iterationCount < 0.0) {
+			throw new IndexSizeError('iterationCount must be >= 0');
+		}
 		this.iterationStart = timingDict.iterationStart || 0.0;
+		if (this.iterationStart < 0.0) {
+			throw new IndexSizeError('iterationStart must be >= 0');
+		}
 		this.playbackRate = exists(timingDict.playbackRate) ? timingDict.playbackRate : 1.0;
 		//this.playbackRate = timingDict.playbackRate || 1.0;
 		this.direction = timingDict.direction || "normal";
@@ -290,9 +296,8 @@ var TimedItem = Class.create({
 				this.currentIteration = null;
 				this._timeFraction = null;
 			} else {
-				var iterationStart = Math.max(0, Math.min(this.timing.iterationStart, this.timing.iterationCount));
-				var iterationCount = Math.max(0, this.timing.iterationCount);
-				var startOffset = iterationStart * this.duration;
+				var effectiveIterationStart = Math.min(this.timing.iterationStart, this.timing.iterationCount);
+				var startOffset = effectiveIterationStart * this.duration;
 				var effectiveSpeed = this._reversing ? -this.timing.playbackRate : this.timing.playbackRate;
 				if (effectiveSpeed < 0) {
 					var adjustedAnimationTime = (this.animationTime - this.animationDuration) * effectiveSpeed + startOffset;
@@ -304,7 +309,7 @@ var TimedItem = Class.create({
 				if (adjustedAnimationTime == 0) {
 					this.currentIteration = 0;
 				} else if (this.duration == 0) {
-					this.currentIteration = Math.floor(iterationCount);
+					this.currentIteration = Math.floor(this.timing.iterationCount);
 				} else {
 					this.currentIteration = isAtEndOfIterations
 						? this._floorWithOpenClosedRange(adjustedAnimationTime, this.duration)
