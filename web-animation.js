@@ -356,8 +356,14 @@ var TimedItem = Class.create({
 		// TODO
 	},
 	changePlaybackRate: function(playbackRate) {
-		timing.playbackRate = playbackRate;
-		// TODO: perform compensatory seek
+		var previousRate = this.timing.playbackRate;
+		this.timing.playbackRate = playbackRate;
+		if (previousRate == 0 || playbackRate == 0) {
+			return;
+		}
+		// TODO: invert the fill mode?
+		var seekAdjustment = (this.itemTime - this.timing.startDelay) * (1 - previousRate / playbackRate);
+		this.currentTime = this.itemTime - seekAdjustment;
 	},
 	reverse: function() {
 		if (this.currentTime === null) {
