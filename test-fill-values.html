@@ -35,16 +35,16 @@ limitations under the License.
 }
 
 #cb {
-	top: 150px;
+	top: 250px;
 }
 
 #cc {
-	top: 300px;
+	top: 500px;
 }
 
 
 #cd {
-	top: 450px;
+	top: 750px;
 }
 
 </style>
@@ -54,6 +54,10 @@ limitations under the License.
 	<div id="b" class="anim"></div>
 	<div id="c" class="anim"></div>
 	<div id="d" class="anim"></div>
+	<div id="e" class="anim"></div>
+	<div id="f" class="anim"></div>
+	<div id="g" class="anim"></div>
+	<div id="h" class="anim"></div>
 </div>
 
 <div class="animContainer" id="cb">
@@ -61,6 +65,10 @@ limitations under the License.
 	<div id="b" class="anim"></div>
 	<div id="c" class="anim"></div>
 	<div id="d" class="anim"></div>
+	<div id="e" class="anim"></div>
+	<div id="f" class="anim"></div>
+	<div id="g" class="anim"></div>
+	<div id="h" class="anim"></div>
 </div>
 
 <div class="animContainer" id="cc">
@@ -68,6 +76,10 @@ limitations under the License.
 	<div id="b" class="anim"></div>
 	<div id="c" class="anim"></div>
 	<div id="d" class="anim"></div>
+	<div id="e" class="anim"></div>
+	<div id="f" class="anim"></div>
+	<div id="g" class="anim"></div>
+	<div id="h" class="anim"></div>
 </div>
 
 <div class="animContainer" id="cd">
@@ -75,6 +87,10 @@ limitations under the License.
 	<div id="b" class="anim"></div>
 	<div id="c" class="anim"></div>
 	<div id="d" class="anim"></div>
+	<div id="e" class="anim"></div>
+	<div id="f" class="anim"></div>
+	<div id="g" class="anim"></div>
+	<div id="h" class="anim"></div>
 </div>
 
 <script src="http://ajax.googleapis.com/ajax/libs/prototype/1.7.1.0/prototype.js"></script>
@@ -88,7 +104,8 @@ var fills = ["none", "backwards", "forwards", "both"];
 for (var i = 0; i < containers.length; i++) {
 	var divs = document.getElementById(containers[i]).getElementsByClassName('anim');
 	for (var j = 0; j < fills.length; j++) {
-		new Anim(divs[j], {left: ["100px", "200px"]}, {iterationCount: 4, direction: directions[i], duration: 1, fill: fills[j]}, undefined, 1);
+		new Anim(divs[2 * j], {left: ["100px", "200px"]}, {iterationCount: 4, direction: directions[i], duration: 1, fill: fills[j]}, undefined, 1);
+		new Anim(divs[2 * j + 1], {left: ["100px", "200px"]}, {iterationCount: 4, direction: directions[i], duration: 0, fill: fills[j]}, undefined, 1);
 	}
 }
 
