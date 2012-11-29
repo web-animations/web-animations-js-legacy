@@ -19,6 +19,9 @@ var Timing = Class.create({
 	initialize: function(timingDict) {
 		this.startDelay = timingDict.startDelay || 0.0;
 		this.duration = timingDict.duration;
+		if (this.duration < 0.0) {
+			throw new IndexSizeError('duration must be >= 0');
+		}
 		this.iterationCount = exists(timingDict.iterationCount) ? timingDict.iterationCount : 1.0;
 		if (this.iterationCount < 0.0) {
 			throw new IndexSizeError('iterationCount must be >= 0');
@@ -244,7 +247,7 @@ var TimedItem = Class.create({
 	},
 	// TODO: take timing.iterationStart into account. Spec needs to as well.
 	updateIterationDuration: function() {
-		if (exists(this.timing.duration) && this.timing.duration >= 0) {
+		if (exists(this.timing.duration)) {
 			this.duration = this.timing.duration;
 		} else {
 			this.duration = this.intrinsicDuration();
