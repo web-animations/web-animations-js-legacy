@@ -548,12 +548,6 @@ var Anim = Class.create(TimedItem, {
 		// section 6.6
 		return Infinity;
 	},
-	_zero: function() {
-	  if (this.animFunc instanceof AnimFunc) {
-			this.animFunc.zeroPoint(this.targetElement, this.underlyingValue);
-		}
-		//this.targetElement.innerHTML = "ZERO"
-	},
 	_getSampleFuncs: function() {
 		var prevTimeFraction = this._timeFraction;
 		this.updateTimeMarkers();
@@ -563,7 +557,6 @@ var Anim = Class.create(TimedItem, {
 
 		var rv = { startTime: this._parentToGlobalTime(this.startTime),
 			target: this.targetElement,
-			clearFunc: function() { this._zero(); }.bind(this),
 			sampleFunc:
 				function() {
 					if (this.animFunc instanceof AnimFunc) {
@@ -871,9 +864,6 @@ var AnimGroup = Class.create(TimedItem, AnimListMixin, {
 			throw "Unsupported type " + this.type;
 		}
 	},
-	_zero: function() {
-		this.children.forEach(function(child) { child._zero(); });
-	},
 	_getSampleFuncs: function() {
 		this.updateTimeMarkers();
 		var sampleFuncs = [];
@@ -948,14 +938,11 @@ var SeqAnimGroupTemplate = Class.create(AnimGroupTemplate, {
 
 var AnimFunc = Class.create({
 	initialize: function(operation, accumulateOperation) {
-		this.operation = operation | "replace";
-		this.accumulateOperation = accumulateOperation | "replace";
+		this.operation = operation === undefined ? "replace" : operation;
+		this.accumulateOperation = accumulateOperation == undefined ? "replace" : operation;
 	},
 	sample: function(timeFraction, currentIteration, target, underlyingValue) {
 		throw "Unimplemented sample function";
-	},
-	zeroPoint: function(target) {
-		return;
 	},
 	getValue: function(target) {
 		return;
@@ -992,7 +979,9 @@ AnimFunc._createKeyframeFunc = function(property, value) {
 	var func = new KeyframeAnimFunc(property);
 
 	if (typeof value === "string") {
+		func.frames.add(new Keyframe(value, 0));
 		func.frames.add(new Keyframe(value, 1));
+		func.operation = "merge";
 	} else if (Array.isArray(value)) {
 		for (var i = 0; i < value.length; i++) {
 			if (typeof value[i] !== "string") {
@@ -1031,7 +1020,7 @@ var KeyframeAnimFunc = Class.create(AnimFunc, {
 		});
 		return this.frames.frames;
 	},
-	sample: function(timeFraction, currentIteration, target, underlyingValue) {
+	sample: function(timeFraction, currentIteration, target) {
 		var frames = this.sortedFrames();
 		if (frames.length == 0) {
 			return;
@@ -1045,7 +1034,7 @@ var KeyframeAnimFunc = Class.create(AnimFunc, {
 				// where we have to massage the data before setting e.g. 'rotate(45deg)'
 				// is valid, but for UAs that don't support CSS Transforms syntax on SVG
 				// content we have to convert that to 'rotate(45)' before setting.
-				setValue(target, this.property, frames[i].value);
+				DEFAULT_GROUP.compositor.setAnimatedValue(target, this.property, new AnimatedResult(frames[i].value, this.operation, timeFraction));
 				return;
 			}
 			if (frames[i].offset > timeFraction) {
@@ -1057,7 +1046,7 @@ var KeyframeAnimFunc = Class.create(AnimFunc, {
 		if (afterFrameNum == 0) {
 			// In the case where we have a negative time fraction and a keyframe at
 			// offset 0, the expected behavior is to extrapolate the interval that
-			// starts at 0, rather than to use the underlying value.
+			// starts at 0, rather than to use the base value.
 			if (frames[0].offset === 0) {
 				afterFrameNum = frames.length > 1 ? 1 : frames.length;
 				beforeFrameNum = 0;
@@ -1067,7 +1056,7 @@ var KeyframeAnimFunc = Class.create(AnimFunc, {
 		} else if (afterFrameNum == null) {
 			// In the case where we have a time fraction greater than 1 and a keyframe
 			// at 1, the expected behavior is to extrapolate the interval that ends at
-			// 1, rather than to use the underlying value.
+			// 1, rather than to use the base value.
 			if (frames[frames.length-1].offset === 1) {
 				afterFrameNum = frames.length - 1;
 				beforeFrameNum = frames.length > 1 ? frames.length - 2 : -1;
@@ -1079,13 +1068,13 @@ var KeyframeAnimFunc = Class.create(AnimFunc, {
 			beforeFrameNum = afterFrameNum - 1;
 		}
 		if (beforeFrameNum == -1) {
-			beforeFrame = {value: underlyingValue, offset: 0};
+			beforeFrame = {value: zero(this.property, frames[afterFrameNum].value), offset: 0};
 		} else {
 			beforeFrame = frames[beforeFrameNum];
 		}
 
 		if (afterFrameNum == frames.length) {
-			afterFrame = {value: underlyingValue, offset: 1};
+			afterFrame = {value: zero(this.property, frames[beforeFrameNum].value), offset: 1};
 		} else {
 			afterFrame = frames[afterFrameNum];
 		}
@@ -1093,10 +1082,7 @@ var KeyframeAnimFunc = Class.create(AnimFunc, {
 		var localTimeFraction = (timeFraction - beforeFrame.offset) / (afterFrame.offset - beforeFrame.offset);
 		// TODO: property-based interpolation for things that aren't simple
 		var animationValue = interpolate(this.property, target, beforeFrame.value, afterFrame.value, localTimeFraction);
-		setValue(target, this.property, animationValue);
-	},
-	zeroPoint: function(target, underlyingValue) {
-		setValue(target, this.property, underlyingValue);
+		DEFAULT_GROUP.compositor.setAnimatedValue(target, this.property, new AnimatedResult(animationValue, this.operation, timeFraction));
 	},
 	getValue: function(target) {
 		return getValue(target, this.property);
@@ -1213,15 +1199,20 @@ function _interpArray(from, to, f) {
 	return result;
 }
 
+function _zeroIsNought() { return 0; }
+
+function transformZero(t) { throw "UNIMPLEMENTED"; }
+
 var supportedProperties = new Array();
-supportedProperties["opacity"] = { type: "number", isSVGAttrib: false };
-supportedProperties["left"]    = { type: "length", isSVGAttrib: false };
-supportedProperties["top"]     = { type: "length", isSVGAttrib: false };
-supportedProperties["cx"]      = { type: "length", isSVGAttrib: true };
+supportedProperties["opacity"] = { type: "number", isSVGAttrib: false, zero: _zeroIsNought };
+supportedProperties["left"]    = { type: "length", isSVGAttrib: false, zero: _zeroIsNought };
+supportedProperties["top"]     = { type: "length", isSVGAttrib: false, zero: _zeroIsNought };
+supportedProperties["cx"]      = { type: "length", isSVGAttrib: true, zero: _zeroIsNought };
+supportedProperties["x"]      = { type: "length", isSVGAttrib: true, zero: _zeroIsNought };
 
 // For browsers that support transform as a style attribute on SVG we can
 // set isSVGAttrib to false
-supportedProperties["transform"] = { type: "transform", isSVGAttrib: true };
+supportedProperties["transform"] = { type: "transform", isSVGAttrib: true, zero: transformZero };
 supportedProperties["-webkit-transform"] =
 	{ type: "transform", isSVGAttrib: false };
 
@@ -1245,6 +1236,10 @@ function propertyIsSVGAttrib(property, target) {
 		return false;
 	var propDetails = supportedProperties[property];
 	return propDetails && propDetails.isSVGAttrib;
+}
+
+function zero(property, value) {
+	return supportedProperties[property].zero(value);
 }
 
 /**
@@ -1411,17 +1406,151 @@ function fromCssValue(property, value) {
 	}
 }
 
-function setValue(target, property, value) {
+var AnimatedResult = Class.create({
+	initialize: function(value, operation, fraction) {
+		this.value = value;
+		this.operation = operation;
+		this.fraction = fraction;
+	}
+});
+
+var CompositedPropertyMap = Class.create({
+	initialize: function(target) {
+		this.properties = {};
+		this.target = target;
+	},
+	addValue: function(property, animValue) {
+		if (this.properties[property] === undefined) {
+			this.properties[property] = [];
+		}
+		if (!animValue instanceof AnimatedResult) {
+			throw new TypeError("expected AnimatedResult when adding value to CompositedPropertyMap");
+		}		
+		this.properties[property].push(animValue);
+	},
+	applyAnimatedValues: function() {
+		for (var property in this.properties) {
+			resultList = this.properties[property];
+			if (resultList.length > 0) {
+				var i;
+				for (i = resultList.length - 1; i >= 0; i--) {
+					if (resultList[i].operation == "replace") {
+						break;
+					}
+				}
+				// the baseValue will either be retrieved after clearing the value or will
+				// be overwritten by a "replace".
+				var baseValue = undefined;
+				if (i == -1) {
+					clearValue(this.target, property);
+					baseValue = getValue(this.target, property);
+					i = 0;
+				}
+				for ( ; i < resultList.length; i++) {
+					switch (resultList[i].operation) {
+					case "replace":
+						baseValue = resultList[i].value;
+						continue;
+					case "add":
+						// TODO: implement generic adder
+						baseValue += resultList[i].value;
+						continue;
+					case "merge":
+						baseValue = interpolate(property, this.target, baseValue, resultList[i].value, resultList[i].fraction);
+						continue;
+					}
+				}	
+				setValue(this.target, property, baseValue);
+			}
+			this.properties[property] = [];
+		}
+	}
+});
+
+var Compositor = Class.create({
+	initialize: function() {
+		this.targets = []
+	},
+	setAnimatedValue: function(target, property, animValue) {
+		if (target._anim_properties === undefined) {
+			target._anim_properties = new CompositedPropertyMap(target);
+			this.targets.push(target);
+		}
+		target._anim_properties.addValue(property, animValue);
+	},
+	applyAnimatedValues: function() {
+		for (var i = 0; i < this.targets.length; i++) {
+			var target = this.targets[i];
+			target._anim_properties.applyAnimatedValues();
+		}
+	}
+		
+});
+
+function initializeIfSVGAndUninitialized(property, target) {
 	if (propertyIsSVGAttrib(property, target)) {
-		target.setAttribute(property, value);
+		if (!exists(target._actuals)) {
+			target._actuals = {};
+			target._bases = {};
+			target.actuals = {};
+			target._getAttribute = target.getAttribute;
+			target._setAttribute = target.setAttribute;
+			target.getAttribute = function(name) {
+				if (exists(target._bases[name])) {
+					return target._bases[name];
+				}
+				return target._getAttribute(name);
+			};
+			target.setAttribute = function(name, value) {
+				if (exists(target._actuals[name])) {
+					target._bases[name] = value;
+				} else {
+					target._setAttribute(name, value);
+				}
+			};
+		}
+		if(!exists(target._actuals[property])) {
+			var baseVal = target.getAttribute(property);
+			target._actuals[property] = 0;
+			target._bases[property] = baseVal;
+			target.actuals.__defineSetter__(property, function(value) {
+				if (value == null) {
+					target._actuals[property] = target._bases[property];
+					target._setAttribute(property, target._bases[property]);
+				} else {
+					target._actuals[property] = value;
+					target._setAttribute(property, value)
+				}
+			});
+			target.actuals.__defineGetter__(property, function() {
+				return target._actuals[property];
+			});
+		}
+	}
+}
+
+function setValue(target, property, value) {
+	initializeIfSVGAndUninitialized(property, target);
+	if (propertyIsSVGAttrib(property, target)) {
+		target.actuals[property] = value;
 	} else {
 		target.style[property] = value;
 	}
 }
 
-function getValue(target, property) {
+function clearValue(target, property) {
+	initializeIfSVGAndUninitialized(property, target);
 	if (propertyIsSVGAttrib(property, target)) {
-		return target.getAttribute(property);
+		target.actuals[property] = null;
+	} else {
+	    target.style[property] = null;
+	}
+}
+
+function getValue(target, property) {
+	initializeIfSVGAndUninitialized(property, target);
+	if (propertyIsSVGAttrib(property, target)) {
+		return target.actuals[property];
 	} else {
 		return window.getComputedStyle(target)[property];
 	}
@@ -1432,18 +1561,13 @@ var rAFNo = undefined;
 var DEFAULT_GROUP = new AnimGroup("par", null, [], {fill: "forwards", name: "DEFAULT"}, 0, undefined);
 
 DEFAULT_GROUP.oldFuncs = new Array();
+DEFAULT_GROUP.compositor = new Compositor();
 
 DEFAULT_GROUP._tick = function(parentTime) {
 		this.updateTimeMarkers(parentTime);
 
-		// Clear old effect in reverse
-		for (var i = this.oldFuncs.length - 1; i >= 0; i--) {
-			if (this.oldFuncs[i].hasOwnProperty('clearFunc')) {
-				this.oldFuncs[i].clearFunc();
-			}
-		}
-
 		// Get animations for this sample
+		// TODO: Consider reverting to direct application of values and sorting inside the compositor.
 		var funcs = new Array();
 		var allFinished = true;
 		this.children.forEach(function(child) {
@@ -1463,6 +1587,9 @@ DEFAULT_GROUP._tick = function(parentTime) {
 			}
 		}
 		this.oldFuncs = funcs;
+	
+		// Composite animated values into element styles	
+		this.compositor.applyAnimatedValues();
 
 		return !allFinished;
 }
