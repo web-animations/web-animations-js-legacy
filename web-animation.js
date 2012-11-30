@@ -1483,27 +1483,27 @@ var Compositor = Class.create({
 
 function initializeIfSVGAndUninitialized(property, target) {
 	if (propertyIsSVGAttrib(property, target)) {
-		if (!exists(target._actuals) || !exists(target._actuals[property])) {
-			if (!target._actuals) {
-				target._actuals = {};
-				target._bases = {};
-				target.actuals = {};
-				target._getAttribute = target.getAttribute;
-				target._setAttribute = target.setAttribute;
-				target.getAttribute = function(name) {
-					if (exists(target._bases[name])) {
-						return target._bases[name];
-					}
-					return target._getAttribute(name);
-				};
-				target.setAttribute = function(name, value) {
-					if (exists(target._actuals[name])) {
-						target._bases[name] = value;
-					} else {
-						target._setAttribute(name, value);
-					}
-				};
-			}
+		if (!exists(target._actuals)) {
+			target._actuals = {};
+			target._bases = {};
+			target.actuals = {};
+			target._getAttribute = target.getAttribute;
+			target._setAttribute = target.setAttribute;
+			target.getAttribute = function(name) {
+				if (exists(target._bases[name])) {
+					return target._bases[name];
+				}
+				return target._getAttribute(name);
+			};
+			target.setAttribute = function(name, value) {
+				if (exists(target._actuals[name])) {
+					target._bases[name] = value;
+				} else {
+					target._setAttribute(name, value);
+				}
+			};
+		}
+		if(!exists(target._actuals[property])) {
 			var baseVal = target.getAttribute(property);
 			target._actuals[property] = 0;
 			target._bases[property] = baseVal;
