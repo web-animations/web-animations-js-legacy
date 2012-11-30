@@ -1562,34 +1562,34 @@ DEFAULT_GROUP.oldFuncs = new Array();
 DEFAULT_GROUP.compositor = new Compositor();
 
 DEFAULT_GROUP._tick = function(parentTime) {
-    this.updateTimeMarkers(parentTime);
+  this.updateTimeMarkers(parentTime);
 
-    // Get animations for this sample
-    // TODO: Consider reverting to direct application of values and sorting inside the compositor.
-    var funcs = new Array();
-    var allFinished = true;
-    this.children.forEach(function(child) {
-      funcs = funcs.concat(child._getSampleFuncs());
-      allFinished &= parentTime > child.endTime;
-    }.bind(this));
+  // Get animations for this sample
+  // TODO: Consider reverting to direct application of values and sorting inside the compositor.
+  var funcs = new Array();
+  var allFinished = true;
+  this.children.forEach(function(child) {
+    funcs = funcs.concat(child._getSampleFuncs());
+    allFinished &= parentTime > child.endTime;
+  }.bind(this));
 
-    // Apply animations in order
-    funcs.sort(function(funcA, funcB) {
-      return funcA.startTime < funcB.startTime
-        ? -1
-        : funcA.startTime === funcB.startTime ? 0 : 1;
-    });
-    for (var i = 0; i < funcs.length; i++) {
-      if (funcs[i].hasOwnProperty('sampleFunc')) {
-        funcs[i].sampleFunc();
-      }
+  // Apply animations in order
+  funcs.sort(function(funcA, funcB) {
+    return funcA.startTime < funcB.startTime
+      ? -1
+      : funcA.startTime === funcB.startTime ? 0 : 1;
+  });
+  for (var i = 0; i < funcs.length; i++) {
+    if (funcs[i].hasOwnProperty('sampleFunc')) {
+      funcs[i].sampleFunc();
     }
-    this.oldFuncs = funcs;
+  }
+  this.oldFuncs = funcs;
 
-    // Composite animated values into element styles
-    this.compositor.applyAnimatedValues();
+  // Composite animated values into element styles
+  this.compositor.applyAnimatedValues();
 
-    return !allFinished;
+  return !allFinished;
 }
 DEFAULT_GROUP.currentState = function() {
   return this.iterationTime + ' ' + (exists(rAFNo) ? 'ticking' : 'stopped') + ' ' + this.toString();
