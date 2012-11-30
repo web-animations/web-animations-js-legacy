@@ -290,7 +290,7 @@ mixin(TimedItem.prototype, {
     this.parentGroup = parentGroup;
     this._timeDrift = 0;
     if (this._startTimeMode == ST_FORCED &&
-        (!parentGroup || parentGroup != 'seq')) {
+        (!this.parentGroup || this.parentGroup.type != 'seq')) {
       this._startTime = this._stashedStartTime;
       this._startTimeMode = this._stashedStartTimeMode;
     }
