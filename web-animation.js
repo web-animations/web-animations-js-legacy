@@ -32,15 +32,15 @@ var Timing = Class.create({
 		}
 		this.playbackRate = exists(timingDict.playbackRate) ? timingDict.playbackRate : 1.0;
 		//this.playbackRate = timingDict.playbackRate || 1.0;
-		this.direction = timingDict.direction || "normal";
-		if (typeof timingDict.timingFunc === "string") {
+		this.direction = timingDict.direction || 'normal';
+		if (typeof timingDict.timingFunc === 'string') {
 			// TODO: Write createFromString
-			throw "createFromString not implemented";
+			throw 'createFromString not implemented';
 			this.timingFunc = TimingFunc.createFromString(timingDict.timingFunc);
 		} else {
 			this.timingFunc = timingDict.timingFunc;
 		}
-		this.fill = timingDict.fill || "forwards";
+		this.fill = timingDict.fill || 'forwards';
 	},
 	clone: function() {
 		return new Timing(
@@ -57,13 +57,13 @@ var Timing = Class.create({
 })
 
 function ImmutableTimingProxy(timing) {
-	return new TimingProxy(timing, function(v) { throw "can't modify timing properties of templated Animation Instances"});
+	return new TimingProxy(timing, function(v) { throw 'can\'t modify timing properties of templated Animation Instances'});
 }
 
 var TimingProxy = Class.create({
 	initialize: function(timing, setter) {
 		this.timing = timing;
-		["startDelay", "duration", "iterationCount", "iterationStart", "playbackRate", "direction", "timingFunc", "fill"].forEach(function(s) {
+		['startDelay', 'duration', 'iterationCount', 'iterationStart', 'playbackRate', 'direction', 'timingFunc', 'fill'].forEach(function(s) {
 			this.__defineGetter__(s, function() { return timing[s]; });
 			this.__defineSetter__(s, function(v) { var old = timing[s]; timing[s] = v; try { setter(v); } catch (e) { timing[s] = old; throw e;}});			
 		}.bind(this));
@@ -127,7 +127,7 @@ var TimedTemplate = Class.create({
 });
 
 function exists(val) {
-	return typeof val !== "undefined";
+	return typeof val !== 'undefined';
 }
 
 var ST_MANUAL = 0;
@@ -149,7 +149,7 @@ var TimedItem = Class.create({
 		} else if (parentGroup instanceof TimedItem) {
 			this.parentGroup = parentGroup;
 		} else {
-			throw new TypeError("parentGroup is not a TimedItem");
+			throw new TypeError('parentGroup is not a TimedItem');
 		}
 
 		if (!exists(startTime)) {
@@ -168,21 +168,21 @@ var TimedItem = Class.create({
 			this.parentGroup._addChild(this);
 		}
 		this._timeDrift = 0;
-		this.__defineGetter__("timeDrift", function() {
+		this.__defineGetter__('timeDrift', function() {
 			if (this.locallyPaused) {
 				return this._effectiveParentTime - this.startTime - this._pauseStartTime;
 			}
 			return this._timeDrift;
 		});
-		this.__defineGetter__("_effectiveParentTime", function() {
+		this.__defineGetter__('_effectiveParentTime', function() {
 			return this.parentGroup && this.parentGroup.iterationTime
 			  ? this.parentGroup.iterationTime
 			  : 0;
 		});
-		this.__defineGetter__("currentTime", function() {
+		this.__defineGetter__('currentTime', function() {
 			return this._effectiveParentTime - this._startTime - this.timeDrift;
 		});
-		this.__defineSetter__("currentTime", function(seekTime) {
+		this.__defineSetter__('currentTime', function(seekTime) {
 			if (this._locallyPaused) {
 				this._pauseStartTime = seekTime;
 			} else {
@@ -193,12 +193,12 @@ var TimedItem = Class.create({
 				this.parentGroup._childrenStateModified();
 			}
 		});
-		this.__defineGetter__("startTime", function() {
+		this.__defineGetter__('startTime', function() {
 			return this._startTime;
 		});
-		this.__defineSetter__("startTime", function(newStartTime) {
-			if (this.parentGroup && this.parentGroup.type === "seq") {
-				throw new Error("NoModificationAllowedError");
+		this.__defineSetter__('startTime', function(newStartTime) {
+			if (this.parentGroup && this.parentGroup.type === 'seq') {
+				throw new Error('NoModificationAllowedError');
 			}
 			this._startTime = newStartTime;
 			this._startTimeMode = ST_MANUAL;
@@ -209,10 +209,10 @@ var TimedItem = Class.create({
 		});
 		this._locallyPaused = false;
 		this._pauseStartTime = 0;
-		this.__defineGetter__("locallyPaused", function() {
+		this.__defineGetter__('locallyPaused', function() {
 			return this._locallyPaused;
 		});
-		this.__defineSetter__("locallyPaused", function(newVal) {
+		this.__defineSetter__('locallyPaused', function(newVal) {
 			if (this._locallyPaused === newVal) {
 				return;
 			}
@@ -224,7 +224,7 @@ var TimedItem = Class.create({
 			this._locallyPaused = newVal;
 			this.updateTimeMarkers();
 		});
-		this.__defineGetter__("paused", function() {
+		this.__defineGetter__('paused', function() {
 			return this.locallyPaused || (exists(this.parentGroup) && this.parentGroup.paused);
 		});
 				
@@ -236,7 +236,7 @@ var TimedItem = Class.create({
 		this.parentGroup = parentGroup;
 		this._timeDrift = 0;
 		if (this._startTimeMode == ST_FORCED &&
-			  (!parentGroup || parentGroup != "seq")) {
+			  (!parentGroup || parentGroup != 'seq')) {
 			this._startTime = this._stashedStartTime;
 			this._startTimeMode = this._stashedStartTimeMode;
 		}
@@ -273,12 +273,12 @@ var TimedItem = Class.create({
 		} else {
 			this.itemTime = null;
 		}
-		//console.log(this.name + ": endTime, itemTime", this.endTime, this.itemTime);
+		//console.log(this.name + ': endTime, itemTime', this.endTime, this.itemTime);
 		if (this.itemTime !== null) {
 			if (this.itemTime < this.timing.startDelay) {
-				if (((this.timing.fill == "backwards") && !this._reversing) 
-					|| this.timing.fill == "both" 
-					|| ((this.timing.fill == "forwards") && this._reversing)) {
+				if (((this.timing.fill == 'backwards') && !this._reversing) 
+					|| this.timing.fill == 'both' 
+					|| ((this.timing.fill == 'forwards') && this._reversing)) {
 					this.animationTime = 0;
 				} else {
 					this.animationTime = null;
@@ -286,9 +286,9 @@ var TimedItem = Class.create({
 			} else if (this.itemTime < this.timing.startDelay + this.animationDuration) {
 				this.animationTime = this.itemTime - this.timing.startDelay;
 			} else {
-				if (((this.timing.fill == "forwards") && !this._reversing)
-					|| this.timing.fill == "both" 
-					|| ((this.timing.fill == "backwards") && this._reversing)) {
+				if (((this.timing.fill == 'forwards') && !this._reversing)
+					|| this.timing.fill == 'both' 
+					|| ((this.timing.fill == 'backwards') && this._reversing)) {
 					this.animationTime = this.animationDuration;
 				} else {
 					this.animationTime = null;
@@ -348,8 +348,8 @@ var TimedItem = Class.create({
 		if (webAnimVisUpdateAnims) {
 			webAnimVisUpdateAnims();
 		}
-		var chillen = (!this.children) || this.children.length == 0 ? "NONE" : this.children.map(function(a) { return a.name; }).reduce(function(a, b) { return a + ", " + b});
-		//console.log("name parent children start end item anim iter currentIter tf:", this.name, this.parentGroup ? this.parentGroup.name : "NONE", chillen, this.startTime, this.endTime, this.itemTime, this.animationTime, this.iterationTime, this.currentIteration, this._timeFraction);
+		var chillen = (!this.children) || this.children.length == 0 ? 'NONE' : this.children.map(function(a) { return a.name; }).reduce(function(a, b) { return a + ', ' + b});
+		//console.log('name parent children start end item anim iter currentIter tf:', this.name, this.parentGroup ? this.parentGroup.name : 'NONE', chillen, this.startTime, this.endTime, this.itemTime, this.animationTime, this.iterationTime, this.currentIteration, this._timeFraction);
 	},
 	pause: function() {
 		this.locallyPaused = true;
@@ -409,14 +409,14 @@ var TimedItem = Class.create({
 		return ret == 0 ? range : ret;
 	},
 	_isCurrentDirectionForwards: function(direction, currentIteration) {
-		if (direction == "normal") {
+		if (direction == 'normal') {
 			return true;
 		}
-		if (direction == "reverse") {
+		if (direction == 'reverse') {
 			return false;
 		}
 		var d = currentIteration;
-		if (direction == "alternate-reverse") {
+		if (direction == 'alternate-reverse') {
 			d += 1;
 		}
 		// TODO: 6.13.3 step 3. wtf?
@@ -449,18 +449,18 @@ function keyframesForValues(property, values) {
 function _interpretAnimFunc(animFunc) {
 	if (animFunc instanceof AnimFunc) {
 		return animFunc;
-	} else if (typeof(animFunc) === "object") {
+	} else if (typeof(animFunc) === 'object') {
 		// Test if the object is actually a CustomAnimFunc
 		// (how does WebIDL actually differentiate different callback interfaces?)
-		if (animFunc.hasOwnProperty("sample") &&
-				typeof(animFunc.sample) === "function") {
+		if (animFunc.hasOwnProperty('sample') &&
+				typeof(animFunc.sample) === 'function') {
 			return animFunc;
 		} else {
 			return AnimFunc.createFromProperties(animFunc);
 		}
 	} else {
 		try {
-			throw new Error("TypeError");
+			throw new Error('TypeError');
 		} catch (e) { console.log(e.stack); throw e; }
 	}
 }
@@ -472,13 +472,13 @@ function _interpretTimingParam(timing) {
 	if (timing instanceof Timing || timing instanceof TimingProxy) {
 		return timing;
 	}
-	if (typeof(timing) === "number") {
+	if (typeof(timing) === 'number') {
 		return new Timing({duration: timing});
 	}
-	if (typeof(timing) === "object") {
+	if (typeof(timing) === 'object') {
 		return new Timing(timing);
 	}
-	throw new TypeError("timing parameters must be undefined, Timing objects, numbers, or timing dictionaries; not \"" + timing + "\"");
+	throw new TypeError('timing parameters must be undefined, Timing objects, numbers, or timing dictionaries; not \'' + timing + '\'');
 }
 
 // -----------
@@ -515,7 +515,7 @@ var Anim = Class.create(TimedItem, {
 		this.targetElement = target;
 		this.name = this.animFunc instanceof KeyframeAnimFunc
 		          ? this.animFunc.property
-		          : "<anon>";
+		          : '<anon>';
 	},
 	unlink: function() {
 		var result = this.template;
@@ -574,8 +574,8 @@ var Anim = Class.create(TimedItem, {
 	toString: function() {
 		var funcDescr = this.animFunc instanceof AnimFunc
 			? this.animFunc.toString()
-			: "Custom scripted function";
-		return "Anim " + this.startTime + "-" + this.endTime + " (" + this.timeDrift + " @" + this.currentTime + ") " + funcDescr;
+			: 'Custom scripted function';
+		return 'Anim ' + this.startTime + '-' + this.endTime + ' (' + this.timeDrift + ' @' + this.currentTime + ') ' + funcDescr;
 	}
 });
 
@@ -593,10 +593,10 @@ var AnimTemplate = Class.create(TimedTemplate, {
 	},
 	__animate: function($super, isLive, targets, parentGroup, startTime) {
 		if (this.resolutionStrategy) {
-			strategy = this.resolutionStrategy.split(":").map(function(a) { return a.strip(); });
+			strategy = this.resolutionStrategy.split(':').map(function(a) { return a.strip(); });
 			var newTargets = [];
 			switch (strategy[0]) {
-				case "selector":
+				case 'selector':
 					[].forEach.call(targets, function(target) {
 						var id;
 						var removeId;
@@ -604,11 +604,11 @@ var AnimTemplate = Class.create(TimedTemplate, {
 							id = target.id;
 							removeId = false;
 						} else {
-							id = "___special_id_for_resolution_0xd3adb33f";
+							id = '___special_id_for_resolution_0xd3adb33f';
 							target.id = id;
 							removeId = true;
 						}
-						selector = "#" + id + " " + strategy[1];
+						selector = '#' + id + ' ' + strategy[1];
 						var selectResult = document.querySelectorAll(selector);
 						if (removeId) {
 							target.id = undefined;
@@ -616,11 +616,11 @@ var AnimTemplate = Class.create(TimedTemplate, {
 						[].forEach.call(selectResult, function(newTarget) { newTargets.push(newTarget); });
 					});
 					break;
-				case "target":
-					newTargets = strategy[1].split(",").map(function(a) { return document.getElementById(a.strip()); });
+				case 'target':
+					newTargets = strategy[1].split(',').map(function(a) { return document.getElementById(a.strip()); });
 					break;
 				default:
-					throw "Unknown resolutionStrategy " + strategy[0];
+					throw 'Unknown resolutionStrategy ' + strategy[0];
 			}
 			targets = newTargets;
 		}
@@ -755,7 +755,7 @@ var AnimListMixin = {
 
 var AnimGroup = Class.create(TimedItem, AnimListMixin, {
 	initialize: function($super, type, template, children, timing, startTime, parentGroup) {
-		this.type = type || "par"; // used by TimedItem via intrinsicDuration(), so needs to be set before initializing super.
+		this.type = type || 'par'; // used by TimedItem via intrinsicDuration(), so needs to be set before initializing super.
 		this.initListMixin(this._assertNotLive, this._childrenStateModified);
 		var completedTiming = _interpretTimingParam(timing);
 		$super(completedTiming, startTime, parentGroup);
@@ -769,17 +769,17 @@ var AnimGroup = Class.create(TimedItem, AnimListMixin, {
 			}
 		}
 		// TODO: Work out where to expose name in the API
-		// this.name = properties.name || "<anon>";
+		// this.name = properties.name || '<anon>';
 	},
 	_assertNotLive: function() {
 		if (this.template) {
-			throw "Can't modify tree of AnimGroupInstances with templates"
+			throw 'Can\'t modify tree of AnimGroupInstances with templates'
 		}
 	},
 	templatize: function() {
 		if (!this.template) {
 			var timing = this.timing.clone();
-			var template = this.type == "par"
+			var template = this.type == 'par'
 				? new ParAnimGroupTemplate(null, timing)
 				: new SeqAnimGroupTemplate(null, timing);
 			this.timing = new ImmutableTimingProxy(template.timing);
@@ -802,7 +802,7 @@ var AnimGroup = Class.create(TimedItem, AnimListMixin, {
 		}
 	},
 	_updateChildStartTimes: function() {
-		if (this.type == "seq") {
+		if (this.type == 'seq') {
 			var cumulativeStartTime = 0;
 			this.children.forEach(function(child) {
 				if (child._startTimeMode != ST_FORCED) {
@@ -853,15 +853,15 @@ var AnimGroup = Class.create(TimedItem, AnimListMixin, {
 		return result;
 	},
 	intrinsicDuration: function() {
-		if (this.type == "par") {
+		if (this.type == 'par') {
 			var dur = Math.max.apply(undefined, this.children.map(function(a) { return a.endTime; }));
 			return dur;
-		} else if (this.type == "seq") {
+		} else if (this.type == 'seq') {
 			var result = 0;
 			this.children.forEach(function(a) { result += a.animationDuration + a.timing.startDelay; });
 			return result;
 		} else {
-			throw "Unsupported type " + this.type;
+			throw 'Unsupported type ' + this.type;
 		}
 	},
 	_getSampleFuncs: function() {
@@ -873,19 +873,19 @@ var AnimGroup = Class.create(TimedItem, AnimListMixin, {
 		return sampleFuncs;
 	},
 	toString: function() {
-		return this.type + " " + this.startTime + "-" + this.endTime + " (" + this.timeDrift + " @" + this.currentTime + ") " + " [" + this.children.map(function(a) { return a.toString(); }) + "]"
+		return this.type + ' ' + this.startTime + '-' + this.endTime + ' (' + this.timeDrift + ' @' + this.currentTime + ') ' + ' [' + this.children.map(function(a) { return a.toString(); }) + ']'
 	}
 });
 
 var ParAnimGroup = Class.create(AnimGroup, {
 	initialize: function($super, children, timing, parentGroup, startTime) {
-		$super("par", undefined, children, timing, startTime, parentGroup);
+		$super('par', undefined, children, timing, startTime, parentGroup);
 	}
 });
 
 var SeqAnimGroup = Class.create(AnimGroup, {
 	initialize: function($super, children, timing, parentGroup, startTime) {
-		$super("seq", undefined, children, timing, startTime, parentGroup);
+		$super('seq', undefined, children, timing, startTime, parentGroup);
 	}
 });
 
@@ -926,29 +926,29 @@ var AnimGroupTemplate = Class.create(TimedTemplate, AnimListMixin, {
 
 var ParAnimGroupTemplate = Class.create(AnimGroupTemplate, {
 	initialize: function($super, children, timing, resolutionStrategy) {
-		$super("par", children, timing, resolutionStrategy);
+		$super('par', children, timing, resolutionStrategy);
 	}
 });
 
 var SeqAnimGroupTemplate = Class.create(AnimGroupTemplate, {
 	initialize: function($super, children, properties, resolutionStrategy) {
-		$super("seq", children, properties, resolutionStrategy);
+		$super('seq', children, properties, resolutionStrategy);
 	}
 });
 
 var AnimFunc = Class.create({
 	initialize: function(operation, accumulateOperation) {
-		this.operation = operation === undefined ? "replace" : operation;
-		this.accumulateOperation = accumulateOperation == undefined ? "replace" : operation;
+		this.operation = operation === undefined ? 'replace' : operation;
+		this.accumulateOperation = accumulateOperation == undefined ? 'replace' : operation;
 	},
 	sample: function(timeFraction, currentIteration, target, underlyingValue) {
-		throw "Unimplemented sample function";
+		throw 'Unimplemented sample function';
 	},
 	getValue: function(target) {
 		return;
 	},
 	clone: function() {
-		throw "Unimplemented clone method"
+		throw 'Unimplemented clone method'
 	}
 });
 
@@ -969,7 +969,7 @@ AnimFunc.createFromProperties = function(properties) {
 	} else {
 		// TODO: GroupAnimFunc
 		try {
-			throw new Error("UnsupportedError");
+			throw new Error('UnsupportedError');
 		} catch (e) { console.log(e.stack); throw e; }
 	}
 }
@@ -978,15 +978,15 @@ AnimFunc.createFromProperties = function(properties) {
 AnimFunc._createKeyframeFunc = function(property, value) {
 	var func = new KeyframeAnimFunc(property);
 
-	if (typeof value === "string") {
+	if (typeof value === 'string') {
 		func.frames.add(new Keyframe(value, 0));
 		func.frames.add(new Keyframe(value, 1));
-		func.operation = "merge";
+		func.operation = 'merge';
 	} else if (Array.isArray(value)) {
 		for (var i = 0; i < value.length; i++) {
-			if (typeof value[i] !== "string") {
+			if (typeof value[i] !== 'string') {
 				try {
-					throw new Error("TypeError");
+					throw new Error('TypeError');
 				} catch (e) { console.log(e.stack); throw e; }
 			}
 			var offset = i / (value.length - 1);
@@ -994,7 +994,7 @@ AnimFunc._createKeyframeFunc = function(property, value) {
 		}
 	} else {
 		try {
-			throw new Error("TypeError");
+			throw new Error('TypeError');
 		} catch (e) { console.log(e.stack); throw e; }
 	}
 	// TODO: Need to handle KeyframeDict objects once they're defined
@@ -1108,7 +1108,7 @@ var Keyframe = Class.create({
 var KeyframeList = Class.create({
 	initialize: function() {
 		this.frames = [];
-		this.__defineGetter__("length", function() {return this.frames.length; });
+		this.__defineGetter__('length', function() {return this.frames.length; });
 	},
 	item: function(index) {
 		if (index >= this.length || index < 0) {
@@ -1138,8 +1138,8 @@ var KeyframeList = Class.create({
 });
 
 var presetTimings = {
-	"ease-in" : [0.42, 0, 1.0, 1.0],
-	"ease-out" : [0, 0, 0.58, 1.0]
+	'ease-in' : [0.42, 0, 1.0, 1.0],
+	'ease-out' : [0, 0, 0.58, 1.0]
 }
 
 var TimingFunc = Class.create({
@@ -1185,11 +1185,11 @@ function _interp(from, to, f) {
 
 function _interpArray(from, to, f) {
 	console.assert(Array.isArray(from) || from === null,
-		"From is not an array or null");
+		'From is not an array or null');
 	console.assert(Array.isArray(to) || to === null,
-		"To is not an array or null");
+		'To is not an array or null');
 	console.assert(from === null || to === null || from.length === to.length,
-		"Arrays differ in length");
+		'Arrays differ in length');
 	var length = from ? from.length : to.length;
 
 	var result = [];
@@ -1201,38 +1201,38 @@ function _interpArray(from, to, f) {
 
 function _zeroIsNought() { return 0; }
 
-function transformZero(t) { throw "UNIMPLEMENTED"; }
+function transformZero(t) { throw 'UNIMPLEMENTED'; }
 
 var supportedProperties = new Array();
-supportedProperties["opacity"] = { type: "number", isSVGAttrib: false, zero: _zeroIsNought };
-supportedProperties["left"]    = { type: "length", isSVGAttrib: false, zero: _zeroIsNought };
-supportedProperties["top"]     = { type: "length", isSVGAttrib: false, zero: _zeroIsNought };
-supportedProperties["cx"]      = { type: "length", isSVGAttrib: true, zero: _zeroIsNought };
-supportedProperties["x"]      = { type: "length", isSVGAttrib: true, zero: _zeroIsNought };
+supportedProperties['opacity'] = { type: 'number', isSVGAttrib: false, zero: _zeroIsNought };
+supportedProperties['left']    = { type: 'length', isSVGAttrib: false, zero: _zeroIsNought };
+supportedProperties['top']     = { type: 'length', isSVGAttrib: false, zero: _zeroIsNought };
+supportedProperties['cx']      = { type: 'length', isSVGAttrib: true, zero: _zeroIsNought };
+supportedProperties['x']      = { type: 'length', isSVGAttrib: true, zero: _zeroIsNought };
 
 // For browsers that support transform as a style attribute on SVG we can
 // set isSVGAttrib to false
-supportedProperties["transform"] = { type: "transform", isSVGAttrib: true, zero: transformZero };
-supportedProperties["-webkit-transform"] =
-	{ type: "transform", isSVGAttrib: false };
+supportedProperties['transform'] = { type: 'transform', isSVGAttrib: true, zero: transformZero };
+supportedProperties['-webkit-transform'] =
+	{ type: 'transform', isSVGAttrib: false };
 
 function propertyIsNumber(property) {
 	var propDetails = supportedProperties[property];
-	return propDetails && propDetails.type === "number";
+	return propDetails && propDetails.type === 'number';
 }
 
 function propertyIsLength(property) {
 	var propDetails = supportedProperties[property];
-	return propDetails && propDetails.type === "length";
+	return propDetails && propDetails.type === 'length';
 }
 
 function propertyIsTransform(property) {
 	var propDetails = supportedProperties[property];
-	return propDetails && propDetails.type === "transform";
+	return propDetails && propDetails.type === 'transform';
 }
 
 function propertyIsSVGAttrib(property, target) {
-	if (target.namespaceURI !== "http://www.w3.org/2000/svg")
+	if (target.namespaceURI !== 'http://www.w3.org/2000/svg')
 		return false;
 	var propDetails = supportedProperties[property];
 	return propDetails && propDetails.isSVGAttrib;
@@ -1248,8 +1248,8 @@ function zero(property, value) {
  * requires the target element to be able to determine whether the given property
  * is an SVG attribute or not, as this impacts the conversion of the interpolated
  * value back into a CSS value string for transform translations.
- * e.g. interpolate("transform", elem, "rotate(40deg)", "rotate(50deg)", 0.3);
- *   will return "rotate(43deg)".
+ * e.g. interpolate('transform', elem, 'rotate(40deg)', 'rotate(50deg)', 0.3);
+ *   will return 'rotate(43deg)'.
  */
 function interpolate(property, target, from, to, f) {
 	var svgMode = propertyIsSVGAttrib(property, target);
@@ -1258,7 +1258,7 @@ function interpolate(property, target, from, to, f) {
 	if (propertyIsNumber(property)) {
 		return toCssValue(property, _interp(from, to, f), svgMode);
 	} else if (propertyIsLength(property)) {
-		return toCssValue(property, [_interp(from[0], to[0], f), "px"], svgMode);
+		return toCssValue(property, [_interp(from[0], to[0], f), 'px'], svgMode);
 	} else if (propertyIsTransform(property)) {
 		while (from.length < to.length) {
 			from.push({t: null, d: null});
@@ -1270,13 +1270,13 @@ function interpolate(property, target, from, to, f) {
 		for (var i = 0; i < from.length; i++) {
 			console.assert(from[i].t === to[i].t || from[i].t === null ||
 				to[i].t === null,
-				"Transform types should match or one should be the underlying value");
+				'Transform types should match or one should be the underlying value');
 			var type = from[i].t ? from[i].t : to[i].t;
 			out.push({t: type, d:_interp(from[i].d, to[i].d, f)});
 		}
 		return toCssValue(property, out, svgMode);
 	} else {
-		throw "UnsupportedProperty";
+		throw 'UnsupportedProperty';
 	}
 }
 
@@ -1287,42 +1287,42 @@ function interpolate(property, target, from, to, f) {
  */
 function toCssValue(property, value, svgMode) {
 	if (propertyIsNumber(property)) {
-		return value + "";
+		return value + '';
 	} else if (propertyIsLength(property)) {
 		return value[0] + value[1];
 	} else if (propertyIsTransform(property)) {
 		// TODO: fix this :)
-		var out = ""
+		var out = ''
 		for (var i = 0; i < value.length; i++) {
-			console.assert(value[i].t, "transform type should be resolved by now");
+			console.assert(value[i].t, 'transform type should be resolved by now');
 			switch (value[i].t) {
-				case "rotate":
-				case "rotateY":
+				case 'rotate':
+				case 'rotateY':
 				{
-					var unit = svgMode ? "" : "deg";
-					out += value[i].t + "(" + value[i].d + unit + ") ";
+					var unit = svgMode ? '' : 'deg';
+					out += value[i].t + '(' + value[i].d + unit + ') ';
 					break;
 				}
-				case "translateZ":
-					out += value[i].t + "(" + value[i].d + 'px' + ") ";
+				case 'translateZ':
+					out += value[i].t + '(' + value[i].d + 'px' + ') ';
 					break;
-				case "translate":
+				case 'translate':
 				{
-					var unit = svgMode ? "" : "px";
+					var unit = svgMode ? '' : 'px';
 					if (value[i].d[1] === 0) {
-						out += value[i].t + "(" + value[i].d[0] + unit + ") ";
+						out += value[i].t + '(' + value[i].d[0] + unit + ') ';
 					} else {
-						out += value[i].t + "(" + value[i].d[0] + unit + ", " +
-									value[i].d[1] + unit + ") ";
+						out += value[i].t + '(' + value[i].d[0] + unit + ', ' +
+									value[i].d[1] + unit + ') ';
 					}
 					break;
 					}
-				case "scale":
+				case 'scale':
 				{
 					if (value[i].d[0] === value[i].d[1]) {
-						out += value[i].t + "(" + value[i].d[0] + ") ";
+						out += value[i].t + '(' + value[i].d[0] + ') ';
 					} else {
-						out += value[i].t + "(" + value[i].d[0] + ", " + value[i].d[1] + ") ";
+						out += value[i].t + '(' + value[i].d[0] + ', ' + value[i].d[1] + ') ';
 					}
 					break;
 				}
@@ -1330,18 +1330,18 @@ function toCssValue(property, value, svgMode) {
 		}
 		return out.substring(0, out.length - 1);
 	} else {
-		throw "UnsupportedProperty";
+		throw 'UnsupportedProperty';
 	}
 }
 
 function extractDeg(deg) {
 	var num  = Number(deg[1]);
 	switch (deg[2]) {
-	case "grad":
+	case 'grad':
 		return num / 400 * 360;
-	case "rad":
+	case 'rad':
 		return num / 2 / Math.PI * 360;
-	case "turn":
+	case 'turn':
 		return num * 360;
 	default:
 		return num;
@@ -1368,20 +1368,20 @@ function extractScaleValues(scales) {
 
 var transformREs =
 	[
-		[/^\s*rotate\(([+-]?(?:\d+|\d*\.\d+))(deg|grad|rad|turn)?\)/, extractDeg, "rotate"],
-		[/^\s*rotateY\(([+-]?(?:\d+|\d*\.\d+))(deg|grad|rad|turn)\)/, extractDeg, "rotateY"],
-		[/^\s*translateZ\(([+-]?(?:\d+|\d*\.\d+))(px)?\)/, extractTranslateValue, "translateZ"],
+		[/^\s*rotate\(([+-]?(?:\d+|\d*\.\d+))(deg|grad|rad|turn)?\)/, extractDeg, 'rotate'],
+		[/^\s*rotateY\(([+-]?(?:\d+|\d*\.\d+))(deg|grad|rad|turn)\)/, extractDeg, 'rotateY'],
+		[/^\s*translateZ\(([+-]?(?:\d+|\d*\.\d+))(px)?\)/, extractTranslateValue, 'translateZ'],
 		[/^\s*translate\(([+-]?(?:\d+|\d*\.\d+))(px)?(?:\s*,\s*([+-]?(?:\d+|\d*\.\d+))(px)?)?\)/,
-		 extractTranslationValues, "translate"],
-		[/^\s*scale\((\d+|\d*\.\d+)(?:\s*,\s*(\d+|\d*.\d+))?\)/, extractScaleValues, "scale"]
+		 extractTranslationValues, 'translate'],
+		[/^\s*scale\((\d+|\d*\.\d+)(?:\s*,\s*(\d+|\d*.\d+))?\)/, extractScaleValues, 'scale']
 	];
 
 function fromCssValue(property, value) {
 	if (propertyIsNumber(property)) {
-		return value !== "" ? Number(value) : null;
+		return value !== '' ? Number(value) : null;
 	} else if (propertyIsLength(property)) {
-		return value !== ""
-		       ? [Number(value.substring(0, value.length - 2)), "px"]
+		return value !== ''
+		       ? [Number(value.substring(0, value.length - 2)), 'px']
 		       : [null, null];
 	} else if (propertyIsTransform(property)) {
 		// TODO: fix this :)
@@ -1402,7 +1402,7 @@ function fromCssValue(property, value) {
 		}
 		return result;
 	} else {
-		throw "UnsupportedProperty";
+		throw 'UnsupportedProperty';
 	}
 }
 
@@ -1424,7 +1424,7 @@ var CompositedPropertyMap = Class.create({
 			this.properties[property] = [];
 		}
 		if (!animValue instanceof AnimatedResult) {
-			throw new TypeError("expected AnimatedResult when adding value to CompositedPropertyMap");
+			throw new TypeError('expected AnimatedResult when adding value to CompositedPropertyMap');
 		}		
 		this.properties[property].push(animValue);
 	},
@@ -1434,12 +1434,12 @@ var CompositedPropertyMap = Class.create({
 			if (resultList.length > 0) {
 				var i;
 				for (i = resultList.length - 1; i >= 0; i--) {
-					if (resultList[i].operation == "replace") {
+					if (resultList[i].operation == 'replace') {
 						break;
 					}
 				}
 				// the baseValue will either be retrieved after clearing the value or will
-				// be overwritten by a "replace".
+				// be overwritten by a 'replace'.
 				var baseValue = undefined;
 				if (i == -1) {
 					clearValue(this.target, property);
@@ -1448,14 +1448,14 @@ var CompositedPropertyMap = Class.create({
 				}
 				for ( ; i < resultList.length; i++) {
 					switch (resultList[i].operation) {
-					case "replace":
+					case 'replace':
 						baseValue = resultList[i].value;
 						continue;
-					case "add":
+					case 'add':
 						// TODO: implement generic adder
 						baseValue += resultList[i].value;
 						continue;
-					case "merge":
+					case 'merge':
 						baseValue = interpolate(property, this.target, baseValue, resultList[i].value, resultList[i].fraction);
 						continue;
 					}
@@ -1558,7 +1558,7 @@ function getValue(target, property) {
 
 var rAFNo = undefined;
 
-var DEFAULT_GROUP = new AnimGroup("par", null, [], {fill: "forwards", name: "DEFAULT"}, 0, undefined);
+var DEFAULT_GROUP = new AnimGroup('par', null, [], {fill: 'forwards', name: 'DEFAULT'}, 0, undefined);
 
 DEFAULT_GROUP.oldFuncs = new Array();
 DEFAULT_GROUP.compositor = new Compositor();
@@ -1594,7 +1594,7 @@ DEFAULT_GROUP._tick = function(parentTime) {
 		return !allFinished;
 }
 DEFAULT_GROUP.currentState = function() {
-	return this.iterationTime + " " + (exists(rAFNo) ? "ticking" : "stopped") + " " + this.toString();
+	return this.iterationTime + ' ' + (exists(rAFNo) ? 'ticking' : 'stopped') + ' ' + this.toString();
 }.bind(DEFAULT_GROUP);
 
 // If requestAnimationFrame is unprefixed then it uses high-res time.
@@ -1603,7 +1603,7 @@ var timeNow = undefined;
 var timeZero = useHighResTime ? 0 : Date.now();
 
 // massive hack to allow things to be added to the parent group and start playing. Maybe this is right though?
-DEFAULT_GROUP.__defineGetter__("iterationTime", function() {
+DEFAULT_GROUP.__defineGetter__('iterationTime', function() {
 	if (!exists(timeNow)) {
 		timeNow = useHighResTime ? window.performance.now() : Date.now() - timeZero;
 		window.setTimeout(function() { timeNow = undefined; }, 0);
