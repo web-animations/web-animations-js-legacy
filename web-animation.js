@@ -1470,27 +1470,31 @@ DEFAULT_GROUP.currentState = function() {
 	return this.iterationTime + " " + (exists(rAFNo) ? "ticking" : "stopped") + " " + this.toString();
 }.bind(DEFAULT_GROUP);
 
-var now = undefined;
+// If requestAnimationFrame is unprefixed then it uses high-res time.
+var useHighResTime = 'requestAnimationFrame' in window;
+var timeNow = undefined;
+var timeZero = useHighResTime ? 0 : Date.now();
 
 // massive hack to allow things to be added to the parent group and start playing. Maybe this is right though?
 DEFAULT_GROUP.__defineGetter__("iterationTime", function() {
-	if (!exists(now)) {
-		now = Date.now();
-		window.setTimeout(function() { now = undefined; }, 0);
+	if (!exists(timeNow)) {
+		timeNow = useHighResTime ? window.performance.now() : Date.now() - timeZero;
+		window.setTimeout(function() { timeNow = undefined; }, 0);
 	}
-	return (now - _startTime) / 1000})
+	return timeNow / 1000;
+})
 
-var _startTime = Date.now();
 
-var requestAnimationFrame = window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.msRequestAnimationFrame
+var requestAnimationFrame = window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.msRequestAnimationFrame;
 
-var ticker = function(_time) {
-	var time = _time - _startTime;
-	if (DEFAULT_GROUP._tick(time / 1000)) {
+var ticker = function(frameTime) {
+	timeNow = frameTime - timeZero;
+	if (DEFAULT_GROUP._tick(timeNow / 1000)) {
 		rAFNo = requestAnimationFrame(ticker);
 	} else {
 		rAFNo = undefined;
 	}
+	timeNow = undefined;
 };
 
 function maybeRestartAnimation() {
