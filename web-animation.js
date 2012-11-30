@@ -45,16 +45,16 @@ var Timing = Class.create({
     this.fill = timingDict.fill || 'forwards';
   },
   clone: function() {
-    return new Timing(
-      { startDelay: this.startDelay,
-        duration: this.duration,
-        iterationCount: this.iterationCount,
-        iterationStart: this.iterationStart,
-        playbackRate: this.playbackRate,
-        direction: this.direction,
-        timingFunc: this.timingFunc ? this.timingFunc.clone() : null,
-        fill: this.fill
-      });
+    return new Timing({
+      startDelay: this.startDelay,
+      duration: this.duration,
+      iterationCount: this.iterationCount,
+      iterationStart: this.iterationStart,
+      playbackRate: this.playbackRate,
+      direction: this.direction,
+      timingFunc: this.timingFunc ? this.timingFunc.clone() : null,
+      fill: this.fill
+    });
   },
 })
 
@@ -86,17 +86,17 @@ var TimingProxy = Class.create({
     }.bind(this));
   },
   extractMutableTiming: function() {
-    return new Timing(
-      { startDelay: this.timing.startDelay,
-        duration: this.timing.duration,
-        iterationCount: this.timing.iterationCount,
-        iterationStart: this.timing.iterationStart,
-        playbackRate: this.timing.playbackRate,
-        direction: this.timing.direction,
-        timingFunc: this.timing.timingFunc ?
-                    this.timing.timingFunc.clone() : null,
-        fill: this.timing.fill
-      });
+    return new Timing({
+      startDelay: this.timing.startDelay,
+      duration: this.timing.duration,
+      iterationCount: this.timing.iterationCount,
+      iterationStart: this.timing.iterationStart,
+      playbackRate: this.timing.playbackRate,
+      direction: this.timing.direction,
+      timingFunc: this.timing.timingFunc ?
+                  this.timing.timingFunc.clone() : null,
+      fill: this.timing.fill
+    });
   },
   clone: function() {
     return this.timing.clone();
