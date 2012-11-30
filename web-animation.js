@@ -1,12 +1,12 @@
 /**
  * Copyright 2012 Google Inc. All Rights Reserved.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -65,7 +65,7 @@ var TimingProxy = Class.create({
     this.timing = timing;
     ['startDelay', 'duration', 'iterationCount', 'iterationStart', 'playbackRate', 'direction', 'timingFunc', 'fill'].forEach(function(s) {
       this.__defineGetter__(s, function() { return timing[s]; });
-      this.__defineSetter__(s, function(v) { var old = timing[s]; timing[s] = v; try { setter(v); } catch (e) { timing[s] = old; throw e;}});      
+      this.__defineSetter__(s, function(v) { var old = timing[s]; timing[s] = v; try { setter(v); } catch (e) { timing[s] = old; throw e;}});
     }.bind(this));
   },
   extractMutableTiming: function() {
@@ -227,7 +227,6 @@ var TimedItem = Class.create({
     this.__defineGetter__('paused', function() {
       return this.locallyPaused || (exists(this.parentGroup) && this.parentGroup.paused);
     });
-        
   },
   reparent: function(parentGroup) {
     if (this.parentGroup) {
@@ -276,8 +275,8 @@ var TimedItem = Class.create({
     //console.log(this.name + ': endTime, itemTime', this.endTime, this.itemTime);
     if (this.itemTime !== null) {
       if (this.itemTime < this.timing.startDelay) {
-        if (((this.timing.fill == 'backwards') && !this._reversing) 
-          || this.timing.fill == 'both' 
+        if (((this.timing.fill == 'backwards') && !this._reversing)
+          || this.timing.fill == 'both'
           || ((this.timing.fill == 'forwards') && this._reversing)) {
           this.animationTime = 0;
         } else {
@@ -287,7 +286,7 @@ var TimedItem = Class.create({
         this.animationTime = this.itemTime - this.timing.startDelay;
       } else {
         if (((this.timing.fill == 'forwards') && !this._reversing)
-          || this.timing.fill == 'both' 
+          || this.timing.fill == 'both'
           || ((this.timing.fill == 'backwards') && this._reversing)) {
           this.animationTime = this.animationDuration;
         } else {
@@ -1425,7 +1424,7 @@ var CompositedPropertyMap = Class.create({
     }
     if (!animValue instanceof AnimatedResult) {
       throw new TypeError('expected AnimatedResult when adding value to CompositedPropertyMap');
-    }    
+    }
     this.properties[property].push(animValue);
   },
   applyAnimatedValues: function() {
@@ -1459,7 +1458,7 @@ var CompositedPropertyMap = Class.create({
             baseValue = interpolate(property, this.target, baseValue, resultList[i].value, resultList[i].fraction);
             continue;
           }
-        }  
+        }
         setValue(this.target, property, baseValue);
       }
       this.properties[property] = [];
@@ -1484,7 +1483,6 @@ var Compositor = Class.create({
       target._anim_properties.applyAnimatedValues();
     }
   }
-    
 });
 
 function initializeIfSVGAndUninitialized(property, target) {
@@ -1587,8 +1585,8 @@ DEFAULT_GROUP._tick = function(parentTime) {
       }
     }
     this.oldFuncs = funcs;
-  
-    // Composite animated values into element styles  
+
+    // Composite animated values into element styles
     this.compositor.applyAnimatedValues();
 
     return !allFinished;
