@@ -1202,6 +1202,7 @@ supportedProperties["opacity"] = { type: "number", isSVGAttrib: false, zero: _ze
 supportedProperties["left"]    = { type: "length", isSVGAttrib: false, zero: _zeroIsNought };
 supportedProperties["top"]     = { type: "length", isSVGAttrib: false, zero: _zeroIsNought };
 supportedProperties["cx"]      = { type: "length", isSVGAttrib: true, zero: _zeroIsNought };
+supportedProperties["x"]      = { type: "length", isSVGAttrib: true, zero: _zeroIsNought };
 
 // For browsers that support transform as a style attribute on SVG we can
 // set isSVGAttrib to false
@@ -1480,25 +1481,70 @@ var Compositor = Class.create({
 		
 });
 
-function setValue(target, property, value) {
+function initializeIfSVGAndUninitialized(property, target) {
 	if (propertyIsSVGAttrib(property, target)) {
-		target.setAttribute(property, value);
+		if (!exists(target._actuals) || !exists(target._actuals[property])) {
+			if (!target._actuals) {
+				target._actuals = {};
+				target._bases = {};
+				target.actuals = {};
+				target._getAttribute = target.getAttribute;
+				target._setAttribute = target.setAttribute;
+				target.getAttribute = function(name) {
+					if (exists(target._bases[name])) {
+						return target._bases[name];
+					}
+					return target._getAttribute(name);
+				};
+				target.setAttribute = function(name, value) {
+					if (exists(target._actuals[name])) {
+						target._bases[name] = value;
+					} else {
+						target._setAttribute(name, value);
+					}
+				};
+			}
+			var baseVal = target.getAttribute(property);
+			target._actuals[property] = 0;
+			target._bases[property] = baseVal;
+			target.actuals.__defineSetter__(property, function(value) {
+				if (value == null) {
+					target._actuals[property] = target._bases[property];
+					target._setAttribute(property, target._bases[property]);
+				} else {
+					target._actuals[property] = value;
+					target._setAttribute(property, value)
+				}
+			});
+			target.actuals.__defineGetter__(property, function() {
+				return target._actuals[property];
+			});
+		}
+	}
+}
+
+function setValue(target, property, value) {
+	initializeIfSVGAndUninitialized(property, target);
+	if (propertyIsSVGAttrib(property, target)) {
+		target.actuals[property] = value;
 	} else {
 		target.style[property] = value;
 	}
 }
 
 function clearValue(target, property) {
+	initializeIfSVGAndUninitialized(property, target);
 	if (propertyIsSVGAttrib(property, target)) {
-		throw new Error("Clearing SVG attribute values not yet implemented");
+		target.actuals[property] = null;
 	} else {
-		target.style[property] = null;
+	    target.style[property] = null;
 	}
 }
 
 function getValue(target, property) {
+	initializeIfSVGAndUninitialized(property, target);
 	if (propertyIsSVGAttrib(property, target)) {
-		return target.getAttribute(property);
+		return target.actuals[property];
 	} else {
 		return window.getComputedStyle(target)[property];
 	}
