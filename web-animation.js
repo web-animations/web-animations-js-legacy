@@ -11,6 +11,7 @@
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
+
  * limitations under the License.
  */
 (function() {
@@ -172,7 +173,7 @@ var TimedItem = function(timing, startTime, parentGroup) {
   this._locallyPaused = false;
 
   if (this.parentGroup) {
-    this.parentGroup._addChild(this);
+    this.parentGroup._addInternal(this);
   }
   this.updateIterationDuration();
   this._pauseStartTime = 0;
@@ -537,30 +538,26 @@ mixin(Animation.prototype, {
 // To use this, need to have children and length member variables.
 var AnimationListMixin = {
   initListMixin: function(onListChange) {
-    this._clear();
+    this.children = [];
+    this.length = 0;
     this.onListChange = onListChange;
   },
-  clear: function() {
-    this._clear();
-    this.onListChange();
-  },
-  _clear: function() {
-    this.children = [];
-    var oldLength = this.length;
-    this.length = 0;
-    this._deleteIdxAccessors(0, oldLength);
-    // TODO: call cancel on children? Update timing?
-  },
-  _createIdxAccessors: function(start, end) {
-    for (var i = start; i < end; i++) {
+  _lengthChanged: function() {
+    while (this.length < this.children.length) {
+      var i = this.length++;
       this.__defineSetter__(i, function(x) { this.children[i] = x; });
       this.__defineGetter__(i, function() { return this.children[i]; });
     }
-  },
-  _deleteIdxAccessors: function(start, end) {
-    for (var i = start; i < end; i++) {
+    while (this.length > this.children.length) {
+      var i = --this.length;
       delete this[i];
     }
+  },
+  clear: function() {
+    // TODO: call cancel on children? Update timing?
+    this.children = [];
+    this._lengthChanged();
+    this.onListChange();
   },
   add: function() {
     var newItems = [];
@@ -570,71 +567,26 @@ var AnimationListMixin = {
     this.splice(this.length, 0, newItems);
     return newItems;
   },
-  _addChild: function(child) {
+  _addInternal: function(child) {
     this.children.push(child);
-    this._createIdxAccessors(this.length, this.length + 1);
-    this.length = this.children.length;
+    this._lengthChanged();
     this.onListChange();
-  },
-  item: function(index) {
-    return this.children[index];
   },
   indexOf: function(item) {
-    for (var i = 0; i < this.children.length; i++) {
-      if (this.children[i] === item) {
-        return i;
-      }
-    }
-    return -1;
+    return this.children.indexOf(item);
   },
-  splice: function() {
-    // Read params
-    var start = arguments[0];
-    var deleteCount = arguments[1];
-    var newItems = [];
-    if (Array.isArray(arguments[2])) {
-      newItems = arguments[2];
-    } else {
-      for (var i = 2; i < arguments.length; i++) {
-        newItems.push(arguments[i]);
+  splice: function(start, deleteCount, newItems) {
+    var args = [start, deleteCount];
+    if (exists(newItems)) {
+      args = args.concat(newItems);
+      for (var i = 2; i < args.length; i++) {
+        args[i].reparent(this);
       }
     }
-
-    var removedItems = [];
-    var len = this.length;
-
-    // Interpret params
-    var actualStart = start < 0 ?
-        Math.max(len + start, 0) : Math.min(start, len);
-    var actualDeleteCount =
-        Math.min(Math.max(deleteCount, 0), len - actualStart);
-
-    // Reparent items
-    for (var i = 0; i < newItems.length; i++) {
-      newItems[i].reparent(this);
-    }
-
-    // Delete stage
-    if (actualDeleteCount) {
-      removedItems = this.children.splice(actualStart, actualDeleteCount);
-      for (var i = 0; i < removedItems.length; i++) {
-        removedItems[i].parentGroup = null;
-      }
-      this._deleteIdxAccessors(actualStart, actualStart + actualDeleteCount);
-    }
-
-    // Add stage
-    if (newItems.length) {
-      for (var i = 0; i < newItems.length; i++) {
-        this.children.splice(actualStart+i, 0, newItems[i]);
-      }
-      this._createIdxAccessors(actualStart, actualStart + newItems.length);
-    }
-
-    this.length = this.children.length;
+    var result = Array.prototype['splice'].apply(this.children, args);
+    this._lengthChanged();
     this.onListChange();
-
-    return removedItems;
+    return result;
   },
   remove: function(index, count) {
     if (!isDefined(count)) {
