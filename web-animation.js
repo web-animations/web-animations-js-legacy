@@ -1273,7 +1273,7 @@ function _interp(from, to, f, type) {
   if (Array.isArray(from) || Array.isArray(to)) {
     return _interpArray(from, to, f, type);
   }
-  var zero = type == "scale" ? 1.0 : 0.0;
+  var zero = type == 'scale' ? 1.0 : 0.0;
   to   = exists(to) ? to : zero;
   from = exists(from) ? from : zero;
 
