@@ -146,7 +146,7 @@ var TimedTemplate = Class.create({
 });
 
 function exists(val) {
-  return typeof val !== 'undefined';
+  return typeof val !== 'undefined' && (val !== null);
 }
 
 var ST_MANUAL = 0;
@@ -1041,7 +1041,7 @@ AnimFunc.createFromProperties = function(properties) {
     return null;
   } else if (animProps.length === 1) {
     return AnimFunc._createKeyframeFunc(
-        animProps[0], properties[animProps[0]]);
+        animProps[0], properties[animProps[0]], properties.operation);
   } else {
     // TODO: GroupAnimFunc
     try {
@@ -1051,7 +1051,7 @@ AnimFunc.createFromProperties = function(properties) {
 }
 
 // Step 3 - Create a KeyframeAnimFunc object
-AnimFunc._createKeyframeFunc = function(property, value) {
+AnimFunc._createKeyframeFunc = function(property, value, operation) {
   var func = new KeyframeAnimFunc(property);
 
   if (typeof value === 'string') {
@@ -1074,6 +1074,10 @@ AnimFunc._createKeyframeFunc = function(property, value) {
     } catch (e) { console.log(e.stack); throw e; }
   }
   // TODO: Need to handle KeyframeDict objects once they're defined
+
+  if (exists(operation)) {
+    func.operation = operation;
+  }
 
   return func;
 }
@@ -1265,16 +1269,18 @@ var TimingFunc = Class.create({
   }
 });
 
-function _interp(from, to, f) {
+function _interp(from, to, f, type) {
   if (Array.isArray(from) || Array.isArray(to)) {
-    return _interpArray(from, to, f);
+    return _interpArray(from, to, f, type);
   }
-  to   = to   || 0.0;
-  from = from || 0.0;
+  var zero = type == "scale" ? 1.0 : 0.0;
+  to   = exists(to) ? to : zero;
+  from = exists(from) ? from : zero;
+
   return to * f + from * (1 - f);
 }
 
-function _interpArray(from, to, f) {
+function _interpArray(from, to, f, type) {
   console.assert(Array.isArray(from) || from === null,
     'From is not an array or null');
   console.assert(Array.isArray(to) || to === null,
@@ -1285,7 +1291,7 @@ function _interpArray(from, to, f) {
 
   var result = [];
   for (var i = 0; i < length; i++) {
-    result[i] = _interp(from ? from[i] : 0.0, to ? to[i] : 0.0, f);
+    result[i] = _interp(from ? from[i] : null, to ? to[i] : null, f, type);
   }
   return result;
 }
@@ -1385,7 +1391,7 @@ function interpolate(property, target, from, to, f) {
         to[i].t === null,
         'Transform types should match or one should be the underlying value');
       var type = from[i].t ? from[i].t : to[i].t;
-      out.push({t: type, d:_interp(from[i].d, to[i].d, f)});
+      out.push({t: type, d:_interp(from[i].d, to[i].d, f, type)});
     }
     return toCssValue(property, out, svgMode);
   } else {
@@ -1470,7 +1476,7 @@ function extractTranslateValue(length) {
 
 function extractScaleValues(scales) {
   var scaleX = Number(scales[1]);
-  var scaleY = scales[2] ? Number(lengths[2]) : scaleX;
+  var scaleY = scales[2] ? Number(scales[2]) : scaleX;
   return [scaleX, scaleY];
 }
 
@@ -1713,12 +1719,12 @@ DEFAULT_GROUP.currentState = function() {
 
 // If requestAnimationFrame is unprefixed then it uses high-res time.
 function initTiming() {
-  useHighResTime = 'requestAnimationFrame' in window;
-  window.requestAnimationFrame = window.requestAnimationFrame ||
-    window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame ||
-    window.msRequestAnimationFrame; // 80 wrap is so 80s
-  timeNow = undefined;
-  timeZero = useHighResTime ? 0 : Date.now();
+	useHighResTime = 'requestAnimationFrame' in window;
+	window.requestAnimationFrame = window.requestAnimationFrame ||
+		window.webkitRequestAnimationFrame || // 80 wrap is so 80s
+		window.mozRequestAnimationFrame || window.msRequestAnimationFrame;
+	timeNow = undefined;
+	timeZero = useHighResTime ? 0 : Date.now();
 }
 
 initTiming();
