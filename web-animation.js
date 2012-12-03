@@ -87,42 +87,43 @@ var ImmutableTimingProxy = function(timing) {
 
 /** @constructor */
 var TimingProxy = function(timing, setter) {
-  this.timing = timing;
-  var properties = ['startDelay', 'duration', 'iterationCount',
-      'iterationStart', 'playbackRate', 'direction', 'timingFunc', 'fill'];
-  properties.forEach(function(s) {
-    this.__defineGetter__(s, function() {
-      return timing[s];
-    });
-    this.__defineSetter__(s, function(v) {
-      var old = timing[s];
-      timing[s] = v;
-      try {
-        setter(v);
-      } catch (e) {
-        timing[s] = old;
-        throw e;
-      }
-    });
-  }.bind(this));
+  this._timing = timing;
+  this._setter = setter;
 };
+
+['startDelay', 'duration', 'iterationCount', 'iterationStart', 'playbackRate',
+    'direction', 'timingFunc', 'fill'].forEach(function(s) {
+  TimingProxy.prototype.__defineGetter__(s, function() {
+    return this._timing[s];
+  });
+  TimingProxy.prototype.__defineSetter__(s, function(v) {
+    var old = this._timing[s];
+    this._timing[s] = v;
+    try {
+      this._setter(v);
+    } catch (e) {
+      this._timing[s] = old;
+      throw e;
+    }
+  });
+});
 
 mixin(TimingProxy.prototype, {
   extractMutableTiming: function() {
     return new Timing({
-      startDelay: this.timing.startDelay,
-      duration: this.timing.duration,
-      iterationCount: this.timing.iterationCount,
-      iterationStart: this.timing.iterationStart,
-      playbackRate: this.timing.playbackRate,
-      direction: this.timing.direction,
-      timingFunc: this.timing.timingFunc ?
-                  this.timing.timingFunc.clone() : null,
-      fill: this.timing.fill
+      startDelay: this._timing.startDelay,
+      duration: this._timing.duration,
+      iterationCount: this._timing.iterationCount,
+      iterationStart: this._timing.iterationStart,
+      playbackRate: this._timing.playbackRate,
+      direction: this._timing.direction,
+      timingFunc: this._timing.timingFunc ?
+                  this._timing.timingFunc.clone() : null,
+      fill: this._timing.fill
     });
   },
   clone: function() {
-    return this.timing.clone();
+    return this._timing.clone();
   }
 });
 
@@ -215,70 +216,71 @@ var TimedItem = function(timing, startTime, parentGroup) {
     this.parentGroup._addChild(this);
   }
   this._timeDrift = 0;
-  this.__defineGetter__('timeDrift', function() {
-    if (this.locallyPaused) {
-      return this._effectiveParentTime - this.startTime -
-          this._pauseStartTime;
-    }
-    return this._timeDrift;
-  });
-  this.__defineGetter__('_effectiveParentTime', function() {
-    return this.parentGroup && this.parentGroup.iterationTime
-      ? this.parentGroup.iterationTime
-      : 0;
-  });
-  this.__defineGetter__('currentTime', function() {
-    return this._effectiveParentTime - this._startTime - this.timeDrift;
-  });
-  this.__defineSetter__('currentTime', function(seekTime) {
-    if (this._locallyPaused) {
-      this._pauseStartTime = seekTime;
-    } else {
-      this._timeDrift = this._effectiveParentTime - this._startTime -
-          seekTime;
-    }
-    this.updateTimeMarkers();
-    if (this.parentGroup) {
-      this.parentGroup._childrenStateModified();
-    }
-  });
-  this.__defineGetter__('startTime', function() {
-    return this._startTime;
-  });
-  this.__defineSetter__('startTime', function(newStartTime) {
-    if (this.parentGroup && this.parentGroup.type === 'seq') {
-      throw new Error('NoModificationAllowedError');
-    }
-    this._startTime = newStartTime;
-    this._startTimeMode = ST_MANUAL;
-    this.updateTimeMarkers();
-    if (this.parentGroup) {
-      this.parentGroup._childrenStateModified();
-    }
-  });
   this._locallyPaused = false;
   this._pauseStartTime = 0;
-  this.__defineGetter__('locallyPaused', function() {
-    return this._locallyPaused;
-  });
-  this.__defineSetter__('locallyPaused', function(newVal) {
-    if (this._locallyPaused === newVal) {
-      return;
-    }
-    if (this._locallyPaused) {
-      this._timeDrift = this._effectiveParentTime - this.startTime -
-          this._pauseStartTime;
-    } else {
-      this._pauseStartTime = this.currentTime;
-    }
-    this._locallyPaused = newVal;
-    this.updateTimeMarkers();
-  });
-  this.__defineGetter__('paused', function() {
-    return this.locallyPaused ||
-        (exists(this.parentGroup) && this.parentGroup.paused);
-  });
 };
+
+TimedItem.prototype.__defineGetter__('timeDrift', function() {
+  if (this.locallyPaused) {
+    return this._effectiveParentTime - this.startTime -
+        this._pauseStartTime;
+  }
+  return this._timeDrift;
+});
+TimedItem.prototype.__defineGetter__('_effectiveParentTime', function() {
+  return this.parentGroup && this.parentGroup.iterationTime
+    ? this.parentGroup.iterationTime
+    : 0;
+});
+TimedItem.prototype.__defineGetter__('currentTime', function() {
+  return this._effectiveParentTime - this._startTime - this.timeDrift;
+});
+TimedItem.prototype.__defineSetter__('currentTime', function(seekTime) {
+  if (this._locallyPaused) {
+    this._pauseStartTime = seekTime;
+  } else {
+    this._timeDrift = this._effectiveParentTime - this._startTime -
+        seekTime;
+  }
+  this.updateTimeMarkers();
+  if (this.parentGroup) {
+    this.parentGroup._childrenStateModified();
+  }
+});
+TimedItem.prototype.__defineGetter__('startTime', function() {
+  return this._startTime;
+});
+TimedItem.prototype.__defineSetter__('startTime', function(newStartTime) {
+  if (this.parentGroup && this.parentGroup.type === 'seq') {
+    throw new Error('NoModificationAllowedError');
+  }
+  this._startTime = newStartTime;
+  this._startTimeMode = ST_MANUAL;
+  this.updateTimeMarkers();
+  if (this.parentGroup) {
+    this.parentGroup._childrenStateModified();
+  }
+});
+TimedItem.prototype.__defineGetter__('locallyPaused', function() {
+  return this._locallyPaused;
+});
+TimedItem.prototype.__defineSetter__('locallyPaused', function(newVal) {
+  if (this._locallyPaused === newVal) {
+    return;
+  }
+  if (this._locallyPaused) {
+    this._timeDrift = this._effectiveParentTime - this.startTime -
+        this._pauseStartTime;
+  } else {
+    this._pauseStartTime = this.currentTime;
+  }
+  this._locallyPaused = newVal;
+  this.updateTimeMarkers();
+});
+TimedItem.prototype.__defineGetter__('paused', function() {
+  return this.locallyPaused ||
+      (exists(this.parentGroup) && this.parentGroup.paused);
+});
 
 mixin(TimedItem.prototype, {
   reparent: function(parentGroup) {
