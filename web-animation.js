@@ -15,7 +15,58 @@
  */
 (function() {
 
-var Timing = Class.create({
+var createClass = function() {
+  // Find the super class, if any.
+  var superClass;
+  if (arguments.length && arguments[0] instanceof Function) {
+    superClass = arguments[0];
+  }
+
+  // Initialize the prototype.
+  var prototype;
+  if (superClass) {
+    var tmp = function() {};
+    tmp.prototype = superClass.prototype;
+    prototype = new tmp();
+  } else {
+    prototype = new Object();
+  }
+  var initialize;
+
+  // Populate the prototype from the mixins.
+  for (var i = superClass ? 1 : 0; i < arguments.length; i++) {
+    var mixin = arguments[i];
+    for (var k in mixin) {
+      if (k == 'initialize') {
+        initialize = mixin[k];
+        continue;
+      }
+      prototype[k] = mixin[k];
+    }
+  }
+
+  // Create the constructor.
+  var klass;
+  if (!initialize) {
+    klass = function() {};
+  } else if (superClass) {
+    klass = function() {
+      var argsArray = Array.prototype.slice.call(arguments, 0);
+      initialize.apply(this, [superClass.bind(this)].concat(argsArray));
+    };
+  } else {
+    klass = function() {
+      initialize.apply(this, arguments);
+    };
+  }
+
+  klass.prototype = prototype;
+  klass.prototype.constructor = klass;
+
+  return klass;
+};
+
+var Timing = createClass({
   initialize: function(timingDict) {
     this.startDelay = timingDict.startDelay || 0.0;
     this.duration = timingDict.duration;
@@ -64,7 +115,7 @@ var ImmutableTimingProxy = function(timing) {
   });
 };
 
-var TimingProxy = Class.create({
+var TimingProxy = createClass({
   initialize: function(timing, setter) {
     this.timing = timing;
     var properties = ['startDelay', 'duration', 'iterationCount',
@@ -103,7 +154,7 @@ var TimingProxy = Class.create({
   }
 })
 
-var TimedTemplate = Class.create({
+var TimedTemplate = createClass({
   initialize: function(timing) {
     this.timing = new TimingProxy(timing || new Timing({}), function() {
       this.updateTiming();
@@ -153,7 +204,7 @@ var ST_MANUAL = 0;
 var ST_AUTO = 1;
 var ST_FORCED = 2;
 
-var TimedItem = Class.create({
+var TimedItem = createClass({
   initialize: function(timing, startTime, parentGroup) {
     this.timing = new TimingProxy(timing, function() {
       this.updateIterationDuration();
@@ -529,7 +580,7 @@ var ClonedAnim = function(target, cloneSource, parentGroup, startTime) {
                       cloneSource.animFunc.clone(), parentGroup, startTime);
 };
 
-var Anim = Class.create(TimedItem, {
+var Anim = createClass(TimedItem, {
   initialize: function($super, target, animFunc, timing, parentGroup,
       startTime) {
     this.animFunc = interpretAnimFunc(animFunc);
@@ -611,7 +662,7 @@ var Anim = Class.create(TimedItem, {
   }
 });
 
-var AnimTemplate = Class.create(TimedTemplate, {
+var AnimTemplate = createClass(TimedTemplate, {
   initialize: function($super, animFunc, timing, resolutionStrategy) {
     this.animFunc = interpretAnimFunc(animFunc);
     this.timing = interpretTimingParam(timing);
@@ -793,7 +844,7 @@ var AnimListMixin = {
   }
 }
 
-var AnimGroup = Class.create(TimedItem, AnimListMixin, {
+var AnimGroup = createClass(TimedItem, AnimListMixin, {
   initialize: function($super, type, template, children, timing, startTime,
       parentGroup) {
     // used by TimedItem via intrinsicDuration(), so needs to be set before
@@ -927,19 +978,19 @@ var AnimGroup = Class.create(TimedItem, AnimListMixin, {
   }
 });
 
-var ParAnimGroup = Class.create(AnimGroup, {
+var ParAnimGroup = createClass(AnimGroup, {
   initialize: function($super, children, timing, parentGroup, startTime) {
     $super('par', undefined, children, timing, startTime, parentGroup);
   }
 });
 
-var SeqAnimGroup = Class.create(AnimGroup, {
+var SeqAnimGroup = createClass(AnimGroup, {
   initialize: function($super, children, timing, parentGroup, startTime) {
     $super('seq', undefined, children, timing, startTime, parentGroup);
   }
 });
 
-var AnimGroupTemplate = Class.create(TimedTemplate, AnimListMixin, {
+var AnimGroupTemplate = createClass(TimedTemplate, AnimListMixin, {
   initialize: function($super, type, children, timing, resolutionStrategy) {
     $super(timing);
     this.type = type;
@@ -977,19 +1028,19 @@ var AnimGroupTemplate = Class.create(TimedTemplate, AnimListMixin, {
   }
 });
 
-var ParAnimGroupTemplate = Class.create(AnimGroupTemplate, {
+var ParAnimGroupTemplate = createClass(AnimGroupTemplate, {
   initialize: function($super, children, timing, resolutionStrategy) {
     $super('par', children, timing, resolutionStrategy);
   }
 });
 
-var SeqAnimGroupTemplate = Class.create(AnimGroupTemplate, {
+var SeqAnimGroupTemplate = createClass(AnimGroupTemplate, {
   initialize: function($super, children, properties, resolutionStrategy) {
     $super('seq', children, properties, resolutionStrategy);
   }
 });
 
-var AnimFunc = Class.create({
+var AnimFunc = createClass({
   initialize: function(operation, accumulateOperation) {
     this.operation = operation === undefined ? 'replace' : operation;
     this.accumulateOperation =
@@ -1061,7 +1112,7 @@ AnimFunc._createKeyframeFunc = function(property, value, operation) {
   return func;
 }
 
-var KeyframeAnimFunc = Class.create(AnimFunc, {
+var KeyframeAnimFunc = createClass(AnimFunc, {
   initialize: function($super, property, operation, accumulateOperation) {
     $super(operation, accumulateOperation);
     this.property = property;
@@ -1168,7 +1219,7 @@ var KeyframeAnimFunc = Class.create(AnimFunc, {
   }
 });
 
-var Keyframe = Class.create({
+var Keyframe = createClass({
   initialize: function(value, offset, timingFunc) {
     this.value = value;
     this.offset = offset;
@@ -1176,7 +1227,7 @@ var Keyframe = Class.create({
   }
 });
 
-var KeyframeList = Class.create({
+var KeyframeList = createClass({
   initialize: function() {
     this.frames = [];
     this.__defineGetter__('length', function() {return this.frames.length; });
@@ -1214,7 +1265,7 @@ var presetTimings = {
   'ease-out' : [0, 0, 0.58, 1.0]
 }
 
-var TimingFunc = Class.create({
+var TimingFunc = createClass({
   initialize: function(spec) {
     if (spec.length == 4) {
       this.params = spec;
@@ -1507,7 +1558,7 @@ var fromCssValue = function(property, value) {
   }
 }
 
-var AnimatedResult = Class.create({
+var AnimatedResult = createClass({
   initialize: function(value, operation, fraction) {
     this.value = value;
     this.operation = operation;
@@ -1515,7 +1566,7 @@ var AnimatedResult = Class.create({
   }
 });
 
-var CompositedPropertyMap = Class.create({
+var CompositedPropertyMap = createClass({
   initialize: function(target) {
     this.properties = {};
     this.target = target;
@@ -1568,7 +1619,7 @@ var CompositedPropertyMap = Class.create({
   }
 });
 
-var Compositor = Class.create({
+var Compositor = createClass({
   initialize: function() {
     this.targets = []
   },
