@@ -15,33 +15,21 @@
  */
 (function() {
 
-/**
- * Wire up the superclass and mix methods into a class.
- * Params are constructor, optional superclass, optional mixin objects...
- */
-var wireClass = function(constructor) {
-  // Find the super class, if any.
-  var $super;
-  if (arguments.length && arguments[1] instanceof Function) {
-    $super = arguments[1];
+var inherits = function(child, parent) {
+  var tmp = function() {};
+  tmp.prototype = parent.prototype;
+  child.$super = parent;
+  child.prototype = new tmp();
+  child.prototype.constructor = child;
+};
 
-    // Wire the prototype to the super class.
-    var tmp = function() {};
-    tmp.prototype = $super.prototype;
-    constructor.$super = $super;
-    constructor.prototype = new tmp();
-    constructor.prototype.constructor = constructor;
-  }
-
-  // Populate the prototype from the mixins.
-  for (var i = $super ? 2 : 1; i < arguments.length; i++) {
-    var mixin = arguments[i];
-    for (var k in mixin) {
-      constructor.prototype[k] = mixin[k];
-    }
+var mixin = function(target, source) {
+  for (var k in source) {
+    target[k] = source[k];
   }
 };
 
+/** @constructor */
 var Timing = function(timingDict) {
   this.startDelay = timingDict.startDelay || 0.0;
   this.duration = timingDict.duration;
@@ -71,7 +59,7 @@ var Timing = function(timingDict) {
   this.fill = timingDict.fill || 'forwards';
 };
 
-wireClass(Timing, {
+mixin(Timing.prototype, {
   clone: function() {
     return new Timing({
       startDelay: this.startDelay,
@@ -86,12 +74,14 @@ wireClass(Timing, {
   },
 });
 
+/** @constructor */
 var ImmutableTimingProxy = function(timing) {
   return new TimingProxy(timing, function(v) {
     throw 'can\'t modify timing properties of templated Animation Instances';
   });
 };
 
+/** @constructor */
 var TimingProxy = function(timing, setter) {
   this.timing = timing;
   var properties = ['startDelay', 'duration', 'iterationCount',
@@ -113,7 +103,7 @@ var TimingProxy = function(timing, setter) {
   }.bind(this));
 };
 
-wireClass(TimingProxy, {
+mixin(TimingProxy.prototype, {
   extractMutableTiming: function() {
     return new Timing({
       startDelay: this.timing.startDelay,
@@ -132,6 +122,7 @@ wireClass(TimingProxy, {
   }
 });
 
+/** @constructor */
 var TimedTemplate = function(timing) {
   this.timing = new TimingProxy(timing || new Timing({}), function() {
     this.updateTiming();
@@ -139,7 +130,7 @@ var TimedTemplate = function(timing) {
   this.linkedAnims = [];
 };
 
-wireClass(TimedTemplate, {
+mixin(TimedTemplate.prototype, {
   addLinkedAnim: function(anim) {
     this.linkedAnims.push(anim);
   },
@@ -183,6 +174,7 @@ var ST_MANUAL = 0;
 var ST_AUTO = 1;
 var ST_FORCED = 2;
 
+/** @constructor */
 var TimedItem = function(timing, startTime, parentGroup) {
   this.timing = new TimingProxy(timing, function() {
     this.updateIterationDuration();
@@ -284,7 +276,7 @@ var TimedItem = function(timing, startTime, parentGroup) {
   });
 };
 
-wireClass(TimedItem, {
+mixin(TimedItem.prototype, {
   reparent: function(parentGroup) {
     if (this.parentGroup) {
       this.parentGroup.remove(this.parentGroup.indexOf(this), 1);
@@ -555,11 +547,13 @@ var LinkedAnim = function(target, template, parentGroup, startTime) {
   return anim;
 };
 
+// TODO: what is this, it isn't used anywhere?
 var ClonedAnim = function(target, cloneSource, parentGroup, startTime) {
   var anim = new Anim(target, cloneSource.timing.clone(),
                       cloneSource.animFunc.clone(), parentGroup, startTime);
 };
 
+/** @constructor */
 var Anim = function(target, animFunc, timing, parentGroup, startTime) {
   this.animFunc = interpretAnimFunc(animFunc);
   this.timing = interpretTimingParam(timing);
@@ -578,7 +572,8 @@ var Anim = function(target, animFunc, timing, parentGroup, startTime) {
             : '<anon>';
 };
 
-wireClass(Anim, TimedItem, {
+inherits(Anim, TimedItem);
+mixin(Anim.prototype, {
   unlink: function() {
     var result = this.template;
     if (result) {
@@ -642,6 +637,7 @@ wireClass(Anim, TimedItem, {
   }
 });
 
+/** @constructor */
 var AnimTemplate = function(animFunc, timing, resolutionStrategy) {
   this.animFunc = interpretAnimFunc(animFunc);
   this.timing = interpretTimingParam(timing);
@@ -651,7 +647,8 @@ var AnimTemplate = function(animFunc, timing, resolutionStrategy) {
   // this.name = properties.name;
 };
 
-wireClass(AnimTemplate, TimedTemplate, {
+inherits(AnimTemplate, TimedTemplate);
+mixin(AnimTemplate.prototype, {
   reparent: function(parentGroup) {
     // TODO: does anything need to happen here?
   },
@@ -825,6 +822,7 @@ var AnimListMixin = {
   }
 }
 
+/** @constructor */
 var AnimGroup = function(type, template, children, timing, startTime,
     parentGroup) {
   // used by TimedItem via intrinsicDuration(), so needs to be set before
@@ -846,7 +844,9 @@ var AnimGroup = function(type, template, children, timing, startTime,
   // this.name = properties.name || '<anon>';
 };
 
-wireClass(AnimGroup, TimedItem, AnimListMixin, {
+inherits(AnimGroup, TimedItem);
+mixin(AnimGroup.prototype, AnimListMixin);
+mixin(AnimGroup.prototype, {
   _assertNotLive: function() {
     if (this.template) {
       throw 'Can\'t modify tree of AnimGroupInstances with templates'
@@ -960,20 +960,23 @@ wireClass(AnimGroup, TimedItem, AnimListMixin, {
   }
 });
 
+/** @constructor */
 var ParAnimGroup = function(children, timing, parentGroup, startTime) {
   ParAnimGroup.$super.call(
       this, 'par', undefined, children, timing, startTime, parentGroup);
 };
 
-wireClass(ParAnimGroup, AnimGroup);
+inherits(ParAnimGroup, AnimGroup);
 
+/** @constructor */
 var SeqAnimGroup = function(children, timing, parentGroup, startTime) {
   SeqAnimGroup.$super.call(
       this, 'seq', undefined, children, timing, startTime, parentGroup);
 };
 
-wireClass(SeqAnimGroup, AnimGroup);
+inherits(SeqAnimGroup, AnimGroup);
 
+/** @constructor */
 var AnimGroupTemplate = function(type, children, timing, resolutionStrategy) {
   AnimGroupTemplate.$super.call(this, timing);
   this.type = type;
@@ -986,7 +989,9 @@ var AnimGroupTemplate = function(type, children, timing, resolutionStrategy) {
   }
 };
 
-wireClass(AnimGroupTemplate, TimedTemplate, AnimListMixin, {
+inherits(AnimGroupTemplate, TimedTemplate);
+mixin(AnimGroupTemplate.prototype, AnimListMixin);
+mixin(AnimGroupTemplate.prototype, {
   reparent: function(parentGroup) {
     // TODO: does anything need to happen here?
   },
@@ -1013,27 +1018,30 @@ wireClass(AnimGroupTemplate, TimedTemplate, AnimListMixin, {
   }
 });
 
+/** @constructor */
 var ParAnimGroupTemplate = function(children, timing, resolutionStrategy) {
   ParAnimGroupTemplate.$super.call(
       this, 'par', children, timing, resolutionStrategy);
 };
 
-wireClass(ParAnimGroupTemplate, AnimGroupTemplate);
+inherits(ParAnimGroupTemplate, AnimGroupTemplate);
 
+/** @constructor */
 var SeqAnimGroupTemplate = function(children, properties, resolutionStrategy) {
   SeqAnimGroupTemplate.$super.call(
       this, 'seq', children, properties, resolutionStrategy);
 };
 
-wireClass(SeqAnimGroupTemplate, AnimGroupTemplate);
+inherits(SeqAnimGroupTemplate, AnimGroupTemplate);
 
+/** @constructor */
 var AnimFunc = function(operation, accumulateOperation) {
   this.operation = operation === undefined ? 'replace' : operation;
   this.accumulateOperation =
       accumulateOperation == undefined ? 'replace' : operation;
 };
 
-wireClass(AnimFunc, {
+mixin(AnimFunc.prototype, {
   sample: function(timeFraction, currentIteration, target, underlyingValue) {
     throw 'Unimplemented sample function';
   },
@@ -1100,13 +1108,15 @@ AnimFunc._createKeyframeFunc = function(property, value, operation) {
   return func;
 }
 
+/** @constructor */
 var KeyframeAnimFunc = function(property, operation, accumulateOperation) {
   KeyframeAnimFunc.$super.call(this, operation, accumulateOperation);
   this.property = property;
   this.frames = new KeyframeList();
 };
 
-wireClass(KeyframeAnimFunc, AnimFunc, {
+inherits(KeyframeAnimFunc, AnimFunc);
+mixin(KeyframeAnimFunc.prototype, {
   sortedFrames: function() {
     this.frames.frames.sort(function(a, b) {
       if (a.offset < b.offset) {
@@ -1208,18 +1218,20 @@ wireClass(KeyframeAnimFunc, AnimFunc, {
   }
 });
 
+/** @constructor */
 var Keyframe = function(value, offset, timingFunc) {
   this.value = value;
   this.offset = offset;
   this.timingFunc = timingFunc;
 };
 
+/** @constructor */
 var KeyframeList = function() {
   this.frames = [];
   this.__defineGetter__('length', function() {return this.frames.length; });
 };
 
-wireClass(KeyframeList, {
+mixin(KeyframeList.prototype, {
   item: function(index) {
     if (index >= this.length || index < 0) {
       return null;
@@ -1253,6 +1265,7 @@ var presetTimings = {
   'ease-out' : [0, 0, 0.58, 1.0]
 }
 
+/** @constructor */
 var TimingFunc = function(spec) {
   if (spec.length == 4) {
     this.params = spec;
@@ -1269,7 +1282,7 @@ var TimingFunc = function(spec) {
   }
 };
 
-wireClass(TimingFunc, {
+mixin(TimingFunc.prototype, {
   scaleTime: function(fraction) {
     var fst = 0;
     while (fst != 100 && fraction > this.map[fst][0]) {
@@ -1547,18 +1560,20 @@ var fromCssValue = function(property, value) {
   }
 }
 
+/** @constructor */
 var AnimatedResult = function(value, operation, fraction) {
   this.value = value;
   this.operation = operation;
   this.fraction = fraction;
 };
 
+/** @constructor */
 var CompositedPropertyMap = function(target) {
   this.properties = {};
   this.target = target;
 };
 
-wireClass(CompositedPropertyMap, {
+mixin(CompositedPropertyMap.prototype, {
   addValue: function(property, animValue) {
     if (this.properties[property] === undefined) {
       this.properties[property] = [];
@@ -1607,11 +1622,12 @@ wireClass(CompositedPropertyMap, {
   }
 });
 
+/** @constructor */
 var Compositor = function() {
   this.targets = []
 };
 
-wireClass(Compositor, {
+mixin(Compositor.prototype, {
   setAnimatedValue: function(target, property, animValue) {
     if (target._anim_properties === undefined) {
       target._anim_properties = new CompositedPropertyMap(target);
