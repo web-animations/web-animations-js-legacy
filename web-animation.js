@@ -1698,9 +1698,16 @@ DEFAULT_GROUP.currentState = function() {
 }.bind(DEFAULT_GROUP);
 
 // If requestAnimationFrame is unprefixed then it uses high-res time.
-var useHighResTime = 'requestAnimationFrame' in window;
-var timeNow = undefined;
-var timeZero = useHighResTime ? 0 : Date.now();
+function initTiming() {
+  useHighResTime = 'requestAnimationFrame' in window;
+  window.requestAnimationFrame = window.requestAnimationFrame ||
+    window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame ||
+    window.msRequestAnimationFrame; // 80 wrap is so 80s
+  timeNow = undefined;
+  timeZero = useHighResTime ? 0 : Date.now();
+}
+
+initTiming();
 
 // Massive hack to allow things to be added to the parent group and start
 // playing. Maybe this is right though?
@@ -1715,8 +1722,6 @@ DEFAULT_GROUP.__defineGetter__('iterationTime', function() {
 })
 
 
-var requestAnimationFrame = window.webkitRequestAnimationFrame ||
-    window.mozRequestAnimationFrame || window.msRequestAnimationFrame;
 
 var ticker = function(frameTime) {
   timeNow = frameTime - timeZero;
