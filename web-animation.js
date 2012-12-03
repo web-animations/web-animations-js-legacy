@@ -15,86 +15,63 @@
  */
 (function() {
 
-var createClass = function() {
+/**
+ * Wire up the superclass and mix methods into a class.
+ * Params are constructor, optional superclass, optional mixin objects...
+ */
+var wireClass = function(constructor) {
   // Find the super class, if any.
-  var superClass;
-  if (arguments.length && arguments[0] instanceof Function) {
-    superClass = arguments[0];
-  }
+  var $super;
+  if (arguments.length && arguments[1] instanceof Function) {
+    $super = arguments[1];
 
-  // Initialize the prototype.
-  var prototype;
-  if (superClass) {
+    // Wire the prototype to the super class.
     var tmp = function() {};
-    tmp.prototype = superClass.prototype;
-    prototype = new tmp();
-  } else {
-    prototype = new Object();
+    tmp.prototype = $super.prototype;
+    constructor.$super = $super;
+    constructor.prototype = new tmp();
+    constructor.prototype.constructor = constructor;
   }
-  var initialize;
 
   // Populate the prototype from the mixins.
-  for (var i = superClass ? 1 : 0; i < arguments.length; i++) {
+  for (var i = $super ? 2 : 1; i < arguments.length; i++) {
     var mixin = arguments[i];
     for (var k in mixin) {
-      if (k == 'initialize') {
-        initialize = mixin[k];
-        continue;
-      }
-      prototype[k] = mixin[k];
+      constructor.prototype[k] = mixin[k];
     }
   }
-
-  // Create the constructor.
-  var klass;
-  if (!initialize) {
-    klass = function() {};
-  } else if (superClass) {
-    klass = function() {
-      var argsArray = Array.prototype.slice.call(arguments, 0);
-      initialize.apply(this, [superClass.bind(this)].concat(argsArray));
-    };
-  } else {
-    klass = function() {
-      initialize.apply(this, arguments);
-    };
-  }
-
-  klass.prototype = prototype;
-  klass.prototype.constructor = klass;
-
-  return klass;
 };
 
-var Timing = createClass({
-  initialize: function(timingDict) {
-    this.startDelay = timingDict.startDelay || 0.0;
-    this.duration = timingDict.duration;
-    if (this.duration < 0.0) {
-      throw new IndexSizeError('duration must be >= 0');
-    }
-    this.iterationCount = exists(timingDict.iterationCount) ?
-        timingDict.iterationCount : 1.0;
-    if (this.iterationCount < 0.0) {
-      throw new IndexSizeError('iterationCount must be >= 0');
-    }
-    this.iterationStart = timingDict.iterationStart || 0.0;
-    if (this.iterationStart < 0.0) {
-      throw new IndexSizeError('iterationStart must be >= 0');
-    }
-    this.playbackRate = exists(timingDict.playbackRate) ?
-        timingDict.playbackRate : 1.0;
-    //this.playbackRate = timingDict.playbackRate || 1.0;
-    this.direction = timingDict.direction || 'normal';
-    if (typeof timingDict.timingFunc === 'string') {
-      // TODO: Write createFromString
-      throw 'createFromString not implemented';
-      this.timingFunc = TimingFunc.createFromString(timingDict.timingFunc);
-    } else {
-      this.timingFunc = timingDict.timingFunc;
-    }
-    this.fill = timingDict.fill || 'forwards';
-  },
+var Timing = function(timingDict) {
+  this.startDelay = timingDict.startDelay || 0.0;
+  this.duration = timingDict.duration;
+  if (this.duration < 0.0) {
+    throw new IndexSizeError('duration must be >= 0');
+  }
+  this.iterationCount = exists(timingDict.iterationCount) ?
+      timingDict.iterationCount : 1.0;
+  if (this.iterationCount < 0.0) {
+    throw new IndexSizeError('iterationCount must be >= 0');
+  }
+  this.iterationStart = timingDict.iterationStart || 0.0;
+  if (this.iterationStart < 0.0) {
+    throw new IndexSizeError('iterationStart must be >= 0');
+  }
+  this.playbackRate = exists(timingDict.playbackRate) ?
+      timingDict.playbackRate : 1.0;
+  //this.playbackRate = timingDict.playbackRate || 1.0;
+  this.direction = timingDict.direction || 'normal';
+  if (typeof timingDict.timingFunc === 'string') {
+    // TODO: Write createFromString
+    throw 'createFromString not implemented';
+    this.timingFunc = TimingFunc.createFromString(timingDict.timingFunc);
+  } else {
+    this.timingFunc = timingDict.timingFunc;
+  }
+  this.fill = timingDict.fill || 'forwards';
+};
+
+wireClass(Timing, {
   clone: function() {
     return new Timing({
       startDelay: this.startDelay,
@@ -107,7 +84,7 @@ var Timing = createClass({
       fill: this.fill
     });
   },
-})
+});
 
 var ImmutableTimingProxy = function(timing) {
   return new TimingProxy(timing, function(v) {
@@ -115,27 +92,28 @@ var ImmutableTimingProxy = function(timing) {
   });
 };
 
-var TimingProxy = createClass({
-  initialize: function(timing, setter) {
-    this.timing = timing;
-    var properties = ['startDelay', 'duration', 'iterationCount',
-        'iterationStart', 'playbackRate', 'direction', 'timingFunc', 'fill'];
-    properties.forEach(function(s) {
-      this.__defineGetter__(s, function() {
-        return timing[s];
-      });
-      this.__defineSetter__(s, function(v) {
-        var old = timing[s];
-        timing[s] = v;
-        try {
-          setter(v);
-        } catch (e) {
-          timing[s] = old;
-          throw e;
-        }
-      });
-    }.bind(this));
-  },
+var TimingProxy = function(timing, setter) {
+  this.timing = timing;
+  var properties = ['startDelay', 'duration', 'iterationCount',
+      'iterationStart', 'playbackRate', 'direction', 'timingFunc', 'fill'];
+  properties.forEach(function(s) {
+    this.__defineGetter__(s, function() {
+      return timing[s];
+    });
+    this.__defineSetter__(s, function(v) {
+      var old = timing[s];
+      timing[s] = v;
+      try {
+        setter(v);
+      } catch (e) {
+        timing[s] = old;
+        throw e;
+      }
+    });
+  }.bind(this));
+};
+
+wireClass(TimingProxy, {
   extractMutableTiming: function() {
     return new Timing({
       startDelay: this.timing.startDelay,
@@ -152,15 +130,16 @@ var TimingProxy = createClass({
   clone: function() {
     return this.timing.clone();
   }
-})
+});
 
-var TimedTemplate = createClass({
-  initialize: function(timing) {
-    this.timing = new TimingProxy(timing || new Timing({}), function() {
-      this.updateTiming();
-    }.bind(this));
-    this.linkedAnims = [];
-  },
+var TimedTemplate = function(timing) {
+  this.timing = new TimingProxy(timing || new Timing({}), function() {
+    this.updateTiming();
+  }.bind(this));
+  this.linkedAnims = [];
+};
+
+wireClass(TimedTemplate, {
   addLinkedAnim: function(anim) {
     this.linkedAnims.push(anim);
   },
@@ -204,107 +183,108 @@ var ST_MANUAL = 0;
 var ST_AUTO = 1;
 var ST_FORCED = 2;
 
-var TimedItem = createClass({
-  initialize: function(timing, startTime, parentGroup) {
-    this.timing = new TimingProxy(timing, function() {
-      this.updateIterationDuration();
-    }.bind(this));
-    this._startTime = startTime;
+var TimedItem = function(timing, startTime, parentGroup) {
+  this.timing = new TimingProxy(timing, function() {
     this.updateIterationDuration();
-    this.currentIteration = null;
-    this.iterationTime = null;
-    this.animationTime = null;
-    this._reversing = false;
+  }.bind(this));
+  this._startTime = startTime;
+  this.updateIterationDuration();
+  this.currentIteration = null;
+  this.iterationTime = null;
+  this.animationTime = null;
+  this._reversing = false;
 
-    if (!exists(parentGroup)) {
-      this.parentGroup = DEFAULT_GROUP;
-    } else if (parentGroup instanceof TimedItem) {
-      this.parentGroup = parentGroup;
-    } else {
-      throw new TypeError('parentGroup is not a TimedItem');
-    }
+  if (!exists(parentGroup)) {
+    this.parentGroup = DEFAULT_GROUP;
+  } else if (parentGroup instanceof TimedItem) {
+    this.parentGroup = parentGroup;
+  } else {
+    throw new TypeError('parentGroup is not a TimedItem');
+  }
 
-    if (!exists(startTime)) {
-      this._startTimeMode = ST_AUTO;
-      if (this.parentGroup) {
-        this._startTime = this.parentGroup.iterationTime || 0;
-      } else {
-        this._startTime = 0;
-      }
-    } else {
-      this._startTimeMode = ST_MANUAL;
-      this._startTime = startTime;
-    }
-    this.endTime = this._startTime + this.animationDuration +
-        this.timing.startDelay;
+  if (!exists(startTime)) {
+    this._startTimeMode = ST_AUTO;
     if (this.parentGroup) {
-      this.parentGroup._addChild(this);
+      this._startTime = this.parentGroup.iterationTime || 0;
+    } else {
+      this._startTime = 0;
     }
-    this._timeDrift = 0;
-    this.__defineGetter__('timeDrift', function() {
-      if (this.locallyPaused) {
-        return this._effectiveParentTime - this.startTime -
-            this._pauseStartTime;
-      }
-      return this._timeDrift;
-    });
-    this.__defineGetter__('_effectiveParentTime', function() {
-      return this.parentGroup && this.parentGroup.iterationTime
-        ? this.parentGroup.iterationTime
-        : 0;
-    });
-    this.__defineGetter__('currentTime', function() {
-      return this._effectiveParentTime - this._startTime - this.timeDrift;
-    });
-    this.__defineSetter__('currentTime', function(seekTime) {
-      if (this._locallyPaused) {
-        this._pauseStartTime = seekTime;
-      } else {
-        this._timeDrift = this._effectiveParentTime - this._startTime -
-            seekTime;
-      }
-      this.updateTimeMarkers();
-      if (this.parentGroup) {
-        this.parentGroup._childrenStateModified();
-      }
-    });
-    this.__defineGetter__('startTime', function() {
-      return this._startTime;
-    });
-    this.__defineSetter__('startTime', function(newStartTime) {
-      if (this.parentGroup && this.parentGroup.type === 'seq') {
-        throw new Error('NoModificationAllowedError');
-      }
-      this._startTime = newStartTime;
-      this._startTimeMode = ST_MANUAL;
-      this.updateTimeMarkers();
-      if (this.parentGroup) {
-        this.parentGroup._childrenStateModified();
-      }
-    });
-    this._locallyPaused = false;
-    this._pauseStartTime = 0;
-    this.__defineGetter__('locallyPaused', function() {
-      return this._locallyPaused;
-    });
-    this.__defineSetter__('locallyPaused', function(newVal) {
-      if (this._locallyPaused === newVal) {
-        return;
-      }
-      if (this._locallyPaused) {
-        this._timeDrift = this._effectiveParentTime - this.startTime -
-            this._pauseStartTime;
-      } else {
-        this._pauseStartTime = this.currentTime;
-      }
-      this._locallyPaused = newVal;
-      this.updateTimeMarkers();
-    });
-    this.__defineGetter__('paused', function() {
-      return this.locallyPaused ||
-          (exists(this.parentGroup) && this.parentGroup.paused);
-    });
-  },
+  } else {
+    this._startTimeMode = ST_MANUAL;
+    this._startTime = startTime;
+  }
+  this.endTime = this._startTime + this.animationDuration +
+      this.timing.startDelay;
+  if (this.parentGroup) {
+    this.parentGroup._addChild(this);
+  }
+  this._timeDrift = 0;
+  this.__defineGetter__('timeDrift', function() {
+    if (this.locallyPaused) {
+      return this._effectiveParentTime - this.startTime -
+          this._pauseStartTime;
+    }
+    return this._timeDrift;
+  });
+  this.__defineGetter__('_effectiveParentTime', function() {
+    return this.parentGroup && this.parentGroup.iterationTime
+      ? this.parentGroup.iterationTime
+      : 0;
+  });
+  this.__defineGetter__('currentTime', function() {
+    return this._effectiveParentTime - this._startTime - this.timeDrift;
+  });
+  this.__defineSetter__('currentTime', function(seekTime) {
+    if (this._locallyPaused) {
+      this._pauseStartTime = seekTime;
+    } else {
+      this._timeDrift = this._effectiveParentTime - this._startTime -
+          seekTime;
+    }
+    this.updateTimeMarkers();
+    if (this.parentGroup) {
+      this.parentGroup._childrenStateModified();
+    }
+  });
+  this.__defineGetter__('startTime', function() {
+    return this._startTime;
+  });
+  this.__defineSetter__('startTime', function(newStartTime) {
+    if (this.parentGroup && this.parentGroup.type === 'seq') {
+      throw new Error('NoModificationAllowedError');
+    }
+    this._startTime = newStartTime;
+    this._startTimeMode = ST_MANUAL;
+    this.updateTimeMarkers();
+    if (this.parentGroup) {
+      this.parentGroup._childrenStateModified();
+    }
+  });
+  this._locallyPaused = false;
+  this._pauseStartTime = 0;
+  this.__defineGetter__('locallyPaused', function() {
+    return this._locallyPaused;
+  });
+  this.__defineSetter__('locallyPaused', function(newVal) {
+    if (this._locallyPaused === newVal) {
+      return;
+    }
+    if (this._locallyPaused) {
+      this._timeDrift = this._effectiveParentTime - this.startTime -
+          this._pauseStartTime;
+    } else {
+      this._pauseStartTime = this.currentTime;
+    }
+    this._locallyPaused = newVal;
+    this.updateTimeMarkers();
+  });
+  this.__defineGetter__('paused', function() {
+    return this.locallyPaused ||
+        (exists(this.parentGroup) && this.parentGroup.paused);
+  });
+};
+
+wireClass(TimedItem, {
   reparent: function(parentGroup) {
     if (this.parentGroup) {
       this.parentGroup.remove(this.parentGroup.indexOf(this), 1);
@@ -580,25 +560,25 @@ var ClonedAnim = function(target, cloneSource, parentGroup, startTime) {
                       cloneSource.animFunc.clone(), parentGroup, startTime);
 };
 
-var Anim = createClass(TimedItem, {
-  initialize: function($super, target, animFunc, timing, parentGroup,
-      startTime) {
-    this.animFunc = interpretAnimFunc(animFunc);
-    this.timing = interpretTimingParam(timing);
+var Anim = function(target, animFunc, timing, parentGroup, startTime) {
+  this.animFunc = interpretAnimFunc(animFunc);
+  this.timing = interpretTimingParam(timing);
 
-    $super(this.timing, startTime, parentGroup);
+  Anim.$super.call(this, this.timing, startTime, parentGroup);
 
-    // TODO: correctly extract the underlying value from the element
-    this.underlyingValue = null;
-    if (target && this.animFunc instanceof AnimFunc) {
-      this.underlyingValue = this.animFunc.getValue(target);
-    }
-    this.template = null;
-    this.targetElement = target;
-    this.name = this.animFunc instanceof KeyframeAnimFunc
-              ? this.animFunc.property
-              : '<anon>';
-  },
+  // TODO: correctly extract the underlying value from the element
+  this.underlyingValue = null;
+  if (target && this.animFunc instanceof AnimFunc) {
+    this.underlyingValue = this.animFunc.getValue(target);
+  }
+  this.template = null;
+  this.targetElement = target;
+  this.name = this.animFunc instanceof KeyframeAnimFunc
+            ? this.animFunc.property
+            : '<anon>';
+};
+
+wireClass(Anim, TimedItem, {
   unlink: function() {
     var result = this.template;
     if (result) {
@@ -662,19 +642,20 @@ var Anim = createClass(TimedItem, {
   }
 });
 
-var AnimTemplate = createClass(TimedTemplate, {
-  initialize: function($super, animFunc, timing, resolutionStrategy) {
-    this.animFunc = interpretAnimFunc(animFunc);
-    this.timing = interpretTimingParam(timing);
-    $super(this.timing);
-    this.resolutionStrategy = resolutionStrategy;
-    // TODO: incorporate name into spec?
-    // this.name = properties.name;
-  },
+var AnimTemplate = function(animFunc, timing, resolutionStrategy) {
+  this.animFunc = interpretAnimFunc(animFunc);
+  this.timing = interpretTimingParam(timing);
+  AnimTemplate.$super.call(this, this.timing);
+  this.resolutionStrategy = resolutionStrategy;
+  // TODO: incorporate name into spec?
+  // this.name = properties.name;
+};
+
+wireClass(AnimTemplate, TimedTemplate, {
   reparent: function(parentGroup) {
     // TODO: does anything need to happen here?
   },
-  __animate: function($super, isLive, targets, parentGroup, startTime) {
+  __animate: function(isLive, targets, parentGroup, startTime) {
     if (this.resolutionStrategy) {
       strategy = this.resolutionStrategy.split(':').map(function(a) {
         return a.strip();
@@ -844,27 +825,28 @@ var AnimListMixin = {
   }
 }
 
-var AnimGroup = createClass(TimedItem, AnimListMixin, {
-  initialize: function($super, type, template, children, timing, startTime,
-      parentGroup) {
-    // used by TimedItem via intrinsicDuration(), so needs to be set before
-    // initializing super.
-    this.type = type || 'par';
-    this.initListMixin(this._assertNotLive, this._childrenStateModified);
-    var completedTiming = interpretTimingParam(timing);
-    $super(completedTiming, startTime, parentGroup);
-    this.template = template;
-    if (template) {
-      template.addLinkedAnim(this);
+var AnimGroup = function(type, template, children, timing, startTime,
+    parentGroup) {
+  // used by TimedItem via intrinsicDuration(), so needs to be set before
+  // initializing super.
+  this.type = type || 'par';
+  this.initListMixin(this._assertNotLive, this._childrenStateModified);
+  var completedTiming = interpretTimingParam(timing);
+  AnimGroup.$super.call(this, completedTiming, startTime, parentGroup);
+  this.template = template;
+  if (template) {
+    template.addLinkedAnim(this);
+  }
+  if (children && Array.isArray(children)) {
+    for (var i = 0; i < children.length; i++) {
+      this.add(children[i]);
     }
-    if (children && Array.isArray(children)) {
-      for (var i = 0; i < children.length; i++) {
-        this.add(children[i]);
-      }
-    }
-    // TODO: Work out where to expose name in the API
-    // this.name = properties.name || '<anon>';
-  },
+  }
+  // TODO: Work out where to expose name in the API
+  // this.name = properties.name || '<anon>';
+};
+
+wireClass(AnimGroup, TimedItem, AnimListMixin, {
   _assertNotLive: function() {
     if (this.template) {
       throw 'Can\'t modify tree of AnimGroupInstances with templates'
@@ -978,34 +960,37 @@ var AnimGroup = createClass(TimedItem, AnimListMixin, {
   }
 });
 
-var ParAnimGroup = createClass(AnimGroup, {
-  initialize: function($super, children, timing, parentGroup, startTime) {
-    $super('par', undefined, children, timing, startTime, parentGroup);
-  }
-});
+var ParAnimGroup = function(children, timing, parentGroup, startTime) {
+  ParAnimGroup.$super.call(
+      this, 'par', undefined, children, timing, startTime, parentGroup);
+};
 
-var SeqAnimGroup = createClass(AnimGroup, {
-  initialize: function($super, children, timing, parentGroup, startTime) {
-    $super('seq', undefined, children, timing, startTime, parentGroup);
-  }
-});
+wireClass(ParAnimGroup, AnimGroup);
 
-var AnimGroupTemplate = createClass(TimedTemplate, AnimListMixin, {
-  initialize: function($super, type, children, timing, resolutionStrategy) {
-    $super(timing);
-    this.type = type;
-    this.resolutionStrategy = resolutionStrategy;
-    this.initListMixin(function() {}, function() {});
-    if (children && Array.isArray(children)) {
-      for (var i = 0; i < children.length; i++) {
-        this.add(children[i]);
-      }
+var SeqAnimGroup = function(children, timing, parentGroup, startTime) {
+  SeqAnimGroup.$super.call(
+      this, 'seq', undefined, children, timing, startTime, parentGroup);
+};
+
+wireClass(SeqAnimGroup, AnimGroup);
+
+var AnimGroupTemplate = function(type, children, timing, resolutionStrategy) {
+  AnimGroupTemplate.$super.call(this, timing);
+  this.type = type;
+  this.resolutionStrategy = resolutionStrategy;
+  this.initListMixin(function() {}, function() {});
+  if (children && Array.isArray(children)) {
+    for (var i = 0; i < children.length; i++) {
+      this.add(children[i]);
     }
-  },
+  }
+};
+
+wireClass(AnimGroupTemplate, TimedTemplate, AnimListMixin, {
   reparent: function(parentGroup) {
     // TODO: does anything need to happen here?
   },
-  __animate: function($super, isLive, targets, parentGroup, startTime) {
+  __animate: function(isLive, targets, parentGroup, startTime) {
     var instances = [];
     for (var i = 0; i < targets.length; i++) {
       var instance = new AnimGroup(
@@ -1028,24 +1013,27 @@ var AnimGroupTemplate = createClass(TimedTemplate, AnimListMixin, {
   }
 });
 
-var ParAnimGroupTemplate = createClass(AnimGroupTemplate, {
-  initialize: function($super, children, timing, resolutionStrategy) {
-    $super('par', children, timing, resolutionStrategy);
-  }
-});
+var ParAnimGroupTemplate = function(children, timing, resolutionStrategy) {
+  ParAnimGroupTemplate.$super.call(
+      this, 'par', children, timing, resolutionStrategy);
+};
 
-var SeqAnimGroupTemplate = createClass(AnimGroupTemplate, {
-  initialize: function($super, children, properties, resolutionStrategy) {
-    $super('seq', children, properties, resolutionStrategy);
-  }
-});
+wireClass(ParAnimGroupTemplate, AnimGroupTemplate);
 
-var AnimFunc = createClass({
-  initialize: function(operation, accumulateOperation) {
-    this.operation = operation === undefined ? 'replace' : operation;
-    this.accumulateOperation =
-        accumulateOperation == undefined ? 'replace' : operation;
-  },
+var SeqAnimGroupTemplate = function(children, properties, resolutionStrategy) {
+  SeqAnimGroupTemplate.$super.call(
+      this, 'seq', children, properties, resolutionStrategy);
+};
+
+wireClass(SeqAnimGroupTemplate, AnimGroupTemplate);
+
+var AnimFunc = function(operation, accumulateOperation) {
+  this.operation = operation === undefined ? 'replace' : operation;
+  this.accumulateOperation =
+      accumulateOperation == undefined ? 'replace' : operation;
+};
+
+wireClass(AnimFunc, {
   sample: function(timeFraction, currentIteration, target, underlyingValue) {
     throw 'Unimplemented sample function';
   },
@@ -1112,12 +1100,13 @@ AnimFunc._createKeyframeFunc = function(property, value, operation) {
   return func;
 }
 
-var KeyframeAnimFunc = createClass(AnimFunc, {
-  initialize: function($super, property, operation, accumulateOperation) {
-    $super(operation, accumulateOperation);
-    this.property = property;
-    this.frames = new KeyframeList();
-  },
+var KeyframeAnimFunc = function(property, operation, accumulateOperation) {
+  KeyframeAnimFunc.$super.call(this, operation, accumulateOperation);
+  this.property = property;
+  this.frames = new KeyframeList();
+};
+
+wireClass(KeyframeAnimFunc, AnimFunc, {
   sortedFrames: function() {
     this.frames.frames.sort(function(a, b) {
       if (a.offset < b.offset) {
@@ -1219,19 +1208,18 @@ var KeyframeAnimFunc = createClass(AnimFunc, {
   }
 });
 
-var Keyframe = createClass({
-  initialize: function(value, offset, timingFunc) {
-    this.value = value;
-    this.offset = offset;
-    this.timingFunc = timingFunc;
-  }
-});
+var Keyframe = function(value, offset, timingFunc) {
+  this.value = value;
+  this.offset = offset;
+  this.timingFunc = timingFunc;
+};
 
-var KeyframeList = createClass({
-  initialize: function() {
-    this.frames = [];
-    this.__defineGetter__('length', function() {return this.frames.length; });
-  },
+var KeyframeList = function() {
+  this.frames = [];
+  this.__defineGetter__('length', function() {return this.frames.length; });
+};
+
+wireClass(KeyframeList, {
   item: function(index) {
     if (index >= this.length || index < 0) {
       return null;
@@ -1265,22 +1253,23 @@ var presetTimings = {
   'ease-out' : [0, 0, 0.58, 1.0]
 }
 
-var TimingFunc = createClass({
-  initialize: function(spec) {
-    if (spec.length == 4) {
-      this.params = spec;
-    } else {
-      this.params = presetTimings[spec];
-    }
-    this.map = []
-    for (var ii = 0; ii <= 100; ii += 1) {
-      var i = ii / 100;
-      this.map.push([
-        3*i*(1-i)*(1-i)*this.params[0] + 3*i*i*(1-i)*this.params[2] + i*i*i,
-        3*i*(1-i)*(1-i)*this.params[1] + 3*i*i*(1-i)*this.params[3] + i*i*i
-      ]);
-    }
-  },
+var TimingFunc = function(spec) {
+  if (spec.length == 4) {
+    this.params = spec;
+  } else {
+    this.params = presetTimings[spec];
+  }
+  this.map = []
+  for (var ii = 0; ii <= 100; ii += 1) {
+    var i = ii / 100;
+    this.map.push([
+      3*i*(1-i)*(1-i)*this.params[0] + 3*i*i*(1-i)*this.params[2] + i*i*i,
+      3*i*(1-i)*(1-i)*this.params[1] + 3*i*i*(1-i)*this.params[3] + i*i*i
+    ]);
+  }
+};
+
+wireClass(TimingFunc, {
   scaleTime: function(fraction) {
     var fst = 0;
     while (fst != 100 && fraction > this.map[fst][0]) {
@@ -1558,19 +1547,18 @@ var fromCssValue = function(property, value) {
   }
 }
 
-var AnimatedResult = createClass({
-  initialize: function(value, operation, fraction) {
-    this.value = value;
-    this.operation = operation;
-    this.fraction = fraction;
-  }
-});
+var AnimatedResult = function(value, operation, fraction) {
+  this.value = value;
+  this.operation = operation;
+  this.fraction = fraction;
+};
 
-var CompositedPropertyMap = createClass({
-  initialize: function(target) {
-    this.properties = {};
-    this.target = target;
-  },
+var CompositedPropertyMap = function(target) {
+  this.properties = {};
+  this.target = target;
+};
+
+wireClass(CompositedPropertyMap, {
   addValue: function(property, animValue) {
     if (this.properties[property] === undefined) {
       this.properties[property] = [];
@@ -1619,10 +1607,11 @@ var CompositedPropertyMap = createClass({
   }
 });
 
-var Compositor = createClass({
-  initialize: function() {
-    this.targets = []
-  },
+var Compositor = function() {
+  this.targets = []
+};
+
+wireClass(Compositor, {
   setAnimatedValue: function(target, property, animValue) {
     if (target._anim_properties === undefined) {
       target._anim_properties = new CompositedPropertyMap(target);
