@@ -1339,6 +1339,21 @@ function zero(property, value) {
   return supportedProperties[property].zero(value);
 }
 
+function add(property, target, base, delta) {
+	var svgMode = propertyIsSVGAttrib(property, target);
+	base = fromCssValue(property, base);
+	delta = fromCssValue(property, delta);
+	if (propertyIsNumber(property)) {
+		return toCssValue(property, base + delta, svgMode);
+	} else if (propertyIsLength(property)) {
+		return toCssValue(property, [base[0] + delta[0], 'px'], svgMode);
+	} else if (propertyIsTransform(property)) {
+		return toCssValue(property, base.concat(delta), svgMode);
+	} else {
+		throw new Error("Unsupported property");
+	}
+}
+
 /**
  * Interpolate the given property name (f*100)% of the way from 'from' to 'to'.
  * 'from' and 'to' are both CSS value strings. Requires the target element to
@@ -1549,8 +1564,7 @@ var CompositedPropertyMap = Class.create({
             baseValue = resultList[i].value;
             continue;
           case 'add':
-            // TODO: implement generic adder
-            baseValue += resultList[i].value;
+            baseValue = add(property, this.target, baseValue, resultList[i].value);
             continue;
           case 'merge':
             baseValue = interpolate(property, this.target, baseValue,
