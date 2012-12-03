@@ -193,7 +193,7 @@ var TimedItem = function(timing, startTime, parentGroup) {
 
   if (!exists(parentGroup)) {
     this.parentGroup = DEFAULT_GROUP;
-  } else if (parentGroup instanceof TimedItem) {
+  } else if (parentGroup === null || parentGroup instanceof TimedItem) {
     this.parentGroup = parentGroup;
   } else {
     throw new TypeError('parentGroup is not a TimedItem');
