@@ -29,6 +29,10 @@ var mixin = function(target, source) {
   }
 };
 
+var strip = function(str) {
+  return str.replace(/^\s+/, '').replace(/\s+$/, '');
+};
+
 /** @constructor */
 var Timing = function(timingDict) {
   this.startDelay = timingDict.startDelay || 0.0;
@@ -655,7 +659,7 @@ mixin(AnimTemplate.prototype, {
   __animate: function(isLive, targets, parentGroup, startTime) {
     if (this.resolutionStrategy) {
       strategy = this.resolutionStrategy.split(':').map(function(a) {
-        return a.strip();
+        return strip(a);
       });
       var newTargets = [];
       switch (strategy[0]) {
@@ -684,7 +688,7 @@ mixin(AnimTemplate.prototype, {
           break;
         case 'target':
           newTargets = strategy[1].split(',').map(function(a) {
-            return document.getElementById(a.strip());
+            return document.getElementById(strip(a));
           });
           break;
         default:
