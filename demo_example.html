@@ -128,13 +128,13 @@ function second() {
 function third() {
 	a.timing.timingFunc = new TimingFunc('ease-in');
 	a.play();
-	console.log(DEFAULT_GROUP.currentState());	
+	console.log(window.document.animationTimeline.currentState());	
 }
 
 function fourth() {
 	a.timing.timingFunc = new TimingFunc([0, 0.2,0.8, 1]);
 	a.play();
-	console.log(DEFAULT_GROUP.currentState());	
+	console.log(window.document.animationTimeline.currentState());	
 }
 
 // STEP 3
@@ -148,7 +148,7 @@ function fifth() {
 		new Anim(picture,
 			{ '-webkit-transform': [ 'rotate(0deg)', 'rotate(-30deg)' ] }, 0.5);
 	group = new SeqAnimGroup([a, pictureTilting]);
-	console.log(DEFAULT_GROUP.currentState());
+	console.log(window.document.animationTimeline.currentState());
 }
 
 function sixth() {
@@ -156,7 +156,7 @@ function sixth() {
 	var dustPuff = new Anim(dust, { opacity: ["0", "0.4", "0"] }, 0.3);
 	group.add(new ParAnimGroup([ pictureTilting, dustPuff ]));
 	group.play();
-	console.log(DEFAULT_GROUP.currentState());
+	console.log(window.document.animationTimeline.currentState());
 }
 
 // STEP 4
@@ -178,7 +178,7 @@ function seventh() {
 	a.timing.timingFunc = null;
 	group.splice(0, 0, closeAnim);
 	group.play();
-	console.log(DEFAULT_GROUP.currentState());
+	console.log(window.document.animationTimeline.currentState());
 }
 
 // STEP 5

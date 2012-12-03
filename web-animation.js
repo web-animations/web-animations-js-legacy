@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var webAnimVisUpdateAnims = undefined;
+(function() {
 
 var Timing = Class.create({
   initialize: function(timingDict) {
@@ -58,11 +58,11 @@ var Timing = Class.create({
   },
 })
 
-function ImmutableTimingProxy(timing) {
+var ImmutableTimingProxy = function(timing) {
   return new TimingProxy(timing, function(v) {
     throw 'can\'t modify timing properties of templated Animation Instances';
   });
-}
+};
 
 var TimingProxy = Class.create({
   initialize: function(timing, setter) {
@@ -145,9 +145,9 @@ var TimedTemplate = Class.create({
   }
 });
 
-function exists(val) {
+var exists = function(val) {
   return typeof val !== 'undefined' && (val !== null);
-}
+};
 
 var ST_MANUAL = 0;
 var ST_AUTO = 1;
@@ -392,7 +392,7 @@ var TimedItem = Class.create({
       this.currentIteration = null;
       this._timeFraction = null;
     }
-    if (webAnimVisUpdateAnims) {
+    if (window.webAnimVisUpdateAnims) {
       webAnimVisUpdateAnims();
     }
   },
@@ -479,24 +479,7 @@ var TimedItem = Class.create({
   },
 });
 
-function keyframesFor(property, startVal, endVal) {
-  var animFun = new KeyframeAnimFunc(property);
-  if (startVal) {
-    animFun.frames.add(new Keyframe(startVal, 0));
-  }
-  animFun.frames.add(new Keyframe(endVal, 1));
-  return animFun;
-}
-
-function keyframesForValues(property, values) {
-  var animFun = new KeyframeAnimFunc(property);
-  for (var i = 0; i < values.length; i++) {
-    animFun.frames.add(new Keyframe(values[i], i / (values.length - 1)));
-  }
-  return animFun;
-}
-
-function _interpretAnimFunc(animFunc) {
+var interpretAnimFunc = function(animFunc) {
   if (animFunc instanceof AnimFunc) {
     return animFunc;
   } else if (typeof(animFunc) === 'object') {
@@ -513,9 +496,9 @@ function _interpretAnimFunc(animFunc) {
       throw new Error('TypeError');
     } catch (e) { console.log(e.stack); throw e; }
   }
-}
+};
 
-function _interpretTimingParam(timing) {
+var interpretTimingParam = function(timing) {
   if (!exists(timing) || timing === null) {
     return new Timing({});
   }
@@ -530,31 +513,27 @@ function _interpretTimingParam(timing) {
   }
   throw new TypeError('timing parameters must be undefined, Timing objects, ' +
       'numbers, or timing dictionaries; not \'' + timing + '\'');
-}
+};
 
-// -----------
-// Anim Object
-// -----------
-
-function LinkedAnim(target, template, parentGroup, startTime) {
+var LinkedAnim = function(target, template, parentGroup, startTime) {
   var anim = new Anim(target, template.animFunc,
                       new ImmutableTimingProxy(template.timing),
                       parentGroup, startTime);
   anim.template = template;
   template.addLinkedAnim(anim);
   return anim;
-}
+};
 
-function ClonedAnim(target, cloneSource, parentGroup, startTime) {
+var ClonedAnim = function(target, cloneSource, parentGroup, startTime) {
   var anim = new Anim(target, cloneSource.timing.clone(),
                       cloneSource.animFunc.clone(), parentGroup, startTime);
-}
+};
 
 var Anim = Class.create(TimedItem, {
   initialize: function($super, target, animFunc, timing, parentGroup,
       startTime) {
-    this.animFunc = _interpretAnimFunc(animFunc);
-    this.timing = _interpretTimingParam(timing);
+    this.animFunc = interpretAnimFunc(animFunc);
+    this.timing = interpretTimingParam(timing);
 
     $super(this.timing, startTime, parentGroup);
 
@@ -634,8 +613,8 @@ var Anim = Class.create(TimedItem, {
 
 var AnimTemplate = Class.create(TimedTemplate, {
   initialize: function($super, animFunc, timing, resolutionStrategy) {
-    this.animFunc = _interpretAnimFunc(animFunc);
-    this.timing = _interpretTimingParam(timing);
+    this.animFunc = interpretAnimFunc(animFunc);
+    this.timing = interpretTimingParam(timing);
     $super(this.timing);
     this.resolutionStrategy = resolutionStrategy;
     // TODO: incorporate name into spec?
@@ -821,7 +800,7 @@ var AnimGroup = Class.create(TimedItem, AnimListMixin, {
     // initializing super.
     this.type = type || 'par';
     this.initListMixin(this._assertNotLive, this._childrenStateModified);
-    var completedTiming = _interpretTimingParam(timing);
+    var completedTiming = interpretTimingParam(timing);
     $super(completedTiming, startTime, parentGroup);
     this.template = template;
     if (template) {
@@ -1269,18 +1248,18 @@ var TimingFunc = Class.create({
   }
 });
 
-function _interp(from, to, f, type) {
+var interp = function(from, to, f, type) {
   if (Array.isArray(from) || Array.isArray(to)) {
-    return _interpArray(from, to, f, type);
+    return interpArray(from, to, f, type);
   }
   var zero = type == 'scale' ? 1.0 : 0.0;
   to   = exists(to) ? to : zero;
   from = exists(from) ? from : zero;
 
   return to * f + from * (1 - f);
-}
+};
 
-function _interpArray(from, to, f, type) {
+var interpArray = function(from, to, f, type) {
   console.assert(Array.isArray(from) || from === null,
     'From is not an array or null');
   console.assert(Array.isArray(to) || to === null,
@@ -1291,14 +1270,18 @@ function _interpArray(from, to, f, type) {
 
   var result = [];
   for (var i = 0; i < length; i++) {
-    result[i] = _interp(from ? from[i] : null, to ? to[i] : null, f, type);
+    result[i] = interp(from ? from[i] : null, to ? to[i] : null, f, type);
   }
   return result;
-}
+};
 
-function _zeroIsNought() { return 0; }
+var _zeroIsNought = function() {
+  return 0;
+};
 
-function transformZero(t) { throw 'UNIMPLEMENTED'; }
+var transformZero = function(t) {
+  throw 'UNIMPLEMENTED';
+};
 
 var supportedProperties = new Array();
 supportedProperties['opacity'] =
@@ -1319,46 +1302,46 @@ supportedProperties['transform'] =
 supportedProperties['-webkit-transform'] =
     { type: 'transform', isSVGAttrib: false };
 
-function propertyIsNumber(property) {
+var propertyIsNumber = function(property) {
   var propDetails = supportedProperties[property];
   return propDetails && propDetails.type === 'number';
-}
+};
 
-function propertyIsLength(property) {
+var propertyIsLength = function(property) {
   var propDetails = supportedProperties[property];
   return propDetails && propDetails.type === 'length';
-}
+};
 
-function propertyIsTransform(property) {
+var propertyIsTransform = function(property) {
   var propDetails = supportedProperties[property];
   return propDetails && propDetails.type === 'transform';
-}
+};
 
-function propertyIsSVGAttrib(property, target) {
+var propertyIsSVGAttrib = function(property, target) {
   if (target.namespaceURI !== 'http://www.w3.org/2000/svg')
     return false;
   var propDetails = supportedProperties[property];
   return propDetails && propDetails.isSVGAttrib;
-}
+};
 
-function zero(property, value) {
+var zero = function(property, value) {
   return supportedProperties[property].zero(value);
-}
+};
 
-function add(property, target, base, delta) {
-	var svgMode = propertyIsSVGAttrib(property, target);
-	base = fromCssValue(property, base);
-	delta = fromCssValue(property, delta);
-	if (propertyIsNumber(property)) {
-		return toCssValue(property, base + delta, svgMode);
-	} else if (propertyIsLength(property)) {
-		return toCssValue(property, [base[0] + delta[0], 'px'], svgMode);
-	} else if (propertyIsTransform(property)) {
-		return toCssValue(property, base.concat(delta), svgMode);
-	} else {
-		throw new Error("Unsupported property");
-	}
-}
+var add = function(property, target, base, delta) {
+  var svgMode = propertyIsSVGAttrib(property, target);
+  base = fromCssValue(property, base);
+  delta = fromCssValue(property, delta);
+  if (propertyIsNumber(property)) {
+    return toCssValue(property, base + delta, svgMode);
+  } else if (propertyIsLength(property)) {
+    return toCssValue(property, [base[0] + delta[0], 'px'], svgMode);
+  } else if (propertyIsTransform(property)) {
+    return toCssValue(property, base.concat(delta), svgMode);
+  } else {
+    throw new Error('Unsupported property');
+  }
+};
 
 /**
  * Interpolate the given property name (f*100)% of the way from 'from' to 'to'.
@@ -1370,14 +1353,14 @@ function add(property, target, base, delta) {
  * e.g. interpolate('transform', elem, 'rotate(40deg)', 'rotate(50deg)', 0.3);
  *   will return 'rotate(43deg)'.
  */
-function interpolate(property, target, from, to, f) {
+var interpolate = function(property, target, from, to, f) {
   var svgMode = propertyIsSVGAttrib(property, target);
   from = fromCssValue(property, from);
   to = fromCssValue(property, to);
   if (propertyIsNumber(property)) {
-    return toCssValue(property, _interp(from, to, f), svgMode);
+    return toCssValue(property, interp(from, to, f), svgMode);
   } else if (propertyIsLength(property)) {
-    return toCssValue(property, [_interp(from[0], to[0], f), 'px'], svgMode);
+    return toCssValue(property, [interp(from[0], to[0], f), 'px'], svgMode);
   } else if (propertyIsTransform(property)) {
     while (from.length < to.length) {
       from.push({t: null, d: null});
@@ -1391,20 +1374,20 @@ function interpolate(property, target, from, to, f) {
         to[i].t === null,
         'Transform types should match or one should be the underlying value');
       var type = from[i].t ? from[i].t : to[i].t;
-      out.push({t: type, d:_interp(from[i].d, to[i].d, f, type)});
+      out.push({t: type, d:interp(from[i].d, to[i].d, f, type)});
     }
     return toCssValue(property, out, svgMode);
   } else {
     throw 'UnsupportedProperty';
   }
-}
+};
 
 /**
  * Convert the provided interpolable value for the provided property to a CSS
  * value string. Note that SVG transforms do not require units for translate
  * or rotate values while CSS properties require 'px' or 'deg' units.
  */
-function toCssValue(property, value, svgMode) {
+var toCssValue = function(property, value, svgMode) {
   if (propertyIsNumber(property)) {
     return value + '';
   } else if (propertyIsLength(property)) {
@@ -1446,9 +1429,9 @@ function toCssValue(property, value, svgMode) {
   } else {
     throw 'UnsupportedProperty';
   }
-}
+};
 
-function extractDeg(deg) {
+var extractDeg = function(deg) {
   var num  = Number(deg[1]);
   switch (deg[2]) {
   case 'grad':
@@ -1460,25 +1443,25 @@ function extractDeg(deg) {
   default:
     return num;
   }
-}
+};
 
-function extractTranslationValues(lengths) {
+var extractTranslationValues = function(lengths) {
   // TODO: Assuming all lengths are px for now
   var length1 = Number(lengths[1]);
   var length2 = lengths[3] ? Number(lengths[3]) : 0;
   return [length1, length2];
-}
+};
 
-function extractTranslateValue(length) {
+var extractTranslateValue = function(length) {
   // TODO: Assuming px for now
   return Number(length[1]);
-}
+};
 
-function extractScaleValues(scales) {
+var extractScaleValues = function(scales) {
   var scaleX = Number(scales[1]);
   var scaleY = scales[2] ? Number(scales[2]) : scaleX;
   return [scaleX, scaleY];
-}
+};
 
 var transformREs =
   [
@@ -1494,7 +1477,7 @@ var transformREs =
          extractScaleValues, 'scale']
   ];
 
-function fromCssValue(property, value) {
+var fromCssValue = function(property, value) {
   if (propertyIsNumber(property)) {
     return value !== '' ? Number(value) : null;
   } else if (propertyIsLength(property)) {
@@ -1604,7 +1587,7 @@ var Compositor = Class.create({
   }
 });
 
-function initializeIfSVGAndUninitialized(property, target) {
+var initializeIfSVGAndUninitialized = function(property, target) {
   if (propertyIsSVGAttrib(property, target)) {
     if (!exists(target._actuals)) {
       target._actuals = {};
@@ -1646,7 +1629,7 @@ function initializeIfSVGAndUninitialized(property, target) {
   }
 }
 
-function setValue(target, property, value) {
+var setValue = function(target, property, value) {
   initializeIfSVGAndUninitialized(property, target);
   if (propertyIsSVGAttrib(property, target)) {
     target.actuals[property] = value;
@@ -1655,7 +1638,7 @@ function setValue(target, property, value) {
   }
 }
 
-function clearValue(target, property) {
+var clearValue = function(target, property) {
   initializeIfSVGAndUninitialized(property, target);
   if (propertyIsSVGAttrib(property, target)) {
     target.actuals[property] = null;
@@ -1664,7 +1647,7 @@ function clearValue(target, property) {
   }
 }
 
-function getValue(target, property) {
+var getValue = function(target, property) {
   initializeIfSVGAndUninitialized(property, target);
   if (propertyIsSVGAttrib(property, target)) {
     return target.actuals[property];
@@ -1718,16 +1701,12 @@ DEFAULT_GROUP.currentState = function() {
 }.bind(DEFAULT_GROUP);
 
 // If requestAnimationFrame is unprefixed then it uses high-res time.
-function initTiming() {
-	useHighResTime = 'requestAnimationFrame' in window;
-	window.requestAnimationFrame = window.requestAnimationFrame ||
-		window.webkitRequestAnimationFrame || // 80 wrap is so 80s
-		window.mozRequestAnimationFrame || window.msRequestAnimationFrame;
-	timeNow = undefined;
-	timeZero = useHighResTime ? 0 : Date.now();
-}
-
-initTiming();
+var useHighResTime = 'requestAnimationFrame' in window;
+var requestAnimationFrame = window.requestAnimationFrame ||
+    window.webkitRequestAnimationFrame || // 80 wrap is so 80s
+    window.mozRequestAnimationFrame || window.msRequestAnimationFrame;
+var timeNow = undefined;
+var timeZero = useHighResTime ? 0 : Date.now();
 
 // Massive hack to allow things to be added to the parent group and start
 // playing. Maybe this is right though?
@@ -1739,9 +1718,7 @@ DEFAULT_GROUP.__defineGetter__('iterationTime', function() {
     window.setTimeout(function() { timeNow = undefined; }, 0);
   }
   return timeNow / 1000;
-})
-
-
+});
 
 var ticker = function(frameTime) {
   timeNow = frameTime - timeZero;
@@ -1753,9 +1730,33 @@ var ticker = function(frameTime) {
   timeNow = undefined;
 };
 
-function maybeRestartAnimation() {
+var maybeRestartAnimation = function() {
   if (exists(rAFNo)) {
     return;
   }
   rAFNo = requestAnimationFrame(ticker);
-}
+};
+
+window.document.__defineGetter__('animationTimeline', function() {
+  return DEFAULT_GROUP;
+});
+window.Anim = Anim;
+window.Timing = Timing;
+// TODO: this is not in the spec
+window.TimingFunc = TimingFunc;
+window.TimedItem = TimedItem;
+// TODO: SplineTimingFunc ?
+// TODO: StepTimingFunc ?
+// TODO: SmoothTimingFunc ?
+window.AnimGroup = AnimGroup;
+window.ParAnimGroup = ParAnimGroup;
+window.SeqAnimGroup = SeqAnimGroup;
+window.KeyframeAnimFunc = KeyframeAnimFunc;
+window.Keyframe = Keyframe;
+// TODO: PathAnimFunc ?
+// TODO: GroupedAnimFunc ?
+window.AnimTemplate = AnimTemplate;
+window.ParAnimGroupTemplate = ParAnimGroupTemplate;
+window.SeqAnimGroupTemplate = SeqAnimGroupTemplate;
+
+})();
