@@ -30,6 +30,10 @@ limitations under the License.
 	position: relative;
 }
 
+.expected {
+	border-right: 1px solid black;
+}
+
 .a {
 	top: 0px
 }
@@ -47,49 +51,51 @@ limitations under the License.
 }
 
 #ca {
-	top: 0px;
+	top: 50px;
 }
 
 #cb {
-	top: 100px;
+	top: 200px;
 }
 
 #cc {
-	top: 200px;
+	top: 350px;
 }
 
 
 #cd {
-	top: 300px;
+	top: 500px;
 }
 </style>
 
+<div>Right edge of each box should align with black line at end of test.</div>
+
 <div class="animContainer" id="ca">
-	<div class="anim a"></div>
-	<div class="anim b"></div>
-	<div class="anim c"></div>
-	<div class="anim d"></div>
+	<div style="width: 100px;" class="expected"><div class="anim a"></div></div>
+	<div style="width: 100px;" class="expected"><div class="anim b"></div></div>
+	<div style="width: 300px;" class="expected"><div class="anim c"></div></div>
+	<div style="width: 300px;" class="expected"><div class="anim d"></div></div>
 </div>
 
 <div class="animContainer" id="cb">
-	<div class="anim a"></div>
-	<div class="anim b"></div>
-	<div class="anim c"></div>
-	<div class="anim d"></div>
+	<div style="width: 100px;" class="expected"><div class="anim a"></div></div>
+	<div style="width: 100px;" class="expected"><div class="anim b"></div></div>
+	<div style="width: 100px;" class="expected"><div class="anim c"></div></div>
+	<div style="width: 100px;" class="expected"><div class="anim d"></div></div>
 </div>
 
 <div class="animContainer" id="cc">
-	<div class="anim a"></div>
-	<div class="anim b"></div>
-	<div class="anim c"></div>
-	<div class="anim d"></div>
+	<div style="width: 100px;" class="expected"><div class="anim a"></div></div>
+	<div style="width: 100px;" class="expected"><div class="anim b"></div></div>
+	<div style="width: 300px;" class="expected"><div class="anim c"></div></div>
+	<div style="width: 300px;" class="expected"><div class="anim d"></div></div>
 </div>
 
 <div class="animContainer" id="cd">
-	<div class="anim a"></div>
-	<div class="anim b"></div>
-	<div class="anim c"></div>
-	<div class="anim d"></div>
+	<div style="width: 100px;" class="expected"><div class="anim a"></div></div>
+	<div style="width: 100px;" class="expected"><div class="anim b"></div></div>
+	<div style="width: 100px;" class="expected"><div class="anim c"></div></div>
+	<div style="width: 100px;" class="expected"><div class="anim d"></div></div>
 </div>
 
 <script src="web-animation.js"></script>
@@ -103,7 +109,7 @@ var groups = [];
 
 for (var i = 0; i < directions.length; i++) {
 	var dir = directions[i];
-	var group = new ParAnimGroup([], {startDelay: 1, duration: 5, iterationCount: 3, playbackRate: 2, direction: dir}, undefined, 1);
+	var group = new ParAnimGroup([], {startDelay: 1, duration: 8, iterationCount: 3, playbackRate: 2, direction: dir}, undefined, 1);
 	groups.push(group);
 }
 
