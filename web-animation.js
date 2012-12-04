@@ -1622,8 +1622,13 @@ mixin(CompositedPropertyMap.prototype, {
           }
         }
         setValue(this.target, property, baseValue);
+        this.properties[property] = [];
+      } else {
+        // property has previously been set but no value was accumulated
+        // in this animation iteration. Reset value and stop tracking.
+        clearValue(this.target, property);
+        delete this.properties[property];
       }
-      this.properties[property] = [];
     }
   }
 });
