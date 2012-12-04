@@ -19,7 +19,8 @@ limitations under the License.
 .animContainer {
 	position: absolute;
 	left: 0px;
-	height: 100px;
+	height: 75px;
+	border-right: 1px solid black;
 }
 
 .anim {
@@ -31,22 +32,29 @@ limitations under the License.
 }
 
 #ca {
-	top: 0px;
+	top: 50px;
+	width: 280px;
 }
 
 #cb {
-	top: 200px;
+	top: 150px;
+	width: 100px;
 }
 
 #cc {
-	top: 400px;
+	top: 250px;
+	width: 100px;
 }
 
 
 #cd {
-	top: 600px;
+	top: 350px;
+	width: 280px;
 }
 </style>
+
+<div>Boxes in each group should line up with each other at end of each iteration (or start if reversed).</div>
+<div>Right edge of each box should align with black line at end of test.</div>
 
 <div class="animContainer" id="ca">
 	<div class="anim a"></div>
@@ -88,7 +96,6 @@ for (var i = 0; i < directions.length; i++) {
 
 for (var i = 0; i < containers.length; i++) {
 	var container = document.getElementById(containers[i]);
-	<!-- All squares should line up at the end of each iteration (or start if reversed). -->
 	<!-- Test basic use. -->
 	new Anim(container.getElementsByClassName("a")[0], {left: ["100px", "300px"]}, {duration: 1, iterationCount: 3.4}, groups[i]);
 	<!-- Test integer iterationCount. -->
