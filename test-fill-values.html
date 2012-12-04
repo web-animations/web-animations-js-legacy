@@ -30,67 +30,73 @@ limitations under the License.
 	position: relative;
 }
 
+.expected {
+	border-right: 1px solid black;
+}
+
 #ca {
-	top: 0px;
+	top: 50px;
 }
 
 #cb {
-	top: 250px;
+	top: 300px;
 }
 
 #cc {
-	top: 500px;
+	top: 550px;
 }
 
 
 #cd {
-	top: 750px;
+	top: 800px;
 }
 
 </style>
 
+<div>Right edge of each box should align with black line at end of test.</div>
+
 <div class="animContainer" id="ca">
-	<div id="a" class="anim"></div>
-	<div id="b" class="anim"></div>
-	<div id="c" class="anim"></div>
-	<div id="d" class="anim"></div>
-	<div id="e" class="anim"></div>
-	<div id="f" class="anim"></div>
-	<div id="g" class="anim"></div>
-	<div id="h" class="anim"></div>
+	<div style="width: 300px;" class="expected"><div id="a" class="anim"></div></div>
+	<div style="width: 300px;" class="expected"><div id="b" class="anim"></div></div>
+	<div style="width: 300px;" class="expected"><div id="c" class="anim"></div></div>
+	<div style="width: 300px;" class="expected"><div id="d" class="anim"></div></div>
+	<div style="width: 500px;" class="expected"><div id="e" class="anim"></div></div>
+	<div style="width: 500px;" class="expected"><div id="f" class="anim"></div></div>
+	<div style="width: 500px;" class="expected"><div id="g" class="anim"></div></div>
+	<div style="width: 500px;" class="expected"><div id="h" class="anim"></div></div>
 </div>
 
 <div class="animContainer" id="cb">
-	<div id="a" class="anim"></div>
-	<div id="b" class="anim"></div>
-	<div id="c" class="anim"></div>
-	<div id="d" class="anim"></div>
-	<div id="e" class="anim"></div>
-	<div id="f" class="anim"></div>
-	<div id="g" class="anim"></div>
-	<div id="h" class="anim"></div>
+	<div style="width: 300px;" class="expected"><div id="a" class="anim"></div></div>
+	<div style="width: 300px;" class="expected"><div id="b" class="anim"></div></div>
+	<div style="width: 300px;" class="expected"><div id="c" class="anim"></div></div>
+	<div style="width: 300px;" class="expected"><div id="d" class="anim"></div></div>
+	<div style="width: 400px;" class="expected"><div id="e" class="anim"></div></div>
+	<div style="width: 400px;" class="expected"><div id="f" class="anim"></div></div>
+	<div style="width: 400px;" class="expected"><div id="g" class="anim"></div></div>
+	<div style="width: 400px;" class="expected"><div id="h" class="anim"></div></div>
 </div>
 
 <div class="animContainer" id="cc">
-	<div id="a" class="anim"></div>
-	<div id="b" class="anim"></div>
-	<div id="c" class="anim"></div>
-	<div id="d" class="anim"></div>
-	<div id="e" class="anim"></div>
-	<div id="f" class="anim"></div>
-	<div id="g" class="anim"></div>
-	<div id="h" class="anim"></div>
+	<div style="width: 300px;" class="expected"><div id="a" class="anim"></div></div>
+	<div style="width: 300px;" class="expected"><div id="b" class="anim"></div></div>
+	<div style="width: 300px;" class="expected"><div id="c" class="anim"></div></div>
+	<div style="width: 300px;" class="expected"><div id="d" class="anim"></div></div>
+	<div style="width: 400px;" class="expected"><div id="e" class="anim"></div></div>
+	<div style="width: 400px;" class="expected"><div id="f" class="anim"></div></div>
+	<div style="width: 400px;" class="expected"><div id="g" class="anim"></div></div>
+	<div style="width: 400px;" class="expected"><div id="h" class="anim"></div></div>
 </div>
 
 <div class="animContainer" id="cd">
-	<div id="a" class="anim"></div>
-	<div id="b" class="anim"></div>
-	<div id="c" class="anim"></div>
-	<div id="d" class="anim"></div>
-	<div id="e" class="anim"></div>
-	<div id="f" class="anim"></div>
-	<div id="g" class="anim"></div>
-	<div id="h" class="anim"></div>
+	<div style="width: 300px;" class="expected"><div id="a" class="anim"></div></div>
+	<div style="width: 300px;" class="expected"><div id="b" class="anim"></div></div>
+	<div style="width: 300px;" class="expected"><div id="c" class="anim"></div></div>
+	<div style="width: 300px;" class="expected"><div id="d" class="anim"></div></div>
+	<div style="width: 500px;" class="expected"><div id="e" class="anim"></div></div>
+	<div style="width: 500px;" class="expected"><div id="f" class="anim"></div></div>
+	<div style="width: 500px;" class="expected"><div id="g" class="anim"></div></div>
+	<div style="width: 500px;" class="expected"><div id="h" class="anim"></div></div>
 </div>
 
 <script src="web-animation.js"></script>
