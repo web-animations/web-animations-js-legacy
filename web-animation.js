@@ -129,7 +129,7 @@ mixin(TimingProxy.prototype, {
 
 /** @constructor */
 var TimedTemplate = function(timing) {
-  this.timing = new TimingProxy(timing || new Timing({}), function() {
+  this.timing = new TimingProxy(interpretTimingParam(timing), function() {
     this.updateTiming();
   }.bind(this));
   this.linkedAnims = [];
@@ -181,7 +181,7 @@ var ST_FORCED = 2;
 
 /** @constructor */
 var TimedItem = function(timing, startTime, parentGroup) {
-  this.timing = new TimingProxy(timing, function() {
+  this.timing = new TimingProxy(interpretTimingParam(timing), function() {
     this.updateIterationDuration();
   }.bind(this));
   this._startTime = startTime;
@@ -562,9 +562,8 @@ var ClonedAnim = function(target, cloneSource, parentGroup, startTime) {
 /** @constructor */
 var Anim = function(target, animFunc, timing, parentGroup, startTime) {
   this.animFunc = interpretAnimFunc(animFunc);
-  this.timing = interpretTimingParam(timing);
 
-  Anim.$super.call(this, this.timing, startTime, parentGroup);
+  Anim.$super.call(this, timing, startTime, parentGroup);
 
   // TODO: correctly extract the underlying value from the element
   this.underlyingValue = null;
@@ -646,8 +645,7 @@ mixin(Anim.prototype, {
 /** @constructor */
 var AnimTemplate = function(animFunc, timing, resolutionStrategy) {
   this.animFunc = interpretAnimFunc(animFunc);
-  this.timing = interpretTimingParam(timing);
-  AnimTemplate.$super.call(this, this.timing);
+  AnimTemplate.$super.call(this, timing);
   this.resolutionStrategy = resolutionStrategy;
   // TODO: incorporate name into spec?
   // this.name = properties.name;
@@ -835,8 +833,7 @@ var AnimGroup = function(type, template, children, timing, startTime,
   // initializing super.
   this.type = type || 'par';
   this.initListMixin(this._assertNotLive, this._childrenStateModified);
-  var completedTiming = interpretTimingParam(timing);
-  AnimGroup.$super.call(this, completedTiming, startTime, parentGroup);
+  AnimGroup.$super.call(this, timing, startTime, parentGroup);
   this.template = template;
   if (template) {
     template.addLinkedAnim(this);
@@ -1726,7 +1723,7 @@ var getValue = function(target, property) {
 var rAFNo = undefined;
 
 var DEFAULT_GROUP = new AnimGroup(
-    'par', null, [], {fill: 'forwards', name: 'DEFAULT'}, 0, undefined);
+    'par', null, [], {name: 'DEFAULT'}, 0, undefined);
 
 DEFAULT_GROUP.oldFuncs = new Array();
 DEFAULT_GROUP.compositor = new Compositor();
