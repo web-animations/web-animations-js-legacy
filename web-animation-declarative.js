@@ -63,11 +63,11 @@ function instantiateElem(elem) {
 	var animFunc = resolveAnimProperties(elem);
 	var timing = resolveTimingProperties(elem);
 	if (elem.tagName == "ANIMATION") {
-		elem.template = new AnimTemplate(animFunc, timing, timing.resolutionStrategy);
+		elem.template = new AnimationTemplate(animFunc, timing, timing.resolutionStrategy);
 	} else if (elem.tagName == "PAR") {
-		elem.template = new ParAnimGroupTemplate([], timing, timing.resolutionStrategy);
+		elem.template = new ParGroupTemplate([], timing, timing.resolutionStrategy);
 	} else {
-		elem.template = new SeqAnimGroupTemplate([], timing, timing.resolutionStrategy);
+		elem.template = new SeqGroupTemplate([], timing, timing.resolutionStrategy);
 	}
 	return timing.startTime;
 }
@@ -100,5 +100,3 @@ for (var i = 0; i < groups.length; i++) {
 	var startTime = instantiateTree(group);
 	group.template.animateLive(group.parentElement, startTime);
 }
-
-maybeRestartAnimation();

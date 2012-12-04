@@ -109,9 +109,9 @@ var fills = ["none", "backwards", "forwards", "both"];
 for (var i = 0; i < containers.length; i++) {
 	var divs = document.getElementById(containers[i]).getElementsByClassName('anim');
 	for (var j = 0; j < fills.length; j++) {
-		new Anim(divs[2 * j], {left: ["100px", "200px"]}, {iterationCount: 4, direction: directions[i], duration: 1, fill: fills[j]}, undefined, 1);
+		new Animation(divs[2 * j], {left: ["100px", "200px"]}, {iterationCount: 4, direction: directions[i], duration: 1, fill: fills[j]}, undefined, 1);
           divs[2 * j].innerHTML = "dir: " + directions[i] + " fill: " + fills[j] + " dur: 1";
-		new Anim(divs[2 * j + 1], {left: ["100px", "200px"]}, {iterationCount: 4, direction: directions[i], duration: 0, fill: fills[j]}, undefined, 1);
+		new Animation(divs[2 * j + 1], {left: ["100px", "200px"]}, {iterationCount: 4, direction: directions[i], duration: 0, fill: fills[j]}, undefined, 1);
           divs[2 * j + 1].innerHTML = "dir: " + directions[i] + " fill: " + fills[j] + " dur: 0";
 	}
 }
