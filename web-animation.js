@@ -33,6 +33,14 @@ var strip = function(str) {
   return str.replace(/^\s+/, '').replace(/\s+$/, '');
 };
 
+var IndexSizeError = function(message) {
+  IndexSizeError.$super.call(this);
+  this.name = "IndexSizeError";
+  this.message = message;
+}
+
+inherits(IndexSizeError, Error);
+
 /** @constructor */
 var Timing = function(timingDict) {
   this.startDelay = timingDict.startDelay || 0.0;
@@ -1825,5 +1833,5 @@ window.Keyframe = Keyframe;
 window.AnimTemplate = AnimTemplate;
 window.ParAnimGroupTemplate = ParAnimGroupTemplate;
 window.SeqAnimGroupTemplate = SeqAnimGroupTemplate;
-
+window.IndexSizeError = IndexSizeError;
 })();
