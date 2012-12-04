@@ -24,30 +24,36 @@ limitations under the License.
 	position: absolute;
 }
 
+.expected {
+	width: 100px;
+	height: 100px;
+	position: absolute;
+	border-right: 1px solid black;
+}
+
 #a {
-	top: 0px
+	top: 50px
 }
 
 #b {
-	top: 100px;
+	top: 150px;
 }
 
 #c {
-	top: 200px;
+	top: 250px;
 }
 
 #d {
-	top: 300px;
+	top: 350px;
 }
 
 </style>
 
-<div>
-	<div id="a" class="anim"></div>
-	<div id="b" class="anim"></div>
-	<div id="c" class="anim"></div>
-	<div id="d" class="anim"></div>
-</div>
+<div>Right edge of each box should align with black line at end of test.</div>
+<div id="a" class="anim"></div> <div id="a" style="top: 50px; left: 200px;" class="expected"></div>
+<div id="b" class="anim"></div> <div id="b" style="top: 150px; left: 0px;" class="expected"></div>
+<div id="c" class="anim"></div> <div id="c" style="top: 250px; left: 200px;" class="expected"></div>
+<div id="d" class="anim"></div> <div id="d" style="top: 550px; left: 0px;" class="expected"></div>
 
 <script src="web-animation.js"></script>
 <script>
