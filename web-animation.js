@@ -1130,6 +1130,17 @@ mixin(GroupedAnimFunc.prototype, {
   },
   remove: function(i) {
     this.children.splice(i, 1);
+  },
+  sample: function(timeFraction, currentIteration, target) {
+    for (var i = 0; i < this.children.length; i++) {
+      children[i].sample(timeFraction, currentIteration, target);
+    }
+  },
+  clone: function() {
+    var result = new GroupedAnimFunc();
+    for (var i = 0; i < this.children.length; i++) {
+      result.add(this.children[i].clone());
+    }
   }
 });
 
