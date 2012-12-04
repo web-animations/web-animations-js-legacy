@@ -1,7 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg"
      xmlns:xlink="http://www.w3.org/1999/xlink"
      viewBox="0 0 800 600" width="100%" height="100%">
- <script xlink:href="http://ajax.googleapis.com/ajax/libs/prototype/1.7.1.0/prototype.js"/>
  <script xlink:href="../web-animation.js"/>
  <rect x="-200%" y="-200%" width="400%" height="400%" fill="black"/>
  <rect id="sky" width="800" height="600" fill="#A2DDFF"/>

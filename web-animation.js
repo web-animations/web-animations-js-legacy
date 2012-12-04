@@ -15,35 +15,55 @@
  */
 (function() {
 
-var Timing = Class.create({
-  initialize: function(timingDict) {
-    this.startDelay = timingDict.startDelay || 0.0;
-    this.duration = timingDict.duration;
-    if (this.duration < 0.0) {
-      throw new IndexSizeError('duration must be >= 0');
-    }
-    this.iterationCount = exists(timingDict.iterationCount) ?
-        timingDict.iterationCount : 1.0;
-    if (this.iterationCount < 0.0) {
-      throw new IndexSizeError('iterationCount must be >= 0');
-    }
-    this.iterationStart = timingDict.iterationStart || 0.0;
-    if (this.iterationStart < 0.0) {
-      throw new IndexSizeError('iterationStart must be >= 0');
-    }
-    this.playbackRate = exists(timingDict.playbackRate) ?
-        timingDict.playbackRate : 1.0;
-    //this.playbackRate = timingDict.playbackRate || 1.0;
-    this.direction = timingDict.direction || 'normal';
-    if (typeof timingDict.timingFunc === 'string') {
-      // TODO: Write createFromString
-      throw 'createFromString not implemented';
-      this.timingFunc = TimingFunc.createFromString(timingDict.timingFunc);
-    } else {
-      this.timingFunc = timingDict.timingFunc;
-    }
-    this.fill = timingDict.fill || 'forwards';
-  },
+var inherits = function(child, parent) {
+  var tmp = function() {};
+  tmp.prototype = parent.prototype;
+  child.$super = parent;
+  child.prototype = new tmp();
+  child.prototype.constructor = child;
+};
+
+var mixin = function(target, source) {
+  for (var k in source) {
+    target[k] = source[k];
+  }
+};
+
+var strip = function(str) {
+  return str.replace(/^\s+/, '').replace(/\s+$/, '');
+};
+
+/** @constructor */
+var Timing = function(timingDict) {
+  this.startDelay = timingDict.startDelay || 0.0;
+  this.duration = timingDict.duration;
+  if (this.duration < 0.0) {
+    throw new IndexSizeError('duration must be >= 0');
+  }
+  this.iterationCount = exists(timingDict.iterationCount) ?
+      timingDict.iterationCount : 1.0;
+  if (this.iterationCount < 0.0) {
+    throw new IndexSizeError('iterationCount must be >= 0');
+  }
+  this.iterationStart = timingDict.iterationStart || 0.0;
+  if (this.iterationStart < 0.0) {
+    throw new IndexSizeError('iterationStart must be >= 0');
+  }
+  this.playbackRate = exists(timingDict.playbackRate) ?
+      timingDict.playbackRate : 1.0;
+  //this.playbackRate = timingDict.playbackRate || 1.0;
+  this.direction = timingDict.direction || 'normal';
+  if (typeof timingDict.timingFunc === 'string') {
+    // TODO: Write createFromString
+    throw 'createFromString not implemented';
+    this.timingFunc = TimingFunc.createFromString(timingDict.timingFunc);
+  } else {
+    this.timingFunc = timingDict.timingFunc;
+  }
+  this.fill = timingDict.fill || 'forwards';
+};
+
+mixin(Timing.prototype, {
   clone: function() {
     return new Timing({
       startDelay: this.startDelay,
@@ -56,60 +76,66 @@ var Timing = Class.create({
       fill: this.fill
     });
   },
-})
+});
 
+/** @constructor */
 var ImmutableTimingProxy = function(timing) {
   return new TimingProxy(timing, function(v) {
     throw 'can\'t modify timing properties of templated Animation Instances';
   });
 };
 
-var TimingProxy = Class.create({
-  initialize: function(timing, setter) {
-    this.timing = timing;
-    var properties = ['startDelay', 'duration', 'iterationCount',
-        'iterationStart', 'playbackRate', 'direction', 'timingFunc', 'fill'];
-    properties.forEach(function(s) {
-      this.__defineGetter__(s, function() {
-        return timing[s];
-      });
-      this.__defineSetter__(s, function(v) {
-        var old = timing[s];
-        timing[s] = v;
-        try {
-          setter(v);
-        } catch (e) {
-          timing[s] = old;
-          throw e;
-        }
-      });
-    }.bind(this));
-  },
+/** @constructor */
+var TimingProxy = function(timing, setter) {
+  this._timing = timing;
+  this._setter = setter;
+};
+
+['startDelay', 'duration', 'iterationCount', 'iterationStart', 'playbackRate',
+    'direction', 'timingFunc', 'fill'].forEach(function(s) {
+  TimingProxy.prototype.__defineGetter__(s, function() {
+    return this._timing[s];
+  });
+  TimingProxy.prototype.__defineSetter__(s, function(v) {
+    var old = this._timing[s];
+    this._timing[s] = v;
+    try {
+      this._setter(v);
+    } catch (e) {
+      this._timing[s] = old;
+      throw e;
+    }
+  });
+});
+
+mixin(TimingProxy.prototype, {
   extractMutableTiming: function() {
     return new Timing({
-      startDelay: this.timing.startDelay,
-      duration: this.timing.duration,
-      iterationCount: this.timing.iterationCount,
-      iterationStart: this.timing.iterationStart,
-      playbackRate: this.timing.playbackRate,
-      direction: this.timing.direction,
-      timingFunc: this.timing.timingFunc ?
-                  this.timing.timingFunc.clone() : null,
-      fill: this.timing.fill
+      startDelay: this._timing.startDelay,
+      duration: this._timing.duration,
+      iterationCount: this._timing.iterationCount,
+      iterationStart: this._timing.iterationStart,
+      playbackRate: this._timing.playbackRate,
+      direction: this._timing.direction,
+      timingFunc: this._timing.timingFunc ?
+                  this._timing.timingFunc.clone() : null,
+      fill: this._timing.fill
     });
   },
   clone: function() {
-    return this.timing.clone();
+    return this._timing.clone();
   }
-})
+});
 
-var TimedTemplate = Class.create({
-  initialize: function(timing) {
-    this.timing = new TimingProxy(timing || new Timing({}), function() {
-      this.updateTiming();
-    }.bind(this));
-    this.linkedAnims = [];
-  },
+/** @constructor */
+var TimedTemplate = function(timing) {
+  this.timing = new TimingProxy(timing || new Timing({}), function() {
+    this.updateTiming();
+  }.bind(this));
+  this.linkedAnims = [];
+};
+
+mixin(TimedTemplate.prototype, {
   addLinkedAnim: function(anim) {
     this.linkedAnims.push(anim);
   },
@@ -153,107 +179,110 @@ var ST_MANUAL = 0;
 var ST_AUTO = 1;
 var ST_FORCED = 2;
 
-var TimedItem = Class.create({
-  initialize: function(timing, startTime, parentGroup) {
-    this.timing = new TimingProxy(timing, function() {
-      this.updateIterationDuration();
-    }.bind(this));
-    this._startTime = startTime;
+/** @constructor */
+var TimedItem = function(timing, startTime, parentGroup) {
+  this.timing = new TimingProxy(timing, function() {
     this.updateIterationDuration();
-    this.currentIteration = null;
-    this.iterationTime = null;
-    this.animationTime = null;
-    this._reversing = false;
+  }.bind(this));
+  this._startTime = startTime;
+  this.updateIterationDuration();
+  this.currentIteration = null;
+  this.iterationTime = null;
+  this.animationTime = null;
+  this._reversing = false;
 
-    if (!exists(parentGroup)) {
-      this.parentGroup = DEFAULT_GROUP;
-    } else if (parentGroup instanceof TimedItem) {
-      this.parentGroup = parentGroup;
-    } else {
-      throw new TypeError('parentGroup is not a TimedItem');
-    }
+  if (!exists(parentGroup)) {
+    this.parentGroup = DEFAULT_GROUP;
+  } else if (parentGroup instanceof TimedItem) {
+    this.parentGroup = parentGroup;
+  } else {
+    throw new TypeError('parentGroup is not a TimedItem');
+  }
 
-    if (!exists(startTime)) {
-      this._startTimeMode = ST_AUTO;
-      if (this.parentGroup) {
-        this._startTime = this.parentGroup.iterationTime || 0;
-      } else {
-        this._startTime = 0;
-      }
-    } else {
-      this._startTimeMode = ST_MANUAL;
-      this._startTime = startTime;
-    }
-    this.endTime = this._startTime + this.animationDuration +
-        this.timing.startDelay;
+  if (!exists(startTime)) {
+    this._startTimeMode = ST_AUTO;
     if (this.parentGroup) {
-      this.parentGroup._addChild(this);
+      this._startTime = this.parentGroup.iterationTime || 0;
+    } else {
+      this._startTime = 0;
     }
-    this._timeDrift = 0;
-    this.__defineGetter__('timeDrift', function() {
-      if (this.locallyPaused) {
-        return this._effectiveParentTime - this.startTime -
-            this._pauseStartTime;
-      }
-      return this._timeDrift;
-    });
-    this.__defineGetter__('_effectiveParentTime', function() {
-      return this.parentGroup && this.parentGroup.iterationTime
-        ? this.parentGroup.iterationTime
-        : 0;
-    });
-    this.__defineGetter__('currentTime', function() {
-      return this._effectiveParentTime - this._startTime - this.timeDrift;
-    });
-    this.__defineSetter__('currentTime', function(seekTime) {
-      if (this._locallyPaused) {
-        this._pauseStartTime = seekTime;
-      } else {
-        this._timeDrift = this._effectiveParentTime - this._startTime -
-            seekTime;
-      }
-      this.updateTimeMarkers();
-      if (this.parentGroup) {
-        this.parentGroup._childrenStateModified();
-      }
-    });
-    this.__defineGetter__('startTime', function() {
-      return this._startTime;
-    });
-    this.__defineSetter__('startTime', function(newStartTime) {
-      if (this.parentGroup && this.parentGroup.type === 'seq') {
-        throw new Error('NoModificationAllowedError');
-      }
-      this._startTime = newStartTime;
-      this._startTimeMode = ST_MANUAL;
-      this.updateTimeMarkers();
-      if (this.parentGroup) {
-        this.parentGroup._childrenStateModified();
-      }
-    });
-    this._locallyPaused = false;
-    this._pauseStartTime = 0;
-    this.__defineGetter__('locallyPaused', function() {
-      return this._locallyPaused;
-    });
-    this.__defineSetter__('locallyPaused', function(newVal) {
-      if (this._locallyPaused === newVal) {
-        return;
-      }
-      if (this._locallyPaused) {
-        this._timeDrift = this._effectiveParentTime - this.startTime -
-            this._pauseStartTime;
-      } else {
-        this._pauseStartTime = this.currentTime;
-      }
-      this._locallyPaused = newVal;
-      this.updateTimeMarkers();
-    });
-    this.__defineGetter__('paused', function() {
-      return this.locallyPaused ||
-          (exists(this.parentGroup) && this.parentGroup.paused);
-    });
-  },
+  } else {
+    this._startTimeMode = ST_MANUAL;
+    this._startTime = startTime;
+  }
+  this.endTime = this._startTime + this.animationDuration +
+      this.timing.startDelay;
+  if (this.parentGroup) {
+    this.parentGroup._addChild(this);
+  }
+  this._timeDrift = 0;
+  this._locallyPaused = false;
+  this._pauseStartTime = 0;
+};
+
+TimedItem.prototype.__defineGetter__('timeDrift', function() {
+  if (this.locallyPaused) {
+    return this._effectiveParentTime - this.startTime -
+        this._pauseStartTime;
+  }
+  return this._timeDrift;
+});
+TimedItem.prototype.__defineGetter__('_effectiveParentTime', function() {
+  return this.parentGroup && this.parentGroup.iterationTime
+    ? this.parentGroup.iterationTime
+    : 0;
+});
+TimedItem.prototype.__defineGetter__('currentTime', function() {
+  return this._effectiveParentTime - this._startTime - this.timeDrift;
+});
+TimedItem.prototype.__defineSetter__('currentTime', function(seekTime) {
+  if (this._locallyPaused) {
+    this._pauseStartTime = seekTime;
+  } else {
+    this._timeDrift = this._effectiveParentTime - this._startTime -
+        seekTime;
+  }
+  this.updateTimeMarkers();
+  if (this.parentGroup) {
+    this.parentGroup._childrenStateModified();
+  }
+});
+TimedItem.prototype.__defineGetter__('startTime', function() {
+  return this._startTime;
+});
+TimedItem.prototype.__defineSetter__('startTime', function(newStartTime) {
+  if (this.parentGroup && this.parentGroup.type === 'seq') {
+    throw new Error('NoModificationAllowedError');
+  }
+  this._startTime = newStartTime;
+  this._startTimeMode = ST_MANUAL;
+  this.updateTimeMarkers();
+  if (this.parentGroup) {
+    this.parentGroup._childrenStateModified();
+  }
+});
+TimedItem.prototype.__defineGetter__('locallyPaused', function() {
+  return this._locallyPaused;
+});
+TimedItem.prototype.__defineSetter__('locallyPaused', function(newVal) {
+  if (this._locallyPaused === newVal) {
+    return;
+  }
+  if (this._locallyPaused) {
+    this._timeDrift = this._effectiveParentTime - this.startTime -
+        this._pauseStartTime;
+  } else {
+    this._pauseStartTime = this.currentTime;
+  }
+  this._locallyPaused = newVal;
+  this.updateTimeMarkers();
+});
+TimedItem.prototype.__defineGetter__('paused', function() {
+  return this.locallyPaused ||
+      (exists(this.parentGroup) && this.parentGroup.paused);
+});
+
+mixin(TimedItem.prototype, {
   reparent: function(parentGroup) {
     if (this.parentGroup) {
       this.parentGroup.remove(this.parentGroup.indexOf(this), 1);
@@ -524,30 +553,33 @@ var LinkedAnim = function(target, template, parentGroup, startTime) {
   return anim;
 };
 
+// TODO: what is this, it isn't used anywhere?
 var ClonedAnim = function(target, cloneSource, parentGroup, startTime) {
   var anim = new Anim(target, cloneSource.timing.clone(),
                       cloneSource.animFunc.clone(), parentGroup, startTime);
 };
 
-var Anim = Class.create(TimedItem, {
-  initialize: function($super, target, animFunc, timing, parentGroup,
-      startTime) {
-    this.animFunc = interpretAnimFunc(animFunc);
-    this.timing = interpretTimingParam(timing);
+/** @constructor */
+var Anim = function(target, animFunc, timing, parentGroup, startTime) {
+  this.animFunc = interpretAnimFunc(animFunc);
+  this.timing = interpretTimingParam(timing);
 
-    $super(this.timing, startTime, parentGroup);
+  Anim.$super.call(this, this.timing, startTime, parentGroup);
 
-    // TODO: correctly extract the underlying value from the element
-    this.underlyingValue = null;
-    if (target && this.animFunc instanceof AnimFunc) {
-      this.underlyingValue = this.animFunc.getValue(target);
-    }
-    this.template = null;
-    this.targetElement = target;
-    this.name = this.animFunc instanceof KeyframeAnimFunc
-              ? this.animFunc.property
-              : '<anon>';
-  },
+  // TODO: correctly extract the underlying value from the element
+  this.underlyingValue = null;
+  if (target && this.animFunc instanceof AnimFunc) {
+    this.underlyingValue = this.animFunc.getValue(target);
+  }
+  this.template = null;
+  this.targetElement = target;
+  this.name = this.animFunc instanceof KeyframeAnimFunc
+            ? this.animFunc.property
+            : '<anon>';
+};
+
+inherits(Anim, TimedItem);
+mixin(Anim.prototype, {
   unlink: function() {
     var result = this.template;
     if (result) {
@@ -611,22 +643,25 @@ var Anim = Class.create(TimedItem, {
   }
 });
 
-var AnimTemplate = Class.create(TimedTemplate, {
-  initialize: function($super, animFunc, timing, resolutionStrategy) {
-    this.animFunc = interpretAnimFunc(animFunc);
-    this.timing = interpretTimingParam(timing);
-    $super(this.timing);
-    this.resolutionStrategy = resolutionStrategy;
-    // TODO: incorporate name into spec?
-    // this.name = properties.name;
-  },
+/** @constructor */
+var AnimTemplate = function(animFunc, timing, resolutionStrategy) {
+  this.animFunc = interpretAnimFunc(animFunc);
+  this.timing = interpretTimingParam(timing);
+  AnimTemplate.$super.call(this, this.timing);
+  this.resolutionStrategy = resolutionStrategy;
+  // TODO: incorporate name into spec?
+  // this.name = properties.name;
+};
+
+inherits(AnimTemplate, TimedTemplate);
+mixin(AnimTemplate.prototype, {
   reparent: function(parentGroup) {
     // TODO: does anything need to happen here?
   },
-  __animate: function($super, isLive, targets, parentGroup, startTime) {
+  __animate: function(isLive, targets, parentGroup, startTime) {
     if (this.resolutionStrategy) {
       strategy = this.resolutionStrategy.split(':').map(function(a) {
-        return a.strip();
+        return strip(a);
       });
       var newTargets = [];
       switch (strategy[0]) {
@@ -655,7 +690,7 @@ var AnimTemplate = Class.create(TimedTemplate, {
           break;
         case 'target':
           newTargets = strategy[1].split(',').map(function(a) {
-            return document.getElementById(a.strip());
+            return document.getElementById(strip(a));
           });
           break;
         default:
@@ -793,27 +828,31 @@ var AnimListMixin = {
   }
 }
 
-var AnimGroup = Class.create(TimedItem, AnimListMixin, {
-  initialize: function($super, type, template, children, timing, startTime,
-      parentGroup) {
-    // used by TimedItem via intrinsicDuration(), so needs to be set before
-    // initializing super.
-    this.type = type || 'par';
-    this.initListMixin(this._assertNotLive, this._childrenStateModified);
-    var completedTiming = interpretTimingParam(timing);
-    $super(completedTiming, startTime, parentGroup);
-    this.template = template;
-    if (template) {
-      template.addLinkedAnim(this);
+/** @constructor */
+var AnimGroup = function(type, template, children, timing, startTime,
+    parentGroup) {
+  // used by TimedItem via intrinsicDuration(), so needs to be set before
+  // initializing super.
+  this.type = type || 'par';
+  this.initListMixin(this._assertNotLive, this._childrenStateModified);
+  var completedTiming = interpretTimingParam(timing);
+  AnimGroup.$super.call(this, completedTiming, startTime, parentGroup);
+  this.template = template;
+  if (template) {
+    template.addLinkedAnim(this);
+  }
+  if (children && Array.isArray(children)) {
+    for (var i = 0; i < children.length; i++) {
+      this.add(children[i]);
     }
-    if (children && Array.isArray(children)) {
-      for (var i = 0; i < children.length; i++) {
-        this.add(children[i]);
-      }
-    }
-    // TODO: Work out where to expose name in the API
-    // this.name = properties.name || '<anon>';
-  },
+  }
+  // TODO: Work out where to expose name in the API
+  // this.name = properties.name || '<anon>';
+};
+
+inherits(AnimGroup, TimedItem);
+mixin(AnimGroup.prototype, AnimListMixin);
+mixin(AnimGroup.prototype, {
   _assertNotLive: function() {
     if (this.template) {
       throw 'Can\'t modify tree of AnimGroupInstances with templates'
@@ -927,34 +966,42 @@ var AnimGroup = Class.create(TimedItem, AnimListMixin, {
   }
 });
 
-var ParAnimGroup = Class.create(AnimGroup, {
-  initialize: function($super, children, timing, parentGroup, startTime) {
-    $super('par', undefined, children, timing, startTime, parentGroup);
-  }
-});
+/** @constructor */
+var ParAnimGroup = function(children, timing, parentGroup, startTime) {
+  ParAnimGroup.$super.call(
+      this, 'par', undefined, children, timing, startTime, parentGroup);
+};
 
-var SeqAnimGroup = Class.create(AnimGroup, {
-  initialize: function($super, children, timing, parentGroup, startTime) {
-    $super('seq', undefined, children, timing, startTime, parentGroup);
-  }
-});
+inherits(ParAnimGroup, AnimGroup);
 
-var AnimGroupTemplate = Class.create(TimedTemplate, AnimListMixin, {
-  initialize: function($super, type, children, timing, resolutionStrategy) {
-    $super(timing);
-    this.type = type;
-    this.resolutionStrategy = resolutionStrategy;
-    this.initListMixin(function() {}, function() {});
-    if (children && Array.isArray(children)) {
-      for (var i = 0; i < children.length; i++) {
-        this.add(children[i]);
-      }
+/** @constructor */
+var SeqAnimGroup = function(children, timing, parentGroup, startTime) {
+  SeqAnimGroup.$super.call(
+      this, 'seq', undefined, children, timing, startTime, parentGroup);
+};
+
+inherits(SeqAnimGroup, AnimGroup);
+
+/** @constructor */
+var AnimGroupTemplate = function(type, children, timing, resolutionStrategy) {
+  AnimGroupTemplate.$super.call(this, timing);
+  this.type = type;
+  this.resolutionStrategy = resolutionStrategy;
+  this.initListMixin(function() {}, function() {});
+  if (children && Array.isArray(children)) {
+    for (var i = 0; i < children.length; i++) {
+      this.add(children[i]);
     }
-  },
+  }
+};
+
+inherits(AnimGroupTemplate, TimedTemplate);
+mixin(AnimGroupTemplate.prototype, AnimListMixin);
+mixin(AnimGroupTemplate.prototype, {
   reparent: function(parentGroup) {
     // TODO: does anything need to happen here?
   },
-  __animate: function($super, isLive, targets, parentGroup, startTime) {
+  __animate: function(isLive, targets, parentGroup, startTime) {
     var instances = [];
     for (var i = 0; i < targets.length; i++) {
       var instance = new AnimGroup(
@@ -977,24 +1024,30 @@ var AnimGroupTemplate = Class.create(TimedTemplate, AnimListMixin, {
   }
 });
 
-var ParAnimGroupTemplate = Class.create(AnimGroupTemplate, {
-  initialize: function($super, children, timing, resolutionStrategy) {
-    $super('par', children, timing, resolutionStrategy);
-  }
-});
+/** @constructor */
+var ParAnimGroupTemplate = function(children, timing, resolutionStrategy) {
+  ParAnimGroupTemplate.$super.call(
+      this, 'par', children, timing, resolutionStrategy);
+};
 
-var SeqAnimGroupTemplate = Class.create(AnimGroupTemplate, {
-  initialize: function($super, children, properties, resolutionStrategy) {
-    $super('seq', children, properties, resolutionStrategy);
-  }
-});
+inherits(ParAnimGroupTemplate, AnimGroupTemplate);
 
-var AnimFunc = Class.create({
-  initialize: function(operation, accumulateOperation) {
-    this.operation = operation === undefined ? 'replace' : operation;
-    this.accumulateOperation =
-        accumulateOperation == undefined ? 'replace' : operation;
-  },
+/** @constructor */
+var SeqAnimGroupTemplate = function(children, properties, resolutionStrategy) {
+  SeqAnimGroupTemplate.$super.call(
+      this, 'seq', children, properties, resolutionStrategy);
+};
+
+inherits(SeqAnimGroupTemplate, AnimGroupTemplate);
+
+/** @constructor */
+var AnimFunc = function(operation, accumulateOperation) {
+  this.operation = operation === undefined ? 'replace' : operation;
+  this.accumulateOperation =
+      accumulateOperation == undefined ? 'replace' : operation;
+};
+
+mixin(AnimFunc.prototype, {
   sample: function(timeFraction, currentIteration, target, underlyingValue) {
     throw 'Unimplemented sample function';
   },
@@ -1061,12 +1114,15 @@ AnimFunc._createKeyframeFunc = function(property, value, operation) {
   return func;
 }
 
-var KeyframeAnimFunc = Class.create(AnimFunc, {
-  initialize: function($super, property, operation, accumulateOperation) {
-    $super(operation, accumulateOperation);
-    this.property = property;
-    this.frames = new KeyframeList();
-  },
+/** @constructor */
+var KeyframeAnimFunc = function(property, operation, accumulateOperation) {
+  KeyframeAnimFunc.$super.call(this, operation, accumulateOperation);
+  this.property = property;
+  this.frames = new KeyframeList();
+};
+
+inherits(KeyframeAnimFunc, AnimFunc);
+mixin(KeyframeAnimFunc.prototype, {
   sortedFrames: function() {
     this.frames.frames.sort(function(a, b) {
       if (a.offset < b.offset) {
@@ -1168,19 +1224,20 @@ var KeyframeAnimFunc = Class.create(AnimFunc, {
   }
 });
 
-var Keyframe = Class.create({
-  initialize: function(value, offset, timingFunc) {
-    this.value = value;
-    this.offset = offset;
-    this.timingFunc = timingFunc;
-  }
-});
+/** @constructor */
+var Keyframe = function(value, offset, timingFunc) {
+  this.value = value;
+  this.offset = offset;
+  this.timingFunc = timingFunc;
+};
 
-var KeyframeList = Class.create({
-  initialize: function() {
-    this.frames = [];
-    this.__defineGetter__('length', function() {return this.frames.length; });
-  },
+/** @constructor */
+var KeyframeList = function() {
+  this.frames = [];
+  this.__defineGetter__('length', function() {return this.frames.length; });
+};
+
+mixin(KeyframeList.prototype, {
   item: function(index) {
     if (index >= this.length || index < 0) {
       return null;
@@ -1214,22 +1271,24 @@ var presetTimings = {
   'ease-out' : [0, 0, 0.58, 1.0]
 }
 
-var TimingFunc = Class.create({
-  initialize: function(spec) {
-    if (spec.length == 4) {
-      this.params = spec;
-    } else {
-      this.params = presetTimings[spec];
-    }
-    this.map = []
-    for (var ii = 0; ii <= 100; ii += 1) {
-      var i = ii / 100;
-      this.map.push([
-        3*i*(1-i)*(1-i)*this.params[0] + 3*i*i*(1-i)*this.params[2] + i*i*i,
-        3*i*(1-i)*(1-i)*this.params[1] + 3*i*i*(1-i)*this.params[3] + i*i*i
-      ]);
-    }
-  },
+/** @constructor */
+var TimingFunc = function(spec) {
+  if (spec.length == 4) {
+    this.params = spec;
+  } else {
+    this.params = presetTimings[spec];
+  }
+  this.map = []
+  for (var ii = 0; ii <= 100; ii += 1) {
+    var i = ii / 100;
+    this.map.push([
+      3*i*(1-i)*(1-i)*this.params[0] + 3*i*i*(1-i)*this.params[2] + i*i*i,
+      3*i*(1-i)*(1-i)*this.params[1] + 3*i*i*(1-i)*this.params[3] + i*i*i
+    ]);
+  }
+};
+
+mixin(TimingFunc.prototype, {
   scaleTime: function(fraction) {
     var fst = 0;
     while (fst != 100 && fraction > this.map[fst][0]) {
@@ -1507,19 +1566,20 @@ var fromCssValue = function(property, value) {
   }
 }
 
-var AnimatedResult = Class.create({
-  initialize: function(value, operation, fraction) {
-    this.value = value;
-    this.operation = operation;
-    this.fraction = fraction;
-  }
-});
+/** @constructor */
+var AnimatedResult = function(value, operation, fraction) {
+  this.value = value;
+  this.operation = operation;
+  this.fraction = fraction;
+};
 
-var CompositedPropertyMap = Class.create({
-  initialize: function(target) {
-    this.properties = {};
-    this.target = target;
-  },
+/** @constructor */
+var CompositedPropertyMap = function(target) {
+  this.properties = {};
+  this.target = target;
+};
+
+mixin(CompositedPropertyMap.prototype, {
   addValue: function(property, animValue) {
     if (this.properties[property] === undefined) {
       this.properties[property] = [];
@@ -1568,10 +1628,12 @@ var CompositedPropertyMap = Class.create({
   }
 });
 
-var Compositor = Class.create({
-  initialize: function() {
-    this.targets = []
-  },
+/** @constructor */
+var Compositor = function() {
+  this.targets = []
+};
+
+mixin(Compositor.prototype, {
   setAnimatedValue: function(target, property, animValue) {
     if (target._anim_properties === undefined) {
       target._anim_properties = new CompositedPropertyMap(target);
