@@ -1115,6 +1115,25 @@ AnimFunc._createKeyframeFunc = function(property, value, operation) {
 }
 
 /** @constructor */
+var GroupedAnimFunc = function() {
+  GroupedAnimFunc.$super.call(this);
+  this.children = [];
+};
+
+inherits(GroupedAnimFunc, AnimFunc);
+mixin(GroupedAnimFunc.prototype, {
+  item: function(i) {
+    return this.children[i];
+  },
+  add: function(func) {
+    this.children.push(func);
+  },
+  remove: function(i) {
+    this.children.splice(i, 1);
+  }
+});
+
+/** @constructor */
 var KeyframeAnimFunc = function(property, operation, accumulateOperation) {
   KeyframeAnimFunc.$super.call(this, operation, accumulateOperation);
   this.property = property;
