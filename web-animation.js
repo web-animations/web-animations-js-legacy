@@ -1075,10 +1075,11 @@ AnimFunc.createFromProperties = function(properties) {
     return AnimFunc._createKeyframeFunc(
         animProps[0], properties[animProps[0]], properties.operation);
   } else {
-    // TODO: GroupAnimFunc
-    try {
-      throw new Error('UnsupportedError');
-    } catch (e) { console.log(e.stack); throw e; }
+    var result = new GroupedAnimFunc();
+    for (var i = 0; i < animProps.length; i++) {
+      result.add(AnimFunc._createKeyframeFunc(animProps[i], properties[animProps[i]], properties.operation));
+    }
+    return result;
   }
 }
 
@@ -1133,7 +1134,7 @@ mixin(GroupedAnimFunc.prototype, {
   },
   sample: function(timeFraction, currentIteration, target) {
     for (var i = 0; i < this.children.length; i++) {
-      children[i].sample(timeFraction, currentIteration, target);
+      this.children[i].sample(timeFraction, currentIteration, target);
     }
   },
   clone: function() {
@@ -1382,6 +1383,10 @@ supportedProperties['top'] =
 supportedProperties['cx'] =
     { type: 'length', isSVGAttrib: true, zero: _zeroIsNought };
 supportedProperties['x'] =
+    { type: 'length', isSVGAttrib: true, zero: _zeroIsNought };
+supportedProperties['y'] =
+    { type: 'length', isSVGAttrib: true, zero: _zeroIsNought };
+supportedProperties['width'] =
     { type: 'length', isSVGAttrib: true, zero: _zeroIsNought };
 
 // For browsers that support transform as a style attribute on SVG we can
