@@ -1833,5 +1833,4 @@ window.Keyframe = Keyframe;
 window.AnimTemplate = AnimTemplate;
 window.ParAnimGroupTemplate = ParAnimGroupTemplate;
 window.SeqAnimGroupTemplate = SeqAnimGroupTemplate;
-window.IndexSizeError = IndexSizeError;
 })();
