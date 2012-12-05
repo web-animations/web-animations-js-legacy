@@ -22,6 +22,10 @@ limitations under the License.
 	height: 100px;
 }
 
+.expected {
+	border-right: 1px solid black;
+}
+
 .anim {
 	left: 0px;
 	width: 100px;
@@ -30,45 +34,31 @@ limitations under the License.
 	position: relative;
 }
 
-.a {
-	top: 0px
-}
-
-.b {
-	top: 0px;
-}
-
-.c {
-	top: 0px;
-}
-
-.d {
-	top: 0px;
-}
-
 #ca {
-	top: 0px;
+	top: 50px;
 }
 
 #cb {
-	top: 100px;
+	top: 200px;
 }
 
 #cc {
-	top: 200px;
+	top: 350px;
 }
 
 
 #cd {
-	top: 300px;
+	top: 500px;
 }
 </style>
 
+<div>Right edge of each box should align with black line at end of test.</div>
+
 <div class="animContainer" id="ca">
-	<div class="anim a" id="a"></div>
-	<div class="anim b"></div>
-	<div class="anim c"></div>
-	<div class="anim d"></div>
+	<div style="width: 100px;" class="expected"><div class="anim a"></div></div>
+	<div style="width: 100px;" class="expected"><div class="anim b"></div></div>
+	<div style="width: 300px;" class="expected"><div class="anim c"></div></div>
+	<div style="width: 300px;" class="expected"><div class="anim d"></div></div>
 	<par startDelay="1" duration="5" iterationCount="3" playbackRate="2" direction="normal" startTime="1" id="par">
 		<animation startDelay="1" duration="1" iterationCount="2" fill="none" prop="left" from="100px" to="200px" playbackRate="0.8" startTime="1" resolutionStrategy="selector: .a" id="anim"></animation>
 		<animation startDelay="1" duration="1" iterationCount="2" fill="backwards" prop="left" from="100px" to="200px" playbackRate="0.8"startTime="1" resolutionStrategy="selector: .b"></animation>
@@ -77,10 +67,10 @@ limitations under the License.
 	</par>
 </div>
 <div class="animContainer" id="cb">
-	<div class="anim a"></div>
-	<div class="anim b"></div>
-	<div class="anim c"></div>
-	<div class="anim d"></div>
+	<div style="width: 100px;" class="expected"><div class="anim a"></div></div>
+	<div style="width: 100px;" class="expected"><div class="anim b"></div></div>
+	<div style="width: 100px;" class="expected"><div class="anim c"></div></div>
+	<div style="width: 100px;" class="expected"><div class="anim d"></div></div>
 	<par startDelay="1" duration="5" iterationCount="3" playbackRate="2" direction="reverse" startTime="1">
 		<animation startDelay="1" duration="1" iterationCount="2" fill="none" prop="left" from="100px" to="200px" playbackRate="0.8" startTime="1" resolutionStrategy="selector: .a"></animation>		
 		<animation startDelay="1" duration="1" iterationCount="2" fill="backwards" prop="left" from="100px" to="200px" playbackRate="0.8"startTime="1" resolutionStrategy="selector: .b"></animation>
@@ -89,10 +79,10 @@ limitations under the License.
 	</par>
 </div>
 <div class="animContainer" id="cc">
-	<div class="anim a"></div>
-	<div class="anim b"></div>
-	<div class="anim c"></div>
-	<div class="anim d"></div>
+	<div style="width: 100px;" class="expected"><div class="anim a"></div></div>
+	<div style="width: 100px;" class="expected"><div class="anim b"></div></div>
+	<div style="width: 300px;" class="expected"><div class="anim c"></div></div>
+	<div style="width: 300px;" class="expected"><div class="anim d"></div></div>
 	<par startDelay="1" duration="5" iterationCount="3" playbackRate="2" direction="alternate" startTime="1">
 		<animation startDelay="1" duration="1" iterationCount="2" fill="none" prop="left" from="100px" to="200px" playbackRate="0.8" startTime="1" resolutionStrategy="selector: .a"></animation>		
 		<animation startDelay="1" duration="1" iterationCount="2" fill="backwards" prop="left" from="100px" to="200px" playbackRate="0.8"startTime="1" resolutionStrategy="selector: .b"></animation>
@@ -102,10 +92,10 @@ limitations under the License.
 </div>
 
 <div class="animContainer" id="cd">
-	<div class="anim a"></div>
-	<div class="anim b"></div>
-	<div class="anim c"></div>
-	<div class="anim d"></div>
+	<div style="width: 100px;" class="expected"><div class="anim a"></div></div>
+	<div style="width: 100px;" class="expected"><div class="anim b"></div></div>
+	<div style="width: 100px;" class="expected"><div class="anim c"></div></div>
+	<div style="width: 100px;" class="expected"><div class="anim d"></div></div>
 	<par startDelay="1" duration="5" iterationCount="3" playbackRate="2" direction="alternate-reverse" startTime="1">
 		<animation startDelay="1" duration="1" iterationCount="2" fill="none" prop="left" from="100px" to="200px" playbackRate="0.8" startTime="1" resolutionStrategy="selector: .a"></animation>		
 		<animation startDelay="1" duration="1" iterationCount="2" fill="backwards" prop="left" from="100px" to="200px" playbackRate="0.8"startTime="1" resolutionStrategy="selector: .b"></animation>

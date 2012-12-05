@@ -1,0 +1,57 @@
+<!-- 
+Copyright 2012 Google Inc. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<!DOCTYPE html>
+<style>
+.anim {
+	left: 0px;
+	width: 100px;
+	height: 25px;
+	background-color: #FAA;
+	position: relative;
+}
+.expected {
+	border-right: 1px solid black;
+}
+
+</style>
+
+<div>Right edge of each box should align with black line at end of test.</div>
+<div style="width: 300px;" class="expected"><div id="a" class="anim"></div></div>
+<div style="width: 300px;" class="expected"><div id="b" class="anim"></div></div>
+<div style="width: 100px;" class="expected"><div id="c" class="anim"></div></div>
+<div style="width: 300px;" class="expected"><div id="d" class="anim"></div></div>
+<div style="width: 300px;" class="expected"><div id="e" class="anim"></div></div>
+<div style="width: 100px;" class="expected"><div id="f" class="anim"></div></div>
+
+<script src="web-animation.js"></script>
+<script>
+
+// Lone animation with default parent. Should use default group.
+new Anim(document.getElementById("a"), {left: ["100px", "200px"]}, 1.0);
+// Lone animation with explicit default parent. Should use default group.
+new Anim(document.getElementById("b"), {left: ["100px", "200px"]}, 1.0, undefined);
+// Lone animation with explicit no parent. Should use no group.
+new Anim(document.getElementById("c"), {left: ["100px", "200px"]}, 1.0, null);
+
+// Animation in group with default parent. Should use default group.
+new Anim(document.getElementById("d"), {left: ["100px", "200px"]}, 1.0, new ParAnimGroup([], {iterationCount: 3}));
+// Animation in group with explicit default parent. Should use default group.
+new Anim(document.getElementById("e"), {left: ["100px", "200px"]}, 1.0, new ParAnimGroup([], {iterationCount: 3}, undefined));
+// Animation in group with explicit no parent. Should use no group.
+new Anim(document.getElementById("f"), {left: ["100px", "200px"]}, 1.0, new ParAnimGroup([], {iterationCount: 3}, null));
+
+</script>
