@@ -236,9 +236,8 @@ TimedItem.prototype.__defineGetter__('timeDrift', function() {
   return this._timeDrift;
 });
 TimedItem.prototype.__defineGetter__('_effectiveParentTime', function() {
-  return this.parentGroup && this.parentGroup.iterationTime
-    ? this.parentGroup.iterationTime
-    : 0;
+  return this.parentGroup && this.parentGroup.iterationTime ?
+      this.parentGroup.iterationTime : 0;
 });
 TimedItem.prototype.__defineGetter__('currentTime', function() {
   return this._effectiveParentTime - this._startTime - this.timeDrift;
@@ -389,8 +388,7 @@ mixin(TimedItem.prototype, {
       } else {
         var startOffset = effectiveIterationStart * this.duration;
         var effectiveSpeed = this._reversing ?
-            -this.timing.playbackRate :
-            this.timing.playbackRate;
+            -this.timing.playbackRate : this.timing.playbackRate;
         if (effectiveSpeed < 0) {
           var adjustedAnimationTime = (this.animationTime -
               this.animationDuration) * effectiveSpeed + startOffset;
@@ -580,9 +578,8 @@ var Anim = function(target, animFunc, timing, parentGroup, startTime) {
   }
   this.template = null;
   this.targetElement = target;
-  this.name = this.animFunc instanceof KeyframeAnimFunc
-            ? this.animFunc.property
-            : '<anon>';
+  this.name = this.animFunc instanceof KeyframeAnimFunc ?
+      this.animFunc.property : '<anon>';
 };
 
 inherits(Anim, TimedItem);
@@ -603,10 +600,10 @@ mixin(Anim.prototype, {
       return this.template;
     }
     // TODO: What resolution strategy, if any, should be employed here?
-    var animFunc = this.animFunc
-      ? this.animFunc.hasOwnProperty('clone')
-        ? this.animFunc.clone() : this.animFunc
-      : null;
+    var animFunc = this.animFunc ?
+        this.animFunc.hasOwnProperty('clone') ?
+            this.animFunc.clone() : this.animFunc :
+        null;
     var template = new AnimTemplate(animFunc, this.timing.clone());
     this.template = template;
     this.animFunc = template.animFunc;
@@ -642,9 +639,8 @@ mixin(Anim.prototype, {
     return new Array(rv);
   },
   toString: function() {
-    var funcDescr = this.animFunc instanceof AnimFunc
-      ? this.animFunc.toString()
-      : 'Custom scripted function';
+    var funcDescr = this.animFunc instanceof AnimFunc ?
+        this.animFunc.toString() : 'Custom scripted function';
     return 'Anim ' + this.startTime + '-' + this.endTime + ' (' +
         this.timeDrift + ' @' + this.currentTime + ') ' + funcDescr;
   }
@@ -793,11 +789,10 @@ var AnimListMixin = {
     var len = this.length;
 
     // Interpret params
-    var actualStart = start < 0
-                    ? Math.max(len + start, 0)
-                    : Math.min(start, len);
+    var actualStart = start < 0 ?
+        Math.max(len + start, 0) : Math.min(start, len);
     var actualDeleteCount =
-      Math.min(Math.max(deleteCount, 0), len - actualStart);
+        Math.min(Math.max(deleteCount, 0), len - actualStart);
 
     // Reparent items
     for (var i = 0; i < newItems.length; i++) {
@@ -866,9 +861,9 @@ mixin(AnimGroup.prototype, {
   templatize: function() {
     if (!this.template) {
       var timing = this.timing.clone();
-      var template = this.type == 'par'
-        ? new ParAnimGroupTemplate(null, timing)
-        : new SeqAnimGroupTemplate(null, timing);
+      var template = this.type == 'par' ?
+          new ParAnimGroupTemplate(null, timing) :
+          new SeqAnimGroupTemplate(null, timing);
       this.timing = new ImmutableTimingProxy(template.timing);
       for (var i = 0; i < this.children.length; i++) {
         template.add(this.children[i].templatize());
@@ -1325,11 +1320,11 @@ var interp = function(from, to, f, type) {
 
 var interpArray = function(from, to, f, type) {
   console.assert(Array.isArray(from) || from === null,
-    'From is not an array or null');
+      'From is not an array or null');
   console.assert(Array.isArray(to) || to === null,
-    'To is not an array or null');
+      'To is not an array or null');
   console.assert(from === null || to === null || from.length === to.length,
-    'Arrays differ in length');
+      'Arrays differ in length');
   var length = from ? from.length : to.length;
 
   var result = [];
@@ -1545,9 +1540,8 @@ var fromCssValue = function(property, value) {
   if (propertyIsNumber(property)) {
     return value !== '' ? Number(value) : null;
   } else if (propertyIsLength(property)) {
-    return value !== ''
-           ? [Number(value.substring(0, value.length - 2)), 'px']
-           : [null, null];
+    return value !== '' ?
+        [Number(value.substring(0, value.length - 2)), 'px'] : [null, null];
   } else if (propertyIsTransform(property)) {
     // TODO: fix this :)
     var result = []
@@ -1751,9 +1745,9 @@ DEFAULT_GROUP._tick = function(parentTime) {
 
   // Apply animations in order
   funcs.sort(function(funcA, funcB) {
-    return funcA.startTime < funcB.startTime
-      ? -1
-      : funcA.startTime === funcB.startTime ? 0 : 1;
+    return funcA.startTime < funcB.startTime ?
+        -1 :
+        funcA.startTime === funcB.startTime ? 0 : 1;
   });
   for (var i = 0; i < funcs.length; i++) {
     if (funcs[i].hasOwnProperty('sampleFunc')) {
@@ -1785,8 +1779,7 @@ var timeZero = useHighResTime ? 0 : Date.now();
 DEFAULT_GROUP.__defineGetter__('iterationTime', function() {
   if (!exists(timeNow)) {
     timeNow = useHighResTime ?
-        window.performance.now() :
-        Date.now() - timeZero;
+        window.performance.now() : Date.now() - timeZero;
     window.setTimeout(function() { timeNow = undefined; }, 0);
   }
   return timeNow / 1000;
