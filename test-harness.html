@@ -47,12 +47,16 @@ iframe {
 <iframe></iframe>
 <script>
 var currentTest = 0;
+if (window.location.hash && tests.indexOf(window.location.hash.substr(1))) {
+  currentTest = tests.indexOf(window.location.hash.substr(1));
+}
 
 function updateState(change) {
   if (change) {
     currentTest += change;
   }
   var test = tests[currentTest];
+  window.location.hash = test;
   document.querySelector('#test-name').innerText = (currentTest + 1) + ' of ' + tests.length + ': ' + test;
   document.querySelector('iframe').src = test;
   document.querySelector('#prev-button').disabled = currentTest <= 0;
