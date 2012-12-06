@@ -15,9 +15,20 @@ limitations under the License.
 -->
 
 <!DOCTYPE html>
+<style>
+.anim, .anim2 {
+  fill: lightsteelblue;
+}
+
+.expectation {
+  fill: red;
+}
+</style>
 <svg>
+     <rect class="expectation" x="200px" y="10px" width="100px" height="100px"></rect>
+	<rect class="expectation" x="200px" y="20px" width="200px" height="200px"></rect>
 	<rect class="anim" x="100px" y="10px" width="100px" height="100px"></rect>
-	<rect class="anim2" x="100px" y="10px" width="100px" height="100px"></rect>
+     <rect class="anim2" x="100px" y="10px" width="100px" height="100px"></rect>
 </svg>
 <script src="web-animation.js"></script>
 <script>
