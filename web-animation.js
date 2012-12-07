@@ -1145,6 +1145,10 @@ mixin(GroupedAnimFunc.prototype, {
   }
 });
 
+GroupedAnimFunc.prototype.__defineGetter__('length', function() {
+  return this.children.length;
+});
+
 /** @constructor */
 var KeyframeAnimFunc = function(property, operation, accumulateOperation) {
   KeyframeAnimFunc.$super.call(this, operation, accumulateOperation);
