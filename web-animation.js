@@ -1075,10 +1075,11 @@ AnimFunc.createFromProperties = function(properties) {
     return AnimFunc._createKeyframeFunc(
         animProps[0], properties[animProps[0]], properties.operation);
   } else {
-    // TODO: GroupAnimFunc
-    try {
-      throw new Error('UnsupportedError');
-    } catch (e) { console.log(e.stack); throw e; }
+    var result = new GroupedAnimFunc();
+    for (var i = 0; i < animProps.length; i++) {
+      result.add(AnimFunc._createKeyframeFunc(animProps[i], properties[animProps[i]], properties.operation));
+    }
+    return result;
   }
 }
 
@@ -1113,6 +1114,40 @@ AnimFunc._createKeyframeFunc = function(property, value, operation) {
 
   return func;
 }
+
+/** @constructor */
+var GroupedAnimFunc = function() {
+  GroupedAnimFunc.$super.call(this);
+  this.children = [];
+};
+
+inherits(GroupedAnimFunc, AnimFunc);
+mixin(GroupedAnimFunc.prototype, {
+  item: function(i) {
+    return this.children[i];
+  },
+  add: function(func) {
+    this.children.push(func);
+  },
+  remove: function(i) {
+    this.children.splice(i, 1);
+  },
+  sample: function(timeFraction, currentIteration, target) {
+    for (var i = 0; i < this.children.length; i++) {
+      this.children[i].sample(timeFraction, currentIteration, target);
+    }
+  },
+  clone: function() {
+    var result = new GroupedAnimFunc();
+    for (var i = 0; i < this.children.length; i++) {
+      result.add(this.children[i].clone());
+    }
+  }
+});
+
+GroupedAnimFunc.prototype.__defineGetter__('length', function() {
+  return this.children.length;
+});
 
 /** @constructor */
 var KeyframeAnimFunc = function(property, operation, accumulateOperation) {
@@ -1352,6 +1387,10 @@ supportedProperties['top'] =
 supportedProperties['cx'] =
     { type: 'length', isSVGAttrib: true, zero: _zeroIsNought };
 supportedProperties['x'] =
+    { type: 'length', isSVGAttrib: true, zero: _zeroIsNought };
+supportedProperties['y'] =
+    { type: 'length', isSVGAttrib: true, zero: _zeroIsNought };
+supportedProperties['width'] =
     { type: 'length', isSVGAttrib: true, zero: _zeroIsNought };
 
 // For browsers that support transform as a style attribute on SVG we can
