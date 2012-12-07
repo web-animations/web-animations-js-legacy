@@ -35,11 +35,11 @@ limitations under the License.
 <script src="web-animation.js"></script>
 <script>
 
-var a1 = new Anim(document.querySelector("#a"),
+var a1 = new Animation(document.querySelector("#a"),
     {left: ["0px", "500px"]},
     {duration: 10, direction: 'alternating', iterationCount: Infinity});
 
-var a2 = new Anim(undefined,
+var a2 = new Animation(undefined,
     {sample: function(timeFraction, iteration, target) {
         a1.changePlaybackRate(0.01 + 10 * timeFraction);
         a2.changePlaybackRate(0.01 + 10 * timeFraction);

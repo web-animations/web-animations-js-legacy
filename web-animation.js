@@ -61,14 +61,14 @@ var Timing = function(timingDict) {
       timingDict.playbackRate : 1.0;
   //this.playbackRate = timingDict.playbackRate || 1.0;
   this.direction = timingDict.direction || 'normal';
-  if (typeof timingDict.timingFunc === 'string') {
+  if (typeof timingDict.timingFunction === 'string') {
     // TODO: Write createFromString
     throw 'createFromString not implemented';
-    this.timingFunc = TimingFunc.createFromString(timingDict.timingFunc);
+    this.timingFunction = TimingFunction.createFromString(timingDict.timingFunction);
   } else {
-    this.timingFunc = timingDict.timingFunc;
+    this.timingFunction = timingDict.timingFunction;
   }
-  this.fill = timingDict.fill || 'forwards';
+  this.fillMode = timingDict.fillMode || 'forwards';
 };
 
 mixin(Timing.prototype, {
@@ -80,8 +80,8 @@ mixin(Timing.prototype, {
       iterationStart: this.iterationStart,
       playbackRate: this.playbackRate,
       direction: this.direction,
-      timingFunc: this.timingFunc ? this.timingFunc.clone() : null,
-      fill: this.fill
+      timingFunction: this.timingFunction ? this.timingFunction.clone() : null,
+      fillMode: this.fillMode
     });
   },
 });
@@ -100,7 +100,7 @@ var TimingProxy = function(timing, setter) {
 };
 
 ['startDelay', 'duration', 'iterationCount', 'iterationStart', 'playbackRate',
-    'direction', 'timingFunc', 'fill'].forEach(function(s) {
+    'direction', 'timingFunction', 'fillMode'].forEach(function(s) {
   TimingProxy.prototype.__defineGetter__(s, function() {
     return this._timing[s];
   });
@@ -125,9 +125,9 @@ mixin(TimingProxy.prototype, {
       iterationStart: this._timing.iterationStart,
       playbackRate: this._timing.playbackRate,
       direction: this._timing.direction,
-      timingFunc: this._timing.timingFunc ?
-                  this._timing.timingFunc.clone() : null,
-      fill: this._timing.fill
+      timingFunction: this._timing.timingFunction ?
+                  this._timing.timingFunction.clone() : null,
+      fillMode: this._timing.fillMode
     });
   },
   clone: function() {
@@ -140,21 +140,21 @@ var TimedTemplate = function(timing) {
   this.timing = new TimingProxy(interpretTimingParam(timing), function() {
     this.updateTiming();
   }.bind(this));
-  this.linkedAnims = [];
+  this.linkedAnimations = [];
 };
 
 mixin(TimedTemplate.prototype, {
-  addLinkedAnim: function(anim) {
-    this.linkedAnims.push(anim);
+  addLinkedAnimation: function(anim) {
+    this.linkedAnimations.push(anim);
   },
-  removeLinkedAnim: function(anim) {
-    var i = this.linkedAnims.indexOf(anim);
+  removeLinkedAnimation: function(anim) {
+    var i = this.linkedAnimations.indexOf(anim);
     if (i >= 0) {
-      this.linkedAnims.splice(i, 1);
+      this.linkedAnimations.splice(i, 1);
     }
   },
   updateTiming: function() {
-    this.linkedAnims.forEach(function(a) { a.updateIterationDuration(); });
+    this.linkedAnimations.forEach(function(a) { a.updateIterationDuration(); });
   },
   _animate: function(isLive, targets, parentGroup, startTime) {
     if (!Array.isArray(targets) && !(targets instanceof NodeList)) {
@@ -339,9 +339,9 @@ mixin(TimedItem.prototype, {
     }
     if (this.itemTime !== null) {
       if (this.itemTime < this.timing.startDelay) {
-        if (((this.timing.fill == 'backwards') && !this._reversing)
-          || this.timing.fill == 'both'
-          || ((this.timing.fill == 'forwards') && this._reversing)) {
+        if (((this.timing.fillMode == 'backwards') && !this._reversing)
+          || this.timing.fillMode == 'both'
+          || ((this.timing.fillMode == 'forwards') && this._reversing)) {
           this.animationTime = 0;
         } else {
           this.animationTime = null;
@@ -350,9 +350,9 @@ mixin(TimedItem.prototype, {
           this.timing.startDelay + this.animationDuration) {
         this.animationTime = this.itemTime - this.timing.startDelay;
       } else {
-        if (((this.timing.fill == 'forwards') && !this._reversing)
-          || this.timing.fill == 'both'
-          || ((this.timing.fill == 'backwards') && this._reversing)) {
+        if (((this.timing.fillMode == 'forwards') && !this._reversing)
+          || this.timing.fillMode == 'both'
+          || ((this.timing.fillMode == 'backwards') && this._reversing)) {
           this.animationTime = this.animationDuration;
         } else {
           this.animationTime = null;
@@ -381,8 +381,8 @@ mixin(TimedItem.prototype, {
             this.timing.direction, this.currentIteration) ?
                 unscaledFraction :
                 1.0 - unscaledFraction;
-        if (this.timing.timingFunc) {
-          this._timeFraction = this.timing.timingFunc.scaleTime(
+        if (this.timing.timingFunction) {
+          this._timeFraction = this.timing.timingFunction.scaleTime(
               this._timeFraction);
         }
       } else {
@@ -415,8 +415,8 @@ mixin(TimedItem.prototype, {
                 scaledIterationTime :
                 this.duration - scaledIterationTime;
         this._timeFraction = this.iterationTime / this.duration;
-        if (this.timing.timingFunc) {
-          this._timeFraction = this.timing.timingFunc.scaleTime(
+        if (this.timing.timingFunction) {
+          this._timeFraction = this.timing.timingFunction.scaleTime(
               this._timeFraction);
           this.iterationTime = this._timeFraction * this.duration;
         }
@@ -443,7 +443,7 @@ mixin(TimedItem.prototype, {
     if (previousRate == 0 || playbackRate == 0) {
       return;
     }
-    // TODO: invert the fill mode?
+    // TODO: invert the fillMode?
     var seekAdjustment = (this.itemTime - this.timing.startDelay) *
         (1 - previousRate / playbackRate);
     this.currentTime = this.itemTime - seekAdjustment;
@@ -514,17 +514,17 @@ mixin(TimedItem.prototype, {
   },
 });
 
-var interpretAnimFunc = function(animFunc) {
-  if (animFunc instanceof AnimFunc) {
-    return animFunc;
-  } else if (typeof(animFunc) === 'object') {
-    // Test if the object is actually a CustomAnimFunc
+var interpretAnimationFunction = function(animationFunction) {
+  if (animationFunction instanceof AnimationFunction) {
+    return animationFunction;
+  } else if (typeof(animationFunction) === 'object') {
+    // Test if the object is actually a CustomAnimationFunction
     // (how does WebIDL actually differentiate different callback interfaces?)
-    if (animFunc.hasOwnProperty('sample') &&
-        typeof(animFunc.sample) === 'function') {
-      return animFunc;
+    if (animationFunction.hasOwnProperty('sample') &&
+        typeof(animationFunction.sample) === 'function') {
+      return animationFunction;
     } else {
-      return AnimFunc.createFromProperties(animFunc);
+      return AnimationFunction.createFromProperties(animationFunction);
     }
   } else {
     try {
@@ -550,47 +550,48 @@ var interpretTimingParam = function(timing) {
       'numbers, or timing dictionaries; not \'' + timing + '\'');
 };
 
-var LinkedAnim = function(target, template, parentGroup, startTime) {
-  var anim = new Anim(target, template.animFunc,
+var LinkedAnimation = function(target, template, parentGroup, startTime) {
+  var anim = new Animation(target, template.animationFunction,
                       new ImmutableTimingProxy(template.timing),
                       parentGroup, startTime);
   anim.template = template;
-  template.addLinkedAnim(anim);
+  template.addLinkedAnimation(anim);
   return anim;
 };
 
 // TODO: what is this, it isn't used anywhere?
-var ClonedAnim = function(target, cloneSource, parentGroup, startTime) {
-  var anim = new Anim(target, cloneSource.timing.clone(),
-                      cloneSource.animFunc.clone(), parentGroup, startTime);
+var ClonedAnimation = function(target, cloneSource, parentGroup, startTime) {
+  var anim = new Animation(target, cloneSource.timing.clone(),
+                      cloneSource.animationFunction.clone(), parentGroup, startTime);
 };
 
 /** @constructor */
-var Anim = function(target, animFunc, timing, parentGroup, startTime) {
-  this.animFunc = interpretAnimFunc(animFunc);
+var Animation = function(target, animationFunction, timing, parentGroup, startTime) {
+  this.animationFunction = interpretAnimationFunction(animationFunction);
+  this.timing = interpretTimingParam(timing);
 
-  Anim.$super.call(this, timing, startTime, parentGroup);
+  Animation.$super.call(this, timing, startTime, parentGroup);
 
   // TODO: correctly extract the underlying value from the element
   this.underlyingValue = null;
-  if (target && this.animFunc instanceof AnimFunc) {
-    this.underlyingValue = this.animFunc.getValue(target);
+  if (target && this.animationFunction instanceof AnimationFunction) {
+    this.underlyingValue = this.animationFunction.getValue(target);
   }
   this.template = null;
   this.targetElement = target;
-  this.name = this.animFunc instanceof KeyframeAnimFunc ?
-      this.animFunc.property : '<anon>';
+  this.name = this.animationFunction instanceof KeyframesAnimationFunction ?
+      this.animationFunction.property : '<anon>';
 };
 
-inherits(Anim, TimedItem);
-mixin(Anim.prototype, {
+inherits(Animation, TimedItem);
+mixin(Animation.prototype, {
   unlink: function() {
     var result = this.template;
     if (result) {
       this.timing = this.timing.extractMutableTiming();
-      // TODO: Does animFunc need to have a FuncProxy too?
-      this.animFunc = this.animFunc.clone();
-      this.template.removeLinkedAnim(this);
+      // TODO: Does animationFunction need to have a FunctionProxy too?
+      this.animationFunction = this.animationFunction.clone();
+      this.template.removeLinkedAnimation(this);
     }
     this.template = null;
     return result;
@@ -600,22 +601,22 @@ mixin(Anim.prototype, {
       return this.template;
     }
     // TODO: What resolution strategy, if any, should be employed here?
-    var animFunc = this.animFunc ?
-        this.animFunc.hasOwnProperty('clone') ?
-            this.animFunc.clone() : this.animFunc :
+    var animationFunction = this.animationFunction ?
+        this.animationFunction.hasOwnProperty('clone') ?
+            this.animationFunction.clone() : this.animationFunction :
         null;
-    var template = new AnimTemplate(animFunc, this.timing.clone());
+    var template = new AnimationTemplate(animationFunction, this.timing.clone());
     this.template = template;
-    this.animFunc = template.animFunc;
+    this.animationFunction = template.animationFunction;
     this.timing = new ImmutableTimingProxy(template.timing);
-    this.template.addLinkedAnim(this);
+    this.template.addLinkedAnimation(this);
     return template;
   },
   intrinsicDuration: function() {
     // section 6.6
     return Infinity;
   },
-  _getSampleFuncs: function() {
+  _getSampleFunctions: function() {
     var prevTimeFraction = this._timeFraction;
     this.updateTimeMarkers();
 
@@ -624,14 +625,14 @@ mixin(Anim.prototype, {
 
     var rv = { startTime: this._parentToGlobalTime(this.startTime),
       target: this.targetElement,
-      sampleFunc:
+      sampleFunction:
         function() {
-          if (this.animFunc instanceof AnimFunc) {
-            this.animFunc.sample(this._timeFraction,
+          if (this.animationFunction instanceof AnimationFunction) {
+            this.animationFunction.sample(this._timeFraction,
               this.currentIteration, this.targetElement,
               this.underlyingValue);
-          } else if (this.animFunc) {
-            this.animFunc.sample.call(this.animFunc, this._timeFraction,
+          } else if (this.animationFunction) {
+            this.animationFunction.sample.call(this.animationFunction, this._timeFraction,
               this.currentIteration, this.targetElement);
           }
         }.bind(this)
@@ -639,24 +640,24 @@ mixin(Anim.prototype, {
     return new Array(rv);
   },
   toString: function() {
-    var funcDescr = this.animFunc instanceof AnimFunc ?
-        this.animFunc.toString() : 'Custom scripted function';
-    return 'Anim ' + this.startTime + '-' + this.endTime + ' (' +
+    var funcDescr = this.animationFunction instanceof AnimationFunction ?
+        this.animationFunction.toString() : 'Custom scripted function';
+    return 'Animation ' + this.startTime + '-' + this.endTime + ' (' +
         this.timeDrift + ' @' + this.currentTime + ') ' + funcDescr;
   }
 });
 
 /** @constructor */
-var AnimTemplate = function(animFunc, timing, resolutionStrategy) {
-  this.animFunc = interpretAnimFunc(animFunc);
-  AnimTemplate.$super.call(this, timing);
+var AnimationTemplate = function(animationFunction, timing, resolutionStrategy) {
+  this.animationFunction = interpretAnimationFunction(animationFunction);
+  AnimationTemplate.$super.call(this, timing);
   this.resolutionStrategy = resolutionStrategy;
   // TODO: incorporate name into spec?
   // this.name = properties.name;
 };
 
-inherits(AnimTemplate, TimedTemplate);
-mixin(AnimTemplate.prototype, {
+inherits(AnimationTemplate, TimedTemplate);
+mixin(AnimationTemplate.prototype, {
   reparent: function(parentGroup) {
     // TODO: does anything need to happen here?
   },
@@ -703,7 +704,7 @@ mixin(AnimTemplate.prototype, {
 
     var instances = [];
     [].forEach.call(targets, function(target) {
-      var instance = LinkedAnim(target, this, parentGroup, startTime);
+      var instance = LinkedAnimation(target, this, parentGroup, startTime);
       if (!isLive) {
         instance.unlink();
       }
@@ -714,7 +715,7 @@ mixin(AnimTemplate.prototype, {
 });
 
 // To use this, need to have children and length member variables.
-var AnimListMixin = {
+var AnimationListMixin = {
   initListMixin: function(beforeListChange, onListChange) {
     this._clear();
     this.onListChange = onListChange;
@@ -830,16 +831,16 @@ var AnimListMixin = {
 }
 
 /** @constructor */
-var AnimGroup = function(type, template, children, timing, startTime,
+var AnimationGroup = function(type, template, children, timing, startTime,
     parentGroup) {
   // used by TimedItem via intrinsicDuration(), so needs to be set before
   // initializing super.
   this.type = type || 'par';
   this.initListMixin(this._assertNotLive, this._childrenStateModified);
-  AnimGroup.$super.call(this, timing, startTime, parentGroup);
+  AnimationGroup.$super.call(this, timing, startTime, parentGroup);
   this.template = template;
   if (template) {
-    template.addLinkedAnim(this);
+    template.addLinkedAnimation(this);
   }
   if (children && Array.isArray(children)) {
     for (var i = 0; i < children.length; i++) {
@@ -850,26 +851,26 @@ var AnimGroup = function(type, template, children, timing, startTime,
   // this.name = properties.name || '<anon>';
 };
 
-inherits(AnimGroup, TimedItem);
-mixin(AnimGroup.prototype, AnimListMixin);
-mixin(AnimGroup.prototype, {
+inherits(AnimationGroup, TimedItem);
+mixin(AnimationGroup.prototype, AnimationListMixin);
+mixin(AnimationGroup.prototype, {
   _assertNotLive: function() {
     if (this.template) {
-      throw 'Can\'t modify tree of AnimGroupInstances with templates'
+      throw 'Can\'t modify tree of AnimationGroupInstances with templates'
     }
   },
   templatize: function() {
     if (!this.template) {
       var timing = this.timing.clone();
       var template = this.type == 'par' ?
-          new ParAnimGroupTemplate(null, timing) :
-          new SeqAnimGroupTemplate(null, timing);
+          new ParGroupTemplate(null, timing) :
+          new SeqGroupTemplate(null, timing);
       this.timing = new ImmutableTimingProxy(template.timing);
       for (var i = 0; i < this.children.length; i++) {
         template.add(this.children[i].templatize());
       }
       this.template = template;
-      this.template.addLinkedAnim(this);
+      this.template.addLinkedAnimation(this);
     }
     return this.template;
   },
@@ -902,7 +903,7 @@ mixin(AnimGroup.prototype, {
   unlink: function() {
     var acted = this.template != null;
     if (this.template) {
-      this.template.removeLinkedAnim(this);
+      this.template.removeLinkedAnimation(this);
       this.timing = this.template.timing.clone();
     }
     this.template = null;
@@ -951,13 +952,13 @@ mixin(AnimGroup.prototype, {
       throw 'Unsupported type ' + this.type;
     }
   },
-  _getSampleFuncs: function() {
+  _getSampleFunctions: function() {
     this.updateTimeMarkers();
-    var sampleFuncs = [];
+    var sampleFunctions = [];
     this.children.forEach(function(child) {
-      sampleFuncs = sampleFuncs.concat(child._getSampleFuncs());
+      sampleFunctions = sampleFunctions.concat(child._getSampleFunctions());
     }.bind(this));
-    return sampleFuncs;
+    return sampleFunctions;
   },
   toString: function() {
     return this.type + ' ' + this.startTime + '-' + this.endTime + ' (' +
@@ -967,24 +968,24 @@ mixin(AnimGroup.prototype, {
 });
 
 /** @constructor */
-var ParAnimGroup = function(children, timing, parentGroup, startTime) {
-  ParAnimGroup.$super.call(
+var ParGroup = function(children, timing, parentGroup, startTime) {
+  ParGroup.$super.call(
       this, 'par', undefined, children, timing, startTime, parentGroup);
 };
 
-inherits(ParAnimGroup, AnimGroup);
+inherits(ParGroup, AnimationGroup);
 
 /** @constructor */
-var SeqAnimGroup = function(children, timing, parentGroup, startTime) {
-  SeqAnimGroup.$super.call(
+var SeqGroup = function(children, timing, parentGroup, startTime) {
+  SeqGroup.$super.call(
       this, 'seq', undefined, children, timing, startTime, parentGroup);
 };
 
-inherits(SeqAnimGroup, AnimGroup);
+inherits(SeqGroup, AnimationGroup);
 
 /** @constructor */
-var AnimGroupTemplate = function(type, children, timing, resolutionStrategy) {
-  AnimGroupTemplate.$super.call(this, timing);
+var AnimationGroupTemplate = function(type, children, timing, resolutionStrategy) {
+  AnimationGroupTemplate.$super.call(this, timing);
   this.type = type;
   this.resolutionStrategy = resolutionStrategy;
   this.initListMixin(function() {}, function() {});
@@ -995,16 +996,16 @@ var AnimGroupTemplate = function(type, children, timing, resolutionStrategy) {
   }
 };
 
-inherits(AnimGroupTemplate, TimedTemplate);
-mixin(AnimGroupTemplate.prototype, AnimListMixin);
-mixin(AnimGroupTemplate.prototype, {
+inherits(AnimationGroupTemplate, TimedTemplate);
+mixin(AnimationGroupTemplate.prototype, AnimationListMixin);
+mixin(AnimationGroupTemplate.prototype, {
   reparent: function(parentGroup) {
     // TODO: does anything need to happen here?
   },
   __animate: function(isLive, targets, parentGroup, startTime) {
     var instances = [];
     for (var i = 0; i < targets.length; i++) {
-      var instance = new AnimGroup(
+      var instance = new AnimationGroup(
           this.type, this, [], this.timing, startTime, parentGroup);
       if (!isLive) {
         instance.unlink();
@@ -1025,29 +1026,29 @@ mixin(AnimGroupTemplate.prototype, {
 });
 
 /** @constructor */
-var ParAnimGroupTemplate = function(children, timing, resolutionStrategy) {
-  ParAnimGroupTemplate.$super.call(
+var ParGroupTemplate = function(children, timing, resolutionStrategy) {
+  ParGroupTemplate.$super.call(
       this, 'par', children, timing, resolutionStrategy);
 };
 
-inherits(ParAnimGroupTemplate, AnimGroupTemplate);
+inherits(ParGroupTemplate, AnimationGroupTemplate);
 
 /** @constructor */
-var SeqAnimGroupTemplate = function(children, properties, resolutionStrategy) {
-  SeqAnimGroupTemplate.$super.call(
+var SeqGroupTemplate = function(children, properties, resolutionStrategy) {
+  SeqGroupTemplate.$super.call(
       this, 'seq', children, properties, resolutionStrategy);
 };
 
-inherits(SeqAnimGroupTemplate, AnimGroupTemplate);
+inherits(SeqGroupTemplate, AnimationGroupTemplate);
 
 /** @constructor */
-var AnimFunc = function(operation, accumulateOperation) {
+var AnimationFunction = function(operation, accumulateOperation) {
   this.operation = operation === undefined ? 'replace' : operation;
   this.accumulateOperation =
       accumulateOperation == undefined ? 'replace' : operation;
 };
 
-mixin(AnimFunc.prototype, {
+mixin(AnimationFunction.prototype, {
   sample: function(timeFraction, currentIteration, target, underlyingValue) {
     throw 'Unimplemented sample function';
   },
@@ -1059,7 +1060,7 @@ mixin(AnimFunc.prototype, {
   }
 });
 
-AnimFunc.createFromProperties = function(properties) {
+AnimationFunction.createFromProperties = function(properties) {
   // Step 1 - determine set of animation properties
   var animProps = [];
   for (var candidate in properties) {
@@ -1068,24 +1069,24 @@ AnimFunc.createFromProperties = function(properties) {
     }
   }
 
-  // Step 2 - Create AnimFunc objects
+  // Step 2 - Create AnimationFunction objects
   if (animProps.length === 0) {
     return null;
   } else if (animProps.length === 1) {
-    return AnimFunc._createKeyframeFunc(
+    return AnimationFunction._createKeyframeFunction(
         animProps[0], properties[animProps[0]], properties.operation);
   } else {
-    var result = new GroupedAnimFunc();
+    var result = new GroupedAnimationFunction();
     for (var i = 0; i < animProps.length; i++) {
-      result.add(AnimFunc._createKeyframeFunc(animProps[i], properties[animProps[i]], properties.operation));
+      result.add(AnimationFunction._createKeyframeFunction(animProps[i], properties[animProps[i]], properties.operation));
     }
     return result;
   }
 }
 
-// Step 3 - Create a KeyframeAnimFunc object
-AnimFunc._createKeyframeFunc = function(property, value, operation) {
-  var func = new KeyframeAnimFunc(property);
+// Step 3 - Create a KeyframesAnimationFunction object
+AnimationFunction._createKeyframeFunction = function(property, value, operation) {
+  var func = new KeyframesAnimationFunction(property);
 
   if (typeof value === 'string') {
     func.frames.add(new Keyframe(value, 0));
@@ -1116,13 +1117,13 @@ AnimFunc._createKeyframeFunc = function(property, value, operation) {
 }
 
 /** @constructor */
-var GroupedAnimFunc = function() {
-  GroupedAnimFunc.$super.call(this);
+var GroupedAnimationFunction = function() {
+  GroupedAnimationFunction.$super.call(this);
   this.children = [];
 };
 
-inherits(GroupedAnimFunc, AnimFunc);
-mixin(GroupedAnimFunc.prototype, {
+inherits(GroupedAnimationFunction, AnimationFunction);
+mixin(GroupedAnimationFunction.prototype, {
   item: function(i) {
     return this.children[i];
   },
@@ -1138,26 +1139,26 @@ mixin(GroupedAnimFunc.prototype, {
     }
   },
   clone: function() {
-    var result = new GroupedAnimFunc();
+    var result = new GroupedAnimationFunction();
     for (var i = 0; i < this.children.length; i++) {
       result.add(this.children[i].clone());
     }
   }
 });
 
-GroupedAnimFunc.prototype.__defineGetter__('length', function() {
+GroupedAnimationFunction.prototype.__defineGetter__('length', function() {
   return this.children.length;
 });
 
 /** @constructor */
-var KeyframeAnimFunc = function(property, operation, accumulateOperation) {
-  KeyframeAnimFunc.$super.call(this, operation, accumulateOperation);
+var KeyframesAnimationFunction = function(property, operation, accumulateOperation) {
+  KeyframesAnimationFunction.$super.call(this, operation, accumulateOperation);
   this.property = property;
   this.frames = new KeyframeList();
 };
 
-inherits(KeyframeAnimFunc, AnimFunc);
-mixin(KeyframeAnimFunc.prototype, {
+inherits(KeyframesAnimationFunction, AnimationFunction);
+mixin(KeyframesAnimationFunction.prototype, {
   sortedFrames: function() {
     this.frames.frames.sort(function(a, b) {
       if (a.offset < b.offset) {
@@ -1249,7 +1250,7 @@ mixin(KeyframeAnimFunc.prototype, {
     return getValue(target, this.property);
   },
   clone: function() {
-    var result = new KeyframeAnimFunc(
+    var result = new KeyframesAnimationFunction(
         this.property, this.operation, this.accumulateOperation);
     result.frames = this.frames.clone();
     return result;
@@ -1260,10 +1261,10 @@ mixin(KeyframeAnimFunc.prototype, {
 });
 
 /** @constructor */
-var Keyframe = function(value, offset, timingFunc) {
+var Keyframe = function(value, offset, timingFunction) {
   this.value = value;
   this.offset = offset;
-  this.timingFunc = timingFunc;
+  this.timingFunction = timingFunction;
 };
 
 /** @constructor */
@@ -1295,7 +1296,7 @@ mixin(KeyframeList.prototype, {
     var result = new KeyframeList();
     for (var i = 0; i < this.frames.length; i++) {
       result.add(new Keyframe(this.frames[i].value, this.frames[i].offset,
-          this.frames[i].timingFunc));
+          this.frames[i].timingFunction));
     }
     return result;
   }
@@ -1307,7 +1308,7 @@ var presetTimings = {
 }
 
 /** @constructor */
-var TimingFunc = function(spec) {
+var TimingFunction = function(spec) {
   if (spec.length == 4) {
     this.params = spec;
   } else {
@@ -1323,7 +1324,7 @@ var TimingFunc = function(spec) {
   }
 };
 
-mixin(TimingFunc.prototype, {
+mixin(TimingFunction.prototype, {
   scaleTime: function(fraction) {
     var fst = 0;
     while (fst != 100 && fraction > this.map[fst][0]) {
@@ -1338,7 +1339,7 @@ mixin(TimingFunc.prototype, {
     return this.map[fst - 1][1] + p * yDiff;
   },
   clone: function() {
-    return new TimingFunc(this.params);
+    return new TimingFunction(this.params);
   }
 });
 
@@ -1763,10 +1764,10 @@ var getValue = function(target, property) {
 
 var rAFNo = undefined;
 
-var DEFAULT_GROUP = new AnimGroup(
+var DEFAULT_GROUP = new AnimationGroup(
     'par', null, [], {name: 'DEFAULT'}, 0, undefined);
 
-DEFAULT_GROUP.oldFuncs = new Array();
+DEFAULT_GROUP.oldFunctions = new Array();
 DEFAULT_GROUP.compositor = new Compositor();
 
 DEFAULT_GROUP._tick = function(parentTime) {
@@ -1778,7 +1779,7 @@ DEFAULT_GROUP._tick = function(parentTime) {
   var funcs = new Array();
   var allFinished = true;
   this.children.forEach(function(child) {
-    funcs = funcs.concat(child._getSampleFuncs());
+    funcs = funcs.concat(child._getSampleFunctions());
     allFinished &= parentTime > child.endTime;
   }.bind(this));
 
@@ -1789,11 +1790,11 @@ DEFAULT_GROUP._tick = function(parentTime) {
         funcA.startTime === funcB.startTime ? 0 : 1;
   });
   for (var i = 0; i < funcs.length; i++) {
-    if (funcs[i].hasOwnProperty('sampleFunc')) {
-      funcs[i].sampleFunc();
+    if (funcs[i].hasOwnProperty('sampleFunction')) {
+      funcs[i].sampleFunction();
     }
   }
-  this.oldFuncs = funcs;
+  this.oldFunctions = funcs;
 
   // Composite animated values into element styles
   this.compositor.applyAnimatedValues();
@@ -1844,22 +1845,23 @@ var maybeRestartAnimation = function() {
 window.document.__defineGetter__('animationTimeline', function() {
   return DEFAULT_GROUP;
 });
-window.Anim = Anim;
+window.Animation = Animation;
 window.Timing = Timing;
 // TODO: this is not in the spec
-window.TimingFunc = TimingFunc;
+window.TimingFunction = TimingFunction;
 window.TimedItem = TimedItem;
-// TODO: SplineTimingFunc ?
-// TODO: StepTimingFunc ?
-// TODO: SmoothTimingFunc ?
-window.AnimGroup = AnimGroup;
-window.ParAnimGroup = ParAnimGroup;
-window.SeqAnimGroup = SeqAnimGroup;
-window.KeyframeAnimFunc = KeyframeAnimFunc;
+// TODO: SplineTimingFunction ?
+// TODO: StepTimingFunction ?
+// TODO: SmoothTimingFunction ?
+window.AnimationGroup = AnimationGroup;
+window.ParGroup = ParGroup;
+window.SeqGroup = SeqGroup;
+window.KeyframesAnimationFunction = KeyframesAnimationFunction;
 window.Keyframe = Keyframe;
-// TODO: PathAnimFunc ?
-// TODO: GroupedAnimFunc ?
-window.AnimTemplate = AnimTemplate;
-window.ParAnimGroupTemplate = ParAnimGroupTemplate;
-window.SeqAnimGroupTemplate = SeqAnimGroupTemplate;
+// TODO: PathAnimationFunction ?
+// TODO: GroupedAnimationFunction ?
+window.AnimationTemplate = AnimationTemplate;
+window.ParGroupTemplate = ParGroupTemplate;
+window.SeqGroupTemplate = SeqGroupTemplate;
+
 })();

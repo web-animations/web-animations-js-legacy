@@ -49,25 +49,25 @@ function resolveTimingProperties(elem) {
 	var duration = attrAsNumber(elem, "duration");
 	var iterationCount = attrAsNumber(elem, "iterationCount", 1);
 	var iterationStart = attrAsNumber(elem, "iterationStart", 0);
-	var fill = attrAsText(elem, "fill");
+	var fillMode = attrAsText(elem, "fillMode");
 	var playbackRate = attrAsNumber(elem, "playbackRate");
 	var startTime = attrAsNumber(elem, "startTime");
 	var direction = attrAsText(elem, "direction");
 	var resolutionStrategy = attrAsText(elem, "resolutionStrategy");
 	var name = elem.id;
 	return {startDelay: startDelay, duration: duration, iterationCount: iterationCount, iterationStart: iterationStart,
-		fill: fill, playbackRate: playbackRate, direction: direction, startTime: startTime, resolutionStrategy: resolutionStrategy, name: name};
+		fillMode: fillMode, playbackRate: playbackRate, direction: direction, startTime: startTime, resolutionStrategy: resolutionStrategy, name: name};
 }
 
 function instantiateElem(elem) {
 	var animFunc = resolveAnimProperties(elem);
 	var timing = resolveTimingProperties(elem);
 	if (elem.tagName == "ANIMATION") {
-		elem.template = new AnimTemplate(animFunc, timing, timing.resolutionStrategy);
+		elem.template = new AnimationTemplate(animFunc, timing, timing.resolutionStrategy);
 	} else if (elem.tagName == "PAR") {
-		elem.template = new ParAnimGroupTemplate([], timing, timing.resolutionStrategy);
+		elem.template = new ParGroupTemplate([], timing, timing.resolutionStrategy);
 	} else {
-		elem.template = new SeqAnimGroupTemplate([], timing, timing.resolutionStrategy);
+		elem.template = new SeqGroupTemplate([], timing, timing.resolutionStrategy);
 	}
 	return timing.startTime;
 }
@@ -100,5 +100,3 @@ for (var i = 0; i < groups.length; i++) {
 	var startTime = instantiateTree(group);
 	group.template.animateLive(group.parentElement, startTime);
 }
-
-maybeRestartAnimation();
