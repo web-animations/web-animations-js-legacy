@@ -49,14 +49,14 @@ function resolveTimingProperties(elem) {
 	var duration = attrAsNumber(elem, "duration");
 	var iterationCount = attrAsNumber(elem, "iterationCount", 1);
 	var iterationStart = attrAsNumber(elem, "iterationStart", 0);
-	var fill = attrAsText(elem, "fill");
+	var fillMode = attrAsText(elem, "fillMode");
 	var playbackRate = attrAsNumber(elem, "playbackRate");
 	var startTime = attrAsNumber(elem, "startTime");
 	var direction = attrAsText(elem, "direction");
 	var resolutionStrategy = attrAsText(elem, "resolutionStrategy");
 	var name = elem.id;
 	return {startDelay: startDelay, duration: duration, iterationCount: iterationCount, iterationStart: iterationStart,
-		fill: fill, playbackRate: playbackRate, direction: direction, startTime: startTime, resolutionStrategy: resolutionStrategy, name: name};
+		fillMode: fillMode, playbackRate: playbackRate, direction: direction, startTime: startTime, resolutionStrategy: resolutionStrategy, name: name};
 }
 
 function instantiateElem(elem) {
