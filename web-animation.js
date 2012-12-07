@@ -197,7 +197,6 @@ var TimedItem = function(timing, startTime, parentGroup) {
     this.updateIterationDuration();
   }.bind(this));
   this._startTime = startTime;
-  this.updateIterationDuration();
   this.currentIteration = null;
   this.iterationTime = null;
   this.animationTime = null;
@@ -222,13 +221,14 @@ var TimedItem = function(timing, startTime, parentGroup) {
     this._startTimeMode = ST_MANUAL;
     this._startTime = startTime;
   }
-  this.endTime = this._startTime + this.animationDuration +
-      this.timing.startDelay;
+
+  this._timeDrift = 0;
+  this._locallyPaused = false;
+  this.updateIterationDuration();
+
   if (this.parentGroup) {
     this.parentGroup._addChild(this);
   }
-  this._timeDrift = 0;
-  this._locallyPaused = false;
   this._pauseStartTime = 0;
 };
 
