@@ -17,71 +17,87 @@ limitations under the License.
 <!DOCTYPE html>
 <style>
 .animContainer {
-	position: absolute;
-	left: 0px;
-	height: 100px;
+  position: absolute;
+  left: 0px;
+  height: 100px;
 }
 
 .anim {
-	left: 0px;
-	width: 100px;
-	height: 25px;
-	background-color: #FAA;
-	position: relative;
+  left: 0px;
+  width: 100px;
+  height: 25px;
+  background-color: lightsteelblue;
+  position: relative;
 }
 
 #ca {
-	top: 0px;
+  top: 0px;
 }
 
 #cb {
-	top: 200px;
+  top: 200px;
 }
 
 #cc {
-	top: 400px;
+  top: 400px;
 }
 
 
 #cd {
-	top: 600px;
+  top: 600px;
+}
+
+.b {
+  background-color: red;
+}
+
+.expectation {
+  position: absolute;
+  background-color: red;
 }
 </style>
 
+<div class="expectation" style="top: 0px; left: 180px; width: 100px; height: 25px;"></div>
+<div class="expectation" style="top: 50px; left: 180px; width: 100px; height: 100px;"></div>
+<div class="expectation" style="top: 200px; left: 0px; width: 100px; height: 150px;"></div>
+<div class="expectation" style="top: 400px; left: 0px; width: 100px; height: 150px;"></div>
+<div class="expectation" style="top: 600px; left: 180px; width: 100px; height: 25px;"></div>
+<div class="expectation" style="top: 650px; left: 180px; width: 100px; height: 100px;"></div>
+
 <div class="animContainer" id="ca">
-	<div class="anim a"></div>
-	<div class="anim b"></div>
-	<div class="anim c"></div>
-	<div class="anim d"></div>
-	<div class="anim e"></div>
-	<div class="anim f"></div>
+  <div class="anim a"></div>
+  <div class="anim b"></div>
+  <div class="anim c"></div>
+  <div class="anim d"></div>
+  <div class="anim e"></div>
+  <div class="anim f"></div>
 </div>
 
 <div class="animContainer" id="cb">
-	<div class="anim a"></div>
-	<div class="anim b"></div>
-	<div class="anim c"></div>
-	<div class="anim d"></div>
-	<div class="anim e"></div>
-	<div class="anim f"></div>
+  <div class="anim a"></div>
+  <div class="anim b"></div>
+  <div class="anim c"></div>
+  <div class="anim d"></div>
+  <div class="anim e"></div>
+  <div class="anim f"></div>
 </div>
 
 <div class="animContainer" id="cc">
-	<div class="anim a"></div>
-	<div class="anim b"></div>
-	<div class="anim c"></div>
-	<div class="anim d"></div>
-	<div class="anim e"></div>
-	<div class="anim f"></div>
+  <div class="anim a"></div>
+  <div class="anim b"></div>
+  <div class="anim c"></div>
+  <div class="anim d"></div>
+  <div class="anim e"></div>
+  <div class="anim f"></div>
 </div>
 
 <div class="animContainer" id="cd">
-	<div class="anim a"></div>
-	<div class="anim b"></div>
-	<div class="anim c"></div>
-	<div class="anim d"></div>
-	<div class="anim e"></div>
-	<div class="anim f"></div>
+  <div class="anim a"></div>
+  <div class="anim b"></div>
+  <div class="anim c"></div>
+  <div class="anim d"></div>
+  <div class="anim e"></div>
+  <div class="anim f"></div>
 </div>
 
 <script src="web-animation.js"></script>
@@ -93,26 +109,32 @@ var directions = ["normal", "reverse", "alternate", "alternate-reverse"];
 var groups = [];
 
 for (var i = 0; i < directions.length; i++) {
-	var dir = directions[i];
-	var group = new ParAnimGroup([], {iterationCount: 2, direction: dir, duration: 4}, undefined, 1);
-	groups.push(group);
+  var dir = directions[i];
+  var group = new ParAnimGroup([], {iterationCount: 2, direction: dir, duration: 4}, undefined, 1);
+  groups.push(group);
 }
 
 for (var i = 0; i < containers.length; i++) {
-	var container = document.getElementById(containers[i]);
-	<!-- All squares should line up at the end of each iteration (or start if reversed). -->
-	<!-- Test basic use. -->
-	new Anim(container.getElementsByClassName("a")[0], {left: ["100px", "300px"]}, {duration: 1, iterationCount: 3.1, iterationStart: 0.3}, groups[i]);
-	<!-- Test that iterationStart has a lower bound of zero. -->
-	new Anim(container.getElementsByClassName("b")[0], {left: ["100px", "300px"]}, {duration: 1, iterationCount: 3.4, iterationStart: -0.2}, groups[i]);
-	<!-- Test that iterationStart has an upper bound of iterationCount. -->
-	<!-- TODO: Revisit this decision. -->
-	new Anim(container.getElementsByClassName("c")[0], {left: ["100px", "300px"]}, {duration: 1, iterationCount: 1.7, iterationStart: 1.8}, groups[i]);
-	<!-- Test that nothing odd happens when iterationCount is an integer. -->
-	new Anim(container.getElementsByClassName("d")[0], {left: ["100px", "300px"]}, {duration: 1, iterationCount: 3.0, iterationStart: 0.4}, groups[i]);
-	<!-- Test that nothing odd happens when (iterationCount - iterationStart) is an integer. -->
-	new Anim(container.getElementsByClassName("e")[0], {left: ["100px", "300px"]}, {duration: 1, iterationCount: 3.2, iterationStart: 0.2}, groups[i]);
-	<!-- Test that nothing odd happens when (iterationCount + iterationStart) is an integer. -->
-	new Anim(container.getElementsByClassName("f")[0], {left: ["100px", "180px"]}, {duration: 1, iterationCount: 2.8, iterationStart: 0.2}, groups[i]);
+  var container = document.getElementById(containers[i]);
+  <!-- All squares should line up at the end of each iteration (or start if reversed). -->
+  <!-- Test basic use. -->
+  new Anim(container.getElementsByClassName("a")[0], {left: ["100px", "300px"]}, {duration: 1, iterationCount: 3.1, iterationStart: 0.3}, groups[i]);
+  try {
+    <!-- Test that iterationStart has a lower bound of zero. -->
+    new Anim(container.getElementsByClassName("b")[0], {left: ["100px", "300px"]}, {duration: 1, iterationCount: 3.4, iterationStart: -0.2}, groups[i]);
+  } catch (e) {
+    if (e.name == "IndexSizeError") {
+      container.getElementsByClassName("b")[0].style["background-color"] = "lightsteelblue";
+    }
+  }    
+  <!-- Test that iterationStart has an upper bound of iterationCount. -->
+  <!-- TODO: Revisit this decision. -->
+  new Anim(container.getElementsByClassName("c")[0], {left: ["100px", "300px"]}, {duration: 1, iterationCount: 1.7, iterationStart: 1.8}, groups[i]);
+  <!-- Test that nothing odd happens when iterationCount is an integer. -->
+  new Anim(container.getElementsByClassName("d")[0], {left: ["100px", "300px"]}, {duration: 1, iterationCount: 3.0, iterationStart: 0.4}, groups[i]);
+  <!-- Test that nothing odd happens when (iterationCount - iterationStart) is an integer. -->
+  new Anim(container.getElementsByClassName("e")[0], {left: ["100px", "300px"]}, {duration: 1, iterationCount: 3.2, iterationStart: 0.2}, groups[i]);
+  <!-- Test that nothing odd happens when (iterationCount + iterationStart) is an integer. -->
+  new Anim(container.getElementsByClassName("f")[0], {left: ["100px", "180px"]}, {duration: 1, iterationCount: 2.8, iterationStart: 0.2}, groups[i]);
 }
 </script>
