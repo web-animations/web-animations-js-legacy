@@ -1076,9 +1076,9 @@ AnimationFunction.createFromProperties = function(properties) {
     return AnimationFunction._createKeyframeFunction(
         animProps[0], properties[animProps[0]], properties.operation);
   } else {
-    var result = new GroupedAnimFunc();
+    var result = new GroupedAnimationFunction();
     for (var i = 0; i < animProps.length; i++) {
-      result.add(AnimFunc._createKeyframeFunc(animProps[i], properties[animProps[i]], properties.operation));
+      result.add(AnimationFunction._createKeyframeFunction(animProps[i], properties[animProps[i]], properties.operation));
     }
     return result;
   }
@@ -1117,13 +1117,13 @@ AnimationFunction._createKeyframeFunction = function(property, value, operation)
 }
 
 /** @constructor */
-var GroupedAnimFunc = function() {
-  GroupedAnimFunc.$super.call(this);
+var GroupedAnimationFunction = function() {
+  GroupedAnimationFunction.$super.call(this);
   this.children = [];
 };
 
-inherits(GroupedAnimFunc, AnimationFunction);
-mixin(GroupedAnimFunc.prototype, {
+inherits(GroupedAnimationFunction, AnimationFunction);
+mixin(GroupedAnimationFunction.prototype, {
   item: function(i) {
     return this.children[i];
   },
@@ -1139,14 +1139,14 @@ mixin(GroupedAnimFunc.prototype, {
     }
   },
   clone: function() {
-    var result = new GroupedAnimFunc();
+    var result = new GroupedAnimationFunction();
     for (var i = 0; i < this.children.length; i++) {
       result.add(this.children[i].clone());
     }
   }
 });
 
-GroupedAnimFunc.prototype.__defineGetter__('length', function() {
+GroupedAnimationFunction.prototype.__defineGetter__('length', function() {
   return this.children.length;
 });
 
