@@ -90,17 +90,17 @@ var groups = [];
 
 for (var i = 0; i < directions.length; i++) {
 	var dir = directions[i];
-	var group = new ParAnimGroup([], {iterationCount: 2, direction: dir, duration: 4}, undefined, 1);
+	var group = new ParGroup([], {iterationCount: 2, direction: dir, duration: 4}, undefined, 1);
 	groups.push(group);
 }
 
 for (var i = 0; i < containers.length; i++) {
 	var container = document.getElementById(containers[i]);
 	<!-- Test basic use. -->
-	new Anim(container.getElementsByClassName("a")[0], {left: ["100px", "300px"]}, {duration: 1, iterationCount: 3.4}, groups[i]);
+	new Animation(container.getElementsByClassName("a")[0], {left: ["100px", "300px"]}, {duration: 1, iterationCount: 3.4}, groups[i]);
 	<!-- Test integer iterationCount. -->
-	new Anim(container.getElementsByClassName("b")[0], {left: ["100px", "180px"]}, {duration: 1, iterationCount: 3.0}, groups[i]);
+	new Animation(container.getElementsByClassName("b")[0], {left: ["100px", "180px"]}, {duration: 1, iterationCount: 3.0}, groups[i]);
 	<!-- Test zero iterationCount. -->
-	new Anim(container.getElementsByClassName("c")[0], {left: ["180px", "300px"]}, {duration: 1, iterationCount: 0.0}, groups[i]);
+	new Animation(container.getElementsByClassName("c")[0], {left: ["180px", "300px"]}, {duration: 1, iterationCount: 0.0}, groups[i]);
 }
 </script>

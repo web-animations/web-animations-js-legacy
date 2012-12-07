@@ -65,13 +65,13 @@ limitations under the License.
 <script src="web-animation.js"></script>
 <script>
 
-var a1 = new Anim(document.querySelector("#a"), {left: ["100px", "200px"]}, 2.6);
-var a2 = new Anim(document.querySelector("#b"), {left: ["100px", "200px"]}, 2.5);
-var a3 = new Anim(document.querySelector("#c"), {left: ["100px", "200px"]}, 2.5);
-var a4 = new Anim(document.querySelector("#d"), {left: ["100px", "200px"]}, 2.3);
-var pgroup1 = new ParAnimGroup([a1, a2], {name: "p1"});
-var pgroup2 = new ParAnimGroup([a3, a4], {name: "p2"});
-var sgroup = new SeqAnimGroup([pgroup1, pgroup2], {name: "s"});
+var a1 = new Animation(document.querySelector("#a"), {left: ["100px", "200px"]}, 2.6);
+var a2 = new Animation(document.querySelector("#b"), {left: ["100px", "200px"]}, 2.5);
+var a3 = new Animation(document.querySelector("#c"), {left: ["100px", "200px"]}, 2.5);
+var a4 = new Animation(document.querySelector("#d"), {left: ["100px", "200px"]}, 2.3);
+var pgroup1 = new ParGroup([a1, a2], {name: "p1"});
+var pgroup2 = new ParGroup([a3, a4], {name: "p2"});
+var sgroup = new SeqGroup([pgroup1, pgroup2], {name: "s"});
 
 window.setTimeout(function() {
 	sgroup.pause();
