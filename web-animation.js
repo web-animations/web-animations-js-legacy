@@ -1095,19 +1095,19 @@ AnimationFunction._createKeyframeFunction = function(property, value, operation)
   } else if (Array.isArray(value)) {
     for (var i = 0; i < value.length; i++) {
       if (typeof value[i] !== 'string') {
-        try {
-          throw new Error('TypeError');
-        } catch (e) { console.log(e.stack); throw e; }
+        var val = exists(value[i].value) ? value[i].value : "";
+        var offset = exists(value[i].offset) ? value[i].offset : 1;
+        func.frames.add(new Keyframe(val, offset));
+      } else {
+        var offset = i / (value.length - 1);
+        func.frames.add(new Keyframe(value[i], offset));
       }
-      var offset = i / (value.length - 1);
-      func.frames.add(new Keyframe(value[i], offset));
     }
   } else {
     try {
       throw new Error('TypeError');
     } catch (e) { console.log(e.stack); throw e; }
   }
-  // TODO: Need to handle KeyframeDict objects once they're defined
 
   if (exists(operation)) {
     func.operation = operation;
