@@ -1374,13 +1374,20 @@ var _zeroIsNought = function() {
   return 0;
 };
 
+var colorZero = function() {
+  return "rgba(0, 0, 0, 0)";
+};
+
 var transformZero = function(t) {
   throw 'UNIMPLEMENTED';
 };
 
 var supportedProperties = new Array();
+
 supportedProperties['opacity'] =
     { type: 'number', isSVGAttrib: false, zero: _zeroIsNought };
+
+// Length properties
 supportedProperties['left'] =
     { type: 'length', isSVGAttrib: false, zero: _zeroIsNought };
 supportedProperties['top'] =
@@ -1400,6 +1407,10 @@ supportedProperties['transform'] =
     { type: 'transform', isSVGAttrib: true, zero: transformZero };
 supportedProperties['-webkit-transform'] =
     { type: 'transform', isSVGAttrib: false };
+
+// Color properties
+supportedProperties['background-color'] =
+    { type: 'color', isSVGAttrib: false, zero: colorZero };
 
 var propertyIsNumber = function(property) {
   var propDetails = supportedProperties[property];
