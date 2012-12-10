@@ -927,7 +927,7 @@ mixin(AnimationGroup.prototype, {
       var dur = Math.max.apply(undefined, this.children.map(function(a) {
         return a.endTime;
       }));
-      return dur;
+      return Math.max(0, dur);
     } else if (this.type == 'seq') {
       var result = 0;
       this.children.forEach(function(a) {
