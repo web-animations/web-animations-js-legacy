@@ -1374,13 +1374,20 @@ var _zeroIsNought = function() {
   return "0px";
 };
 
+var colorZero = function() {
+  return "rgba(0, 0, 0, 0)";
+};
+
 var transformZero = function(t) {
   throw 'UNIMPLEMENTED';
 };
 
 var supportedProperties = new Array();
+
 supportedProperties['opacity'] =
     { type: 'number', isSVGAttrib: false, zero: _zeroIsNought };
+
+// Length properties
 supportedProperties['left'] =
     { type: 'length', isSVGAttrib: false, zero: _zeroIsNought };
 supportedProperties['top'] =
@@ -1401,6 +1408,10 @@ supportedProperties['transform'] =
 supportedProperties['-webkit-transform'] =
     { type: 'transform', isSVGAttrib: false };
 
+// Color properties
+supportedProperties['background-color'] =
+    { type: 'color', isSVGAttrib: false, zero: colorZero };
+
 var propertyIsNumber = function(property) {
   var propDetails = supportedProperties[property];
   return propDetails && propDetails.type === 'number';
@@ -1415,6 +1426,11 @@ var propertyIsTransform = function(property) {
   var propDetails = supportedProperties[property];
   return propDetails && propDetails.type === 'transform';
 };
+
+var propertyIsColor = function(property) {
+  var propDetails = supportedProperties[property];
+  return propDetails && propDetails.type === 'color';
+}
 
 var propertyIsSVGAttrib = function(property, target) {
   if (target.namespaceURI !== 'http://www.w3.org/2000/svg')
@@ -1437,6 +1453,10 @@ var add = function(property, target, base, delta) {
     return toCssValue(property, [base[0] + delta[0], 'px'], svgMode);
   } else if (propertyIsTransform(property)) {
     return toCssValue(property, base.concat(delta), svgMode);
+  } else if (propertyIsColor(property)) {
+    return toCssValue(property, 
+        {r: base.r + delta.r, g: base.g + delta.g, b: base.b + delta.b, 
+         a: base.a + delta.a});
   } else {
     throw new Error('Unsupported property');
   }
@@ -1476,6 +1496,10 @@ var interpolate = function(property, target, from, to, f) {
       out.push({t: type, d:interp(from[i].d, to[i].d, f, type)});
     }
     return toCssValue(property, out, svgMode);
+  } else if (propertyIsColor(property)) {
+    return toCssValue(property, 
+        {r: interp(from.r, to.r, f), g: interp(from.g, to.g, f), 
+         b: interp(from.b, to.b, f), a: interp(from.a, to.a, f)});
   } else {
     throw 'UnsupportedProperty';
   }
@@ -1525,6 +1549,9 @@ var toCssValue = function(property, value, svgMode) {
       }
     }
     return out.substring(0, out.length - 1);
+  } else if (propertyIsColor(property)) {
+    return 'rgba(' + Math.round(value.r) + ', ' + Math.round(value.g) + 
+        ', ' + Math.round(value.b) + ', ' + value.a + ')';
   } else {
     throw 'UnsupportedProperty';
   }
@@ -1576,6 +1603,14 @@ var transformREs =
          extractScaleValues, 'scale']
   ];
 
+var rgbRE = /^\s*rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/
+var rgbaRE = /^\s*rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+|\d*\.\d+)\s*\)/
+
+var colorDict = {
+  lightsteelblue: {r: 0xB0, g: 0xC4, b: 0xDE, a: 1},
+  red: {r: 0xFF, g: 0x00, b: 0x00, a: 1},
+  green: {r: 0x00, g: 0x80, b: 0x00, a: 1}}
+
 var fromCssValue = function(property, value) {
   if (propertyIsNumber(property)) {
     return value !== '' ? Number(value) : null;
@@ -1600,6 +1635,17 @@ var fromCssValue = function(property, value) {
         return result;
     }
     return result;
+  } else if (propertyIsColor(property)) {
+    var r = rgbRE.exec(value);
+    if (r) {
+      return {r: Number(r[1]), g: Number(r[2]), b: Number(r[3]), a: 1}
+    }
+    r = rgbaRE.exec(value);
+    if (r) {
+      return {r: Number(r[1]), g: Number(r[2]), 
+          b: Number(r[3]), a: Number(r[4])}
+    }
+    return colorDict[value]; 
   } else {
     throw 'UnsupportedProperty';
   }
