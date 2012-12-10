@@ -1371,7 +1371,7 @@ var interpArray = function(from, to, f, type) {
 };
 
 var _zeroIsNought = function() {
-  return 0;
+  return "0px";
 };
 
 var transformZero = function(t) {
