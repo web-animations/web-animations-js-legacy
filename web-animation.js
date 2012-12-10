@@ -1454,7 +1454,9 @@ var add = function(property, target, base, delta) {
   } else if (propertyIsTransform(property)) {
     return toCssValue(property, base.concat(delta), svgMode);
   } else if (propertyIsColor(property)) {
-    return toCssValue(property, {r: base.r + delta.r, g: base.g + delta.g, b: base.b + delta.b, a: base.a + delta.a});
+    return toCssValue(property, 
+        {r: base.r + delta.r, g: base.g + delta.g, b: base.b + delta.b, 
+         a: base.a + delta.a});
   } else {
     throw new Error('Unsupported property');
   }
@@ -1495,7 +1497,9 @@ var interpolate = function(property, target, from, to, f) {
     }
     return toCssValue(property, out, svgMode);
   } else if (propertyIsColor(property)) {
-    return toCssValue(property, {r: interp(from.r, to.r, f), g: interp(from.g, to.g, f), b: interp(from.b, to.b, f), a: interp(from.a, to.a, f)});
+    return toCssValue(property, 
+        {r: interp(from.r, to.r, f), g: interp(from.g, to.g, f), 
+         b: interp(from.b, to.b, f), a: interp(from.a, to.a, f)});
   } else {
     throw 'UnsupportedProperty';
   }
@@ -1546,7 +1550,8 @@ var toCssValue = function(property, value, svgMode) {
     }
     return out.substring(0, out.length - 1);
   } else if (propertyIsColor(property)) {
-    return 'rgba(' + Math.round(value.r) + ', ' + Math.round(value.g) + ', ' + Math.round(value.b) + ', ' + value.a + ')';
+    return 'rgba(' + Math.round(value.r) + ', ' + Math.round(value.g) + 
+        ', ' + Math.round(value.b) + ', ' + value.a + ')';
   } else {
     throw 'UnsupportedProperty';
   }
@@ -1637,7 +1642,8 @@ var fromCssValue = function(property, value) {
     }
     r = rgbaRE.exec(value);
     if (r) {
-      return {r: Number(r[1]), g: Number(r[2]), b: Number(r[3]), a: Number(r[4])}
+      return {r: Number(r[1]), g: Number(r[2]), 
+          b: Number(r[3]), a: Number(r[4])}
     }
     return colorDict[value]; 
   } else {
