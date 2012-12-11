@@ -1151,14 +1151,11 @@ GroupedAnimationFunction.prototype.__defineGetter__('length', function() {
 });
 
 /** @constructor */
-var PathAnimationFunction = function(pathData) {
-  PathAnimationFunction.$super.call(this);
-  this._path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-  // TODO: path data argument is not in the spec -- seems useful since
+var PathAnimationFunction = function(path, operation, accumulateOperation) {
+  PathAnimationFunction.$super.call(this, operation, accumulateOperation);
+  // TODO: path argument is not in the spec -- seems useful since
   // SVGPathSegList doesn't have a constructor.
-  if (pathData) {
-    this._path.setAttribute('d', pathData);
-  }
+  this._path = path;
 };
 
 inherits(PathAnimationFunction, AnimationFunction);
@@ -1172,17 +1169,16 @@ mixin(PathAnimationFunction.prototype, {
     var value = 'translate(' + x + 'px, ' + y + 'px)';
     if (this.rotate) {
       // Super hacks
-      var lastPoint = this._path.getPointAtLength(timeFraction * this._path.getTotalLength() + 0.01);
+      var lastPoint = this._path.getPointAtLength(timeFraction * this._path.getTotalLength() - 0.01);
       var dx = point.x - lastPoint.x;
       var dy = point.y - lastPoint.y;
       var rotation = Math.atan2(dy, dx);
       value = value + ' rotate(' + rotation + 'rad)';
     }
-    // TODO: where does the compositor operation come from?
     DEFAULT_GROUP.compositor.setAnimatedValue(target, '-webkit-transform',
-        new AnimatedResult(value, 'replace', timeFraction));
+        new AnimatedResult(value, this.operation, timeFraction));
     DEFAULT_GROUP.compositor.setAnimatedValue(target, 'transform',
-        new AnimatedResult(value, 'replace', timeFraction));
+        new AnimatedResult(value, this.operation, timeFraction));
   },
   clone: function() {
     return new PathAnimationFunction(this._path.getAttribute('d'));
