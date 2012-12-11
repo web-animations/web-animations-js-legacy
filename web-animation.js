@@ -1151,6 +1151,59 @@ GroupedAnimationFunction.prototype.__defineGetter__('length', function() {
 });
 
 /** @constructor */
+var PathAnimationFunction = function(pathData) {
+  PathAnimationFunction.$super.call(this);
+  this._path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  // TODO: path data argument is not in the spec -- seems useful since
+  // SVGPathSegList doesn't have a constructor.
+  if (pathData) {
+    this._path.setAttribute('d', pathData);
+  }
+};
+
+inherits(PathAnimationFunction, AnimationFunction);
+    lastPoint = null;
+mixin(PathAnimationFunction.prototype, {
+  sample: function(timeFraction, currentIteration, target) {
+    var point = this._path.getPointAtLength(timeFraction * this._path.getTotalLength());
+    var x = point.x - target.offsetWidth / 2;
+    var y = point.y - target.offsetHeight / 2;
+    // TODO: calc(point.x - 50%) doesn't work?
+    var value = 'translate(' + x + 'px, ' + y + 'px)';
+    if (this.rotate) {
+      // Super hacks
+      var lastPoint = this._path.getPointAtLength(timeFraction * this._path.getTotalLength() + 0.01);
+      var dx = point.x - lastPoint.x;
+      var dy = point.y - lastPoint.y;
+      var rotation = Math.atan2(dy, dx);
+      value = value + ' rotate(' + rotation + 'rad)';
+    }
+    // TODO: where does the compositor operation come from?
+    DEFAULT_GROUP.compositor.setAnimatedValue(target, '-webkit-transform',
+        new AnimatedResult(value, 'replace', timeFraction));
+    DEFAULT_GROUP.compositor.setAnimatedValue(target, 'transform',
+        new AnimatedResult(value, 'replace', timeFraction));
+  },
+  clone: function() {
+    return new PathAnimationFunction(this._path.getAttribute('d'));
+  }
+});
+
+PathAnimationFunction.prototype.__defineSetter__('segments', function(segments) {
+  // TODO: moving the path segments is not entirely correct, but we can't
+  // assign the list to the path.
+  var targetSegments = this._path.pathSegList;
+  targetSegments.clear();
+  for (var i = 0; i < segments.numberOfItems; i++) {
+    this._path.pathSegList.appendItem(segments.getItem(i));
+  }
+});
+
+PathAnimationFunction.prototype.__defineGetter__('segments', function() {
+  return this._path.pathSegList;
+});
+
+/** @constructor */
 var KeyframesAnimationFunction = function(property, operation, accumulateOperation) {
   KeyframesAnimationFunction.$super.call(this, operation, accumulateOperation);
   this.property = property;
@@ -1904,8 +1957,8 @@ window.ParGroup = ParGroup;
 window.SeqGroup = SeqGroup;
 window.KeyframesAnimationFunction = KeyframesAnimationFunction;
 window.Keyframe = Keyframe;
-// TODO: PathAnimationFunction ?
-// TODO: GroupedAnimationFunction ?
+window.PathAnimationFunction = PathAnimationFunction;
+window.GroupedAnimationFunction = GroupedAnimationFunction;
 window.AnimationTemplate = AnimationTemplate;
 window.ParGroupTemplate = ParGroupTemplate;
 window.SeqGroupTemplate = SeqGroupTemplate;
