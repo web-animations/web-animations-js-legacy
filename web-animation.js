@@ -1159,7 +1159,6 @@ var PathAnimationFunction = function(path, operation, accumulateOperation) {
 };
 
 inherits(PathAnimationFunction, AnimationFunction);
-    lastPoint = null;
 mixin(PathAnimationFunction.prototype, {
   sample: function(timeFraction, currentIteration, target) {
     var point = this._path.getPointAtLength(timeFraction * this._path.getTotalLength());
