@@ -213,6 +213,9 @@ var TimedItem = function(timing, startTime, parentGroup) {
   if (!isDefined(startTime)) {
     this._startTimeMode = ST_AUTO;
     if (this.parentGroup) {
+      // We take parentGroup.iterationTime at the moment this TimedItem is
+      // created. Note that the call to _addChild() below may cause the parent
+      // to update its timing properties, including its iterationTime.
       this._startTime = this.parentGroup.iterationTime || 0;
     } else {
       this._startTime = 0;
