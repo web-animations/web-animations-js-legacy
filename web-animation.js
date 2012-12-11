@@ -1443,70 +1443,70 @@ var interpArray = function(from, to, f, type) {
   return result;
 };
 
-var numberZero = function() {
-  return "0";
+var numberType = {
+  zero: function() { return '0'; }
 }
 
-var lengthZero = function() {
-  return "0px";
-};
+var lengthType = {
+  zero: function() { return '0px'; }
+}
 
-var colorZero = function() {
-  return "rgba(0, 0, 0, 0)";
-};
+var colorType = {
+  zero: function() { return 'rgba(0, 0, 0, 0)'; }
+}
 
-var transformZero = function(t) {
-  throw 'UNIMPLEMENTED';
-};
+var transformType = {
+  zero: function(t) { throw 'UNIMPLEMENTED'; }
+}
 
 var supportedProperties = new Array();
 
 supportedProperties['opacity'] =
-    { type: 'number', isSVGAttrib: false, zero: numberZero };
+    { type: numberType, isSVGAttrib: false};
 
 // Length properties
 supportedProperties['left'] =
-    { type: 'length', isSVGAttrib: false, zero: lengthZero };
+    { type: lengthType, isSVGAttrib: false};
 supportedProperties['top'] =
-    { type: 'length', isSVGAttrib: false, zero: lengthZero };
+    { type: lengthType, isSVGAttrib: false};
 supportedProperties['cx'] =
-    { type: 'length', isSVGAttrib: true, zero: lengthZero };
+    { type: lengthType, isSVGAttrib: true};
 supportedProperties['x'] =
-    { type: 'length', isSVGAttrib: true, zero: lengthZero };
+    { type: lengthType, isSVGAttrib: true};
 supportedProperties['y'] =
-    { type: 'length', isSVGAttrib: true, zero: lengthZero };
+    { type: lengthType, isSVGAttrib: true};
 supportedProperties['width'] =
-    { type: 'length', isSVGAttrib: true, zero: lengthZero };
+    { type: lengthType, isSVGAttrib: true};
 
 // For browsers that support transform as a style attribute on SVG we can
 // set isSVGAttrib to false
 supportedProperties['transform'] =
-    { type: 'transform', isSVGAttrib: true, zero: transformZero };
+    { type: transformType, isSVGAttrib: true};
 supportedProperties['-webkit-transform'] =
-    { type: 'transform', isSVGAttrib: false };
+    { type: transformType, isSVGAttrib: false };
 
 // Color properties
 supportedProperties['background-color'] =
-    { type: 'color', isSVGAttrib: false, zero: colorZero };
+    { type: colorType, isSVGAttrib: false};
 
 var propertyIsNumber = function(property) {
   var propDetails = supportedProperties[property];
-  return propDetails && propDetails.type === 'number';
+  return propDetails && propDetails.type === numberType;
 };
 
 var propertyIsLength = function(property) {
   var propDetails = supportedProperties[property];
-  return propDetails && propDetails.type === 'length';
+  return propDetails && propDetails.type === lengthType;
 };
 
 var propertyIsTransform = function(property) {
   var propDetails = supportedProperties[property];
-  return propDetails && propDetails.type === 'transform';
+  return propDetails && propDetails.type === transformType;
 };
 
 var propertyIsColor = function(property) {
   var propDetails = supportedProperties[property];
-  return propDetails && propDetails.type === 'color';
+  return propDetails && propDetails.type === colorType;
 }
 
 var propertyIsSVGAttrib = function(property, target) {
@@ -1517,7 +1517,7 @@ var propertyIsSVGAttrib = function(property, target) {
 };
 
 var zero = function(property, value) {
-  return supportedProperties[property].zero(value);
+  return supportedProperties[property].type.zero(value);
 };
 
 var add = function(property, target, base, delta) {
