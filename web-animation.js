@@ -1443,7 +1443,11 @@ var interpArray = function(from, to, f, type) {
   return result;
 };
 
-var _zeroIsNought = function() {
+var numberZero = function() {
+  return "0";
+}
+
+var lengthZero = function() {
   return "0px";
 };
 
@@ -1458,21 +1462,21 @@ var transformZero = function(t) {
 var supportedProperties = new Array();
 
 supportedProperties['opacity'] =
-    { type: 'number', isSVGAttrib: false, zero: _zeroIsNought };
+    { type: 'number', isSVGAttrib: false, zero: numberZero };
 
 // Length properties
 supportedProperties['left'] =
-    { type: 'length', isSVGAttrib: false, zero: _zeroIsNought };
+    { type: 'length', isSVGAttrib: false, zero: lengthZero };
 supportedProperties['top'] =
-    { type: 'length', isSVGAttrib: false, zero: _zeroIsNought };
+    { type: 'length', isSVGAttrib: false, zero: lengthZero };
 supportedProperties['cx'] =
-    { type: 'length', isSVGAttrib: true, zero: _zeroIsNought };
+    { type: 'length', isSVGAttrib: true, zero: lengthZero };
 supportedProperties['x'] =
-    { type: 'length', isSVGAttrib: true, zero: _zeroIsNought };
+    { type: 'length', isSVGAttrib: true, zero: lengthZero };
 supportedProperties['y'] =
-    { type: 'length', isSVGAttrib: true, zero: _zeroIsNought };
+    { type: 'length', isSVGAttrib: true, zero: lengthZero };
 supportedProperties['width'] =
-    { type: 'length', isSVGAttrib: true, zero: _zeroIsNought };
+    { type: 'length', isSVGAttrib: true, zero: lengthZero };
 
 // For browsers that support transform as a style attribute on SVG we can
 // set isSVGAttrib to false
