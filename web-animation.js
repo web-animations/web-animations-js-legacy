@@ -1402,13 +1402,13 @@ mixin(StepTimingFunction.prototype, {
   scaleTime: function(fraction) {
     if (fraction >= 1)
       return 1;
-    var s = 1 / this.numSteps;
+    var stepSize = 1 / this.numSteps;
     if (this.position == 'start') {
-      fraction += s;
+      fraction += stepSize;
     } else if (this.position == 'middle') {
-      fraction += s / 2;
+      fraction += stepSize / 2;
     }
-    return fraction - fraction % s;
+    return fraction - fraction % stepSize;
   },
   clone: function() {
     return new StepTimingFunction(this.numSteps, this.position);
