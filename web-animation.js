@@ -1780,24 +1780,27 @@ mixin(CompositedPropertyMap.prototype, {
         var baseValue = undefined;
         if (i == -1) {
           clearValue(this.target, property);
-          baseValue = getValue(this.target, property);
+          baseValue = fromCssValue(property, getValue(this.target, property));
           i = 0;
         }
+        var inValue = fromCssValue(property, resultList[i].value);
         for ( ; i < resultList.length; i++) {
           switch (resultList[i].operation) {
           case 'replace':
-            baseValue = resultList[i].value;
+            baseValue = inValue;
             continue;
           case 'add':
-            baseValue = add(property, this.target, baseValue, resultList[i].value);
+            baseValue = addPrim(property, baseValue, inValue);
             continue;
           case 'merge':
-            baseValue = interpolate(property, this.target, baseValue,
-                resultList[i].value, resultList[i].fraction);
+            baseValue = interpolatePrim(property, baseValue, inValue,
+                resultList[i].fraction);
             continue;
           }
         }
-        setValue(this.target, property, baseValue);
+	var svgMode = propertyIsSVGAttrib(property, this.target);
+        setValue(this.target, property, toCssValue(property, baseValue, 
+            svgMode));
         this.properties[property] = [];
       } else {
         // property has previously been set but no value was accumulated
