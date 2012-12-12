@@ -1444,20 +1444,52 @@ var interpArray = function(from, to, f, type) {
 };
 
 var numberType = {
-  zero: function() { return '0'; }
-}
+  zero: function() { return '0'; },
+  add: function(base, delta) { return base + delta; },
+  interpolate: interp
+};
 
 var lengthType = {
-  zero: function() { return '0px'; }
-}
+  zero: function() { return '0px'; },
+  add: function(base, delta) { return [base[0] + delta[0], 'px']; },
+  interpolate: function(from, to, f) {
+    return [interp(from[0], to[0], f), 'px'];
+  }
+};
 
 var colorType = {
-  zero: function() { return 'rgba(0, 0, 0, 0)'; }
-}
+  zero: function() { return 'rgba(0, 0, 0, 0)'; },
+  add: function(base, delta) {
+    return {r: base.r + delta.r, g: base.g + delta.g, b: base.b + delta.b, 
+	a: base.a + delta.a};
+  },
+  interpolate: function(from, to, f) {
+    return  {r: interp(from.r, to.r, f), g: interp(from.g, to.g, f), 
+	b: interp(from.b, to.b, f), a: interp(from.a, to.a, f)};
+  }
+};
 
 var transformType = {
-  zero: function(t) { throw 'UNIMPLEMENTED'; }
-}
+  zero: function(t) { throw 'UNIMPLEMENTED'; },
+  add: function(base, delta) { return base.concat(delta); },
+  interpolate: function(from, to, f) {
+    while (from.length < to.length) {
+      from.push({t: null, d: null});
+    }
+    while (to.length < from.length) {
+      to.push({t: null, d: null});
+    }
+    var out = []
+    for (var i = 0; i < from.length; i++) {
+      console.assert(from[i].t === to[i].t || from[i].t === null ||
+        to[i].t === null,
+        'Transform types should match or one should be the underlying value');
+      var type = from[i].t ? from[i].t : to[i].t;
+      out.push({t: type, d:interp(from[i].d, to[i].d, f, type)});
+    }
+    return out;
+  }
+};
 
 var supportedProperties = new Array();
 
@@ -1516,27 +1548,31 @@ var propertyIsSVGAttrib = function(property, target) {
   return propDetails && propDetails.isSVGAttrib;
 };
 
+var getType = function(property) {
+  var propertyRef = supportedProperties[property];
+  if (exists(propertyRef)) {
+    return propertyRef.type;
+  }
+  throw new Error('Unsupported property');
+}
+
 var zero = function(property, value) {
-  return supportedProperties[property].type.zero(value);
+  return getType(property).zero(value);
 };
+
+var addPrim = function(property, base, delta) {
+  return getType(property).add(base, delta);
+}
+
+var interpolatePrim = function(property, from, to, f) {
+  return getType(property).interpolate(from, to, f);
+}
 
 var add = function(property, target, base, delta) {
   var svgMode = propertyIsSVGAttrib(property, target);
   base = fromCssValue(property, base);
   delta = fromCssValue(property, delta);
-  if (propertyIsNumber(property)) {
-    return toCssValue(property, base + delta, svgMode);
-  } else if (propertyIsLength(property)) {
-    return toCssValue(property, [base[0] + delta[0], 'px'], svgMode);
-  } else if (propertyIsTransform(property)) {
-    return toCssValue(property, base.concat(delta), svgMode);
-  } else if (propertyIsColor(property)) {
-    return toCssValue(property, 
-        {r: base.r + delta.r, g: base.g + delta.g, b: base.b + delta.b, 
-         a: base.a + delta.a});
-  } else {
-    throw new Error('Unsupported property');
-  }
+  return toCssValue(property, addPrim(property, base, delta), svgMode);
 };
 
 /**
@@ -1553,33 +1589,7 @@ var interpolate = function(property, target, from, to, f) {
   var svgMode = propertyIsSVGAttrib(property, target);
   from = fromCssValue(property, from);
   to = fromCssValue(property, to);
-  if (propertyIsNumber(property)) {
-    return toCssValue(property, interp(from, to, f), svgMode);
-  } else if (propertyIsLength(property)) {
-    return toCssValue(property, [interp(from[0], to[0], f), 'px'], svgMode);
-  } else if (propertyIsTransform(property)) {
-    while (from.length < to.length) {
-      from.push({t: null, d: null});
-    }
-    while (to.length < from.length) {
-      to.push({t: null, d: null});
-    }
-    var out = []
-    for (var i = 0; i < from.length; i++) {
-      console.assert(from[i].t === to[i].t || from[i].t === null ||
-        to[i].t === null,
-        'Transform types should match or one should be the underlying value');
-      var type = from[i].t ? from[i].t : to[i].t;
-      out.push({t: type, d:interp(from[i].d, to[i].d, f, type)});
-    }
-    return toCssValue(property, out, svgMode);
-  } else if (propertyIsColor(property)) {
-    return toCssValue(property, 
-        {r: interp(from.r, to.r, f), g: interp(from.g, to.g, f), 
-         b: interp(from.b, to.b, f), a: interp(from.a, to.a, f)});
-  } else {
-    throw 'UnsupportedProperty';
-  }
+  return toCssValue(property, interpolatePrim(property, from, to, f), svgMode);
 };
 
 /**
