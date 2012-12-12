@@ -1444,7 +1444,7 @@ var interpArray = function(from, to, f, type) {
 };
 
 var numberType = {
-  zero: function() { return '0'; },
+  zero: function() { return 0; },
   add: function(base, delta) { return base + delta; },
   interpolate: interp,
   toCssValue: function(value) { return value + ''; },
@@ -1452,7 +1452,7 @@ var numberType = {
 };
 
 var lengthType = {
-  zero: function() { return '0px'; },
+  zero: function() { return [0, 'px']; },
   add: function(base, delta) { return [base[0] + delta[0], 'px']; },
   interpolate: function(from, to, f) {
     return [interp(from[0], to[0], f), 'px'];
@@ -1475,7 +1475,7 @@ var colorDict = {
   green: {r: 0x00, g: 0x80, b: 0x00, a: 1}}
 
 var colorType = {
-  zero: function() { return 'rgba(0, 0, 0, 0)'; },
+  zero: function() { return {r: 0, g: 0, b: 0, a: 0}; },
   add: function(base, delta) {
     return {r: base.r + delta.r, g: base.g + delta.g, b: base.b + delta.b, 
 	a: base.a + delta.a};
@@ -1689,7 +1689,7 @@ var getType = function(property) {
   throw new Error('Unsupported property');
 }
 
-var zero = function(property, value) {
+var zeroPrim = function(property, value) {
   return getType(property).zero(value);
 };
 
@@ -1699,6 +1699,10 @@ var addPrim = function(property, base, delta) {
 
 var interpolatePrim = function(property, from, to, f) {
   return getType(property).interpolate(from, to, f);
+}
+
+var zero = function(property, value, svgMode) {
+  return toCssValue(property, zeroPrim(property, value), svgMode);
 }
 
 var add = function(property, target, base, delta) {
