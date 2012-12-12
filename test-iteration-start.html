@@ -31,20 +31,19 @@ limitations under the License.
 }
 
 #ca {
-  top: 0px;
+  top: 50px;
 }
 
 #cb {
-  top: 200px;
+  top: 250px;
 }
 
 #cc {
-  top: 400px;
+  top: 450px;
 }
 
-
 #cd {
-  top: 600px;
+  top: 650px;
 }
 
 .b {
@@ -57,12 +56,14 @@ limitations under the License.
 }
 </style>
 
-<div class="expectation" style="top: 0px; left: 180px; width: 100px; height: 25px;"></div>
-<div class="expectation" style="top: 50px; left: 180px; width: 100px; height: 100px;"></div>
-<div class="expectation" style="top: 200px; left: 0px; width: 100px; height: 150px;"></div>
-<div class="expectation" style="top: 400px; left: 0px; width: 100px; height: 150px;"></div>
-<div class="expectation" style="top: 600px; left: 180px; width: 100px; height: 25px;"></div>
-<div class="expectation" style="top: 650px; left: 180px; width: 100px; height: 100px;"></div>
+<div>All squares should line up at the end of each iteration (or start if reversed).</div>
+
+<div class="expectation" style="top: 50px; left: 180px; width: 100px; height: 25px;"></div>
+<div class="expectation" style="top: 100px; left: 180px; width: 100px; height: 100px;"></div>
+<div class="expectation" style="top: 250px; left: 0px; width: 100px; height: 150px;"></div>
+<div class="expectation" style="top: 450px; left: 0px; width: 100px; height: 150px;"></div>
+<div class="expectation" style="top: 650px; left: 180px; width: 100px; height: 25px;"></div>
+<div class="expectation" style="top: 700px; left: 180px; width: 100px; height: 100px;"></div>
 
 <div class="animContainer" id="ca">
   <div class="anim a"></div>
@@ -116,25 +117,26 @@ for (var i = 0; i < directions.length; i++) {
 
 for (var i = 0; i < containers.length; i++) {
   var container = document.getElementById(containers[i]);
-  <!-- All squares should line up at the end of each iteration (or start if reversed). -->
-  <!-- Test basic use. -->
+  // Test basic use.
   new Animation(container.getElementsByClassName("a")[0], {left: ["100px", "300px"]}, {duration: 1, iterationCount: 3.1, iterationStart: 0.3}, groups[i]);
   try {
-    <!-- Test that iterationStart has a lower bound of zero. -->
+    // Test that iterationStart has a lower bound of zero.
     new Animation(container.getElementsByClassName("b")[0], {left: ["100px", "300px"]}, {duration: 1, iterationCount: 3.4, iterationStart: -0.2}, groups[i]);
   } catch (e) {
     if (e.name == "IndexSizeError") {
       container.getElementsByClassName("b")[0].style["background-color"] = "lightsteelblue";
+      if (i == 0 || i == 3) {
+        container.getElementsByClassName("b")[0].style["left"] = "180px";
+      }
     }
   }    
-  <!-- Test that iterationStart has an upper bound of iterationCount. -->
-  <!-- TODO: Revisit this decision. -->
-  new Animation(container.getElementsByClassName("c")[0], {left: ["100px", "300px"]}, {duration: 1, iterationCount: 1.7, iterationStart: 1.8}, groups[i]);
-  <!-- Test that nothing odd happens when iterationCount is an integer. -->
+  // Test that iterationStart is not clipped to iterationCount.
+  new Animation(container.getElementsByClassName("c")[0], {left: ["100px", "300px"]}, {duration: 1, iterationCount: 1.6, iterationStart: 1.8}, groups[i]);
+  // Test that nothing odd happens when iterationCount is an integer.
   new Animation(container.getElementsByClassName("d")[0], {left: ["100px", "300px"]}, {duration: 1, iterationCount: 3.0, iterationStart: 0.4}, groups[i]);
-  <!-- Test that nothing odd happens when (iterationCount - iterationStart) is an integer. -->
+  // Test that nothing odd happens when (iterationCount - iterationStart) is an integer.
   new Animation(container.getElementsByClassName("e")[0], {left: ["100px", "300px"]}, {duration: 1, iterationCount: 3.2, iterationStart: 0.2}, groups[i]);
-  <!-- Test that nothing odd happens when (iterationCount + iterationStart) is an integer. -->
+  // Test that nothing odd happens when (iterationCount + iterationStart) is an integer.
   new Animation(container.getElementsByClassName("f")[0], {left: ["100px", "180px"]}, {duration: 1, iterationCount: 2.8, iterationStart: 0.2}, groups[i]);
 }
 </script>
