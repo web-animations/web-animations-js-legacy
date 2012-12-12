@@ -48,7 +48,7 @@ var Timing = function(timingDict) {
   if (this.duration < 0.0) {
     throw new IndexSizeError('duration must be >= 0');
   }
-  this.iterationCount = isDefinedAndNotNull(timingDict.iterationCount) ?
+  this.iterationCount = isDefined(timingDict.iterationCount) ?
       timingDict.iterationCount : 1.0;
   if (this.iterationCount < 0.0) {
     throw new IndexSizeError('iterationCount must be >= 0');
@@ -57,7 +57,7 @@ var Timing = function(timingDict) {
   if (this.iterationStart < 0.0) {
     throw new IndexSizeError('iterationStart must be >= 0');
   }
-  this.playbackRate = isDefinedAndNotNull(timingDict.playbackRate) ?
+  this.playbackRate = isDefined(timingDict.playbackRate) ?
       timingDict.playbackRate : 1.0;
   //this.playbackRate = timingDict.playbackRate || 1.0;
   this.direction = timingDict.direction || 'normal';
@@ -179,8 +179,12 @@ mixin(TimedTemplate.prototype, {
   }
 });
 
+var isDefined = function(val) {
+  return typeof val !== 'undefined';
+};
+
 var isDefinedAndNotNull = function(val) {
-  return typeof val !== 'undefined' && (val !== null);
+  return isDefined(val) && (val !== null);
 };
 
 var ST_MANUAL = 0;
@@ -201,13 +205,13 @@ var TimedItem = function(timing, startTime, parentGroup) {
 
   if (parentGroup === null || parentGroup instanceof TimedItem) {
     this.parentGroup = parentGroup;
-  } else if (!isDefinedAndNotNull(parentGroup)) {
+  } else if (!isDefined(parentGroup)) {
     this.parentGroup = DEFAULT_GROUP;
   } else {
     throw new TypeError('parentGroup is not a TimedItem');
   }
 
-  if (!isDefinedAndNotNull(startTime)) {
+  if (!isDefined(startTime)) {
     this._startTimeMode = ST_AUTO;
     if (this.parentGroup) {
       this._startTime = this.parentGroup.iterationTime || 0;
@@ -308,7 +312,7 @@ mixin(TimedItem.prototype, {
   },
   // TODO: take timing.iterationStart into account. Spec needs to as well.
   updateIterationDuration: function() {
-    if (isDefinedAndNotNull(this.timing.duration)) {
+    if (isDefined(this.timing.duration)) {
       this.duration = this.timing.duration;
     } else {
       this.duration = this.intrinsicDuration();
@@ -332,7 +336,7 @@ mixin(TimedItem.prototype, {
     if (this.parentGroup && this.parentGroup.iterationTime) {
       this.itemTime = this.parentGroup.iterationTime -
           this._startTime - this.timeDrift;
-    } else if (isDefinedAndNotNull(parentTime)) {
+    } else if (isDefined(parentTime)) {
       this.itemTime = parentTime;
     } else {
       this.itemTime = null;
@@ -530,7 +534,7 @@ var interpretAnimationFunction = function(animationFunction) {
 };
 
 var interpretTimingParam = function(timing) {
-  if (!isDefinedAndNotNull(timing) || timing === null) {
+  if (!isDefinedAndNotNull(timing)) {
     return new Timing({});
   }
   if (timing instanceof Timing || timing instanceof TimingProxy) {
@@ -805,7 +809,7 @@ var AnimationListMixin = {
     return removedItems;
   },
   remove: function(index, count) {
-    if (!isDefinedAndNotNull(count)) {
+    if (!isDefined(count)) {
       count = 1;
     }
     return this.splice(index, count);
