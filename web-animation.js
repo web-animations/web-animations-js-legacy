@@ -1446,7 +1446,9 @@ var interpArray = function(from, to, f, type) {
 var numberType = {
   zero: function() { return '0'; },
   add: function(base, delta) { return base + delta; },
-  interpolate: interp
+  interpolate: interp,
+  toCssValue: function(value) { return value + ''; },
+  fromCssValue: function(value) { return value !== '' ? Number(value): null; }
 };
 
 var lengthType = {
@@ -1454,8 +1456,23 @@ var lengthType = {
   add: function(base, delta) { return [base[0] + delta[0], 'px']; },
   interpolate: function(from, to, f) {
     return [interp(from[0], to[0], f), 'px'];
+  },
+  toCssValue: function(value) { 
+    return value[0] + value[1];
+  },
+  fromCssValue: function(value) {
+    return value !== '' ?
+	[Number(value.substring(0, value.length - 2)), 'px'] : [null, null];
   }
 };
+
+var rgbRE = /^\s*rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/
+var rgbaRE = /^\s*rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+|\d*\.\d+)\s*\)/
+
+var colorDict = {
+  lightsteelblue: {r: 0xB0, g: 0xC4, b: 0xDE, a: 1},
+  red: {r: 0xFF, g: 0x00, b: 0x00, a: 1},
+  green: {r: 0x00, g: 0x80, b: 0x00, a: 1}}
 
 var colorType = {
   zero: function() { return 'rgba(0, 0, 0, 0)'; },
@@ -1466,8 +1483,70 @@ var colorType = {
   interpolate: function(from, to, f) {
     return  {r: interp(from.r, to.r, f), g: interp(from.g, to.g, f), 
 	b: interp(from.b, to.b, f), a: interp(from.a, to.a, f)};
+  },
+  toCssValue: function(value) {
+    return 'rgba(' + Math.round(value.r) + ', ' + Math.round(value.g) + 
+        ', ' + Math.round(value.b) + ', ' + value.a + ')';
+  },
+  fromCssValue: function(value) {
+    var r = rgbRE.exec(value);
+    if (r) {
+      return {r: Number(r[1]), g: Number(r[2]), b: Number(r[3]), a: 1}
+    }
+    r = rgbaRE.exec(value);
+    if (r) {
+      return {r: Number(r[1]), g: Number(r[2]), 
+          b: Number(r[3]), a: Number(r[4])}
+    }
+    return colorDict[value];
   }
 };
+
+var extractDeg = function(deg) {
+  var num  = Number(deg[1]);
+  switch (deg[2]) {
+  case 'grad':
+    return num / 400 * 360;
+  case 'rad':
+    return num / 2 / Math.PI * 360;
+  case 'turn':
+    return num * 360;
+  default:
+    return num;
+  }
+};
+
+var extractTranslationValues = function(lengths) {
+  // TODO: Assuming all lengths are px for now
+  var length1 = Number(lengths[1]);
+  var length2 = lengths[3] ? Number(lengths[3]) : 0;
+  return [length1, length2];
+};
+
+var extractTranslateValue = function(length) {
+  // TODO: Assuming px for now
+  return Number(length[1]);
+};
+
+var extractScaleValues = function(scales) {
+  var scaleX = Number(scales[1]);
+  var scaleY = scales[2] ? Number(scales[2]) : scaleX;
+  return [scaleX, scaleY];
+};
+
+var transformREs =
+  [
+    [/^\s*rotate\(([+-]?(?:\d+|\d*\.\d+))(deg|grad|rad|turn)?\)/,
+        extractDeg, 'rotate'],
+    [/^\s*rotateY\(([+-]?(?:\d+|\d*\.\d+))(deg|grad|rad|turn)\)/,
+        extractDeg, 'rotateY'],
+    [/^\s*translateZ\(([+-]?(?:\d+|\d*\.\d+))(px)?\)/,
+         extractTranslateValue, 'translateZ'],
+    [/^\s*translate\(([+-]?(?:\d+|\d*\.\d+))(px)?(?:\s*,\s*([+-]?(?:\d+|\d*\.\d+))(px)?)?\)/,
+         extractTranslationValues, 'translate'],
+    [/^\s*scale\((\d+|\d*\.\d+)(?:\s*,\s*(\d+|\d*.\d+))?\)/,
+         extractScaleValues, 'scale']
+  ];
 
 var transformType = {
   zero: function(t) { throw 'UNIMPLEMENTED'; },
@@ -1488,6 +1567,60 @@ var transformType = {
       out.push({t: type, d:interp(from[i].d, to[i].d, f, type)});
     }
     return out;
+  },
+  toCssValue: function(value, svgMode) {
+    // TODO: fix this :)
+    var out = ''
+    for (var i = 0; i < value.length; i++) {
+      console.assert(value[i].t, 'transform type should be resolved by now');
+      switch (value[i].t) {
+        case 'rotate':
+        case 'rotateY':
+          var unit = svgMode ? '' : 'deg';
+          out += value[i].t + '(' + value[i].d + unit + ') ';
+          break;
+        case 'translateZ':
+          out += value[i].t + '(' + value[i].d + 'px' + ') ';
+          break;
+        case 'translate':
+          var unit = svgMode ? '' : 'px';
+          if (value[i].d[1] === 0) {
+            out += value[i].t + '(' + value[i].d[0] + unit + ') ';
+          } else {
+            out += value[i].t + '(' + value[i].d[0] + unit + ', ' +
+                  value[i].d[1] + unit + ') ';
+          }
+          break;
+        case 'scale':
+          if (value[i].d[0] === value[i].d[1]) {
+            out += value[i].t + '(' + value[i].d[0] + ') ';
+          } else {
+            out += value[i].t + '(' + value[i].d[0] + ', ' + value[i].d[1] +
+                ') ';
+          }
+          break;
+      }
+    }
+    return out.substring(0, out.length - 1);
+  },
+  fromCssValue: function(value) {
+    // TODO: fix this :)
+    var result = []
+    while (value.length > 0) {
+      var r = undefined;
+      for (var i = 0; i < transformREs.length; i++) {
+        var reSpec = transformREs[i];
+        r = reSpec[0].exec(value);
+        if (r) {
+          result.push({t: reSpec[2], d: reSpec[1](r)});
+          value = value.substring(r[0].length);
+          break;
+        }
+      }
+      if (r === undefined)
+        return result;
+    }
+    return result;
   }
 };
 
@@ -1598,144 +1731,11 @@ var interpolate = function(property, target, from, to, f) {
  * or rotate values while CSS properties require 'px' or 'deg' units.
  */
 var toCssValue = function(property, value, svgMode) {
-  if (propertyIsNumber(property)) {
-    return value + '';
-  } else if (propertyIsLength(property)) {
-    return value[0] + value[1];
-  } else if (propertyIsTransform(property)) {
-    // TODO: fix this :)
-    var out = ''
-    for (var i = 0; i < value.length; i++) {
-      console.assert(value[i].t, 'transform type should be resolved by now');
-      switch (value[i].t) {
-        case 'rotate':
-        case 'rotateY':
-          var unit = svgMode ? '' : 'deg';
-          out += value[i].t + '(' + value[i].d + unit + ') ';
-          break;
-        case 'translateZ':
-          out += value[i].t + '(' + value[i].d + 'px' + ') ';
-          break;
-        case 'translate':
-          var unit = svgMode ? '' : 'px';
-          if (value[i].d[1] === 0) {
-            out += value[i].t + '(' + value[i].d[0] + unit + ') ';
-          } else {
-            out += value[i].t + '(' + value[i].d[0] + unit + ', ' +
-                  value[i].d[1] + unit + ') ';
-          }
-          break;
-        case 'scale':
-          if (value[i].d[0] === value[i].d[1]) {
-            out += value[i].t + '(' + value[i].d[0] + ') ';
-          } else {
-            out += value[i].t + '(' + value[i].d[0] + ', ' + value[i].d[1] +
-                ') ';
-          }
-          break;
-      }
-    }
-    return out.substring(0, out.length - 1);
-  } else if (propertyIsColor(property)) {
-    return 'rgba(' + Math.round(value.r) + ', ' + Math.round(value.g) + 
-        ', ' + Math.round(value.b) + ', ' + value.a + ')';
-  } else {
-    throw 'UnsupportedProperty';
-  }
-};
-
-var extractDeg = function(deg) {
-  var num  = Number(deg[1]);
-  switch (deg[2]) {
-  case 'grad':
-    return num / 400 * 360;
-  case 'rad':
-    return num / 2 / Math.PI * 360;
-  case 'turn':
-    return num * 360;
-  default:
-    return num;
-  }
-};
-
-var extractTranslationValues = function(lengths) {
-  // TODO: Assuming all lengths are px for now
-  var length1 = Number(lengths[1]);
-  var length2 = lengths[3] ? Number(lengths[3]) : 0;
-  return [length1, length2];
-};
-
-var extractTranslateValue = function(length) {
-  // TODO: Assuming px for now
-  return Number(length[1]);
-};
-
-var extractScaleValues = function(scales) {
-  var scaleX = Number(scales[1]);
-  var scaleY = scales[2] ? Number(scales[2]) : scaleX;
-  return [scaleX, scaleY];
-};
-
-var transformREs =
-  [
-    [/^\s*rotate\(([+-]?(?:\d+|\d*\.\d+))(deg|grad|rad|turn)?\)/,
-        extractDeg, 'rotate'],
-    [/^\s*rotateY\(([+-]?(?:\d+|\d*\.\d+))(deg|grad|rad|turn)\)/,
-        extractDeg, 'rotateY'],
-    [/^\s*translateZ\(([+-]?(?:\d+|\d*\.\d+))(px)?\)/,
-         extractTranslateValue, 'translateZ'],
-    [/^\s*translate\(([+-]?(?:\d+|\d*\.\d+))(px)?(?:\s*,\s*([+-]?(?:\d+|\d*\.\d+))(px)?)?\)/,
-         extractTranslationValues, 'translate'],
-    [/^\s*scale\((\d+|\d*\.\d+)(?:\s*,\s*(\d+|\d*.\d+))?\)/,
-         extractScaleValues, 'scale']
-  ];
-
-var rgbRE = /^\s*rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/
-var rgbaRE = /^\s*rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+|\d*\.\d+)\s*\)/
-
-var colorDict = {
-  lightsteelblue: {r: 0xB0, g: 0xC4, b: 0xDE, a: 1},
-  red: {r: 0xFF, g: 0x00, b: 0x00, a: 1},
-  green: {r: 0x00, g: 0x80, b: 0x00, a: 1}}
+  return getType(property).toCssValue(value, svgMode);
+}
 
 var fromCssValue = function(property, value) {
-  if (propertyIsNumber(property)) {
-    return value !== '' ? Number(value) : null;
-  } else if (propertyIsLength(property)) {
-    return value !== '' ?
-        [Number(value.substring(0, value.length - 2)), 'px'] : [null, null];
-  } else if (propertyIsTransform(property)) {
-    // TODO: fix this :)
-    var result = []
-    while (value.length > 0) {
-      var r = undefined;
-      for (var i = 0; i < transformREs.length; i++) {
-        var reSpec = transformREs[i];
-        r = reSpec[0].exec(value);
-        if (r) {
-          result.push({t: reSpec[2], d: reSpec[1](r)});
-          value = value.substring(r[0].length);
-          break;
-        }
-      }
-      if (r === undefined)
-        return result;
-    }
-    return result;
-  } else if (propertyIsColor(property)) {
-    var r = rgbRE.exec(value);
-    if (r) {
-      return {r: Number(r[1]), g: Number(r[2]), b: Number(r[3]), a: 1}
-    }
-    r = rgbaRE.exec(value);
-    if (r) {
-      return {r: Number(r[1]), g: Number(r[2]), 
-          b: Number(r[3]), a: Number(r[4])}
-    }
-    return colorDict[value]; 
-  } else {
-    throw 'UnsupportedProperty';
-  }
+  return getType(property).fromCssValue(value);
 }
 
 /** @constructor */
