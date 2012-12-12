@@ -19,7 +19,7 @@ limitations under the License.
 .anim {
 	left: 50px;
 	width: 100px;
-	height: 100px;
+	height: 50px;
 	background-color: lightsteelblue;
 	position: absolute;
 }
@@ -29,14 +29,26 @@ limitations under the License.
 }
 
 #b {
-	top: 100px;
+	top: 50px;
 }
 
 #c {
-	top: 200px
+	top: 100px;
 }
 
 #d {
+	top: 150px;
+}
+
+#e {
+	top: 200px;
+}
+
+#f {
+	top: 250px;
+}
+
+#g {
 	top: 300px;
 }
 
@@ -45,7 +57,7 @@ limitations under the License.
   top: 0px;
   left: 200px;
   width: 100px;
-  height: 400px;
+  height: 350px;
   background: red;
 }
 </style>
@@ -57,6 +69,9 @@ limitations under the License.
 	<div id="b" class="anim"></div>
 	<div id="c" class="anim"></div>
 	<div id="d" class="anim"></div>
+	<div id="e" class="anim"></div>
+	<div id="f" class="anim"></div>
+	<div id="g" class="anim"></div>
 </div>
 
 <script src="web-animation.js"></script>
@@ -66,6 +81,9 @@ new Animation(document.querySelector("#a"), {left: "200px"}, {startDelay: 1, dur
 new Animation(document.querySelector("#b"), {left: "200px"}, {startDelay: 1, duration: 2, timingFunction: new TimingFunction("ease-in")});
 new Animation(document.querySelector("#c"), {left: "200px"}, {startDelay: 1, duration: 2, timingFunction: new TimingFunction("ease-out")});
 new Animation(document.querySelector("#d"), {left: "200px"}, {startDelay: 1, duration: 2, timingFunction: new TimingFunction([0, 0.2, 0.8, 1])});
+new Animation(document.querySelector("#e"), {left: "200px"}, {startDelay: 1, duration: 2, timingFunction: new StepTimingFunction(3, 'start')});
+new Animation(document.querySelector("#f"), {left: "200px"}, {startDelay: 1, duration: 2, timingFunction: new StepTimingFunction(3, 'middle')});
+new Animation(document.querySelector("#g"), {left: "200px"}, {startDelay: 1, duration: 2, timingFunction: new StepTimingFunction(3, 'end')});
 
 
 </script>
