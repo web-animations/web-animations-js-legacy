@@ -1443,190 +1443,62 @@ var interpArray = function(from, to, f, type) {
   return result;
 };
 
-var _zeroIsNought = function() {
-  return "0px";
+var numberType = {
+  zero: function() { return '0'; },
+  add: function(base, delta) { return base + delta; },
+  interpolate: interp,
+  toCssValue: function(value) { return value + ''; },
+  fromCssValue: function(value) { return value !== '' ? Number(value): null; }
 };
 
-var colorZero = function() {
-  return "rgba(0, 0, 0, 0)";
-};
-
-var transformZero = function(t) {
-  throw 'UNIMPLEMENTED';
-};
-
-var supportedProperties = new Array();
-
-supportedProperties['opacity'] =
-    { type: 'number', isSVGAttrib: false, zero: _zeroIsNought };
-
-// Length properties
-supportedProperties['left'] =
-    { type: 'length', isSVGAttrib: false, zero: _zeroIsNought };
-supportedProperties['top'] =
-    { type: 'length', isSVGAttrib: false, zero: _zeroIsNought };
-supportedProperties['cx'] =
-    { type: 'length', isSVGAttrib: true, zero: _zeroIsNought };
-supportedProperties['x'] =
-    { type: 'length', isSVGAttrib: true, zero: _zeroIsNought };
-supportedProperties['y'] =
-    { type: 'length', isSVGAttrib: true, zero: _zeroIsNought };
-supportedProperties['width'] =
-    { type: 'length', isSVGAttrib: true, zero: _zeroIsNought };
-
-// For browsers that support transform as a style attribute on SVG we can
-// set isSVGAttrib to false
-supportedProperties['transform'] =
-    { type: 'transform', isSVGAttrib: true, zero: transformZero };
-supportedProperties['-webkit-transform'] =
-    { type: 'transform', isSVGAttrib: false };
-
-// Color properties
-supportedProperties['background-color'] =
-    { type: 'color', isSVGAttrib: false, zero: colorZero };
-
-var propertyIsNumber = function(property) {
-  var propDetails = supportedProperties[property];
-  return propDetails && propDetails.type === 'number';
-};
-
-var propertyIsLength = function(property) {
-  var propDetails = supportedProperties[property];
-  return propDetails && propDetails.type === 'length';
-};
-
-var propertyIsTransform = function(property) {
-  var propDetails = supportedProperties[property];
-  return propDetails && propDetails.type === 'transform';
-};
-
-var propertyIsColor = function(property) {
-  var propDetails = supportedProperties[property];
-  return propDetails && propDetails.type === 'color';
-}
-
-var propertyIsSVGAttrib = function(property, target) {
-  if (target.namespaceURI !== 'http://www.w3.org/2000/svg')
-    return false;
-  var propDetails = supportedProperties[property];
-  return propDetails && propDetails.isSVGAttrib;
-};
-
-var zero = function(property, value) {
-  return supportedProperties[property].zero(value);
-};
-
-var add = function(property, target, base, delta) {
-  var svgMode = propertyIsSVGAttrib(property, target);
-  base = fromCssValue(property, base);
-  delta = fromCssValue(property, delta);
-  if (propertyIsNumber(property)) {
-    return toCssValue(property, base + delta, svgMode);
-  } else if (propertyIsLength(property)) {
-    return toCssValue(property, [base[0] + delta[0], 'px'], svgMode);
-  } else if (propertyIsTransform(property)) {
-    return toCssValue(property, base.concat(delta), svgMode);
-  } else if (propertyIsColor(property)) {
-    return toCssValue(property, 
-        {r: base.r + delta.r, g: base.g + delta.g, b: base.b + delta.b, 
-         a: base.a + delta.a});
-  } else {
-    throw new Error('Unsupported property');
-  }
-};
-
-/**
- * Interpolate the given property name (f*100)% of the way from 'from' to 'to'.
- * 'from' and 'to' are both CSS value strings. Requires the target element to
- * be able to determine whether the given property is an SVG attribute or not,
- * as this impacts the conversion of the interpolated value back into a CSS
- * value string for transform translations.
- *
- * e.g. interpolate('transform', elem, 'rotate(40deg)', 'rotate(50deg)', 0.3);
- *   will return 'rotate(43deg)'.
- */
-var interpolate = function(property, target, from, to, f) {
-  var svgMode = propertyIsSVGAttrib(property, target);
-  from = fromCssValue(property, from);
-  to = fromCssValue(property, to);
-  if (propertyIsNumber(property)) {
-    return toCssValue(property, interp(from, to, f), svgMode);
-  } else if (propertyIsLength(property)) {
-    return toCssValue(property, [interp(from[0], to[0], f), 'px'], svgMode);
-  } else if (propertyIsTransform(property)) {
-    while (from.length < to.length) {
-      from.push({t: null, d: null});
-    }
-    while (to.length < from.length) {
-      to.push({t: null, d: null});
-    }
-    var out = []
-    for (var i = 0; i < from.length; i++) {
-      console.assert(from[i].t === to[i].t || from[i].t === null ||
-        to[i].t === null,
-        'Transform types should match or one should be the underlying value');
-      var type = from[i].t ? from[i].t : to[i].t;
-      out.push({t: type, d:interp(from[i].d, to[i].d, f, type)});
-    }
-    return toCssValue(property, out, svgMode);
-  } else if (propertyIsColor(property)) {
-    return toCssValue(property, 
-        {r: interp(from.r, to.r, f), g: interp(from.g, to.g, f), 
-         b: interp(from.b, to.b, f), a: interp(from.a, to.a, f)});
-  } else {
-    throw 'UnsupportedProperty';
-  }
-};
-
-/**
- * Convert the provided interpolable value for the provided property to a CSS
- * value string. Note that SVG transforms do not require units for translate
- * or rotate values while CSS properties require 'px' or 'deg' units.
- */
-var toCssValue = function(property, value, svgMode) {
-  if (propertyIsNumber(property)) {
-    return value + '';
-  } else if (propertyIsLength(property)) {
+var lengthType = {
+  zero: function() { return '0px'; },
+  add: function(base, delta) { return [base[0] + delta[0], 'px']; },
+  interpolate: function(from, to, f) {
+    return [interp(from[0], to[0], f), 'px'];
+  },
+  toCssValue: function(value) { 
     return value[0] + value[1];
-  } else if (propertyIsTransform(property)) {
-    // TODO: fix this :)
-    var out = ''
-    for (var i = 0; i < value.length; i++) {
-      console.assert(value[i].t, 'transform type should be resolved by now');
-      switch (value[i].t) {
-        case 'rotate':
-        case 'rotateY':
-          var unit = svgMode ? '' : 'deg';
-          out += value[i].t + '(' + value[i].d + unit + ') ';
-          break;
-        case 'translateZ':
-          out += value[i].t + '(' + value[i].d + 'px' + ') ';
-          break;
-        case 'translate':
-          var unit = svgMode ? '' : 'px';
-          if (value[i].d[1] === 0) {
-            out += value[i].t + '(' + value[i].d[0] + unit + ') ';
-          } else {
-            out += value[i].t + '(' + value[i].d[0] + unit + ', ' +
-                  value[i].d[1] + unit + ') ';
-          }
-          break;
-        case 'scale':
-          if (value[i].d[0] === value[i].d[1]) {
-            out += value[i].t + '(' + value[i].d[0] + ') ';
-          } else {
-            out += value[i].t + '(' + value[i].d[0] + ', ' + value[i].d[1] +
-                ') ';
-          }
-          break;
-      }
-    }
-    return out.substring(0, out.length - 1);
-  } else if (propertyIsColor(property)) {
+  },
+  fromCssValue: function(value) {
+    return value !== '' ?
+	[Number(value.substring(0, value.length - 2)), 'px'] : [null, null];
+  }
+};
+
+var rgbRE = /^\s*rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/
+var rgbaRE = /^\s*rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+|\d*\.\d+)\s*\)/
+
+var colorDict = {
+  lightsteelblue: {r: 0xB0, g: 0xC4, b: 0xDE, a: 1},
+  red: {r: 0xFF, g: 0x00, b: 0x00, a: 1},
+  green: {r: 0x00, g: 0x80, b: 0x00, a: 1}}
+
+var colorType = {
+  zero: function() { return 'rgba(0, 0, 0, 0)'; },
+  add: function(base, delta) {
+    return {r: base.r + delta.r, g: base.g + delta.g, b: base.b + delta.b, 
+	a: base.a + delta.a};
+  },
+  interpolate: function(from, to, f) {
+    return  {r: interp(from.r, to.r, f), g: interp(from.g, to.g, f), 
+	b: interp(from.b, to.b, f), a: interp(from.a, to.a, f)};
+  },
+  toCssValue: function(value) {
     return 'rgba(' + Math.round(value.r) + ', ' + Math.round(value.g) + 
         ', ' + Math.round(value.b) + ', ' + value.a + ')';
-  } else {
-    throw 'UnsupportedProperty';
+  },
+  fromCssValue: function(value) {
+    var r = rgbRE.exec(value);
+    if (r) {
+      return {r: Number(r[1]), g: Number(r[2]), b: Number(r[3]), a: 1}
+    }
+    r = rgbaRE.exec(value);
+    if (r) {
+      return {r: Number(r[1]), g: Number(r[2]), 
+          b: Number(r[3]), a: Number(r[4])}
+    }
+    return colorDict[value];
   }
 };
 
@@ -1676,21 +1548,62 @@ var transformREs =
          extractScaleValues, 'scale']
   ];
 
-var rgbRE = /^\s*rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/
-var rgbaRE = /^\s*rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+|\d*\.\d+)\s*\)/
-
-var colorDict = {
-  lightsteelblue: {r: 0xB0, g: 0xC4, b: 0xDE, a: 1},
-  red: {r: 0xFF, g: 0x00, b: 0x00, a: 1},
-  green: {r: 0x00, g: 0x80, b: 0x00, a: 1}}
-
-var fromCssValue = function(property, value) {
-  if (propertyIsNumber(property)) {
-    return value !== '' ? Number(value) : null;
-  } else if (propertyIsLength(property)) {
-    return value !== '' ?
-        [Number(value.substring(0, value.length - 2)), 'px'] : [null, null];
-  } else if (propertyIsTransform(property)) {
+var transformType = {
+  zero: function(t) { throw 'UNIMPLEMENTED'; },
+  add: function(base, delta) { return base.concat(delta); },
+  interpolate: function(from, to, f) {
+    while (from.length < to.length) {
+      from.push({t: null, d: null});
+    }
+    while (to.length < from.length) {
+      to.push({t: null, d: null});
+    }
+    var out = []
+    for (var i = 0; i < from.length; i++) {
+      console.assert(from[i].t === to[i].t || from[i].t === null ||
+        to[i].t === null,
+        'Transform types should match or one should be the underlying value');
+      var type = from[i].t ? from[i].t : to[i].t;
+      out.push({t: type, d:interp(from[i].d, to[i].d, f, type)});
+    }
+    return out;
+  },
+  toCssValue: function(value, svgMode) {
+    // TODO: fix this :)
+    var out = ''
+    for (var i = 0; i < value.length; i++) {
+      console.assert(value[i].t, 'transform type should be resolved by now');
+      switch (value[i].t) {
+        case 'rotate':
+        case 'rotateY':
+          var unit = svgMode ? '' : 'deg';
+          out += value[i].t + '(' + value[i].d + unit + ') ';
+          break;
+        case 'translateZ':
+          out += value[i].t + '(' + value[i].d + 'px' + ') ';
+          break;
+        case 'translate':
+          var unit = svgMode ? '' : 'px';
+          if (value[i].d[1] === 0) {
+            out += value[i].t + '(' + value[i].d[0] + unit + ') ';
+          } else {
+            out += value[i].t + '(' + value[i].d[0] + unit + ', ' +
+                  value[i].d[1] + unit + ') ';
+          }
+          break;
+        case 'scale':
+          if (value[i].d[0] === value[i].d[1]) {
+            out += value[i].t + '(' + value[i].d[0] + ') ';
+          } else {
+            out += value[i].t + '(' + value[i].d[0] + ', ' + value[i].d[1] +
+                ') ';
+          }
+          break;
+      }
+    }
+    return out.substring(0, out.length - 1);
+  },
+  fromCssValue: function(value) {
     // TODO: fix this :)
     var result = []
     while (value.length > 0) {
@@ -1708,20 +1621,121 @@ var fromCssValue = function(property, value) {
         return result;
     }
     return result;
-  } else if (propertyIsColor(property)) {
-    var r = rgbRE.exec(value);
-    if (r) {
-      return {r: Number(r[1]), g: Number(r[2]), b: Number(r[3]), a: 1}
-    }
-    r = rgbaRE.exec(value);
-    if (r) {
-      return {r: Number(r[1]), g: Number(r[2]), 
-          b: Number(r[3]), a: Number(r[4])}
-    }
-    return colorDict[value]; 
-  } else {
-    throw 'UnsupportedProperty';
   }
+};
+
+var supportedProperties = new Array();
+
+supportedProperties['opacity'] =
+    { type: numberType, isSVGAttrib: false};
+
+// Length properties
+supportedProperties['left'] =
+    { type: lengthType, isSVGAttrib: false};
+supportedProperties['top'] =
+    { type: lengthType, isSVGAttrib: false};
+supportedProperties['cx'] =
+    { type: lengthType, isSVGAttrib: true};
+supportedProperties['x'] =
+    { type: lengthType, isSVGAttrib: true};
+supportedProperties['y'] =
+    { type: lengthType, isSVGAttrib: true};
+supportedProperties['width'] =
+    { type: lengthType, isSVGAttrib: true};
+
+// For browsers that support transform as a style attribute on SVG we can
+// set isSVGAttrib to false
+supportedProperties['transform'] =
+    { type: transformType, isSVGAttrib: true};
+supportedProperties['-webkit-transform'] =
+    { type: transformType, isSVGAttrib: false };
+
+// Color properties
+supportedProperties['background-color'] =
+    { type: colorType, isSVGAttrib: false};
+
+var propertyIsNumber = function(property) {
+  var propDetails = supportedProperties[property];
+  return propDetails && propDetails.type === numberType;
+};
+
+var propertyIsLength = function(property) {
+  var propDetails = supportedProperties[property];
+  return propDetails && propDetails.type === lengthType;
+};
+
+var propertyIsTransform = function(property) {
+  var propDetails = supportedProperties[property];
+  return propDetails && propDetails.type === transformType;
+};
+
+var propertyIsColor = function(property) {
+  var propDetails = supportedProperties[property];
+  return propDetails && propDetails.type === colorType;
+}
+
+var propertyIsSVGAttrib = function(property, target) {
+  if (target.namespaceURI !== 'http://www.w3.org/2000/svg')
+    return false;
+  var propDetails = supportedProperties[property];
+  return propDetails && propDetails.isSVGAttrib;
+};
+
+var getType = function(property) {
+  var propertyRef = supportedProperties[property];
+  if (exists(propertyRef)) {
+    return propertyRef.type;
+  }
+  throw new Error('Unsupported property');
+}
+
+var zero = function(property, value) {
+  return getType(property).zero(value);
+};
+
+var addPrim = function(property, base, delta) {
+  return getType(property).add(base, delta);
+}
+
+var interpolatePrim = function(property, from, to, f) {
+  return getType(property).interpolate(from, to, f);
+}
+
+var add = function(property, target, base, delta) {
+  var svgMode = propertyIsSVGAttrib(property, target);
+  base = fromCssValue(property, base);
+  delta = fromCssValue(property, delta);
+  return toCssValue(property, addPrim(property, base, delta), svgMode);
+};
+
+/**
+ * Interpolate the given property name (f*100)% of the way from 'from' to 'to'.
+ * 'from' and 'to' are both CSS value strings. Requires the target element to
+ * be able to determine whether the given property is an SVG attribute or not,
+ * as this impacts the conversion of the interpolated value back into a CSS
+ * value string for transform translations.
+ *
+ * e.g. interpolate('transform', elem, 'rotate(40deg)', 'rotate(50deg)', 0.3);
+ *   will return 'rotate(43deg)'.
+ */
+var interpolate = function(property, target, from, to, f) {
+  var svgMode = propertyIsSVGAttrib(property, target);
+  from = fromCssValue(property, from);
+  to = fromCssValue(property, to);
+  return toCssValue(property, interpolatePrim(property, from, to, f), svgMode);
+};
+
+/**
+ * Convert the provided interpolable value for the provided property to a CSS
+ * value string. Note that SVG transforms do not require units for translate
+ * or rotate values while CSS properties require 'px' or 'deg' units.
+ */
+var toCssValue = function(property, value, svgMode) {
+  return getType(property).toCssValue(value, svgMode);
+}
+
+var fromCssValue = function(property, value) {
+  return getType(property).fromCssValue(value);
 }
 
 /** @constructor */
