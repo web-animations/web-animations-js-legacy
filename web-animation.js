@@ -1389,6 +1389,30 @@ mixin(TimingFunction.prototype, {
   }
 });
 
+/** @constructor */
+var StepTimingFunction = function(numSteps, position) {
+  this.numSteps = numSteps;
+  this.position = position || 'end';
+}
+
+inherits(StepTimingFunction, TimingFunction);
+mixin(StepTimingFunction.prototype, {
+  scaleTime: function(fraction) {
+    if (fraction >= 1)
+      return 1;
+    var stepSize = 1 / this.numSteps;
+    if (this.position == 'start') {
+      fraction += stepSize;
+    } else if (this.position == 'middle') {
+      fraction += stepSize / 2;
+    }
+    return fraction - fraction % stepSize;
+  },
+  clone: function() {
+    return new StepTimingFunction(this.numSteps, this.position);
+  }
+});
+
 var interp = function(from, to, f, type) {
   if (Array.isArray(from) || Array.isArray(to)) {
     return interpArray(from, to, f, type);
@@ -1943,7 +1967,7 @@ window.Timing = Timing;
 window.TimingFunction = TimingFunction;
 window.TimedItem = TimedItem;
 // TODO: SplineTimingFunction ?
-// TODO: StepTimingFunction ?
+window.StepTimingFunction = StepTimingFunction;
 // TODO: SmoothTimingFunction ?
 window.AnimationGroup = AnimationGroup;
 window.ParGroup = ParGroup;
