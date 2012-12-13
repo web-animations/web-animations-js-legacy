@@ -1809,7 +1809,7 @@ mixin(CompositedPropertyMap.prototype, {
             continue;
           }
         }
-	var svgMode = propertyIsSVGAttrib(property, this.target);
+        var svgMode = propertyIsSVGAttrib(property, this.target);
         setValue(this.target, property, toCssValue(property, baseValue, 
             svgMode));
         this.properties[property] = [];
