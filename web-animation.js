@@ -1250,7 +1250,7 @@ mixin(KeyframesAnimationFunction.prototype, {
     }
     if (beforeFrameNum == -1) {
       beforeFrame = {
-        rawValue: zeroPrim(this.property, frames[afterFrameNum].value),
+        rawValue: zero(this.property, frames[afterFrameNum].value),
         offset: 0
       };
     } else {
@@ -1260,7 +1260,7 @@ mixin(KeyframesAnimationFunction.prototype, {
 
     if (afterFrameNum == frames.length) {
       afterFrame = {
-        rawValue: zeroPrim(this.property, frames[beforeFrameNum].value),
+        rawValue: zero(this.property, frames[beforeFrameNum].value),
         offset: 1
       };
     } else {
@@ -1271,7 +1271,7 @@ mixin(KeyframesAnimationFunction.prototype, {
     var localTimeFraction = (timeFraction - beforeFrame.offset) /
         (afterFrame.offset - beforeFrame.offset);
     // TODO: property-based interpolation for things that aren't simple
-    var animationValue = interpolatePrim(this.property, beforeFrame.rawValue,
+    var animationValue = interpolate(this.property, beforeFrame.rawValue,
         afterFrame.rawValue, localTimeFraction);
     DEFAULT_GROUP.compositor.setAnimatedValue(target, this.property,
         new AnimatedResult(animationValue, this.operation, timeFraction));
@@ -1680,11 +1680,11 @@ var getType = function(property) {
   throw new Error('Unsupported property');
 }
 
-var zeroPrim = function(property, value) {
+var zero = function(property, value) {
   return getType(property).zero(value);
 };
 
-var addPrim = function(property, base, delta) {
+var add = function(property, base, delta) {
   return getType(property).add(base, delta);
 }
 
@@ -1698,7 +1698,7 @@ var addPrim = function(property, base, delta) {
  * e.g. interpolate('transform', elem, 'rotate(40deg)', 'rotate(50deg)', 0.3);
  *   will return 'rotate(43deg)'.
  */
-var interpolatePrim = function(property, from, to, f) {
+var interpolate = function(property, from, to, f) {
   return getType(property).interpolate(from, to, f);
 }
 
@@ -1763,10 +1763,10 @@ mixin(CompositedPropertyMap.prototype, {
             baseValue = inValue;
             continue;
           case 'add':
-            baseValue = addPrim(property, baseValue, inValue);
+            baseValue = add(property, baseValue, inValue);
             continue;
           case 'merge':
-            baseValue = interpolatePrim(property, baseValue, inValue,
+            baseValue = interpolate(property, baseValue, inValue,
                 resultList[i].fraction);
             continue;
           }
