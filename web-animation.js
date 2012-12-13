@@ -1386,8 +1386,23 @@ mixin(TimingFunction.prototype, {
 });
 
 TimingFunction.createFromString = function(spec) {
-  // TODO: parse steps(), cubic-bezier()
-  return new TimingFunction(presetTimings[spec]);
+  var preset = presetTimings[spec];
+  if (preset) {
+    return new TimingFunction(presetTimings[spec]);
+  }
+  var stepMatch = /steps\(\s*(\d+)\s*,\s*(start|end|middle)\s*\)/.exec(spec);
+  if (stepMatch) {
+    return new StepTimingFunction(Number(stepMatch[1]), stepMatch[2]);
+  }
+  var bezierMatch = /cubic-bezier\(([^,]*),([^,]*),([^,]*),([^)]*)\)/.exec(spec);
+  if (bezierMatch) {
+    return new TimingFunction([
+        Number(bezierMatch[1]),
+        Number(bezierMatch[2]),
+        Number(bezierMatch[3]),
+        Number(bezierMatch[4])]);
+  }
+  throw 'not a timing function: ' + spec;
 };
 
 /** @constructor */
