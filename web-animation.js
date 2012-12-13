@@ -419,14 +419,13 @@ mixin(TimedItem.prototype, {
           this.iterationTime = this._timeFraction * this.duration;
         }
       }
-      return true;
     } else {
       this.animationTime = null;
       this.iterationTime = null;
       this.currentIteration = null;
       this._timeFraction = null;
-      return false;
     }
+    return this._timeFraction !== null;
   },
   pause: function() {
     this.locallyPaused = true;
@@ -1774,7 +1773,7 @@ mixin(CompositedPropertyMap.prototype, {
         }
         // the baseValue will either be retrieved after clearing the value or
         // will be overwritten by a 'replace'.
-        var baseValue;
+        var baseValue = undefined;
         if (i == -1) {
           clearValue(this.target, property);
           baseValue = fromCssValue(property, getValue(this.target, property));
