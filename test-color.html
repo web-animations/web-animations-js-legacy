@@ -17,32 +17,43 @@ limitations under the License.
 <!DOCTYPE html>
 <style>
 .anim {
-	left: 50px;
-	width: 100px;
-	height: 100px;
-	background-color: lightsteelblue;
-	position: absolute;
+  top: 50px;
+  width: 100px;
+  height: 100px;
+  background-color: lightsteelblue;
+  position: absolute;
 }
 
 #a {
-	top: 0px
+  left: 50px
 }
 
 #b {
-	top: 100px;
+  left: 150px;
 }
 
 #c {
-	top: 200px;
-        background-color: green;
+  left: 250px;
+  background-color: green;
+}
+
+#container {
+  position: absolute;
+  left: 0px;
+  top: 50px;
+  width: 400px;
+  height: 200px;
+  background-color: green;
 }
 
 </style>
 
-<div>
-	<div id="a" class="anim"></div>
-	<div id="b" class="anim"></div>
-	<div id="c" class="anim"></div>
+All three boxes should end up the same color as the outline.
+
+<div id="container">
+  <div id="a" class="anim"></div>
+  <div id="b" class="anim"></div>
+  <div id="c" class="anim"></div>
 </div>
 
 <script src="web-animation.js"></script>
