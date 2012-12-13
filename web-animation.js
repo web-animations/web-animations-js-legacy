@@ -1249,7 +1249,7 @@ mixin(KeyframesAnimationFunction.prototype, {
     }
     if (beforeFrameNum == -1) {
       beforeFrame = {
-        rawValue: zeroPrim(this.property, frames[afterFrameNum].value),
+        rawValue: zero(this.property, frames[afterFrameNum].value),
         offset: 0
       };
     } else {
@@ -1259,7 +1259,7 @@ mixin(KeyframesAnimationFunction.prototype, {
 
     if (afterFrameNum == frames.length) {
       afterFrame = {
-        rawValue: zeroPrim(this.property, frames[beforeFrameNum].value),
+        rawValue: zero(this.property, frames[beforeFrameNum].value),
         offset: 1
       };
     } else {
@@ -1270,7 +1270,7 @@ mixin(KeyframesAnimationFunction.prototype, {
     var localTimeFraction = (timeFraction - beforeFrame.offset) /
         (afterFrame.offset - beforeFrame.offset);
     // TODO: property-based interpolation for things that aren't simple
-    var animationValue = interpolatePrim(this.property, beforeFrame.rawValue,
+    var animationValue = interpolate(this.property, beforeFrame.rawValue,
         afterFrame.rawValue, localTimeFraction);
     DEFAULT_GROUP.compositor.setAnimatedValue(target, this.property,
         new AnimatedResult(animationValue, this.operation, timeFraction));
@@ -1683,26 +1683,6 @@ supportedProperties['-webkit-transform'] =
 supportedProperties['background-color'] =
     { type: colorType, isSVGAttrib: false};
 
-var propertyIsNumber = function(property) {
-  var propDetails = supportedProperties[property];
-  return propDetails && propDetails.type === numberType;
-};
-
-var propertyIsLength = function(property) {
-  var propDetails = supportedProperties[property];
-  return propDetails && propDetails.type === lengthType;
-};
-
-var propertyIsTransform = function(property) {
-  var propDetails = supportedProperties[property];
-  return propDetails && propDetails.type === transformType;
-};
-
-var propertyIsColor = function(property) {
-  var propDetails = supportedProperties[property];
-  return propDetails && propDetails.type === colorType;
-}
-
 var propertyIsSVGAttrib = function(property, target) {
   if (target.namespaceURI !== 'http://www.w3.org/2000/svg')
     return false;
@@ -1718,28 +1698,13 @@ var getType = function(property) {
   throw new Error('Unsupported property');
 }
 
-var zeroPrim = function(property, value) {
+var zero = function(property, value) {
   return getType(property).zero(value);
 };
 
-var addPrim = function(property, base, delta) {
+var add = function(property, base, delta) {
   return getType(property).add(base, delta);
 }
-
-var interpolatePrim = function(property, from, to, f) {
-  return getType(property).interpolate(from, to, f);
-}
-
-var zero = function(property, value, svgMode) {
-  return toCssValue(property, zeroPrim(property, value), svgMode);
-}
-
-var add = function(property, target, base, delta) {
-  var svgMode = propertyIsSVGAttrib(property, target);
-  base = fromCssValue(property, base);
-  delta = fromCssValue(property, delta);
-  return toCssValue(property, addPrim(property, base, delta), svgMode);
-};
 
 /**
  * Interpolate the given property name (f*100)% of the way from 'from' to 'to'.
@@ -1751,12 +1716,9 @@ var add = function(property, target, base, delta) {
  * e.g. interpolate('transform', elem, 'rotate(40deg)', 'rotate(50deg)', 0.3);
  *   will return 'rotate(43deg)'.
  */
-var interpolate = function(property, target, from, to, f) {
-  var svgMode = propertyIsSVGAttrib(property, target);
-  from = fromCssValue(property, from);
-  to = fromCssValue(property, to);
-  return toCssValue(property, interpolatePrim(property, from, to, f), svgMode);
-};
+var interpolate = function(property, from, to, f) {
+  return getType(property).interpolate(from, to, f);
+}
 
 /**
  * Convert the provided interpolable value for the provided property to a CSS
@@ -1819,10 +1781,10 @@ mixin(CompositedPropertyMap.prototype, {
             baseValue = inValue;
             continue;
           case 'add':
-            baseValue = addPrim(property, baseValue, inValue);
+            baseValue = add(property, baseValue, inValue);
             continue;
           case 'merge':
-            baseValue = interpolatePrim(property, baseValue, inValue,
+            baseValue = interpolate(property, baseValue, inValue,
                 resultList[i].fraction);
             continue;
           }
