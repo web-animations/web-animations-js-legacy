@@ -425,9 +425,7 @@ mixin(TimedItem.prototype, {
       this.currentIteration = null;
       this._timeFraction = null;
     }
-    if (window.webAnimVisUpdateAnims) {
-      webAnimVisUpdateAnims();
-    }
+    return this._timeFraction !== null;
   },
   pause: function() {
     this.locallyPaused = true;
@@ -570,15 +568,11 @@ var Animation = function(target, animationFunction, timing, parentGroup, startTi
 
   Animation.$super.call(this, timing, startTime, parentGroup);
 
-  // TODO: correctly extract the underlying value from the element
-  this.underlyingValue = null;
-  if (target && this.animationFunction instanceof AnimationFunction) {
-    this.underlyingValue = this.animationFunction.getValue(target);
-  }
   this.template = null;
   this.targetElement = target;
   this.name = this.animationFunction instanceof KeyframesAnimationFunction ?
       this.animationFunction.property : '<anon>';
+  this._sortOrder = 0;
 };
 
 inherits(Animation, TimedItem);
@@ -614,28 +608,18 @@ mixin(Animation.prototype, {
     // section 6.6
     return Infinity;
   },
-  _getSampleFunctions: function() {
-    var prevTimeFraction = this._timeFraction;
-    this.updateTimeMarkers();
+  _sample: function() {
+    this.animationFunction.sample(this._timeFraction,
+        this.currentIteration, this.targetElement,
+        this.underlyingValue);
+  },
+  _getActiveAnimations: function() {
+    if (!this.updateTimeMarkers()) {
+      return [];
+    }
 
-    if (this._timeFraction === null)
-      return new Array();
-
-    var rv = { startTime: this._parentToGlobalTime(this.startTime),
-      target: this.targetElement,
-      sampleFunction:
-        function() {
-          if (this.animationFunction instanceof AnimationFunction) {
-            this.animationFunction.sample(this._timeFraction,
-              this.currentIteration, this.targetElement,
-              this.underlyingValue);
-          } else if (this.animationFunction) {
-            this.animationFunction.sample.call(this.animationFunction, this._timeFraction,
-              this.currentIteration, this.targetElement);
-          }
-        }.bind(this)
-    };
-    return new Array(rv);
+    this._sortOrder = this._parentToGlobalTime(this.startTime);
+    return [this];
   },
   toString: function() {
     var funcDescr = this.animationFunction instanceof AnimationFunction ?
@@ -784,7 +768,7 @@ var AnimationListMixin = {
       }
     }
 
-    var removedItems = new Array();
+    var removedItems = [];
     var len = this.length;
 
     // Interpret params
@@ -950,13 +934,13 @@ mixin(AnimationGroup.prototype, {
       throw 'Unsupported type ' + this.type;
     }
   },
-  _getSampleFunctions: function() {
+  _getActiveAnimations: function() {
     this.updateTimeMarkers();
-    var sampleFunctions = [];
+    var animations = [];
     this.children.forEach(function(child) {
-      sampleFunctions = sampleFunctions.concat(child._getSampleFunctions());
+      animations = animations.concat(child._getActiveAnimations());
     }.bind(this));
-    return sampleFunctions;
+    return animations;
   },
   toString: function() {
     return this.type + ' ' + this.startTime + '-' + this.endTime + ' (' +
@@ -1047,7 +1031,7 @@ var AnimationFunction = function(operation, accumulateOperation) {
 };
 
 mixin(AnimationFunction.prototype, {
-  sample: function(timeFraction, currentIteration, target, underlyingValue) {
+  sample: function(timeFraction, currentIteration, target) {
     throw 'Unimplemented sample function';
   },
   getValue: function(target) {
@@ -1159,14 +1143,15 @@ var PathAnimationFunction = function(path, operation, accumulateOperation) {
 inherits(PathAnimationFunction, AnimationFunction);
 mixin(PathAnimationFunction.prototype, {
   sample: function(timeFraction, currentIteration, target) {
-    var point = this._path.getPointAtLength(timeFraction * this._path.getTotalLength());
+    var length = this._path.getTotalLength();
+    var point = this._path.getPointAtLength(timeFraction * length);
     var x = point.x - target.offsetWidth / 2;
     var y = point.y - target.offsetHeight / 2;
     // TODO: calc(point.x - 50%) doesn't work?
     var value = [{t: 'translate', d: [x, y]}];
     if (this.rotate) {
       // Super hacks
-      var lastPoint = this._path.getPointAtLength(timeFraction * this._path.getTotalLength() - 0.01);
+      var lastPoint = this._path.getPointAtLength(timeFraction * length - 0.01);
       var dx = point.x - lastPoint.x;
       var dy = point.y - lastPoint.y;
       var rotation = Math.atan2(dy, dx);
@@ -1635,7 +1620,7 @@ var transformType = {
   }
 };
 
-var supportedProperties = new Array();
+var supportedProperties = [];
 
 supportedProperties['opacity'] =
     { type: numberType, isSVGAttrib: false};
@@ -1768,10 +1753,10 @@ var CompositedPropertyMap = function(target) {
 
 mixin(CompositedPropertyMap.prototype, {
   addValue: function(property, animValue) {
-    if (this.properties[property] === undefined) {
+    if (!(property in this.properties)) {
       this.properties[property] = [];
     }
-    if (!animValue instanceof AnimatedResult) {
+    if (!(animValue instanceof AnimatedResult)) {
       throw new TypeError('expected AnimatedResult');
     }
     this.properties[property].push(animValue);
@@ -1918,7 +1903,6 @@ var rAFNo = undefined;
 var DEFAULT_GROUP = new AnimationGroup(
     'par', null, [], {name: 'DEFAULT'}, 0, undefined);
 
-DEFAULT_GROUP.oldFunctions = new Array();
 DEFAULT_GROUP.compositor = new Compositor();
 
 DEFAULT_GROUP._tick = function(parentTime) {
@@ -1927,28 +1911,29 @@ DEFAULT_GROUP._tick = function(parentTime) {
   // Get animations for this sample
   // TODO: Consider reverting to direct application of values and sorting
   // inside the compositor.
-  var funcs = new Array();
+  var animations = [];
   var allFinished = true;
   this.children.forEach(function(child) {
-    funcs = funcs.concat(child._getSampleFunctions());
+    animations = animations.concat(child._getActiveAnimations());
     allFinished &= parentTime > child.endTime;
   }.bind(this));
 
   // Apply animations in order
-  funcs.sort(function(funcA, funcB) {
-    return funcA.startTime < funcB.startTime ?
+  animations.sort(function(funcA, funcB) {
+    return funcA._sortOrder < funcB._sortOrder ?
         -1 :
-        funcA.startTime === funcB.startTime ? 0 : 1;
+        funcA._sortOrder === funcB._sortOrder ? 0 : 1;
   });
-  for (var i = 0; i < funcs.length; i++) {
-    if (funcs[i].hasOwnProperty('sampleFunction')) {
-      funcs[i].sampleFunction();
-    }
+  for (var i = 0; i < animations.length; i++) {
+    animations[i]._sample();
   }
-  this.oldFunctions = funcs;
 
   // Composite animated values into element styles
   this.compositor.applyAnimatedValues();
+
+  if (window.webAnimVisUpdateAnims) {
+    webAnimVisUpdateAnims();
+  }
 
   return !allFinished;
 }
