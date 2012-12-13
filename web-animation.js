@@ -558,7 +558,7 @@ var LinkedAnimation = function(target, template, parentGroup, startTime) {
 // TODO: what is this, it isn't used anywhere?
 var ClonedAnimation = function(target, cloneSource, parentGroup, startTime) {
   var anim = new Animation(target, cloneSource.timing.clone(),
-                      cloneSource.animationFunction.clone(), parentGroup, startTime);
+      cloneSource.animationFunction.clone(), parentGroup, startTime);
 };
 
 /** @constructor */
@@ -1060,7 +1060,8 @@ AnimationFunction.createFromProperties = function(properties) {
   } else {
     var result = new GroupedAnimationFunction();
     for (var i = 0; i < animProps.length; i++) {
-      result.add(AnimationFunction._createKeyframeFunction(animProps[i], properties[animProps[i]], properties.operation));
+      result.add(AnimationFunction._createKeyframeFunction(
+          animProps[i], properties[animProps[i]], properties.operation));
     }
     return result;
   }
@@ -1219,7 +1220,7 @@ mixin(KeyframesAnimationFunction.prototype, {
         // 'rotate(45)' before setting.
         this.ensureRawValue(frames[i]);
         DEFAULT_GROUP.compositor.setAnimatedValue(target, this.property,
-            new AnimatedResult(frames[i].rawValue, this.operation, 
+            new AnimatedResult(frames[i].rawValue, this.operation,
             timeFraction));
         return;
       }
@@ -1453,35 +1454,36 @@ var lengthType = {
   interpolate: function(from, to, f) {
     return [interp(from[0], to[0], f), 'px'];
   },
-  toCssValue: function(value) { 
+  toCssValue: function(value) {
     return value[0] + value[1];
   },
   fromCssValue: function(value) {
     return value !== '' ?
-	[Number(value.substring(0, value.length - 2)), 'px'] : [null, null];
+        [Number(value.substring(0, value.length - 2)), 'px'] : [null, null];
   }
 };
 
-var rgbRE = /^\s*rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/
-var rgbaRE = /^\s*rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+|\d*\.\d+)\s*\)/
+var rgbRE = /^\s*rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/;
+var rgbaRE = /^\s*rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+|\d*\.\d+)\s*\)/;
 
 var colorDict = {
   lightsteelblue: {r: 0xB0, g: 0xC4, b: 0xDE, a: 1},
   red: {r: 0xFF, g: 0x00, b: 0x00, a: 1},
-  green: {r: 0x00, g: 0x80, b: 0x00, a: 1}}
+  green: {r: 0x00, g: 0x80, b: 0x00, a: 1}
+};
 
 var colorType = {
   zero: function() { return {r: 0, g: 0, b: 0, a: 0}; },
   add: function(base, delta) {
-    return {r: base.r + delta.r, g: base.g + delta.g, b: base.b + delta.b, 
-	a: base.a + delta.a};
+    return {r: base.r + delta.r, g: base.g + delta.g, b: base.b + delta.b,
+        a: base.a + delta.a};
   },
   interpolate: function(from, to, f) {
-    return  {r: interp(from.r, to.r, f), g: interp(from.g, to.g, f), 
-	b: interp(from.b, to.b, f), a: interp(from.a, to.a, f)};
+    return  {r: interp(from.r, to.r, f), g: interp(from.g, to.g, f),
+        b: interp(from.b, to.b, f), a: interp(from.a, to.a, f)};
   },
   toCssValue: function(value) {
-    return 'rgba(' + Math.round(value.r) + ', ' + Math.round(value.g) + 
+    return 'rgba(' + Math.round(value.r) + ', ' + Math.round(value.g) +
         ', ' + Math.round(value.b) + ', ' + value.a + ')';
   },
   fromCssValue: function(value) {
@@ -1491,7 +1493,7 @@ var colorType = {
     }
     r = rgbaRE.exec(value);
     if (r) {
-      return {r: Number(r[1]), g: Number(r[2]), 
+      return {r: Number(r[1]), g: Number(r[2]),
           b: Number(r[3]), a: Number(r[4])}
     }
     return colorDict[value];
@@ -1530,19 +1532,18 @@ var extractScaleValues = function(scales) {
   return [scaleX, scaleY];
 };
 
-var transformREs =
-  [
-    [/^\s*rotate\(([+-]?(?:\d+|\d*\.\d+))(deg|grad|rad|turn)?\)/,
-        extractDeg, 'rotate'],
-    [/^\s*rotateY\(([+-]?(?:\d+|\d*\.\d+))(deg|grad|rad|turn)\)/,
-        extractDeg, 'rotateY'],
-    [/^\s*translateZ\(([+-]?(?:\d+|\d*\.\d+))(px)?\)/,
-         extractTranslateValue, 'translateZ'],
-    [/^\s*translate\(([+-]?(?:\d+|\d*\.\d+))(px)?(?:\s*,\s*([+-]?(?:\d+|\d*\.\d+))(px)?)?\)/,
-         extractTranslationValues, 'translate'],
-    [/^\s*scale\((\d+|\d*\.\d+)(?:\s*,\s*(\d+|\d*.\d+))?\)/,
-         extractScaleValues, 'scale']
-  ];
+var transformREs = [
+  [/^\s*rotate\(([+-]?(?:\d+|\d*\.\d+))(deg|grad|rad|turn)?\)/,
+      extractDeg, 'rotate'],
+  [/^\s*rotateY\(([+-]?(?:\d+|\d*\.\d+))(deg|grad|rad|turn)\)/,
+      extractDeg, 'rotateY'],
+  [/^\s*translateZ\(([+-]?(?:\d+|\d*\.\d+))(px)?\)/,
+      extractTranslateValue, 'translateZ'],
+  [/^\s*translate\(([+-]?(?:\d+|\d*\.\d+))(px)?(?:\s*,\s*([+-]?(?:\d+|\d*\.\d+))(px)?)?\)/,
+      extractTranslationValues, 'translate'],
+  [/^\s*scale\((\d+|\d*\.\d+)(?:\s*,\s*(\d+|\d*.\d+))?\)/,
+      extractScaleValues, 'scale']
+];
 
 var transformType = {
   zero: function(t) { throw 'UNIMPLEMENTED'; },
@@ -1795,7 +1796,7 @@ mixin(CompositedPropertyMap.prototype, {
           }
         }
         var svgMode = propertyIsSVGAttrib(property, this.target);
-        setValue(this.target, property, toCssValue(property, baseValue, 
+        setValue(this.target, property, toCssValue(property, baseValue,
             svgMode));
         this.properties[property] = [];
       } else {
