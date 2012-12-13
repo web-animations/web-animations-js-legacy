@@ -1582,7 +1582,6 @@ var transformType = {
   toCssValue: function(value, svgMode) {
     // TODO: fix this :)
     var out = ''
-    console.log(value);
     for (var i = 0; i < value.length; i++) {
       console.assert(value[i].t, 'transform type should be resolved by now');
       switch (value[i].t) {
