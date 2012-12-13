@@ -62,8 +62,6 @@ var Timing = function(timingDict) {
   //this.playbackRate = timingDict.playbackRate || 1.0;
   this.direction = timingDict.direction || 'normal';
   if (typeof timingDict.timingFunction === 'string') {
-    // TODO: Write createFromString
-    throw 'createFromString not implemented';
     this.timingFunction = TimingFunction.createFromString(timingDict.timingFunction);
   } else {
     this.timingFunction = timingDict.timingFunction;
@@ -1350,15 +1348,14 @@ var presetTimings = {
   'ease-in': [0.42, 0, 1.0, 1.0],
   'ease-out': [0, 0, 0.58, 1.0],
   'ease-in-out': [0.42, 0, 0.58, 1.0]
-}
+};
 
 /** @constructor */
 var TimingFunction = function(spec) {
-  if (Array.isArray(spec)) {
-    this.params = spec;
-  } else {
-    this.params = presetTimings[spec];
+  if (!Array.isArray(spec)) {
+    return TimingFunction.createFromString(spec);
   }
+  this.params = spec;
   this.map = []
   for (var ii = 0; ii <= 100; ii += 1) {
     var i = ii / 100;
@@ -1387,6 +1384,11 @@ mixin(TimingFunction.prototype, {
     return new TimingFunction(this.params);
   }
 });
+
+TimingFunction.createFromString = function(spec) {
+  // TODO: parse steps(), cubic-bezier()
+  return new TimingFunction(presetTimings[spec]);
+};
 
 /** @constructor */
 var StepTimingFunction = function(numSteps, position) {
