@@ -334,7 +334,7 @@ mixin(TimedItem.prototype, {
       this.endTime = this._startTime + this.animationDuration +
           this.timing.startDelay + this.timeDrift;
     }
-    if (this.parentGroup && this.parentGroup.iterationTime) {
+    if (this.parentGroup && (this.parentGroup.iterationTime !== null)) {
       this.itemTime = this.parentGroup.iterationTime -
           this._startTime - this.timeDrift;
     } else if (isDefined(parentTime)) {
