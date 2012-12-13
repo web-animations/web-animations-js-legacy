@@ -1163,14 +1163,14 @@ mixin(PathAnimationFunction.prototype, {
     var x = point.x - target.offsetWidth / 2;
     var y = point.y - target.offsetHeight / 2;
     // TODO: calc(point.x - 50%) doesn't work?
-    var value = 'translate(' + x + 'px, ' + y + 'px)';
+    var value = [{t: 'translate', d: [x, y]}];
     if (this.rotate) {
       // Super hacks
       var lastPoint = this._path.getPointAtLength(timeFraction * this._path.getTotalLength() - 0.01);
       var dx = point.x - lastPoint.x;
       var dy = point.y - lastPoint.y;
       var rotation = Math.atan2(dy, dx);
-      value = value + ' rotate(' + rotation + 'rad)';
+      value.push({t:'rotate', d: rotation / 2 / Math.PI * 360});
     }
     DEFAULT_GROUP.compositor.setAnimatedValue(target, '-webkit-transform',
         new AnimatedResult(value, this.operation, timeFraction));
@@ -1232,8 +1232,10 @@ mixin(KeyframesAnimationFunction.prototype, {
         // 'rotate(45deg)' is valid, but for UAs that don't support CSS
         // Transforms syntax on SVG content we have to convert that to
         // 'rotate(45)' before setting.
+        this.ensureRawValue(frames[i]);
         DEFAULT_GROUP.compositor.setAnimatedValue(target, this.property,
-            new AnimatedResult(frames[i].value, this.operation, timeFraction));
+            new AnimatedResult(frames[i].rawValue, this.operation, 
+            timeFraction));
         return;
       }
       if (frames[i].offset > timeFraction) {
@@ -1268,27 +1270,29 @@ mixin(KeyframesAnimationFunction.prototype, {
     }
     if (beforeFrameNum == -1) {
       beforeFrame = {
-        value: zero(this.property, frames[afterFrameNum].value),
+        rawValue: zeroPrim(this.property, frames[afterFrameNum].value),
         offset: 0
       };
     } else {
       beforeFrame = frames[beforeFrameNum];
+      this.ensureRawValue(beforeFrame);
     }
 
     if (afterFrameNum == frames.length) {
       afterFrame = {
-        value: zero(this.property, frames[beforeFrameNum].value),
+        rawValue: zeroPrim(this.property, frames[beforeFrameNum].value),
         offset: 1
       };
     } else {
       afterFrame = frames[afterFrameNum];
+      this.ensureRawValue(afterFrame);
     }
     // TODO: apply time function
     var localTimeFraction = (timeFraction - beforeFrame.offset) /
         (afterFrame.offset - beforeFrame.offset);
     // TODO: property-based interpolation for things that aren't simple
-    var animationValue = interpolate(this.property, target, beforeFrame.value,
-        afterFrame.value, localTimeFraction);
+    var animationValue = interpolatePrim(this.property, beforeFrame.rawValue,
+        afterFrame.rawValue, localTimeFraction);
     DEFAULT_GROUP.compositor.setAnimatedValue(target, this.property,
         new AnimatedResult(animationValue, this.operation, timeFraction));
   },
@@ -1301,6 +1305,12 @@ mixin(KeyframesAnimationFunction.prototype, {
     result.frames = this.frames.clone();
     return result;
   },
+  ensureRawValue: function(frame) {
+    if (exists(frame.rawValue)) {
+      return;
+    }
+    frame.rawValue = fromCssValue(this.property, frame.value);
+  },
   toString: function() {
     return this.property;
   }
@@ -1309,6 +1319,7 @@ mixin(KeyframesAnimationFunction.prototype, {
 /** @constructor */
 var Keyframe = function(value, offset, timingFunction) {
   this.value = value;
+  this.rawValue = null;
   this.offset = offset;
   this.timingFunction = timingFunction;
 };
@@ -1358,7 +1369,7 @@ var presetTimings = {
 
 /** @constructor */
 var TimingFunction = function(spec) {
-  if (Array.isArray(spec.length)) {
+  if (Array.isArray(spec)) {
     this.params = spec;
   } else {
     this.params = presetTimings[spec];
@@ -1444,7 +1455,7 @@ var interpArray = function(from, to, f, type) {
 };
 
 var numberType = {
-  zero: function() { return '0'; },
+  zero: function() { return 0; },
   add: function(base, delta) { return base + delta; },
   interpolate: interp,
   toCssValue: function(value) { return value + ''; },
@@ -1452,7 +1463,7 @@ var numberType = {
 };
 
 var lengthType = {
-  zero: function() { return '0px'; },
+  zero: function() { return [0, 'px']; },
   add: function(base, delta) { return [base[0] + delta[0], 'px']; },
   interpolate: function(from, to, f) {
     return [interp(from[0], to[0], f), 'px'];
@@ -1475,7 +1486,7 @@ var colorDict = {
   green: {r: 0x00, g: 0x80, b: 0x00, a: 1}}
 
 var colorType = {
-  zero: function() { return 'rgba(0, 0, 0, 0)'; },
+  zero: function() { return {r: 0, g: 0, b: 0, a: 0}; },
   add: function(base, delta) {
     return {r: base.r + delta.r, g: base.g + delta.g, b: base.b + delta.b, 
 	a: base.a + delta.a};
@@ -1689,7 +1700,7 @@ var getType = function(property) {
   throw new Error('Unsupported property');
 }
 
-var zero = function(property, value) {
+var zeroPrim = function(property, value) {
   return getType(property).zero(value);
 };
 
@@ -1699,6 +1710,10 @@ var addPrim = function(property, base, delta) {
 
 var interpolatePrim = function(property, from, to, f) {
   return getType(property).interpolate(from, to, f);
+}
+
+var zero = function(property, value, svgMode) {
+  return toCssValue(property, zeroPrim(property, value), svgMode);
 }
 
 var add = function(property, target, base, delta) {
@@ -1763,7 +1778,7 @@ mixin(CompositedPropertyMap.prototype, {
   },
   applyAnimatedValues: function() {
     for (var property in this.properties) {
-      resultList = this.properties[property];
+      var resultList = this.properties[property];
       if (resultList.length > 0) {
         var i;
         for (i = resultList.length - 1; i >= 0; i--) {
@@ -1776,24 +1791,27 @@ mixin(CompositedPropertyMap.prototype, {
         var baseValue = undefined;
         if (i == -1) {
           clearValue(this.target, property);
-          baseValue = getValue(this.target, property);
+          baseValue = fromCssValue(property, getValue(this.target, property));
           i = 0;
         }
         for ( ; i < resultList.length; i++) {
+          var inValue = resultList[i].value;
           switch (resultList[i].operation) {
           case 'replace':
-            baseValue = resultList[i].value;
+            baseValue = inValue;
             continue;
           case 'add':
-            baseValue = add(property, this.target, baseValue, resultList[i].value);
+            baseValue = addPrim(property, baseValue, inValue);
             continue;
           case 'merge':
-            baseValue = interpolate(property, this.target, baseValue,
-                resultList[i].value, resultList[i].fraction);
+            baseValue = interpolatePrim(property, baseValue, inValue,
+                resultList[i].fraction);
             continue;
           }
         }
-        setValue(this.target, property, baseValue);
+        var svgMode = propertyIsSVGAttrib(property, this.target);
+        setValue(this.target, property, toCssValue(property, baseValue, 
+            svgMode));
         this.properties[property] = [];
       } else {
         // property has previously been set but no value was accumulated
