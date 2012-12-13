@@ -1190,20 +1190,8 @@ var KeyframesAnimationFunction = function(property, operation, accumulateOperati
 
 inherits(KeyframesAnimationFunction, AnimationFunction);
 mixin(KeyframesAnimationFunction.prototype, {
-  sortedFrames: function() {
-    this.frames.frames.sort(function(a, b) {
-      if (a.offset < b.offset) {
-        return -1;
-      }
-      if (a.offset > b.offset) {
-        return 1;
-      }
-      return 0;
-    });
-    return this.frames.frames;
-  },
   sample: function(timeFraction, currentIteration, target) {
-    var frames = this.sortedFrames();
+    var frames = this.frames._sorted();
     if (frames.length == 0) {
       return;
     }
@@ -1312,10 +1300,25 @@ var Keyframe = function(value, offset, timingFunction) {
 /** @constructor */
 var KeyframeList = function() {
   this.frames = [];
-  this.__defineGetter__('length', function() {return this.frames.length; });
+  this._isSorted = true;
 };
 
 mixin(KeyframeList.prototype, {
+  _sorted: function() {
+    if (!this._isSorted) {
+      this.frames.sort(function(a, b) {
+        if (a.offset < b.offset) {
+          return -1;
+        }
+        if (a.offset > b.offset) {
+          return 1;
+        }
+        return 0;
+      });
+      this._isSorted = true;
+    }
+    return this.frames;
+  },
   item: function(index) {
     if (index >= this.length || index < 0) {
       return null;
@@ -1324,6 +1327,7 @@ mixin(KeyframeList.prototype, {
   },
   add: function(frame) {
     this.frames.push(frame);
+    this._isSorted = false;
     return frame;
   },
   remove: function(frame) {
@@ -1342,6 +1346,10 @@ mixin(KeyframeList.prototype, {
     }
     return result;
   }
+});
+
+KeyframeList.prototype.__defineGetter__('length', function() {
+  return this.frames.length;
 });
 
 var presetTimings = {
