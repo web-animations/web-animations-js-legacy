@@ -1480,18 +1480,44 @@ var numberType = {
   fromCssValue: function(value) { return value !== '' ? Number(value): null; }
 };
 
+var calcRE = /-webkit-calc\s*\(\s*([^+\s)]*)\s*([+-])\s*([^+\s)]*)\s*\)/
+
 var lengthType = {
-  zero: function() { return [0, 'px']; },
-  add: function(base, delta) { return [base[0] + delta[0], 'px']; },
-  interpolate: function(from, to, f) {
-    return [interp(from[0], to[0], f), 'px'];
+  zero: function() { return {px: 0, percent: 0}; },
+  add: function(base, delta) { 
+    return {px: base.px + delta.px, 
+        percent: base.percent + delta.percent};
   },
-  toCssValue: function(value) {
-    return value[0] + value[1];
+  interpolate: function(from, to, f) {
+    return {px: interp(from.px, to.px, f), 
+        percent: interp(from.percent,to.percent, f)};
+  },
+  toCssValue: function(value) { 
+    if (value.percent == 0) {
+      return value.px + 'px';
+    } else if (value.px == 0) {
+      return value.percent + '%';
+    } else {
+      return '-webkit-calc(' + value.px + 'px + ' + value.percent + '%)';
+    }
   },
   fromCssValue: function(value) {
-    return value !== '' ?
-        [Number(value.substring(0, value.length - 2)), 'px'] : [null, null];
+    if (value.substring(value.length - 2) === 'px') {
+      return {px: Number(value.substring(0, value.length - 2)), percent: 0};
+    } else if (value.substring(value.length - 1) === '%') {
+      return {px: 0, percent: Number(value.substring(0, value.length - 1))};
+    } else {
+      var r = calcRE.exec(value);
+      if (r) {
+        var left = lengthType.fromCssValue(r[1]);
+        var right = lengthType.fromCssValue(r[3]);
+        if (r[2] == '-') {
+          right = {px: -right.px, percent: -right.percent};
+        }
+        return lengthType.add(left, right);
+      }
+      return undefined;
+    }
   }
 };
 
