@@ -1665,26 +1665,6 @@ supportedProperties['-webkit-transform'] =
 supportedProperties['background-color'] =
     { type: colorType, isSVGAttrib: false};
 
-var propertyIsNumber = function(property) {
-  var propDetails = supportedProperties[property];
-  return propDetails && propDetails.type === numberType;
-};
-
-var propertyIsLength = function(property) {
-  var propDetails = supportedProperties[property];
-  return propDetails && propDetails.type === lengthType;
-};
-
-var propertyIsTransform = function(property) {
-  var propDetails = supportedProperties[property];
-  return propDetails && propDetails.type === transformType;
-};
-
-var propertyIsColor = function(property) {
-  var propDetails = supportedProperties[property];
-  return propDetails && propDetails.type === colorType;
-}
-
 var propertyIsSVGAttrib = function(property, target) {
   if (target.namespaceURI !== 'http://www.w3.org/2000/svg')
     return false;
@@ -1708,21 +1688,6 @@ var addPrim = function(property, base, delta) {
   return getType(property).add(base, delta);
 }
 
-var interpolatePrim = function(property, from, to, f) {
-  return getType(property).interpolate(from, to, f);
-}
-
-var zero = function(property, value, svgMode) {
-  return toCssValue(property, zeroPrim(property, value), svgMode);
-}
-
-var add = function(property, target, base, delta) {
-  var svgMode = propertyIsSVGAttrib(property, target);
-  base = fromCssValue(property, base);
-  delta = fromCssValue(property, delta);
-  return toCssValue(property, addPrim(property, base, delta), svgMode);
-};
-
 /**
  * Interpolate the given property name (f*100)% of the way from 'from' to 'to'.
  * 'from' and 'to' are both CSS value strings. Requires the target element to
@@ -1733,12 +1698,9 @@ var add = function(property, target, base, delta) {
  * e.g. interpolate('transform', elem, 'rotate(40deg)', 'rotate(50deg)', 0.3);
  *   will return 'rotate(43deg)'.
  */
-var interpolate = function(property, target, from, to, f) {
-  var svgMode = propertyIsSVGAttrib(property, target);
-  from = fromCssValue(property, from);
-  to = fromCssValue(property, to);
-  return toCssValue(property, interpolatePrim(property, from, to, f), svgMode);
-};
+var interpolatePrim = function(property, from, to, f) {
+  return getType(property).interpolate(from, to, f);
+}
 
 /**
  * Convert the provided interpolable value for the provided property to a CSS
