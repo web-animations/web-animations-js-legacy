@@ -78,12 +78,12 @@ limitations under the License.
 <script>
 
 new Animation(document.querySelector("#a"), {left: "200px"}, {startDelay: 1, duration: 2});
-new Animation(document.querySelector("#b"), {left: "200px"}, {startDelay: 1, duration: 2, timingFunction: new TimingFunction("ease-in")});
-new Animation(document.querySelector("#c"), {left: "200px"}, {startDelay: 1, duration: 2, timingFunction: new TimingFunction("ease-out")});
-new Animation(document.querySelector("#d"), {left: "200px"}, {startDelay: 1, duration: 2, timingFunction: new TimingFunction([0, 0.2, 0.8, 1])});
-new Animation(document.querySelector("#e"), {left: "200px"}, {startDelay: 1, duration: 2, timingFunction: new StepTimingFunction(3, 'start')});
-new Animation(document.querySelector("#f"), {left: "200px"}, {startDelay: 1, duration: 2, timingFunction: new StepTimingFunction(3, 'middle')});
-new Animation(document.querySelector("#g"), {left: "200px"}, {startDelay: 1, duration: 2, timingFunction: new StepTimingFunction(3, 'end')});
+new Animation(document.querySelector("#b"), {left: "200px"}, {startDelay: 1, duration: 2, timingFunction: "ease-in"});
+new Animation(document.querySelector("#c"), {left: "200px"}, {startDelay: 1, duration: 2, timingFunction: "ease-out"});
+new Animation(document.querySelector("#d"), {left: "200px"}, {startDelay: 1, duration: 2, timingFunction: "cubic-bezier(0, 0.2, 0.8, 1)"});
+new Animation(document.querySelector("#e"), {left: "200px"}, {startDelay: 1, duration: 2, timingFunction: "steps(3, start)"});
+new Animation(document.querySelector("#f"), {left: "200px"}, {startDelay: 1, duration: 2, timingFunction: "steps(3, middle)"});
+new Animation(document.querySelector("#g"), {left: "200px"}, {startDelay: 1, duration: 2, timingFunction: "steps(3, end)"});
 
 
 </script>
