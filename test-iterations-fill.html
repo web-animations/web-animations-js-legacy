@@ -17,85 +17,85 @@ limitations under the License.
 <!DOCTYPE html>
 <style>
 .animContainer {
-	position: absolute;
-	left: 0px;
-	height: 100px;
+  position: absolute;
+  left: 0px;
+  height: 100px;
 }
 
 .anim {
-	left: 0px;
-	width: 100px;
-	height: 25px;
-	background-color: #FAA;
-	position: relative;
+  left: 0px;
+  width: 100px;
+  height: 25px;
+  background-color: #FAA;
+  position: relative;
 }
 
 .expected {
-	border-right: 1px solid black;
+  border-right: 1px solid black;
 }
 
 .a {
-	top: 0px
+  top: 0px
 }
 
 .b {
-	top: 0px;
+  top: 0px;
 }
 
 .c {
-	top: 0px;
+  top: 0px;
 }
 
 .d {
-	top: 0px;
+  top: 0px;
 }
 
 #ca {
-	top: 50px;
+  top: 50px;
 }
 
 #cb {
-	top: 200px;
+  top: 200px;
 }
 
 #cc {
-	top: 350px;
+  top: 350px;
 }
 
 
 #cd {
-	top: 500px;
+  top: 500px;
 }
 </style>
 
 <div>Right edge of each box should align with black line at end of test.</div>
 
 <div class="animContainer" id="ca">
-	<div style="width: 100px;" class="expected"><div class="anim a"></div></div>
-	<div style="width: 100px;" class="expected"><div class="anim b"></div></div>
-	<div style="width: 300px;" class="expected"><div class="anim c"></div></div>
-	<div style="width: 300px;" class="expected"><div class="anim d"></div></div>
+  <div style="width: 100px;" class="expected"><div class="anim a"></div></div>
+  <div style="width: 100px;" class="expected"><div class="anim b"></div></div>
+  <div style="width: 300px;" class="expected"><div class="anim c"></div></div>
+  <div style="width: 300px;" class="expected"><div class="anim d"></div></div>
 </div>
 
 <div class="animContainer" id="cb">
-	<div style="width: 100px;" class="expected"><div class="anim a"></div></div>
-	<div style="width: 100px;" class="expected"><div class="anim b"></div></div>
-	<div style="width: 100px;" class="expected"><div class="anim c"></div></div>
-	<div style="width: 100px;" class="expected"><div class="anim d"></div></div>
+  <div style="width: 100px;" class="expected"><div class="anim a"></div></div>
+  <div style="width: 100px;" class="expected"><div class="anim b"></div></div>
+  <div style="width: 100px;" class="expected"><div class="anim c"></div></div>
+  <div style="width: 100px;" class="expected"><div class="anim d"></div></div>
 </div>
 
 <div class="animContainer" id="cc">
-	<div style="width: 100px;" class="expected"><div class="anim a"></div></div>
-	<div style="width: 100px;" class="expected"><div class="anim b"></div></div>
-	<div style="width: 300px;" class="expected"><div class="anim c"></div></div>
-	<div style="width: 300px;" class="expected"><div class="anim d"></div></div>
+  <div style="width: 100px;" class="expected"><div class="anim a"></div></div>
+  <div style="width: 100px;" class="expected"><div class="anim b"></div></div>
+  <div style="width: 300px;" class="expected"><div class="anim c"></div></div>
+  <div style="width: 300px;" class="expected"><div class="anim d"></div></div>
 </div>
 
 <div class="animContainer" id="cd">
-	<div style="width: 100px;" class="expected"><div class="anim a"></div></div>
-	<div style="width: 100px;" class="expected"><div class="anim b"></div></div>
-	<div style="width: 100px;" class="expected"><div class="anim c"></div></div>
-	<div style="width: 100px;" class="expected"><div class="anim d"></div></div>
+  <div style="width: 100px;" class="expected"><div class="anim a"></div></div>
+  <div style="width: 100px;" class="expected"><div class="anim b"></div></div>
+  <div style="width: 100px;" class="expected"><div class="anim c"></div></div>
+  <div style="width: 100px;" class="expected"><div class="anim d"></div></div>
 </div>
 
 <script src="web-animation.js"></script>
@@ -108,20 +108,20 @@ var directions = ["normal", "reverse", "alternate", "alternate-reverse"]
 var groups = [];
 
 for (var i = 0; i < directions.length; i++) {
-	var dir = directions[i];
-	var group = new ParGroup([], {startDelay: 1, duration: 8, iterationCount: 3, playbackRate: 2, direction: dir}, undefined, 1);
-	groups.push(group);
+  var dir = directions[i];
+  var group = new ParGroup([], {startDelay: 1, duration: 8, iterationCount: 3, playbackRate: 2, direction: dir}, undefined, 1);
+  groups.push(group);
 }
 
 function sampleFunc(timeFraction, iteration, target) {
-	target.innerHTML = Math.floor(timeFraction * 1000) / 1000 + " : " + iteration
+  target.innerHTML = Math.floor(timeFraction * 1000) / 1000 + " : " + iteration
 }
 
 for (var i = 0; i < fillModes.length; i++) {
-	var divs = document.querySelectorAll(categories[i]);
-	for (var j = 0; j < divs.length; j++) {
-		var anim = new Animation(divs[j], {left: ["100px", "200px"]}, {startDelay: 1, duration: 1, iterationCount: 2, fillMode: fillModes[i], playbackRate: 0.8}, groups[j], 1);
-		new Animation(divs[j], {sample: sampleFunc}, {startDelay: 1, duration: 1, iterationCount: 2, fillMode: fillModes[i], playbackRate: 0.8}, groups[j], 1);
+  var divs = document.querySelectorAll(categories[i]);
+  for (var j = 0; j < divs.length; j++) {
+    new Animation(divs[j], {left: ["100px", "200px"]}, {startDelay: 1, duration: 1, iterationCount: 2, fillMode: fillModes[i], playbackRate: 0.8}, groups[j], 1);
+    new Animation(divs[j], {sample: sampleFunc}, {startDelay: 1, duration: 1, iterationCount: 2, fillMode: fillModes[i], playbackRate: 0.8}, groups[j], 1);
 	}
 }
 </script>

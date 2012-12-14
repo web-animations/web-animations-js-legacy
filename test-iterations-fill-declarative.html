@@ -17,91 +17,91 @@ limitations under the License.
 <!DOCTYPE html>
 <style>
 .animContainer {
-	position: absolute;
-	left: 0px;
-	height: 100px;
+  position: absolute;
+  left: 0px;
+  height: 100px;
 }
 
 .expected {
-	border-right: 1px solid black;
+  border-right: 1px solid black;
 }
 
 .anim {
-	left: 0px;
-	width: 100px;
-	height: 25px;
-	background-color: #FAA;
-	position: relative;
+  left: 0px;
+  width: 100px;
+  height: 25px;
+  background-color: #FAA;
+  position: relative;
 }
 
 #ca {
-	top: 50px;
+  top: 50px;
 }
 
 #cb {
-	top: 200px;
+  top: 200px;
 }
 
 #cc {
-	top: 350px;
+  top: 350px;
 }
 
 
 #cd {
-	top: 500px;
+  top: 500px;
 }
 </style>
 
 <div>Right edge of each box should align with black line at end of test.</div>
 
 <div class="animContainer" id="ca">
-	<div style="width: 100px;" class="expected"><div class="anim a"></div></div>
-	<div style="width: 100px;" class="expected"><div class="anim b"></div></div>
-	<div style="width: 300px;" class="expected"><div class="anim c"></div></div>
-	<div style="width: 300px;" class="expected"><div class="anim d"></div></div>
-	<par startDelay="1" duration="5" iterationCount="3" playbackRate="2" direction="normal" startTime="1" id="par">
-		<animation startDelay="1" duration="1" iterationCount="2" fillMode="none" prop="left" from="100px" to="200px" playbackRate="0.8" startTime="1" resolutionStrategy="selector: .a" id="anim"></animation>
-		<animation startDelay="1" duration="1" iterationCount="2" fillMode="backwards" prop="left" from="100px" to="200px" playbackRate="0.8"startTime="1" resolutionStrategy="selector: .b"></animation>
-		<animation startDelay="1" duration="1" iterationCount="2" fillMode="forwards" prop="left" from="100px" to="200px" playbackRate="0.8" startTime="1" resolutionStrategy="selector: .c"></animation>		
-		<animation startDelay="1" duration="1" iterationCount="2" fillMode="both" prop="left" from="100px" to="200px" playbackRate="0.8" startTime="1" resolutionStrategy="selector: .d"></animation>
-	</par>
+  <div style="width: 100px;" class="expected"><div class="anim a"></div></div>
+  <div style="width: 100px;" class="expected"><div class="anim b"></div></div>
+  <div style="width: 300px;" class="expected"><div class="anim c"></div></div>
+  <div style="width: 300px;" class="expected"><div class="anim d"></div></div>
+  <par startDelay="1" duration="5" iterationCount="3" playbackRate="2" direction="normal" startTime="1" id="par">
+    <animation startDelay="1" duration="1" iterationCount="2" fillMode="none" prop="left" from="100px" to="200px" playbackRate="0.8" startTime="1" resolutionStrategy="selector: .a" id="anim"></animation>
+    <animation startDelay="1" duration="1" iterationCount="2" fillMode="backwards" prop="left" from="100px" to="200px" playbackRate="0.8"startTime="1" resolutionStrategy="selector: .b"></animation>
+    <animation startDelay="1" duration="1" iterationCount="2" fillMode="forwards" prop="left" from="100px" to="200px" playbackRate="0.8" startTime="1" resolutionStrategy="selector: .c"></animation>		
+    <animation startDelay="1" duration="1" iterationCount="2" fillMode="both" prop="left" from="100px" to="200px" playbackRate="0.8" startTime="1" resolutionStrategy="selector: .d"></animation>
+  </par>
 </div>
 <div class="animContainer" id="cb">
-	<div style="width: 100px;" class="expected"><div class="anim a"></div></div>
-	<div style="width: 100px;" class="expected"><div class="anim b"></div></div>
-	<div style="width: 100px;" class="expected"><div class="anim c"></div></div>
-	<div style="width: 100px;" class="expected"><div class="anim d"></div></div>
-	<par startDelay="1" duration="5" iterationCount="3" playbackRate="2" direction="reverse" startTime="1">
-		<animation startDelay="1" duration="1" iterationCount="2" fillMode="none" prop="left" from="100px" to="200px" playbackRate="0.8" startTime="1" resolutionStrategy="selector: .a"></animation>		
-		<animation startDelay="1" duration="1" iterationCount="2" fillMode="backwards" prop="left" from="100px" to="200px" playbackRate="0.8"startTime="1" resolutionStrategy="selector: .b"></animation>
-		<animation startDelay="1" duration="1" iterationCount="2" fillMode="forwards" prop="left" from="100px" to="200px" playbackRate="0.8" startTime="1" resolutionStrategy="selector: .c"></animation>		
-		<animation startDelay="1" duration="1" iterationCount="2" fillMode="both" prop="left" from="100px" to="200px" playbackRate="0.8" startTime="1" resolutionStrategy="selector: .d"></animation>
-	</par>
+  <div style="width: 100px;" class="expected"><div class="anim a"></div></div>
+  <div style="width: 100px;" class="expected"><div class="anim b"></div></div>
+  <div style="width: 100px;" class="expected"><div class="anim c"></div></div>
+  <div style="width: 100px;" class="expected"><div class="anim d"></div></div>
+  <par startDelay="1" duration="5" iterationCount="3" playbackRate="2" direction="reverse" startTime="1">
+    <animation startDelay="1" duration="1" iterationCount="2" fillMode="none" prop="left" from="100px" to="200px" playbackRate="0.8" startTime="1" resolutionStrategy="selector: .a"></animation>		
+    <animation startDelay="1" duration="1" iterationCount="2" fillMode="backwards" prop="left" from="100px" to="200px" playbackRate="0.8"startTime="1" resolutionStrategy="selector: .b"></animation>
+    <animation startDelay="1" duration="1" iterationCount="2" fillMode="forwards" prop="left" from="100px" to="200px" playbackRate="0.8" startTime="1" resolutionStrategy="selector: .c"></animation>		
+    <animation startDelay="1" duration="1" iterationCount="2" fillMode="both" prop="left" from="100px" to="200px" playbackRate="0.8" startTime="1" resolutionStrategy="selector: .d"></animation>
+  </par>
 </div>
 <div class="animContainer" id="cc">
-	<div style="width: 100px;" class="expected"><div class="anim a"></div></div>
-	<div style="width: 100px;" class="expected"><div class="anim b"></div></div>
-	<div style="width: 300px;" class="expected"><div class="anim c"></div></div>
-	<div style="width: 300px;" class="expected"><div class="anim d"></div></div>
-	<par startDelay="1" duration="5" iterationCount="3" playbackRate="2" direction="alternate" startTime="1">
-		<animation startDelay="1" duration="1" iterationCount="2" fillMode="none" prop="left" from="100px" to="200px" playbackRate="0.8" startTime="1" resolutionStrategy="selector: .a"></animation>		
-		<animation startDelay="1" duration="1" iterationCount="2" fillMode="backwards" prop="left" from="100px" to="200px" playbackRate="0.8"startTime="1" resolutionStrategy="selector: .b"></animation>
-		<animation startDelay="1" duration="1" iterationCount="2" fillMode="forwards" prop="left" from="100px" to="200px" playbackRate="0.8" startTime="1" resolutionStrategy="selector: .c"></animation>		
-		<animation startDelay="1" duration="1" iterationCount="2" fillMode="both" prop="left" from="100px" to="200px" playbackRate="0.8" startTime="1" resolutionStrategy="selector: .d"></animation>
-	</par>
+  <div style="width: 100px;" class="expected"><div class="anim a"></div></div>
+  <div style="width: 100px;" class="expected"><div class="anim b"></div></div>
+  <div style="width: 300px;" class="expected"><div class="anim c"></div></div>
+  <div style="width: 300px;" class="expected"><div class="anim d"></div></div>
+  <par startDelay="1" duration="5" iterationCount="3" playbackRate="2" direction="alternate" startTime="1">
+    <animation startDelay="1" duration="1" iterationCount="2" fillMode="none" prop="left" from="100px" to="200px" playbackRate="0.8" startTime="1" resolutionStrategy="selector: .a"></animation>		
+    <animation startDelay="1" duration="1" iterationCount="2" fillMode="backwards" prop="left" from="100px" to="200px" playbackRate="0.8"startTime="1" resolutionStrategy="selector: .b"></animation>
+    <animation startDelay="1" duration="1" iterationCount="2" fillMode="forwards" prop="left" from="100px" to="200px" playbackRate="0.8" startTime="1" resolutionStrategy="selector: .c"></animation>		
+    <animation startDelay="1" duration="1" iterationCount="2" fillMode="both" prop="left" from="100px" to="200px" playbackRate="0.8" startTime="1" resolutionStrategy="selector: .d"></animation>
+  </par>
 </div>
 
 <div class="animContainer" id="cd">
-	<div style="width: 100px;" class="expected"><div class="anim a"></div></div>
-	<div style="width: 100px;" class="expected"><div class="anim b"></div></div>
-	<div style="width: 100px;" class="expected"><div class="anim c"></div></div>
-	<div style="width: 100px;" class="expected"><div class="anim d"></div></div>
-	<par startDelay="1" duration="5" iterationCount="3" playbackRate="2" direction="alternate-reverse" startTime="1">
-		<animation startDelay="1" duration="1" iterationCount="2" fillMode="none" prop="left" from="100px" to="200px" playbackRate="0.8" startTime="1" resolutionStrategy="selector: .a"></animation>		
-		<animation startDelay="1" duration="1" iterationCount="2" fillMode="backwards" prop="left" from="100px" to="200px" playbackRate="0.8"startTime="1" resolutionStrategy="selector: .b"></animation>
-		<animation startDelay="1" duration="1" iterationCount="2" fillMode="forwards" prop="left" from="100px" to="200px" playbackRate="0.8" startTime="1" resolutionStrategy="selector: .c"></animation>		
-		<animation startDelay="1" duration="1" iterationCount="2" fillMode="both" prop="left" from="100px" to="200px" playbackRate="0.8" startTime="1" resolutionStrategy="selector: .d"></animation>
-	</par>
+  <div style="width: 100px;" class="expected"><div class="anim a"></div></div>
+  <div style="width: 100px;" class="expected"><div class="anim b"></div></div>
+  <div style="width: 100px;" class="expected"><div class="anim c"></div></div>
+  <div style="width: 100px;" class="expected"><div class="anim d"></div></div>
+  <par startDelay="1" duration="5" iterationCount="3" playbackRate="2" direction="alternate-reverse" startTime="1">
+    <animation startDelay="1" duration="1" iterationCount="2" fillMode="none" prop="left" from="100px" to="200px" playbackRate="0.8" startTime="1" resolutionStrategy="selector: .a"></animation>		
+    <animation startDelay="1" duration="1" iterationCount="2" fillMode="backwards" prop="left" from="100px" to="200px" playbackRate="0.8"startTime="1" resolutionStrategy="selector: .b"></animation>
+    <animation startDelay="1" duration="1" iterationCount="2" fillMode="forwards" prop="left" from="100px" to="200px" playbackRate="0.8" startTime="1" resolutionStrategy="selector: .c"></animation>		
+    <animation startDelay="1" duration="1" iterationCount="2" fillMode="both" prop="left" from="100px" to="200px" playbackRate="0.8" startTime="1" resolutionStrategy="selector: .d"></animation>
+  </par>
 </div>
 <script src="web-animation.js"></script>
 <script src="web-animation-declarative.js"></script>
