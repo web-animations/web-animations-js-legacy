@@ -58,12 +58,12 @@ limitations under the License.
 </div>
 
 <div class="animContainer" id="cb">
-  <div style="width: 200px;" class="expected"><div class="anim a"></div></div>
-  <div style="width: 200px;" class="expected"><div class="anim b"></div></div>
+  <div style="width: 100px;" class="expected"><div class="anim a"></div></div>
+  <div style="width: 100px;" class="expected"><div class="anim b"></div></div>
   <div style="width: 100px;" class="expected"><div class="anim c"></div></div>
   <div style="width: 100px;" class="expected"><div class="anim d"></div></div>
-  <div style="width: 200px;" class="expected"><div class="anim e"></div></div>
-  <div style="width: 200px;" class="expected"><div class="anim f"></div></div>
+  <div style="width: 100px;" class="expected"><div class="anim e"></div></div>
+  <div style="width: 100px;" class="expected"><div class="anim f"></div></div>
 </div>
 
 <script src="web-animation.js"></script>
@@ -91,9 +91,9 @@ for (var i = 0; i < directions.length; i++) {
       new ParGroup([], {iterationCount: 2.0, direction: directions[i], duration: 1.0}));
   // Default child start time, explicit parent duration, plus explicit parent
   // group zero start time. As above, but we have to extend the parent duration
-  // to avoid the "normal" child animation being clipped.  This is because
+  // to avoid the "normal" child animation being clipped. This is because
   // forcing a parent start time of zero means that the parent starts with a
-  // non-zero iteration time, which is used as the child start time, cauisng
+  // non-zero iteration time, which is used as the child start time, causing
   // the child end time to exceed 1.0.
   new Animation(container.getElementsByClassName("d")[0], animation, {duration: 1.0},
       new ParGroup([], {iterationCount: 2.0, direction: directions[i], duration: 2.0}, undefined, 0.0));
