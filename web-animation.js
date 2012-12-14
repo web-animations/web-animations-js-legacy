@@ -241,7 +241,7 @@ TimedItem.prototype.__defineGetter__('timeDrift', function() {
   return this._timeDrift;
 });
 TimedItem.prototype.__defineGetter__('_effectiveParentTime', function() {
-  return this.parentGroup && this.parentGroup.iterationTime ?
+  return this.parentGroup !== null && this.parentGroup.iterationTime !== null ?
       this.parentGroup.iterationTime : 0;
 });
 TimedItem.prototype.__defineGetter__('currentTime', function() {
