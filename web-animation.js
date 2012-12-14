@@ -334,7 +334,7 @@ mixin(TimedItem.prototype, {
       this.endTime = this._startTime + this.animationDuration +
           this.timing.startDelay + this.timeDrift;
     }
-    if (this.parentGroup && (this.parentGroup.iterationTime !== null)) {
+    if (this.parentGroup !== null && this.parentGroup.iterationTime !== null) {
       this.itemTime = this.parentGroup.iterationTime -
           this._startTime - this.timeDrift;
     } else if (isDefined(parentTime)) {
@@ -343,7 +343,7 @@ mixin(TimedItem.prototype, {
       this.itemTime = null;
     }
     if (this.itemTime !== null) {
-      if (this.itemTime < this.timing.startDelay) {
+      if (this.itemTime <= this.timing.startDelay) {
         if (((this.timing.fillMode == 'backwards') && !this._reversing)
           || this.timing.fillMode == 'both'
           || ((this.timing.fillMode == 'forwards') && this._reversing)) {
