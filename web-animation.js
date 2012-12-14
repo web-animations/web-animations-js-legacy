@@ -241,7 +241,7 @@ TimedItem.prototype.__defineGetter__('timeDrift', function() {
   return this._timeDrift;
 });
 TimedItem.prototype.__defineGetter__('_effectiveParentTime', function() {
-  return this.parentGroup && this.parentGroup.iterationTime ?
+  return this.parentGroup !== null && this.parentGroup.iterationTime !== null ?
       this.parentGroup.iterationTime : 0;
 });
 TimedItem.prototype.__defineGetter__('currentTime', function() {
@@ -334,7 +334,7 @@ mixin(TimedItem.prototype, {
       this.endTime = this._startTime + this.animationDuration +
           this.timing.startDelay + this.timeDrift;
     }
-    if (this.parentGroup && (this.parentGroup.iterationTime !== null)) {
+    if (this.parentGroup !== null && this.parentGroup.iterationTime !== null) {
       this.itemTime = this.parentGroup.iterationTime -
           this._startTime - this.timeDrift;
     } else if (isDefined(parentTime)) {
@@ -343,7 +343,7 @@ mixin(TimedItem.prototype, {
       this.itemTime = null;
     }
     if (this.itemTime !== null) {
-      if (this.itemTime < this.timing.startDelay) {
+      if (this.itemTime <= this.timing.startDelay) {
         if (((this.timing.fillMode == 'backwards') && !this._reversing)
           || this.timing.fillMode == 'both'
           || ((this.timing.fillMode == 'forwards') && this._reversing)) {
@@ -1921,8 +1921,10 @@ var getValue = function(target, property) {
 
 var rAFNo = undefined;
 
+// Pass null for the parent, as TimedItem uses the default group, (ie this
+// object) as the parent if no value is provided. 
 var DEFAULT_GROUP = new AnimationGroup(
-    'par', null, [], {name: 'DEFAULT'}, 0, undefined);
+    'par', null, [], {name: 'DEFAULT'}, 0, null);
 
 DEFAULT_GROUP.compositor = new Compositor();
 
