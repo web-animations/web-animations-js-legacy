@@ -584,6 +584,9 @@ var AnimationListMixin = {
       }
     }
     var result = Array.prototype['splice'].apply(this.children, args);
+    for (var i = 0; i < result.length; i++) {
+      result[i].parentGroup = null;
+    }
     this._lengthChanged();
     this.onListChange();
     return result;
