@@ -225,11 +225,11 @@ var TimedItem = function(timing, startTime, parentGroup) {
 
   this._timeDrift = 0;
   this._locallyPaused = false;
-  this.updateIterationDuration();
 
   if (this.parentGroup) {
     this.parentGroup._addChild(this);
   }
+  this.updateIterationDuration();
   this._pauseStartTime = 0;
 };
 
