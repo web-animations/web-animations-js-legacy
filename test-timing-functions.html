@@ -52,12 +52,16 @@ limitations under the License.
   top: 300px;
 }
 
+#h {
+  top: 350px;
+}
+
 #expectation {
   position: absolute;
   top: 0px;
   left: 200px;
   width: 100px;
-  height: 350px;
+  height: 400px;
   background: red;
 }
 </style>
@@ -72,6 +76,7 @@ limitations under the License.
   <div id="e" class="anim"></div>
   <div id="f" class="anim"></div>
   <div id="g" class="anim"></div>
+  <div id="h" class="anim"></div>
 </div>
 
 <script src="web-animation.js"></script>
@@ -84,6 +89,6 @@ new Animation(document.querySelector("#d"), {left: "200px"}, {startDelay: 1, dur
 new Animation(document.querySelector("#e"), {left: "200px"}, {startDelay: 1, duration: 2, timingFunction: "steps(3, start)"});
 new Animation(document.querySelector("#f"), {left: "200px"}, {startDelay: 1, duration: 2, timingFunction: "steps(3, middle)"});
 new Animation(document.querySelector("#g"), {left: "200px"}, {startDelay: 1, duration: 2, timingFunction: "steps(3, end)"});
-
+new Animation(document.querySelector("#h"), {left: "200px"}, {startDelay: 1, duration: 2, timingFunction: "cubic-bezier(0.5, -1.5, 0.5, 2.5)"});
 
 </script>
