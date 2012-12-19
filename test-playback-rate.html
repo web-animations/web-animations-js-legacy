@@ -17,34 +17,33 @@ limitations under the License.
 <!DOCTYPE html>
 <style>
 .animContainer {
-	position: absolute;
-	left: 0px;
-	height: 100px;
+  position: absolute;
+  left: 0px;
+  height: 100px;
 }
 
 .anim {
-	left: 0px;
-	width: 100px;
-	height: 25px;
-	background-color: lightsteelblue;
-	position: relative;
+  left: 0px;
+  width: 100px;
+  height: 25px;
+  background-color: lightsteelblue;
+  position: relative;
 }
 
 #ca {
-	top: 0px;
+  top: 0px;
 }
 
 #cb {
-	top: 200px;
+  top: 200px;
 }
 
 #cc {
-	top: 400px;
+  top: 400px;
 }
 
-
 #cd {
-	top: 600px;
+  top: 600px;
 }
 #expectation1 {
   position: absolute;
@@ -68,23 +67,23 @@ limitations under the License.
 <div id=expectation2></div>
 
 <div class="animContainer" id="ca">
-	<div class="anim a"></div>
-	<div class="anim b"></div>
-	<div class="anim c"></div>
-	<div class="anim d"></div>
-	<div class="anim e"></div>
-	<div class="anim f"></div>
-	<div class="anim g"></div>
+  <div class="anim a"></div>
+  <div class="anim b"></div>
+  <div class="anim c"></div>
+  <div class="anim d"></div>
+  <div class="anim e"></div>
+  <div class="anim f"></div>
+  <div class="anim g"></div>
 </div>
 
 <div class="animContainer" id="cb">
-	<div class="anim a"></div>
-	<div class="anim b"></div>
-	<div class="anim c"></div>
-	<div class="anim d"></div>
-	<div class="anim e"></div>
-	<div class="anim f"></div>
-	<div class="anim g"></div>
+  <div class="anim a"></div>
+  <div class="anim b"></div>
+  <div class="anim c"></div>
+  <div class="anim d"></div>
+  <div class="anim e"></div>
+  <div class="anim f"></div>
+  <div class="anim g"></div>
 </div>
 
 <script src="web-animation.js"></script>
@@ -96,23 +95,24 @@ var directions = ["normal", "reverse"];
 var groups = [];
 
 for (var i = 0; i < directions.length; i++) {
-	var dir = directions[i];
-	var group = new ParGroup([], {direction: dir, duration: 3}, undefined, 1);
-	groups.push(group);
+  var dir = directions[i];
+  var group = new ParGroup([], {direction: dir, duration: 3}, undefined, 1);
+  groups.push(group);
 }
 
 for (var i = 0; i < containers.length; i++) {
-	var container = document.getElementById(containers[i]);
-	<!-- All squares should line up at the end of each iteration (or start if reversed). All movement should be at the same speed. -->
-	<!-- Test basic use. -->
-	new Animation(container.getElementsByClassName("a")[0], {left: ["100px", "300px"]}, {duration: 1.0}, groups[i]);
-	new Animation(container.getElementsByClassName("b")[0], {left: ["100px", "300px"]}, {duration: 0.5, playbackRate: 0.5}, groups[i]);
-	new Animation(container.getElementsByClassName("c")[0], {left: ["100px", "300px"]}, {duration: 2.0, playbackRate: 2.0}, groups[i]);
-        <!-- Test negative values. -->
-	new Animation(container.getElementsByClassName("d")[0], {left: ["300px", "100px"]}, {duration: 1.0, playbackRate: -1.0}, groups[i]);
-	new Animation(container.getElementsByClassName("e")[0], {left: ["300px", "100px"]}, {duration: 0.5, playbackRate: -0.5}, groups[i]);
-	new Animation(container.getElementsByClassName("f")[0], {left: ["300px", "100px"]}, {duration: 2.0, playbackRate: -2.0}, groups[i]);
-        <!-- Test zero. -->
-	new Animation(container.getElementsByClassName("g")[0], {left: ["300px", "100px"]}, {duration: 1.0, playbackRate: 0.0}, groups[i]);
+  var container = document.getElementById(containers[i]);
+  // All squares should line up at the end of each iteration (or start if
+  // reversed). All movement should be at the same speed.
+  // Test basic use.
+  new Animation(container.getElementsByClassName("a")[0], {left: ["100px", "300px"]}, {duration: 1.0}, groups[i]);
+  new Animation(container.getElementsByClassName("b")[0], {left: ["100px", "300px"]}, {duration: 0.5, playbackRate: 0.5}, groups[i]);
+  new Animation(container.getElementsByClassName("c")[0], {left: ["100px", "300px"]}, {duration: 2.0, playbackRate: 2.0}, groups[i]);
+   // Test negative values.
+  new Animation(container.getElementsByClassName("d")[0], {left: ["300px", "100px"]}, {duration: 1.0, playbackRate: -1.0}, groups[i]);
+  new Animation(container.getElementsByClassName("e")[0], {left: ["300px", "100px"]}, {duration: 0.5, playbackRate: -0.5}, groups[i]);
+  new Animation(container.getElementsByClassName("f")[0], {left: ["300px", "100px"]}, {duration: 2.0, playbackRate: -2.0}, groups[i]);
+   // Test zero.
+  new Animation(container.getElementsByClassName("g")[0], {left: ["300px", "100px"]}, {duration: 1.0, playbackRate: 0.0}, groups[i]);
 }
 </script>
