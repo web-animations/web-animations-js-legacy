@@ -1,0 +1,102 @@
+<!-- 
+Copyright 2012 Google Inc. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<!DOCTYPE html>
+<style>
+.anim {
+  position: absolute;
+  height: 100px;
+  width: 100px;
+  left: 0px;
+  top: 0px;
+}
+
+#back {
+  background-color: red;
+		
+}
+
+#front {
+  background-color: green;
+
+}
+
+#main {
+ 	
+  position: absolute;
+  width: 500px;
+  height: 300px;
+  top: 150px;
+  left: 100px;
+  border: 2px solid black;
+}
+
+#message {
+
+}
+</style>
+
+<div>
+  <p>There should be a green square moving with no red.</p>
+  <div id="main">
+    <div id="back" class="anim"></div>
+    <div id="front" class="anim"></div>
+  </div>
+  <button onclick="passed()">pass</button>
+  <button onclick="failed()">fail</button>
+  <p id="messageA"></p>
+  <p id="messageB"></p>
+</div>
+
+<script src="web-animation.js"></script>
+<script>
+
+var pass = 0;
+var fail = 0;
+
+var passed = function() {
+  pass = pass + 1;
+  document.querySelector("#messageA").innerHTML = "This test has passed " +pass +" times.";
+}
+
+var failed = function() {
+  fail = fail + 1;
+  document.querySelector("#messageB").innerHTML = "This test has failed " +fail +" times.";
+}
+
+
+var around = new ParGroup([], {iterationCount: 2});
+around.locallyPaused = true;
+
+var seqAround = new SeqGroup([], {iterationCount: 2, direction: "reverse"}, around);
+
+var parAround = new ParGroup([], {iterationCount: 2}, around);
+
+var seqRight = new Animation(document.querySelector("#front"), {left: ["0px", "400px"]}, {duration: 2}, seqAround);
+var seqDown = new Animation(document.querySelector("#front"), {top: ["0px", "200px"]}, {duration: 1}, seqAround);
+var seqLeft = new Animation(document.querySelector("#front"), {left: ["400px", "0px"]}, {duration: 2}, seqAround);
+var seqUp = new Animation(document.querySelector("#front"), {top: ["200px", "0px"]}, {duration: 1}, seqAround);
+
+
+var parDown = new Animation(document.querySelector("#back"), {top: ["0px", "200px"]}, {duration: 1}, parAround);
+var parRight = new Animation(document.querySelector("#back"), {left: ["0px", "400px"]}, {startDelay: 1, duration: 2}, parAround);
+var parUp = new Animation(document.querySelector("#back"), {top: ["200px", "0px"]}, {startDelay: 3, duration: 1}, parAround);
+var parLeft = new Animation(document.querySelector("#back"), {left: ["400px", "0px"]}, {startDelay: 4, duration: 2}, parAround);
+
+
+around.play();
+
+</script>

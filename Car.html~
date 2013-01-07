@@ -17,135 +17,135 @@ limitations under the License.
 <!DOCTYPE html>
 <style>
 .anim {
-  position: absolute;
+	position: absolute;
 }
 
 .car {
-  position: absolute;
-  background-color: LightSteelBlue;
-  left: 10px;
+	position: absolute;
+	background-color: LightSteelBlue;
+	left: 10px;
 
 }
 
 .lightsOn {
 	
-  left: 500px;
-  width: 25px;
-  height: 25px;
-  position: absolute;
-  border-radius: 100%;
+	left: 500px;
+	width: 25px;
+	height: 25px;
+	position: absolute;
+	border-radius: 100%;
 }
 
 .lightsOff {
-  display: hidden;
+	display: hidden;
 }
 
 .block{
-  position: absolute;
-  background-color: lightsteelblue;
+	position: absolute;
+	background-color: lightsteelblue;
 }
 
 .wheel {
-  position: absolute;
-  border-radius: 100%;
-  top:325px;
-  height: 50px;
-  width: 50px;
-  background-color: black;
+	position: absolute;
+	border-radius: 100%;
+	top:325px;
+	height: 50px;
+	width: 50px;
+	background-color: black;
 }
 
 .button {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  height: 2em;
-  width: 6em;
-  text-align: center;
-  font-size: 30px;
+	position: absolute;
+	top: 10px;
+	left: 10px;
+	height: 2em;
+	width: 6em;
+	text-align: center;
+	font-size: 30px;
 }
 
 .button:hover {
-  background-color: green;
+	background-color: green;
 }
 
 .button:click {
-  text-color: blue;
+	text-color: blue;
 }
 
 #redLight {
-  top: 15px;
-  background-color: red;
+	top: 15px;
+	background-color: red;
 }
 
 #orangeLight {
-  top: 45px;
-  background-color: rgb(50,50,50);
+	top: 45px;
+	background-color: rgb(50,50,50);
 
 }
 
 #greenLight {
-  top: 75px;
-  background-color: rgb(50,50,50);
+	top: 75px;
+	background-color: rgb(50,50,50);
 }
 
 #a {
-  position: absolute;
-  top: 10px;
-  left: 495px;
-  width: 35px;
-  height: 95px;
-  background-color: rgb(192,192,192);
+	position: absolute;
+	top: 10px;
+	left: 495px;
+	width: 35px;
+	height: 95px;
+	background-color: rgb(192,192,192);
 }
 
 #carA {
-  top: 200px;
-  left: 10px;
-  width: 300px;
-  height: 150px;
+	top: 200px;
+	left: 10px;
+	width: 300px;
+	height: 150px;
 }
 
 #carB {
-  top: 275px;
-  left: 315px;
-  width: 100px;
-  height: 75px;
+	top: 275px;
+	left: 315px;
+	width: 100px;
+	height: 75px;
 }
 
 #carC {
-  top: 225px;
-  left: 315px;
-  width: 75px;
-  height: 50px;
+	top: 225px;
+	left: 315px;
+	width: 75px;
+	height: 50px;
 }
 
 #wheelA {
-  left: 25px;
+	left: 25px;
 }
 
 #wheelB {
-  left: 195px;
+	left: 195px;
 }
 
 </style>
 
 <div>
-  <div id="a"></div>
-  <div id="redLight" class="lightsOn"></div>
-  <div id="orangeLight" class="lightsOn"></div>
-  <div id="greenLight" class="lightsOn"></div>
-  <div class="car">
-    <div id="carA" class="block"></div>
-    <div id="carB" class="block"></div>
-    <div id="carC" class="block"></div>
-    <div id="wheelA" class="wheel"></div>
-    <div id="wheelB" class="wheel"></div>
-  </div>
-  <button id="buttonA" class="button">
-    <p id="down">"Go!"</p>
-  </button>
+	<div id="a"></div>
+	<div id="redLight" class="lightsOn"></div>
+	<div id="orangeLight" class="lightsOn"></div>
+	<div id="greenLight" class="lightsOn"></div>
+	<div class="car">
+		<div id="carA" class="block"></div>
+		<div id="carB" class="block"></div>
+		<div id="carC" class="block"></div>
+		<div id="wheelA" class="wheel"></div>
+		<div id="wheelB" class="wheel"></div>
+	</div>
+	<button id="buttonA" class="button">
+		<p id="down">"Go!"</p>
+	</button>
 </div>
 
-<script src="../web-animation.js"></script>
+<script src="web-animation.js"></script>
 <script>
   var lightOff = "rgb(50,50,50)";
 
