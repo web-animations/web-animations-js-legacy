@@ -1,0 +1,98 @@
+<!-- 
+Copyright 2012 Google Inc. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<script>
+var tests = [
+  ['test-change-playback-rate.html', 0, 0],
+  ['test-composite-transforms.html', 0, 0],
+  ['test-compositor.html', 0, 0],
+  ['test-fill-values.html', 0, 0],
+  ['test-grouped-anim-func.html', 0, 0],
+  ['test-iterations-basic.html', 0, 0],
+  ['test-iterations-fill-declarative.html', 0, 0],
+  ['test-iterations-fill.html', 0, 0],
+  ['test-iteration-start.html', 0, 0],
+  ['test-keyframe-creation.html', 0, 0],
+  ['test-parent.html', 0, 0],
+  ['test-path.html', 0, 0],
+  ['test-pause.html', 0, 0],
+  ['test-playback-rate.html', 0, 0],
+  ['test-seq-speed.html', 0, 0],
+  ['test-step.html', 0, 0],
+  ['test-svg-anim.html', 0, 0],
+  ['test-templating.html', 0, 0],
+  ['test-timing-functions.html', 0, 0],
+  ['test-to-animation.html', 0, 0],
+  ['test-alternate-direction.html', 0, 0],
+  ['test-timing', 0, 0],
+  ['test-direction', 0, 0],
+  ['test-parallel-group', 0, 0]  
+];
+
+
+</script>
+<style>
+iframe {
+  width: 800px;
+  height: 800px;
+}
+</style>
+<button id=prev-button onclick="updateState(-1)">Prev</button>
+<button id=reload-button onclick="updateState()">Reload</button>
+<button id=next-button onclick="updateState(1)">Next</button><br>
+<button id=pass-button onclick="pass(1)">Pass</button>
+<button id=fail-button onclick="fail(1)">Fail</button>
+<div id=test-name></div>
+<iframe></iframe>
+<p id=pass-message></p>
+<p id=fail-message></p>
+<script>
+var currentTest = 0;
+if (window.location.hash && tests.indexOf(window.location.hash.substr(1))) {
+  currentTest = tests.indexOf(window.location.hash.substr(1));
+}
+
+function updateState(change) {
+  if (change) {
+    currentTest += change;
+  }
+  var test = tests[currentTest][0];
+  window.location.hash = test;
+  document.querySelector('#test-name').innerText = (currentTest + 1) + ' of ' + tests.length + ': ' + test;
+  document.querySelector('iframe').src = test;
+  document.querySelector('#prev-button').disabled = currentTest <= 0;
+  document.querySelector('#next-button').disabled = currentTest >= tests.length - 1;
+  pass(0);
+  fail(0);
+}
+
+updateState();
+
+function pass(update) {
+  tests[currentTest][1] = tests[currentTest][1] + update;
+  document.querySelector("#pass-message").innerHTML = "This test has passed " +tests[currentTest][1] +" time(s)";
+}
+
+function fail(update) {
+  tests[currentTest][2] = tests[currentTest][2] + update;
+  document.querySelector("#fail-message").innerHTML = "This test has failed " +tests[currentTest][2] +" time(s)";
+}
+
+function clear() {
+  document.querySelector("#pass-message").innerHTML = "";
+  document.querySelector("#fail-message").innerHTML = "";
+}
+
+</script>

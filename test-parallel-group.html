@@ -1,0 +1,64 @@
+<!-- 
+Copyright 2012 Google Inc. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<!DOCTYPE html>
+<style>
+.anim {
+  position: absolute;
+  height: 100px;
+  width: 100px;
+  left: 100px;
+  top: 100px;
+}
+
+#a {
+  background-color: red;
+		
+}
+
+#b {
+  background-color: green;
+
+}
+
+</style>
+
+<div>
+  <div id="a" class="anim"></div>
+  <div id="b" class="anim"></div>
+  <p>There should be a green square moving with no red.</p>
+</div>
+
+<script src="web-animation.js"></script>
+<script>
+
+var leftRight = new SeqGroup([]);
+
+leftRight.locallyPaused = true;
+
+var left = new ParGroup([], {}, leftRight);
+var right = new ParGroup([], {}, leftRight);
+
+var aLeft = new Animation(document.querySelector("#a"), {left: ["100px", "200px"]}, {duration: 1}, left);
+var aRight = new Animation(document.querySelector("#a"), {left: ["200px", "100px"]}, {duration: 1}, right);
+
+var bLeft = new Animation(document.querySelector("#b"), {left: ["100px", "200px"]}, {duration: 1}, left);
+var bRight = new Animation(document.querySelector("#b"), {left: ["200px", "100px"]}, {duration: 1}, right);
+
+leftRight.play();
+
+
+</script>

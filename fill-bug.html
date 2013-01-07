@@ -1,0 +1,72 @@
+<!-- 
+Copyright 2012 Google Inc. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<!DOCTYPE html>
+<style>
+.anim {
+	position: absolute;
+	height: 100px;
+	width: 100px;
+	left: 100px;
+}
+
+#a {
+	background-color: red;
+	top: 100px;	
+}
+
+#b {
+	background-color: blue;
+	top: 200px;	
+}
+
+</style>
+
+<div>
+	<div id="a" class="anim"></div>
+	<div id="b" class="anim"></div>
+	<button id="buttonA" class="button">
+		<p id="down">"Go!"</p>
+	</button>
+</div>
+
+<script src="web-animation.js"></script>
+<script>
+  var go = function() {
+	var lightOff = "rgb(50,50,50)";
+	
+	var aLeft = new Animation(document.querySelector("#a"), {left: ["100px", "200px"]}, {duration: 1});
+	var aRight = new Animation(document.querySelector("#a"), {left: ["200px", "100px"]}, {duration: 1});
+	
+	var bLeft = new Animation(document.querySelector("#b"), {left: ["100px", "200px"]}, {duration: 1});
+	var bRight = new Animation(document.querySelector("#b"), {left: ["200px", "100px"]}, {duration: 1});
+	
+	var left = new SeqGroup([aLeft, bLeft]);
+	var right = new ParGroup([aRight, bRight]);	
+
+	var sgroup = new SeqGroup([left, right]);
+
+	//var sgroup = new SeqGroup([right, left]);
+
+	//var sgroup = new SeqGroup([left, bRight]);
+	
+	sgroup.play();
+
+}
+
+var button = document.querySelector("#buttonA");
+button.addEventListener('mousedown', go, false);
+</script>
