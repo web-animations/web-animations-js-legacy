@@ -20,7 +20,7 @@ limitations under the License.
   <head>
     <style>
       #main {
-        position: absolute;
+        position: relative;
         width: 500px;
         height: 300px;
         top: 100px;
@@ -57,10 +57,22 @@ limitations under the License.
         left: 0px;
         position: absolute;
       }
+      .txt {
+        width: 7	00px;
+        position: relative;
+      }
     </style>
   </head> 
   <body>
-    <div id="main">	
+    <div class="txt">The animation should have a circle changes colour as it moves along the edge of a rectangular box,
+         a red circle moving towards all 4 corners and back to the center of the box,
+         2 square that rotates and move along the top and bottom edge of the box. The circle that changes
+         colour should moves in alternate directions.</div>
+    <div class="txt"></div>
+    <div class="txt">Somehow the circle that changes colour jumps to different spots after finish it's first round.
+         Other elements move as expected.</div>
+         
+    <div id="main">    
     <div class="anim" id="a"></div>
     <div class="block" id="blockA"></div>
     <div class="anim" id="b"></div>
@@ -75,7 +87,7 @@ limitations under the License.
     var around5 = new Animation(document.querySelector("#a"), {top: "0px"}, {startDelay: 6, duration: 2});
     var blueBallMove = new ParGroup([around1, around2, around3, around4, around5], {iterationCount: 2, direction: "alternate", duration: 8});
 	
-	var redBallMove = new SeqGroup([], {duration: 16});
+    var redBallMove = new SeqGroup([], {duration: 16});
     new Animation(document.querySelector("#b"), {top: "0px", left: "0px"}, 2, redBallMove);
     new Animation(document.querySelector("#b"), {top: "125px", left: "225px"}, 2, redBallMove);
     new Animation(document.querySelector("#b"), {top: "0px", left: "450px"}, 2, redBallMove);
@@ -87,11 +99,9 @@ limitations under the License.
     
     new ParGroup([blueBallMove, redBallMove]);
 
-/*	after adding these, the animation doesn't go smoothly anymore
-
     var transformGroup = new ParGroup([]);
     new Animation(document.querySelector("#blockA"), {"-webkit-transform": ["translate(0px, 0px) rotate(0deg)", "translate(-450px, 0px) rotate(180deg)"]} , 4, transformGroup);
-    new Animation(document.querySelector("#blockB"), {"-webkit-transform": ["translate(0px, 0px) rotate(0deg)", "translate(450px, 0px) rotate(270deg)"]} , 4, transformGroup); */
+    new Animation(document.querySelector("#blockB"), {"-webkit-transform": ["translate(0px, 0px) rotate(0deg)", "translate(450px, 0px) rotate(270deg)"]} , 4, transformGroup); 
   </script>              
   </body>
 </html>
