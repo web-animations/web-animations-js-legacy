@@ -66,31 +66,32 @@ limitations under the License.
     <div class="anim" id="b"></div>
     <div class="block" id="blockB"></div>
   </div>
-  <script src="web-animation.js"></script>
-  <script>	
+  <script src="../web-animation.js"></script>
+  <script>
     var around1 = new Animation(document.querySelector("#a"), {left: "450px"}, 2);
     var around2 = new Animation(document.querySelector("#a"), {"background-color": ["lightsteelblue", "red", "green", "lightsteelblue"]}, 8);
     var around3 = new Animation(document.querySelector("#a"), {top: "250px"}, {startDelay: 2, duration: 2});
     var around4 = new Animation(document.querySelector("#a"), {left: "0px"}, {startDelay: 4, duration: 2});
     var around5 = new Animation(document.querySelector("#a"), {top: "0px"}, {startDelay: 6, duration: 2});
-    new ParGroup([around1, around2, around3, around4, around5], {iterationCount: 2, direction: "alternate", duration: 8});
-			
-    var backToMiddle = function(delayTime) {
-      new Animation(document.querySelector("#b"), {top: "125px", left: "225px"}, {startDelay: delayTime, duration: 2});
-    }
-    new Animation(document.querySelector("#b"), {top: "0px", left: "0px"}, 2);
-    backToMiddle(2);
-    new Animation(document.querySelector("#b"), {top: "0px", left: "450px"}, {startDelay: 4, duration: 2});
-    backToMiddle(6);
-    new Animation(document.querySelector("#b"), {top: "250px", left: "450px"}, {startDelay: 8, duration: 2});
-    backToMiddle(10);
-    new Animation(document.querySelector("#b"), {top: "250px", left: "0px"}, {startDelay: 12, duration: 2});
-    backToMiddle(14);
-		
-    new Animation(document.querySelector("#blockA"), {"-webkit-transform": ["translate(0px, 0px) rotate(0deg)", "translate(-450px, 0px) rotate(180deg)"]} , 4);
-    new Animation(document.querySelector("#blockB"), {"-webkit-transform": ["translate(0px, 0px) rotate(0deg)", "translate(450px, 0px) rotate(270deg)"]} , 4);
-    new Animation(document.querySelector("#blockA"), {"-webkit-transform": ["translate(-450px, 0px) rotate(0deg)", "translate(-450px, 250px) rotate(180deg)"]} , 4);
-    new Animation(document.querySelector("#blockB"), {"-webkit-transform": ["translate(450px, 0px) rotate(0deg)", "translate(450px, -250px) rotate(270deg)"]} , 4);
+    var blueBallMove = new ParGroup([around1, around2, around3, around4, around5], {iterationCount: 2, direction: "alternate", duration: 8});
+	
+	var redBallMove = new SeqGroup([], {duration: 16});
+    new Animation(document.querySelector("#b"), {top: "0px", left: "0px"}, 2, redBallMove);
+    new Animation(document.querySelector("#b"), {top: "125px", left: "225px"}, 2, redBallMove);
+    new Animation(document.querySelector("#b"), {top: "0px", left: "450px"}, 2, redBallMove);
+    new Animation(document.querySelector("#b"), {top: "125px", left: "225px"}, 2, redBallMove);
+    new Animation(document.querySelector("#b"), {top: "250px", left: "450px"}, 2, redBallMove);
+    new Animation(document.querySelector("#b"), {top: "125px", left: "225px"}, 2, redBallMove);
+    new Animation(document.querySelector("#b"), {top: "250px", left: "0px"}, 2, redBallMove);
+    new Animation(document.querySelector("#b"), {top: "125px", left: "225px"}, 2, redBallMove);
+    
+    new ParGroup([blueBallMove, redBallMove]);
+
+/*	after adding these, the animation doesn't go smoothly anymore
+
+    var transformGroup = new ParGroup([]);
+    new Animation(document.querySelector("#blockA"), {"-webkit-transform": ["translate(0px, 0px) rotate(0deg)", "translate(-450px, 0px) rotate(180deg)"]} , 4, transformGroup);
+    new Animation(document.querySelector("#blockB"), {"-webkit-transform": ["translate(0px, 0px) rotate(0deg)", "translate(450px, 0px) rotate(270deg)"]} , 4, transformGroup); */
   </script>              
   </body>
 </html>
