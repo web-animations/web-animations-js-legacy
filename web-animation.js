@@ -560,12 +560,6 @@ var LinkedAnimation = function(target, template, parentGroup, startTime) {
   return anim;
 };
 
-// TODO: what is this, it isn't used anywhere?
-var ClonedAnimation = function(target, cloneSource, parentGroup, startTime) {
-  var anim = new Animation(target, cloneSource.timing.clone(),
-      cloneSource.animationFunction.clone(), parentGroup, startTime);
-};
-
 /** @constructor */
 var Animation = function(target, animationFunction, timing, parentGroup, startTime) {
   this.animationFunction = interpretAnimationFunction(animationFunction);
