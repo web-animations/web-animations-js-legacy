@@ -1051,7 +1051,7 @@ AnimationFunction.createFromProperties = function(properties) {
   // Step 1 - determine set of animation properties
   var animProps = [];
   for (var candidate in properties) {
-    if (supportedProperties.hasOwnProperty(candidate)) {
+    if (candidate in propertyTypes) {
       animProps.push(candidate);
     }
   }
@@ -1482,7 +1482,7 @@ var numberType = {
 
 var calcRE = /-webkit-calc\s*\(\s*([^+\s)]*)\s*([+-])\s*([^+\s)]*)\s*\)/
 
-var lengthType = {
+var percentLengthType = {
   zero: function() { return {px: 0, percent: 0}; },
   add: function(base, delta) { 
     return {px: base.px + delta.px, 
@@ -1520,6 +1520,15 @@ var lengthType = {
     }
   }
 };
+
+// TODO: implement properly
+var lengthType = percentLengthType;
+var integerType = numberType;
+// TODO: implement
+var shadowType = undefined;
+var visibilityType = undefined;
+var rectangleType = undefined;
+var fontWeightType = undefined;
 
 var rgbRE = /^\s*rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/;
 var rgbaRE = /^\s*rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+|\d*\.\d+)\s*\)/;
@@ -1679,47 +1688,81 @@ var transformType = {
   }
 };
 
-var supportedProperties = [];
+var propertyTypes = {
+  'background-color': colorType,
+  'background-position': percentLengthType,
+  'border-bottom-color': colorType,
+  'border-bottom-width': lengthType,
+  'border-left-color': colorType,
+  'border-left-width': lengthType,
+  'border-right-color': colorType,
+  'border-right-width': lengthType,
+  'border-spacing': lengthType,
+  'border-top-color': colorType,
+  'border-top-width': lengthType,
+  'bottom': percentLengthType,
+  'clip': rectangleType,
+  'color': colorType,
+  'crop': rectangleType,
+  'cx': lengthType,
+  'font-size': percentLengthType,
+  'font-weight': fontWeightType,
+  'height': percentLengthType,
+  'left': percentLengthType,
+  'letter-spacing': lengthType,
+  // TODO: should be both number and percent-length
+  'line-height': percentLengthType,
+  'margin-bottom': lengthType,
+  'margin-left': lengthType,
+  'margin-right': lengthType,
+  'margin-top': lengthType,
+  'max-height': percentLengthType,
+  'max-width': percentLengthType,
+  'min-height': percentLengthType,
+  'min-width': percentLengthType,
+  'opacity': numberType,
+  'outline-color': colorType,
+  'outline-offset': integerType,
+  'outline-width': lengthType,
+  'padding-bottom': lengthType,
+  'padding-left': lengthType,
+  'padding-right': lengthType,
+  'padding-top': lengthType,
+  'right': percentLengthType,
+  'text-indent': percentLengthType,
+  'text-shadow': shadowType,
+  'top': percentLengthType,
+  'transform': transformType,
+  '-webkit-transform': transformType,
+  'vertical-align': percentLengthType,
+  'visibility': visibilityType,
+  'width': percentLengthType,
+  'word-spacing': percentLengthType,
+  'x': lengthType,
+  'y': lengthType,
+  'z-index': integerType,
+};
 
-supportedProperties['opacity'] =
-    { type: numberType, isSVGAttrib: false};
+var svgProperties = {
+  // TODO: For browsers that support transform as a style attribute on SVG we can
+  // delete this.
+  'transform': 1,
+  'cx': 1,
+  'width': 1,
+  'x': 1,
+  'y': 1,
+};
 
-// Length properties
-supportedProperties['left'] =
-    { type: lengthType, isSVGAttrib: false};
-supportedProperties['top'] =
-    { type: lengthType, isSVGAttrib: false};
-supportedProperties['cx'] =
-    { type: lengthType, isSVGAttrib: true};
-supportedProperties['x'] =
-    { type: lengthType, isSVGAttrib: true};
-supportedProperties['y'] =
-    { type: lengthType, isSVGAttrib: true};
-supportedProperties['width'] =
-    { type: lengthType, isSVGAttrib: true};
-
-// For browsers that support transform as a style attribute on SVG we can
-// set isSVGAttrib to false
-supportedProperties['transform'] =
-    { type: transformType, isSVGAttrib: true};
-supportedProperties['-webkit-transform'] =
-    { type: transformType, isSVGAttrib: false };
-
-// Color properties
-supportedProperties['background-color'] =
-    { type: colorType, isSVGAttrib: false};
 
 var propertyIsSVGAttrib = function(property, target) {
-  if (target.namespaceURI !== 'http://www.w3.org/2000/svg')
-    return false;
-  var propDetails = supportedProperties[property];
-  return propDetails && propDetails.isSVGAttrib;
+  return target.namespaceURI == 'http://www.w3.org/2000/svg' &&
+      property in svgProperties;
 };
 
 var getType = function(property) {
-  var propertyRef = supportedProperties[property];
-  if (isDefinedAndNotNull(propertyRef)) {
-    return propertyRef.type;
+  var type = propertyTypes[property];
+  if (isDefinedAndNotNull(type)) {
+    return type;
   }
   throw new Error('Unsupported property');
 }
