@@ -58,6 +58,9 @@ var check = function(actual, expected, failureMessage) {
 var leftToRight = {left: ["100px", "200px"]};
 var rightToLeft = {left: ["200px", "100px"]};
 
+/*
+TODO: Reinstate pause functionality.
+
 // Test that an animation uses the correct compositing order when it has a
 // grandparent that remains active longer than its parent.
 //
@@ -99,5 +102,6 @@ setTimeout(function() {
   check(getComputedStyle(target2).getPropertyValue("left"), "100px",
       "Nested animation should have later compositing order");
 }, 100.0);
+*/
 
 </script>

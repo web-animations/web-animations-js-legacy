@@ -134,7 +134,6 @@
   var lightOff = "rgb(50,50,50)";
 
   var sgroup = new SeqGroup([]);
-  sgroup.locallyPaused = true;
 
   var go = new ParGroup([], {}, sgroup);
   new Animation(document.querySelector("#redLight"), {"background-color": lightOff}, {duration: 0.5}, go);

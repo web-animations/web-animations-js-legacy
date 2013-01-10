@@ -156,22 +156,14 @@ var TimedItem = function(timing, parentGroup) {
   }
   this._parentGroup = this._sanitizeParent(parentGroup);
 
-  this._timeDrift = 0;
-  this._locallyPaused = false;
+  this.timeDrift = 0;
 
   if (this.parentGroup) {
     this.parentGroup._addInternal(this);
   }
   this._updateInternalState();
-  this._pauseStartTime = 0;
 };
 
-TimedItem.prototype.__defineGetter__('timeDrift', function() {
-  if (this.locallyPaused) {
-    return this._effectiveParentTime - this.startTime - this._pauseStartTime;
-  }
-  return this._timeDrift;
-});
 TimedItem.prototype.__defineGetter__('_effectiveParentTime', function() {
   return this.parentGroup !== null && this.parentGroup.iterationTime !== null ?
       this.parentGroup.iterationTime : 0;
@@ -180,35 +172,11 @@ TimedItem.prototype.__defineGetter__('currentTime', function() {
   return this._effectiveParentTime - this._startTime - this.timeDrift;
 });
 TimedItem.prototype.__defineSetter__('currentTime', function(seekTime) {
-  if (this._locallyPaused) {
-    this._pauseStartTime = seekTime;
-  } else {
-    this._timeDrift = this._effectiveParentTime - this._startTime - seekTime;
-  }
+  this.timeDrift = this._effectiveParentTime - this._startTime - seekTime;
   this._updateTimeMarkers();
 });
 TimedItem.prototype.__defineGetter__('startTime', function() {
   return this._startTime;
-});
-TimedItem.prototype.__defineGetter__('locallyPaused', function() {
-  return this._locallyPaused;
-});
-TimedItem.prototype.__defineSetter__('locallyPaused', function(newVal) {
-  if (this._locallyPaused === newVal) {
-    return;
-  }
-  if (this._locallyPaused) {
-    this._timeDrift = this._effectiveParentTime - this.startTime -
-        this._pauseStartTime;
-  } else {
-    this._pauseStartTime = this.currentTime;
-  }
-  this._locallyPaused = newVal;
-  this._updateTimeMarkers();
-});
-TimedItem.prototype.__defineGetter__('paused', function() {
-  return this.locallyPaused ||
-      (isDefinedAndNotNull(this.parentGroup) && this.parentGroup.paused);
 });
 TimedItem.prototype.__defineSetter__('duration', function(duration) {
   this._duration = duration;
@@ -232,8 +200,7 @@ TimedItem.prototype.__defineGetter__('animationDuration', function() {
   return repeatedDuration / Math.abs(this.timing.playbackRate);
 });
 TimedItem.prototype.__defineGetter__('endTime', function() {
-  return this.locallyPaused ? Infinity :
-      this._startTime + this.animationDuration + this.timing.startDelay +
+  return this._startTime + this.animationDuration + this.timing.startDelay +
       this.timeDrift;
 });
 TimedItem.prototype.__defineGetter__('parentGroup', function() {
@@ -259,7 +226,7 @@ mixin(TimedItem.prototype, {
       this.parentGroup.remove(this.parentGroup.indexOf(this), 1);
     }
     this._parentGroup = parentGroup;
-    this._timeDrift = 0;
+    this.timeDrift = 0;
     // In the case of a SeqGroup parent, _startTime will be updated by
     // AnimationGroup.splice().
     if (this.parentGroup === null || this.parentGroup.type !== 'seq') {
@@ -432,9 +399,6 @@ mixin(TimedItem.prototype, {
     return this.parentGroup._iterationTimeToRootItemTime(
         this._iterationTimeToItemTime(inputTime) + this._startTime);
   },
-  pause: function() {
-    this.locallyPaused = true;
-  },
   seek: function(itemTime) {
     // TODO
   },
@@ -475,7 +439,6 @@ mixin(TimedItem.prototype, {
         this.timing.playbackRate >= 0) {
       this.currentTime = this.timing.startDelay;
     }
-    this.locallyPaused = false;
   },
   _floorWithClosedOpenRange: function(x, range) {
     return Math.floor(x / range);
