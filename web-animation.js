@@ -200,12 +200,12 @@ var TimedItem = function(timing, startTime, parentGroup) {
   this.animationTime = null;
   this._reversing = false;
 
-  if (parentGroup === null || parentGroup instanceof TimedItem) {
+  if (parentGroup === null || parentGroup instanceof AnimationGroup) {
     this.parentGroup = parentGroup;
   } else if (!isDefined(parentGroup)) {
     this.parentGroup = DEFAULT_GROUP;
   } else {
-    throw new TypeError('parentGroup is not a TimedItem');
+    throw new TypeError('parentGroup is not an AnimationGroup');
   }
 
   if (!isDefined(startTime)) {
