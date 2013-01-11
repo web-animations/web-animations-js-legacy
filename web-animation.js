@@ -1913,8 +1913,7 @@ var rAFNo = undefined;
 
 // Pass null for the parent, as TimedItem uses the default group, (ie this
 // object) as the parent if no value is provided. 
-var DEFAULT_GROUP = new AnimationGroup(
-    'par', null, [], {name: 'DEFAULT'}, 0, null);
+var DEFAULT_GROUP = new ParGroup([], {name: 'DEFAULT'}, null);
 
 DEFAULT_GROUP.compositor = new Compositor();
 
