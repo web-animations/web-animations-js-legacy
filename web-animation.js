@@ -210,14 +210,10 @@ var TimedItem = function(timing, startTime, parentGroup) {
 
   if (!isDefined(startTime)) {
     this._startTimeMode = ST_AUTO;
-    if (this.parentGroup) {
-      // We take parentGroup.iterationTime at the moment this TimedItem is
-      // created. Note that the call to _addChild() below may cause the parent
-      // to update its timing properties, including its iterationTime.
-      this._startTime = this.parentGroup.iterationTime || 0;
-    } else {
-      this._startTime = 0;
-    }
+    // We take _effectiveParentTime at the moment this TimedItem is
+    // created. Note that the call to _addChild() below may cause the parent
+    // to update its timing properties, including its iterationTime.
+    this._startTime = this._effectiveParentTime;
   } else {
     this._startTimeMode = ST_MANUAL;
     this._startTime = startTime;
@@ -307,7 +303,7 @@ mixin(TimedItem.prototype, {
       this._startTimeMode = this._stashedStartTimeMode;
     }
     if (this._startTimeMode == ST_AUTO) {
-      this._startTime = this.parentGroup.iterationTime || 0;
+      this._startTime = this._effectiveParentTime;
     }
     this.updateTimeMarkers();
   },
