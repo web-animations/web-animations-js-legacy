@@ -1255,13 +1255,19 @@ var percentLengthType = {
     return out;
   },
   toCssValue: function(value) { 
-    if (!isDefinedAndNotNull(value['%']) || value['%'] == 0) {
-      return value.px + 'px';
-    } else if (!isDefinedAndNotNull(value.px) || value.px == 0) {
-      return value['%'] + '%';
-    } else {
-      return '-webkit-calc(' + value.px + 'px + ' + value['%'] + '%)';
+    var s = '';
+    single_value = true;
+    for (item in value) {
+      if (s === '') {
+        s = value[item] + item;
+      } else if (single_value) {
+        s = '-webkit-calc(' + s + ' + ' + value[item] + item + ')';
+        single_value = false;
+      } else {
+        s = s.substring(0, s.length - 1) + ' + ' + value[item] + item + ')';
+      }
     }
+    return s;
   },
   fromCssValue: function(value) {
     var out = {}
