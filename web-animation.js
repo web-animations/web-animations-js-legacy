@@ -1223,7 +1223,7 @@ integerType.__proto__ = numberType;
 var calcRE = /-webkit-calc\s*\(\s*([^+\s)]*)\s*([+-])\s*([^+\s)]*)\s*\)/
 
 var percentLengthType = {
-  zero: function() { return {px: 0, percent: 0}; },
+  zero: function() { return {}; },
   add: function(base, delta) { 
     out = {}
     for (value in base) {
