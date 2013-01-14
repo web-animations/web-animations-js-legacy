@@ -1255,26 +1255,31 @@ var percentLengthType = {
     return out;
   },
   toCssValue: function(value) { 
-    if (!isDefinedAndNotNull(value.percent) || value.percent == 0) {
+    if (!isDefinedAndNotNull(value['%']) || value['%'] == 0) {
       return value.px + 'px';
     } else if (!isDefinedAndNotNull(value.px) || value.px == 0) {
-      return value.percent + '%';
+      return value['%'] + '%';
     } else {
-      return '-webkit-calc(' + value.px + 'px + ' + value.percent + '%)';
+      return '-webkit-calc(' + value.px + 'px + ' + value['%'] + '%)';
     }
   },
   fromCssValue: function(value) {
+    var out = {}
     if (value.substring(value.length - 2) === 'px') {
-      return {px: Number(value.substring(0, value.length - 2))};
+      out['px'] = Number(value.substring(0, value.length - 2));
+      return out;
     } else if (value.substring(value.length - 1) === '%') {
-      return {percent: Number(value.substring(0, value.length - 1))};
+      out['%'] = Number(value.substring(0, value.length - 1));
+      return out;
     } else {
       var r = calcRE.exec(value);
       if (r) {
         var left = lengthType.fromCssValue(r[1]);
         var right = lengthType.fromCssValue(r[3]);
         if (r[2] == '-') {
-          right = {px: -right.px, percent: -right.percent};
+          for (value in right) {
+            right[value] = -right[value];
+          }
         }
         return lengthType.add(left, right);
       }
