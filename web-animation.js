@@ -1528,7 +1528,6 @@ var percentLengthType = {
 
 // TODO: implement properly
 var lengthType = percentLengthType;
-var integerType = integerType;
 // TODO: implement
 var shadowType = undefined;
 var visibilityType = undefined;
@@ -1727,6 +1726,7 @@ var propertyTypes = {
   'min-width': percentLengthType,
   'opacity': numberType,
   'outline-color': colorType,
+  // TODO: not clear why this is an integer in the transitions spec
   'outline-offset': integerType,
   'outline-width': lengthType,
   'padding-bottom': lengthType,
