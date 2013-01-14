@@ -1220,22 +1220,16 @@ var integerType = {
 };
 integerType.__proto__ = numberType;
 
-var calcRE = /-webkit-calc\s*\(\s*([^+\s)]*)\s*([+-])\s*([^+\s)]*)\s*\)/
-
-var outerCalcRE = /-webkit-calc\s*\(\s*([^)]*)\)/
-var valueRE = /\s*([0-9.]*)([a-zA-Z%]*)/
-var operatorRE = /\s*([+-])/
+var outerCalcRE = /-webkit-calc\s*\(\s*([^)]*)\)/;
+var valueRE = /\s*([0-9.]*)([a-zA-Z%]*)/;
+var operatorRE = /\s*([+-])/;
 
 var percentLengthType = {
   zero: function() { return {}; },
   add: function(base, delta) { 
-    out = {}
+    var out = {};
     for (value in base) {
-        if (value in delta) {
-            out[value] = base[value] + delta[value];
-        } else {
-            out[value] = base[value];
-        }
+        out[value] = base[value] + (delta[value] || 0);
     }
     for (value in delta) {
         if (value in base) {
@@ -1246,11 +1240,11 @@ var percentLengthType = {
     return out;
   },
   interpolate: function(from, to, f) {
-    out = {}
-    for (value in from) {
+    var out = {};
+    for (var value in from) {
         out[value] = interp(from[value], to[value], f);
     }
-    for (value in to) {
+    for (var value in to) {
         if (value in out) {
             continue;
         }
@@ -1260,8 +1254,8 @@ var percentLengthType = {
   },
   toCssValue: function(value) { 
     var s = '';
-    single_value = true;
-    for (item in value) {
+    var single_value = true;
+    for (var item in value) {
       if (s === '') {
         s = value[item] + item;
       } else if (single_value) {
@@ -1276,7 +1270,7 @@ var percentLengthType = {
   fromCssValue: function(value) {
     var out = {}
     var innards = outerCalcRE.exec(value);
-    if (innards == null) {
+    if (!innards) {
       var singleValue = valueRE.exec(value);
       if (singleValue.length == 3) {
         out[singleValue[2]] = Number(singleValue[1]);
