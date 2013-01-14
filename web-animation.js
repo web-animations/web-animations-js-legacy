@@ -200,24 +200,20 @@ var TimedItem = function(timing, startTime, parentGroup) {
   this.animationTime = null;
   this._reversing = false;
 
-  if (parentGroup === null || parentGroup instanceof TimedItem) {
+  if (parentGroup === null || parentGroup instanceof AnimationGroup) {
     this.parentGroup = parentGroup;
   } else if (!isDefined(parentGroup)) {
     this.parentGroup = DEFAULT_GROUP;
   } else {
-    throw new TypeError('parentGroup is not a TimedItem');
+    throw new TypeError('parentGroup is not an AnimationGroup');
   }
 
   if (!isDefined(startTime)) {
     this._startTimeMode = ST_AUTO;
-    if (this.parentGroup) {
-      // We take parentGroup.iterationTime at the moment this TimedItem is
-      // created. Note that the call to _addChild() below may cause the parent
-      // to update its timing properties, including its iterationTime.
-      this._startTime = this.parentGroup.iterationTime || 0;
-    } else {
-      this._startTime = 0;
-    }
+    // We take _effectiveParentTime at the moment this TimedItem is
+    // created. Note that the call to _addChild() below may cause the parent
+    // to update its timing properties, including its iterationTime.
+    this._startTime = this._effectiveParentTime;
   } else {
     this._startTimeMode = ST_MANUAL;
     this._startTime = startTime;
@@ -307,7 +303,7 @@ mixin(TimedItem.prototype, {
       this._startTimeMode = this._stashedStartTimeMode;
     }
     if (this._startTimeMode == ST_AUTO) {
-      this._startTime = this.parentGroup.iterationTime || 0;
+      this._startTime = this._effectiveParentTime;
     }
     this.updateTimeMarkers();
   },
@@ -558,12 +554,6 @@ var LinkedAnimation = function(target, template, parentGroup, startTime) {
   anim.template = template;
   template.addLinkedAnimation(anim);
   return anim;
-};
-
-// TODO: what is this, it isn't used anywhere?
-var ClonedAnimation = function(target, cloneSource, parentGroup, startTime) {
-  var anim = new Animation(target, cloneSource.timing.clone(),
-      cloneSource.animationFunction.clone(), parentGroup, startTime);
 };
 
 /** @constructor */
@@ -2014,8 +2004,7 @@ var rAFNo = undefined;
 
 // Pass null for the parent, as TimedItem uses the default group, (ie this
 // object) as the parent if no value is provided. 
-var DEFAULT_GROUP = new AnimationGroup(
-    'par', null, [], {name: 'DEFAULT'}, 0, null);
+var DEFAULT_GROUP = new ParGroup([], {name: 'DEFAULT'}, null);
 
 DEFAULT_GROUP.compositor = new Compositor();
 

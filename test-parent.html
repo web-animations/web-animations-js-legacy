@@ -43,15 +43,21 @@ limitations under the License.
 // Lone animation with default parent. Should use default group.
 new Animation(document.getElementById("a"), {left: ["100px", "200px"]}, 1.0);
 // Lone animation with explicit default parent. Should use default group.
-new Animation(document.getElementById("b"), {left: ["100px", "200px"]}, 1.0, undefined);
+new Animation(document.getElementById("b"), {left: ["100px", "200px"]}, 1.0,
+              undefined);
 // Lone animation with explicit no parent. Should use no group.
-new Animation(document.getElementById("c"), {left: ["100px", "200px"]}, 1.0, null);
+new Animation(document.getElementById("c"), {left: ["100px", "200px"]}, 1.0,
+              null);
 
 // Animationation in group with default parent. Should use default group.
-new Animation(document.getElementById("d"), {left: ["100px", "200px"]}, 1.0, new ParGroup([], {iterationCount: 3}));
-// Animationation in group with explicit default parent. Should use default group.
-new Animation(document.getElementById("e"), {left: ["100px", "200px"]}, 1.0, new ParGroup([], {iterationCount: 3}, undefined));
+new Animation(document.getElementById("d"), {left: ["100px", "200px"]}, 1.0,
+              new ParGroup([], {iterationCount: 3}));
+// Animationation in group with explicit default parent. Should use default
+// group.
+new Animation(document.getElementById("e"), {left: ["100px", "200px"]}, 1.0,
+              new ParGroup([], {iterationCount: 3}, undefined));
 // Animationation in group with explicit no parent. Should use no group.
-new Animation(document.getElementById("f"), {left: ["100px", "200px"]}, 1.0, new ParGroup([], {iterationCount: 3}, null));
+new Animation(document.getElementById("f"), {left: ["100px", "200px"]}, 1.0,
+              new ParGroup([], {iterationCount: 3}, null));
 
 </script>
