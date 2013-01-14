@@ -1250,14 +1250,14 @@ var percentLengthType = {
         if (value in out) {
             continue;
         }
-        out[value] = to[value];
+        out[value] = interp(0, to[value], f);
     }
     return out;
   },
-  toCssValue: function(value) {
-    if (value.percent == 0) {
+  toCssValue: function(value) { 
+    if (!isDefinedAndNotNull(value.percent) || value.percent == 0) {
       return value.px + 'px';
-    } else if (value.px == 0) {
+    } else if (!isDefinedAndNotNull(value.px) || value.px == 0) {
       return value.percent + '%';
     } else {
       return '-webkit-calc(' + value.px + 'px + ' + value.percent + '%)';
@@ -1265,9 +1265,9 @@ var percentLengthType = {
   },
   fromCssValue: function(value) {
     if (value.substring(value.length - 2) === 'px') {
-      return {px: Number(value.substring(0, value.length - 2)), percent: 0};
+      return {px: Number(value.substring(0, value.length - 2))};
     } else if (value.substring(value.length - 1) === '%') {
-      return {px: 0, percent: Number(value.substring(0, value.length - 1))};
+      return {percent: Number(value.substring(0, value.length - 1))};
     } else {
       var r = calcRE.exec(value);
       if (r) {
