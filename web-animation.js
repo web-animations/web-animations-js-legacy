@@ -1222,6 +1222,10 @@ integerType.__proto__ = numberType;
 
 var calcRE = /-webkit-calc\s*\(\s*([^+\s)]*)\s*([+-])\s*([^+\s)]*)\s*\)/
 
+var outerCalcRE = /-webkit-calc\s*\(\s*([^)]*)\)/
+var valueRE = /\s*([0-9.]*)([a-zA-Z%]*)/
+var operatorRE = /\s*([+-])/
+
 var percentLengthType = {
   zero: function() { return {}; },
   add: function(base, delta) { 
@@ -1271,25 +1275,47 @@ var percentLengthType = {
   },
   fromCssValue: function(value) {
     var out = {}
-    if (value.substring(value.length - 2) === 'px') {
-      out['px'] = Number(value.substring(0, value.length - 2));
-      return out;
-    } else if (value.substring(value.length - 1) === '%') {
-      out['%'] = Number(value.substring(0, value.length - 1));
-      return out;
-    } else {
-      var r = calcRE.exec(value);
-      if (r) {
-        var left = lengthType.fromCssValue(r[1]);
-        var right = lengthType.fromCssValue(r[3]);
-        if (r[2] == '-') {
-          for (value in right) {
-            right[value] = -right[value];
-          }
-        }
-        return lengthType.add(left, right);
+    var innards = outerCalcRE.exec(value);
+    if (innards == null) {
+      var singleValue = valueRE.exec(value);
+      if (singleValue.length == 3) {
+        out[singleValue[2]] = Number(singleValue[1]);
+        return out;
       }
-      return undefined;
+      return {};
+    }
+    innards = innards[1];
+    var first_time = true;
+    while (true) {
+      var reversed = false;
+      if (first_time) {
+        first_time = false;
+      } else {
+        var op = operatorRE.exec(innards);
+        if (!op) {
+          return {};
+        }
+        if (op[1] == '-') {
+          reversed = true;
+        }
+        innards = innards.substring(op[0].length);
+      }
+      value = valueRE.exec(innards);
+      if (!value) {
+        return {};
+      }
+      if (!isDefinedAndNotNull(out[value[2]])) {
+        out[value[2]] = 0;
+      }
+      if (reversed) {
+        out[value[2]] -= Number(value[1]);
+      } else {
+        out[value[2]] += Number(value[1]);
+      }
+      innards = innards.substring(value[0].length);
+      if (/\s*/.exec(innards)[0].length == innards.length) {
+        return out;
+      }
     }
   }
 };
