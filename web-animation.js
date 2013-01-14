@@ -1521,13 +1521,56 @@ var percentLengthType = {
   }
 };
 
+var rectangleRE = /rect\(([^,]+),([^,]+),([^,]+),([^)]+)\)/;
+var rectangleType = {
+  zero: function() {
+    return {
+      top: percentLengthType.zero(),
+      right: percentLengthType.zero(),
+      bottom: percentLengthType.zero(),
+      left: percentLengthType.zero()
+    };
+  },
+  add: function(base, delta) {
+    return {
+      top: percentLengthType.add(base.top, delta.top),
+      right: percentLengthType.add(base.right, delta.right),
+      bottom: percentLengthType.add(base.bottom, delta.bottom),
+      left: percentLengthType.add(base.left, delta.left)
+    };
+  },
+  interpolate: function(from, to, f) {
+    return {
+      top: percentLengthType.interpolate(from.top, to.top, f),
+      right: percentLengthType.interpolate(from.right, to.right, f),
+      bottom: percentLengthType.interpolate(from.bottom, to.bottom, f),
+      left: percentLengthType.interpolate(from.left, to.left, f)
+    };
+  },
+  toCssValue: function(value) {
+    return 'rect(' +
+        percentLengthType.toCssValue(value.top) + ',' +
+        percentLengthType.toCssValue(value.right) + ',' +
+        percentLengthType.toCssValue(value.bottom) + ',' +
+        percentLengthType.toCssValue(value.left) + ')';
+  },
+  fromCssValue: function(value) {
+    var match = rectangleRE.exec(value);
+    return {
+      top: percentLengthType.fromCssValue(match[1]),
+      right: percentLengthType.fromCssValue(match[2]),
+      bottom: percentLengthType.fromCssValue(match[3]),
+      left: percentLengthType.fromCssValue(match[4])
+    };
+  }
+};
+
 // TODO: implement properly
 var lengthType = percentLengthType;
 var integerType = numberType;
 // TODO: implement
 var shadowType = undefined;
 var visibilityType = undefined;
-var rectangleType = undefined;
 var fontWeightType = undefined;
 
 var rgbRE = /^\s*rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/;
