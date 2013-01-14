@@ -1224,9 +1224,22 @@ var calcRE = /-webkit-calc\s*\(\s*([^+\s)]*)\s*([+-])\s*([^+\s)]*)\s*\)/
 
 var percentLengthType = {
   zero: function() { return {px: 0, percent: 0}; },
-  add: function(base, delta) {
-    return {px: base.px + delta.px,
-        percent: base.percent + delta.percent};
+  add: function(base, delta) { 
+    out = {}
+    for (value in base) {
+        if (value in delta) {
+            out[value] = base[value] + delta[value];
+        } else {
+            out[value] = base[value];
+        }
+    }
+    for (value in delta) {
+        if (value in base) {
+            continue;
+        }
+        out[value] = delta[value];
+    }
+    return out;
   },
   interpolate: function(from, to, f) {
     out = {}
