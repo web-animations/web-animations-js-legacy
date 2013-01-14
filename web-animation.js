@@ -1229,8 +1229,17 @@ var percentLengthType = {
         percent: base.percent + delta.percent};
   },
   interpolate: function(from, to, f) {
-    return {px: interp(from.px, to.px, f),
-        percent: interp(from.percent,to.percent, f)};
+    out = {}
+    for (value in from) {
+        out[value] = interp(from[value], to[value], f);
+    }
+    for (value in to) {
+        if (value in out) {
+            continue;
+        }
+        out[value] = to[value];
+    }
+    return out;
   },
   toCssValue: function(value) {
     if (value.percent == 0) {
