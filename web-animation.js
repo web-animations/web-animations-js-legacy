@@ -1480,19 +1480,24 @@ var numberType = {
   fromCssValue: function(value) { return value !== '' ? Number(value): null; }
 };
 
+var integerType = {
+  interpolate: function(from, to, f) { return Math.floor(interp(from, to, f)); },
+};
+integerType.__proto__ = numberType;
+
 var calcRE = /-webkit-calc\s*\(\s*([^+\s)]*)\s*([+-])\s*([^+\s)]*)\s*\)/
 
 var percentLengthType = {
   zero: function() { return {px: 0, percent: 0}; },
-  add: function(base, delta) { 
-    return {px: base.px + delta.px, 
+  add: function(base, delta) {
+    return {px: base.px + delta.px,
         percent: base.percent + delta.percent};
   },
   interpolate: function(from, to, f) {
-    return {px: interp(from.px, to.px, f), 
+    return {px: interp(from.px, to.px, f),
         percent: interp(from.percent,to.percent, f)};
   },
-  toCssValue: function(value) { 
+  toCssValue: function(value) {
     if (value.percent == 0) {
       return value.px + 'px';
     } else if (value.px == 0) {
@@ -1523,7 +1528,7 @@ var percentLengthType = {
 
 // TODO: implement properly
 var lengthType = percentLengthType;
-var integerType = numberType;
+var integerType = integerType;
 // TODO: implement
 var shadowType = undefined;
 var visibilityType = undefined;
