@@ -1221,21 +1221,23 @@ var integerType = {
 integerType.__proto__ = numberType;
 
 var fontWeightType = {
-  zero: function() { return 400; },
-  add: function(base, delta) { return Math.min(Math.max(base + delta, 100), 900); },
+  zero: function() { return 0; },
+  add: function(base, delta) { return Math.min(Math.max(base + delta, 0), 8); },
   interpolate: function(from, to, f) {
-    return 100 * Math.round(interp(from / 100, to / 100, f));
+    return Math.round(interp(from, to, f));
   },
-  toCssValue: function(value) { return String(value); },
+  toCssValue: function(value) {
+    return String(value * 100 + 100);
+  },
   fromCssValue: function(value) {
     if (value == 'normal') {
-      return 400;
+      return 3;
     }
     if (value == 'bold') {
-      return 700;
+      return 6;
     }
     // TODO: support lighter / darker ?
-    return Number(value);
+    return Number(value) / 100 - 1;
   }
 };
 
