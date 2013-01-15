@@ -1220,43 +1220,96 @@ var integerType = {
 };
 integerType.__proto__ = numberType;
 
-var calcRE = /-webkit-calc\s*\(\s*([^+\s)]*)\s*([+-])\s*([^+\s)]*)\s*\)/
+var outerCalcRE = /-webkit-calc\s*\(\s*([^)]*)\)/;
+var valueRE = /\s*([0-9.]*)([a-zA-Z%]*)/;
+var operatorRE = /\s*([+-])/;
 
 var percentLengthType = {
-  zero: function() { return {px: 0, percent: 0}; },
-  add: function(base, delta) {
-    return {px: base.px + delta.px,
-        percent: base.percent + delta.percent};
+  zero: function() { return {}; },
+  add: function(base, delta) { 
+    var out = {};
+    for (value in base) {
+      out[value] = base[value] + (delta[value] || 0);
+    }
+    for (value in delta) {
+      if (value in base) {
+        continue;
+      }
+      out[value] = delta[value];
+    }
+    return out;
   },
   interpolate: function(from, to, f) {
-    return {px: interp(from.px, to.px, f),
-        percent: interp(from.percent,to.percent, f)};
-  },
-  toCssValue: function(value) {
-    if (value.percent == 0) {
-      return value.px + 'px';
-    } else if (value.px == 0) {
-      return value.percent + '%';
-    } else {
-      return '-webkit-calc(' + value.px + 'px + ' + value.percent + '%)';
+    var out = {};
+    for (var value in from) {
+      out[value] = interp(from[value], to[value], f);
     }
+    for (var value in to) {
+      if (value in out) {
+        continue;
+      }
+      out[value] = interp(0, to[value], f);
+    }
+    return out;
+  },
+  toCssValue: function(value) { 
+    var s = '';
+    var single_value = true;
+    for (var item in value) {
+      if (s === '') {
+        s = value[item] + item;
+      } else if (single_value) {
+        s = '-webkit-calc(' + s + ' + ' + value[item] + item + ')';
+        single_value = false;
+      } else {
+        s = s.substring(0, s.length - 1) + ' + ' + value[item] + item + ')';
+      }
+    }
+    return s;
   },
   fromCssValue: function(value) {
-    if (value.substring(value.length - 2) === 'px') {
-      return {px: Number(value.substring(0, value.length - 2)), percent: 0};
-    } else if (value.substring(value.length - 1) === '%') {
-      return {px: 0, percent: Number(value.substring(0, value.length - 1))};
-    } else {
-      var r = calcRE.exec(value);
-      if (r) {
-        var left = lengthType.fromCssValue(r[1]);
-        var right = lengthType.fromCssValue(r[3]);
-        if (r[2] == '-') {
-          right = {px: -right.px, percent: -right.percent};
-        }
-        return lengthType.add(left, right);
+    var out = {}
+    var innards = outerCalcRE.exec(value);
+    if (!innards) {
+      var singleValue = valueRE.exec(value);
+      if (singleValue && (singleValue.length == 3)) {
+        out[singleValue[2]] = Number(singleValue[1]);
+        return out;
       }
-      return undefined;
+      return {};
+    }
+    innards = innards[1];
+    var first_time = true;
+    while (true) {
+      var reversed = false;
+      if (first_time) {
+        first_time = false;
+      } else {
+        var op = operatorRE.exec(innards);
+        if (!op) {
+          return {};
+        }
+        if (op[1] == '-') {
+          reversed = true;
+        }
+        innards = innards.substring(op[0].length);
+      }
+      value = valueRE.exec(innards);
+      if (!value) {
+        return {};
+      }
+      if (!isDefinedAndNotNull(out[value[2]])) {
+        out[value[2]] = 0;
+      }
+      if (reversed) {
+        out[value[2]] -= Number(value[1]);
+      } else {
+        out[value[2]] += Number(value[1]);
+      }
+      innards = innards.substring(value[0].length);
+      if (/\s*/.exec(innards)[0].length == innards.length) {
+        return out;
+      }
     }
   }
 };
