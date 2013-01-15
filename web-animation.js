@@ -1229,26 +1229,26 @@ var percentLengthType = {
   add: function(base, delta) { 
     var out = {};
     for (value in base) {
-        out[value] = base[value] + (delta[value] || 0);
+      out[value] = base[value] + (delta[value] || 0);
     }
     for (value in delta) {
-        if (value in base) {
-            continue;
-        }
-        out[value] = delta[value];
+      if (value in base) {
+        continue;
+      }
+      out[value] = delta[value];
     }
     return out;
   },
   interpolate: function(from, to, f) {
     var out = {};
     for (var value in from) {
-        out[value] = interp(from[value], to[value], f);
+      out[value] = interp(from[value], to[value], f);
     }
     for (var value in to) {
-        if (value in out) {
-            continue;
-        }
-        out[value] = interp(0, to[value], f);
+      if (value in out) {
+        continue;
+      }
+      out[value] = interp(0, to[value], f);
     }
     return out;
   },
@@ -1272,7 +1272,7 @@ var percentLengthType = {
     var innards = outerCalcRE.exec(value);
     if (!innards) {
       var singleValue = valueRE.exec(value);
-      if (singleValue.length == 3) {
+      if (singleValue && (singleValue.length == 3)) {
         out[singleValue[2]] = Number(singleValue[1]);
         return out;
       }
