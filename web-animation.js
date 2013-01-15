@@ -1375,18 +1375,18 @@ var shadowType = {
           base ? base.vOffset : lengthType.zero(),
           delta ? delta.vOffset : lengthType.zero()),
       blur: lengthType.add(
-          base ? base.blur : lengthType.zero(),
-          delta ? delta.blur : lengthType.zero()),
+          base && base.blur || lengthType.zero(),
+          delta && delta.blur || lengthType.zero()),
     };
     if (base && base.spread || delta && delta.spread) {
       result.spread = lengthType.add(
-          base ? base.spread : lengthType.zero(),
-          delta ? delta.spread : lengthType.zero());
+          base && base.spread || lengthType.zero(),
+          delta && delta.spread || lengthType.zero());
     }
     if (base && base.color || delta && delta.color) {
       result.color = colorType.add(
-          base ? base.color : colorType.zero(),
-          delta ? delta.color : colorType.zero());
+          base && base.color || colorType.zero(),
+          delta && delta.color || colorType.zero());
     }
     return result;
   },
@@ -1410,18 +1410,18 @@ var shadowType = {
           from ? from.vOffset : lengthType.zero(),
           to ? to.vOffset : lengthType.zero(), f),
       blur: lengthType.interpolate(
-          from ? from.blur : lengthType.zero(),
-          to ? to.blur : lengthType.zero(), f),
+          from && from.blur || lengthType.zero(),
+          to && to.blur || lengthType.zero(), f),
     };
     if (from && from.spread || to && to.spread) {
       result.spread = lengthType.interpolate(
-          from ? from.spread : lengthType.zero(),
-          to ? to.spread : lengthType.zero(), f);
+          from && from.spread || lengthType.zero(),
+          to && to.spread || lengthType.zero(), f);
     }
     if (from && from.color || to && to.color) {
       result.color = colorType.interpolate(
-          from ? from.color : colorType.zero(),
-          to ? to.color : colorType.zero(), f);
+          from && from.color || colorType.zero(),
+          to && to.color || colorType.zero(), f);
     }
     return result;
   },
