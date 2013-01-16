@@ -1220,10 +1220,32 @@ var integerType = {
 };
 integerType.__proto__ = numberType;
 
+var fontWeightType = {
+  zero: function() { return 0; },
+  add: function(base, delta) { return base + delta; },
+  interpolate: function(from, to, f) {
+    return interp(from, to, f);
+  },
+  toCssValue: function(value) {
+      value = Math.round(value / 100) * 100
+      value = Math.min(900, Math.max(100, value));
+      return String(value);
+  },
+  fromCssValue: function(value) {
+    if (value == 'normal') {
+      return 400;
+    }
+    if (value == 'bold') {
+      return 700;
+    }
+    // TODO: support lighter / darker ?
+    return Number(value);
+  }
+};
+
 var outerCalcRE = /-webkit-calc\s*\(\s*([^)]*)\)/;
 var valueRE = /\s*([0-9.]*)([a-zA-Z%]*)/;
 var operatorRE = /\s*([+-])/;
-
 var percentLengthType = {
   zero: function() { return {}; },
   add: function(base, delta) { 
@@ -1499,7 +1521,6 @@ var shadowType = {
 var lengthType = percentLengthType;
 // TODO: implement
 var visibilityType = undefined;
-var fontWeightType = undefined;
 
 var rgbRE = /^\s*rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/;
 var rgbaRE = /^\s*rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+|\d*\.\d+)\s*\)/;
