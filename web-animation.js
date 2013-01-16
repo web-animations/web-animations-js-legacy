@@ -1222,22 +1222,24 @@ integerType.__proto__ = numberType;
 
 var fontWeightType = {
   zero: function() { return 0; },
-  add: function(base, delta) { return Math.min(Math.max(base + delta, 0), 8); },
+  add: function(base, delta) { return base + delta; },
   interpolate: function(from, to, f) {
-    return Math.round(interp(from, to, f));
+    return interp(from, to, f);
   },
   toCssValue: function(value) {
-    return String(value * 100 + 100);
+      value = Math.round(value / 100) * 100
+      value = Math.min(900, Math.max(100, value));
+      return String(value);
   },
   fromCssValue: function(value) {
     if (value == 'normal') {
-      return 3;
+      return 400;
     }
     if (value == 'bold') {
-      return 6;
+      return 700;
     }
     // TODO: support lighter / darker ?
-    return Number(value) / 100 - 1;
+    return Number(value);
   }
 };
 
