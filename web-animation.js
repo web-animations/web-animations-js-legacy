@@ -1498,7 +1498,7 @@ var nonNumericType = {
     return undefined;
   },
   add: function(base, delta) {
-    return delta;
+    return isDefined(delta) ? delta : base;
   },
   interpolate: function(from, to, f) {
     return f < 0.5 ? from : to;
