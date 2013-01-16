@@ -1511,28 +1511,27 @@ var colorDict = {
 };
 
 var colorType = {
-  zero: function() { return {r: 0, g: 0, b: 0, a: 0}; },
+  zero: function() { return [0,0,0,0]; },
   add: function(base, delta) {
-    return {r: base.r + delta.r, g: base.g + delta.g, b: base.b + delta.b,
-        a: base.a + delta.a};
+    return [base[0] + delta[0], base[1] + delta[1],
+            base[2] + delta[2], base[3] + delta[3]];
   },
   interpolate: function(from, to, f) {
-    return  {r: interp(from.r, to.r, f), g: interp(from.g, to.g, f),
-        b: interp(from.b, to.b, f), a: interp(from.a, to.a, f)};
+    return [interp(from[0], to[0], f), interp(from[1], to[1], f),
+            interp(from[2], to[2], f), interp(from[3], to[3], f)];
   },
   toCssValue: function(value) {
-    return 'rgba(' + Math.round(value.r) + ', ' + Math.round(value.g) +
-        ', ' + Math.round(value.b) + ', ' + value.a + ')';
+    return 'rgba(' + Math.round(value[0]) + ', ' + Math.round(value[1]) +
+              ', ' + Math.round(value[2]) + ', ' + value[3] + ')';
   },
   fromCssValue: function(value) {
     var r = rgbRE.exec(value);
     if (r) {
-      return {r: Number(r[1]), g: Number(r[2]), b: Number(r[3]), a: 1}
+      return [Number(r[1]), Number(r[2]), Number(r[3]), 1];
     }
     r = rgbaRE.exec(value);
     if (r) {
-      return {r: Number(r[1]), g: Number(r[2]),
-          b: Number(r[3]), a: Number(r[4])}
+      return [Number(r[1]), Number(r[2]), Number(r[3]), Number(r[4])];
     }
     return colorDict[value];
   }
