@@ -786,9 +786,7 @@ AnimationFunction.createFromProperties = function(properties) {
   // Step 1 - determine set of animation properties
   var animProps = [];
   for (var candidate in properties) {
-    if (candidate in propertyTypes) {
-      animProps.push(candidate);
-    }
+    animProps.push(candidate);
   }
 
   // Step 2 - Create AnimationFunction objects
@@ -1517,6 +1515,24 @@ var shadowType = {
   }
 };
 
+var nonNumericType = {
+  zero: function() {
+    return undefined;
+  },
+  add: function(base, delta) {
+    return isDefined(delta) ? delta : base;
+  },
+  interpolate: function(from, to, f) {
+    return f < 0.5 ? from : to;
+  },
+  toCssValue: function(value) {
+    return value;
+  },
+  fromCssValue: function(value) {
+    return value;
+  }
+};
+
 // TODO: implement properly
 var lengthType = percentLengthType;
 // TODO: implement
@@ -1823,11 +1839,7 @@ var propertyIsSVGAttrib = function(property, target) {
 };
 
 var getType = function(property) {
-  var type = propertyTypes[property];
-  if (isDefinedAndNotNull(type)) {
-    return type;
-  }
-  throw new Error('Unsupported property');
+  return propertyTypes[property] || nonNumericType;
 }
 
 var zero = function(property, value) {
