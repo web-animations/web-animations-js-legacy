@@ -1531,12 +1531,32 @@ var nonNumericType = {
   fromCssValue: function(value) {
     return value;
   }
+
+var visibilityType = {
+  zero: function(value) {
+    return undefined;
+  },
+  add: function(base, delta) {
+    return isDefined(delta) ? delta : base;
+  },
+  interpolate: function(from, to, f) {
+    if (from != 'visible' && to != 'visible') {
+      return f < 0.5 ? from : to;
+    }
+    var value = interp(0, 1, f);
+    if (value <= 0) {
+      return from;
+    }
+    if (value >= 1) {
+      return to;
+    }
+    return 'visible';
+  },
+  toCssValue: function(value) { return value; },
+  fromCssValue: function(value) { return value; }
 };
 
-// TODO: implement properly
 var lengthType = percentLengthType;
-// TODO: implement
-var visibilityType = undefined;
 
 var rgbRE = /^\s*rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/;
 var rgbaRE = /^\s*rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+|\d*\.\d+)\s*\)/;
