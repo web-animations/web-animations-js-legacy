@@ -1364,7 +1364,7 @@ var shadowType = {
   },
   _addSingle: function(base, delta) {
     if (base && delta && base.inset != delta.inset) {
-      return base;
+      return delta;
     }
     var result = {
       inset: base ? base.inset : delta.inset,
@@ -1399,7 +1399,7 @@ var shadowType = {
   },
   _interpolateSingle: function(from, to, f) {
     if (from && to && from.inset != to.inset) {
-      return from;
+      return f < 0.5 ? from : to;
     }
     var result = {
       inset: from ? from.inset : to.inset,
