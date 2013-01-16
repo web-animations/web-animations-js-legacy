@@ -105,14 +105,27 @@ for (var i = 0; i < containers.length; i++) {
   // All squares should line up at the end of each iteration (or start if
   // reversed). All movement should be at the same speed.
   // Test basic use.
-  new Animation(container.getElementsByClassName("a")[0], {left: ["100px", "300px"]}, {duration: 1.0}, groups[i]);
-  new Animation(container.getElementsByClassName("b")[0], {left: ["100px", "300px"]}, {duration: 0.5, playbackRate: 0.5}, groups[i]);
-  new Animation(container.getElementsByClassName("c")[0], {left: ["100px", "300px"]}, {duration: 2.0, playbackRate: 2.0}, groups[i]);
+  new Animation(container.getElementsByClassName("a")[0],
+      {left: ["100px", "300px"]}, {duration: 1.0}, groups[i]);
+  new Animation(container.getElementsByClassName("b")[0],
+      {left: ["100px", "300px"]}, {duration: 0.5, playbackRate: 0.5},
+      groups[i]);
+  new Animation(container.getElementsByClassName("c")[0],
+      {left: ["100px", "300px"]}, {duration: 2.0, playbackRate: 2.0},
+      groups[i]);
    // Test negative values.
-  new Animation(container.getElementsByClassName("d")[0], {left: ["300px", "100px"]}, {duration: 1.0, playbackRate: -1.0}, groups[i]);
-  new Animation(container.getElementsByClassName("e")[0], {left: ["300px", "100px"]}, {duration: 0.5, playbackRate: -0.5}, groups[i]);
-  new Animation(container.getElementsByClassName("f")[0], {left: ["300px", "100px"]}, {duration: 2.0, playbackRate: -2.0}, groups[i]);
+  new Animation(container.getElementsByClassName("d")[0],
+      {left: ["300px", "100px"]}, {duration: 1.0, playbackRate: -1.0},
+      groups[i]);
+  new Animation(container.getElementsByClassName("e")[0],
+      {left: ["300px", "100px"]}, {duration: 0.5, playbackRate: -0.5},
+      groups[i]);
+  new Animation(container.getElementsByClassName("f")[0],
+      {left: ["300px", "100px"]}, {duration: 2.0, playbackRate: -2.0},
+      groups[i]);
    // Test zero.
-  new Animation(container.getElementsByClassName("g")[0], {left: ["300px", "100px"]}, {duration: 1.0, playbackRate: 0.0}, groups[i]);
+  new Animation(container.getElementsByClassName("g")[0],
+      {left: ["300px", "100px"]}, {duration: 1.0, playbackRate: 0.0},
+      groups[i]);
 }
 </script>

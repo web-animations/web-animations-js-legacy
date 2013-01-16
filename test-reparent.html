@@ -32,17 +32,21 @@ limitations under the License.
 
 <div>Right edge of each box should align with black line at end of test.</div>
 
-<div style="width: 400px;" class="expected"><div id="a" class="anim"></div></div>
+<div style="width: 400px;" class="expected">
+  <div id="a" class="anim"></div>
+</div>
 
 <script src="web-animation.js"></script>
 <script>
 
 // Run an animation in the global group. It should animate indefinitely.
-var anim = new Animation(document.getElementById("a"), {left: ["100px", "500px"]}, {iterationCount: Infinity, duration: 1.0});
+var anim = new Animation(document.getElementById("a"),
+    {left: ["100px", "500px"]}, {iterationCount: Infinity, duration: 1.0});
 
 // After 2.5s, move it to a parallel group and run that.
 setTimeout(function() {
-  new ParGroup([anim], {direction: "alternate", duration: 2.0, iterationCount: 2.0});
+  new ParGroup([anim], {direction: "alternate", duration: 2.0,
+      iterationCount: 2.0});
 }, 2500);
 
 // Move it to a new group and run that.
