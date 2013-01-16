@@ -1358,10 +1358,146 @@ var rectangleType = {
   }
 };
 
+var shadowType = {
+  zero: function() {
+      return [];
+  },
+  _addSingle: function(base, delta) {
+    if (base && delta && base.inset != delta.inset) {
+      return delta;
+    }
+    var result = {
+      inset: base ? base.inset : delta.inset,
+      hOffset: lengthType.add(
+          base ? base.hOffset : lengthType.zero(),
+          delta ? delta.hOffset : lengthType.zero()),
+      vOffset: lengthType.add(
+          base ? base.vOffset : lengthType.zero(),
+          delta ? delta.vOffset : lengthType.zero()),
+      blur: lengthType.add(
+          base && base.blur || lengthType.zero(),
+          delta && delta.blur || lengthType.zero()),
+    };
+    if (base && base.spread || delta && delta.spread) {
+      result.spread = lengthType.add(
+          base && base.spread || lengthType.zero(),
+          delta && delta.spread || lengthType.zero());
+    }
+    if (base && base.color || delta && delta.color) {
+      result.color = colorType.add(
+          base && base.color || colorType.zero(),
+          delta && delta.color || colorType.zero());
+    }
+    return result;
+  },
+  add: function(base, delta) {
+    var result = [];
+    for (var i = 0; i < base.length || i < delta.length; i++) {
+      result.push(this._addSingle(base[i], delta[i]));
+    }
+    return result;
+  },
+  _interpolateSingle: function(from, to, f) {
+    if (from && to && from.inset != to.inset) {
+      return f < 0.5 ? from : to;
+    }
+    var result = {
+      inset: from ? from.inset : to.inset,
+      hOffset: lengthType.interpolate(
+          from ? from.hOffset : lengthType.zero(),
+          to ? to.hOffset : lengthType.zero(), f),
+      vOffset: lengthType.interpolate(
+          from ? from.vOffset : lengthType.zero(),
+          to ? to.vOffset : lengthType.zero(), f),
+      blur: lengthType.interpolate(
+          from && from.blur || lengthType.zero(),
+          to && to.blur || lengthType.zero(), f),
+    };
+    if (from && from.spread || to && to.spread) {
+      result.spread = lengthType.interpolate(
+          from && from.spread || lengthType.zero(),
+          to && to.spread || lengthType.zero(), f);
+    }
+    if (from && from.color || to && to.color) {
+      result.color = colorType.interpolate(
+          from && from.color || colorType.zero(),
+          to && to.color || colorType.zero(), f);
+    }
+    return result;
+  },
+  interpolate: function(from, to, f) {
+    var result = [];
+    for (var i = 0; i < from.length || i < to.length; i++) {
+      result.push(this._interpolateSingle(from[i], to[i], f));
+    }
+    return result;
+  },
+  _toCssValueSingle: function(value) {
+    return (value.inset ? 'inset ' : '') +
+        lengthType.toCssValue(value.hOffset) + ' ' +
+        lengthType.toCssValue(value.vOffset) + ' ' +
+        lengthType.toCssValue(value.blur) +
+        (value.spread ? ' ' + lengthType.toCssValue(value.spread) : '') +
+        (value.color ? ' ' + colorType.toCssValue(value.color) : '');
+  },
+  toCssValue: function(value) {
+    return value.map(this._toCssValueSingle).join(', ');
+  },
+  fromCssValue: function(value) {
+    var shadows = value.split(/\s*,\s*/);
+    var result = shadows.map(function(value) {
+      value = value.replace(/^\s+|\s+$/g, '');
+      var parts = value.split(/\s+/);
+      if (parts.length < 2 || parts.length > 6) {
+        return undefined;
+      }
+      var result = {
+        inset: false
+      };
+      if (parts[0] == 'inset') {
+        parts.shift();
+        result.inset = true;
+      }
+      var color;
+      var lengths = [];
+      while (parts.length) {
+        var part = parts.shift();
+        // TODO: what's the contract for fromCssValue, assuming it returns
+        // undefined if it cannot parse the value (colorType behaves this way)
+        color = colorType.fromCssValue(part);
+        if (color) {
+          result.color = color;
+          if (parts.length) {
+            return undefined;
+          }
+          break;
+        }
+        var length = lengthType.fromCssValue(part);
+        lengths.push(length);
+      }
+      if (lengths.length < 2 || lengths.length > 4) {
+        return undefined;
+      }
+      result.hOffset = lengths[0];
+      result.vOffset = lengths[1];
+      if (lengths.length > 2) {
+        result.blur = lengths[2];
+      }
+      if (lengths.length > 3) {
+        result.spread = lengths[3];
+      }
+      if (color) {
+        result.color = color;
+      }
+      return result;
+    });
+    return result.every(isDefined) ? result : [];
+  }
+};
+
 // TODO: implement properly
 var lengthType = percentLengthType;
 // TODO: implement
-var shadowType = undefined;
 var visibilityType = undefined;
 var fontWeightType = undefined;
 
