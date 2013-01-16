@@ -58,7 +58,7 @@ iframe {
 <button id=prev-button onclick="updateState(-1)">Prev</button>
 <button id=reload-button onclick="updateState()">Reload</button>
 <button id=next-button onclick="updateState(1)">Next</button><br>
-<div id=test-name></div>
+<span id=test-num></span><a id=test-name></a><br>
 <iframe></iframe>
 <script>
 var currentTest = 0;
@@ -72,7 +72,9 @@ function updateState(change) {
   }
   var test = tests[currentTest];
   window.location.hash = test;
-  document.querySelector('#test-name').innerText = (currentTest + 1) + ' of ' + tests.length + ': ' + test;
+  document.querySelector('#test-num').innerText = (currentTest + 1) + ' of ' + tests.length + ': ';
+  document.querySelector('#test-name').innerText = test;
+  document.querySelector('#test-name').href = test;
   document.querySelector('iframe').src = test;
   document.querySelector('#prev-button').disabled = currentTest <= 0;
   document.querySelector('#next-button').disabled = currentTest >= tests.length - 1;
