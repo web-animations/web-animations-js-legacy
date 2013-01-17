@@ -1201,8 +1201,9 @@ var fontWeightType = {
   }
 };
 
+var noUnit = 'no-unit';
 var outerCalcRE = /-webkit-calc\s*\(\s*([^)]*)\)/;
-var valueRE = /\s*([0-9.]+)([a-zA-Z%]+)/;
+var valueRE = /\s*([0-9.]+)([a-zA-Z%]+)?/;
 var operatorRE = /\s*([+-])/;
 var percentLengthType = {
   zero: function() { return {}; },
@@ -1235,14 +1236,15 @@ var percentLengthType = {
   toCssValue: function(value) {
     var s = '';
     var single_value = true;
-    for (var item in value) {
+    for (var key in value) {
+      var unit = key == noUnit ? '' : key;
       if (s === '') {
-        s = value[item] + item;
+        s = value[key] + unit;
       } else if (single_value) {
-        s = '-webkit-calc(' + s + ' + ' + value[item] + item + ')';
+        s = '-webkit-calc(' + s + ' + ' + value[key] + unit + ')';
         single_value = false;
       } else {
-        s = s.substring(0, s.length - 1) + ' + ' + value[item] + item + ')';
+        s = s.substring(0, s.length - 1) + ' + ' + value[key] + unit + ')';
       }
     }
     return s;
@@ -1253,7 +1255,8 @@ var percentLengthType = {
     if (!innards) {
       var singleValue = valueRE.exec(value);
       if (singleValue) {
-        out[singleValue[2]] = Number(singleValue[1]);
+        var unit = singleValue[2] === '' ? noUnit : singleValue[2];
+        out[unit] = Number(singleValue[1]);
       }
       return out;
     }
@@ -1277,13 +1280,14 @@ var percentLengthType = {
       if (!value) {
         return {};
       }
-      if (!isDefinedAndNotNull(out[value[2]])) {
-        out[value[2]] = 0;
+      var unit = value[2] === '' ? noUnit : value[2];
+      if (!(unit in out)) {
+        out[unit] = 0;
       }
       if (reversed) {
-        out[value[2]] -= Number(value[1]);
+        out[unit] -= Number(value[1]);
       } else {
-        out[value[2]] += Number(value[1]);
+        out[unit] += Number(value[1]);
       }
       innards = innards.substring(value[0].length);
       if (/\s*/.exec(innards)[0].length == innards.length) {
