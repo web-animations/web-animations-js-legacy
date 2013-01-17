@@ -577,7 +577,7 @@ var AnimationListMixin = {
   },
   splice: function(start, deleteCount, newItems) {
     var args = [start, deleteCount];
-    if (exists(newItems)) {
+    if (isDefined(newItems)) {
       args = args.concat(newItems);
       for (var i = 2; i < args.length; i++) {
         args[i].reparent(this);
