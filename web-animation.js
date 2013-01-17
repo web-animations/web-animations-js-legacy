@@ -1202,7 +1202,7 @@ var fontWeightType = {
 };
 
 var outerCalcRE = /-webkit-calc\s*\(\s*([^)]*)\)/;
-var valueRE = /\s*([0-9.]*)([a-zA-Z%]*)/;
+var valueRE = /\s*([0-9.]+)([a-zA-Z%]+)/;
 var operatorRE = /\s*([+-])/;
 var percentLengthType = {
   zero: function() { return {}; },
@@ -1252,11 +1252,10 @@ var percentLengthType = {
     var innards = outerCalcRE.exec(value);
     if (!innards) {
       var singleValue = valueRE.exec(value);
-      if (singleValue && (singleValue.length == 3)) {
+      if (singleValue) {
         out[singleValue[2]] = Number(singleValue[1]);
-        return out;
       }
-      return {};
+      return out;
     }
     innards = innards[1];
     var first_time = true;
