@@ -1489,28 +1489,20 @@ var nonNumericType = {
 };
 
 var visibilityType = {
-  zero: function(value) {
-    return undefined;
-  },
-  add: function(base, delta) {
-    return isDefined(delta) ? delta : base;
-  },
   interpolate: function(from, to, f) {
     if (from != 'visible' && to != 'visible') {
-      return f < 0.5 ? from : to;
+      return nonNumericType.interpolate(from, to, f);
     }
-    var value = interp(0, 1, f);
-    if (value <= 0) {
+    if (f <= 0) {
       return from;
     }
-    if (value >= 1) {
+    if (f >= 1) {
       return to;
     }
     return 'visible';
   },
-  toCssValue: function(value) { return value; },
-  fromCssValue: function(value) { return value; }
 };
+visibilityType.__proto__ = nonNumericType;
 
 var lengthType = percentLengthType;
 
