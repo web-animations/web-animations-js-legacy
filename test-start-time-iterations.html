@@ -97,8 +97,12 @@ var animation = {left: ["100px", "500px"]};
 
 // We use a new group for each animation to avoid coupling due to the intrinsic
 // duration of a par group.
-var group = function(dir) { return new ParGroup([], {iterationCount: 2.0, direction: dir}); };
-var groupWithFixedDuration = function(dir) { return new ParGroup([], {iterationCount: 2.0, direction: dir, duration: 4.0}); };
+var group = function(dir) {
+  return new ParGroup([], {iterationCount: 2.0, direction: dir});
+};
+var groupWithFixedDuration = function(dir) {
+  return new ParGroup([], {iterationCount: 2.0, direction: dir, duration: 4.0});
+};
 
 for (var i = 0; i < directions.length; i++) {
   var container = document.getElementById(containers[i]);
@@ -106,8 +110,10 @@ for (var i = 0; i < directions.length; i++) {
         
   // Interaction of start time with parent iterations. Each child should
   // complete the full animation, starting 1.0s into the parent iteration.
-  new Animation(container.getElementsByClassName("a")[0], animation, {duration: 1.0}, group(dir), 1.0);
-  new Animation(container.getElementsByClassName("b")[0], animation, {duration: 1.0}, groupWithFixedDuration(dir), 1.0);
+  new Animation(container.getElementsByClassName("a")[0], animation,
+      {duration: 1.0}, group(dir), 1.0);
+  new Animation(container.getElementsByClassName("b")[0], animation,
+      {duration: 1.0}, groupWithFixedDuration(dir), 1.0);
   // Interaction of default start time with parent iterations. At the time of
   // addition, the first group has a duration, and hence iteration time of
   // zero, so the child picks up a start time of zero.  The parent then updates
@@ -117,9 +123,13 @@ for (var i = 0; i < directions.length; i++) {
   // time, so plays the complete animation. In iterations where the parent
   // plays backwards, the above is reversed. Also, if the first iteration plays
   // backwards, the child will miss it altogether.
-  setTimeout(function(container, group1, group2) { return function() {
-    new Animation(container.getElementsByClassName("c")[0], animation, {duration: 1.0}, group1);
-    new Animation(container.getElementsByClassName("d")[0], animation, {duration: 1.0}, group2);
-  }; }(container, group(dir), groupWithFixedDuration(dir)), 500);
+  setTimeout(function(container, group1, group2) {
+    return function() {
+      new Animation(container.getElementsByClassName("c")[0], animation,
+          {duration: 1.0}, group1);
+      new Animation(container.getElementsByClassName("d")[0], animation,
+          {duration: 1.0}, group2);
+    };
+  }(container, group(dir), groupWithFixedDuration(dir)), 500);
 }
 </script>

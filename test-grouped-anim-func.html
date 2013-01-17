@@ -24,13 +24,16 @@ limitations under the License.
 }
 </style>
 <svg>
-	<rect class="expectation" x="400px" y="200px" width="50px" height="100px"></rect>
-	<rect class="anim" x="100px" y="10px" width="100px" height="100px"></rect>
+  <rect class="expectation" x="400px" y="200px" width="50px" height="100px">
+  </rect>
+  <rect class="anim" x="100px" y="10px" width="100px" height="100px">
+  </rect>
 </svg>
 <script src="web-animation.js"></script>
 <script>
-var rect = document.querySelector(".anim")
+var rect = document.querySelector(".anim");
 
-var a = new Animation(rect, {x: "400px", y: ["300px", "200px"], width: ["100px", "20px", "50px"]}, 1);
+new Animation(rect,
+    {x: "400px", y: ["300px", "200px"], width: ["100px", "20px", "50px"]}, 1);
 
 </script>

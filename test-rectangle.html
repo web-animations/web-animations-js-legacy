@@ -30,11 +30,14 @@ position: absolute;
   background: red;
 }
 </style>
-<div id=expectation></div>
-<div id=test></div>
+<div id="expectation"></div>
+<div id="test"></div>
 <script src="web-animation.js"></script>
 <script>
-var anim = {'clip': ['rect(300px, 400px, 300px, 400px)', 'rect(0px, 800px, 600px, 0px)']};
+var anim = {'clip': [
+  'rect(300px, 400px, 300px, 400px)',
+  'rect(0px, 800px, 600px, 0px)'
+]};
 var timing = 1;
 new Animation(document.querySelector('#test'), anim, timing);
 </script>

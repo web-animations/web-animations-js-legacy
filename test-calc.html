@@ -84,25 +84,27 @@ limitations under the License.
 
 </style>
 
-Blue lines should all hit the deep red boundary at the same time, then completely cover the light red box when the animation has finished.
+Blue lines should all hit the deep red boundary at the same time, then
+completely cover the light red box when the animation has finished.
 
 <div class="outer">
-<div class="expectation2"></div>
-<div class="expectation" style="top: 0px; width: 150px"></div>
-<div class="anim" id="a"></div>
-<div class="expectation" style="top: 50px; width: 187.5px"></div>
-<div class="anim" id="b"></div>
-<div class="expectation" style="top: 100px; width: 225px"></div>
-<div class="anim" id="c"></div>
-<div class="expectation" style="top: 150px; width: 168.75px"></div>
-<div class="anim" id="d"></div>
-<div class="expectation" style="top: 200px; width: 168.75px"></div>
-<div class="anim" id="e"></div>
-<div class="expectation" style="top: 250px; width: 218.75px"></div>
-<div class="anim" id="f"></div>
-<div class="expectation" style="top: 300px; width: 131.25px"></div>
-<div class="anim" id="g"></div>
+  <div class="expectation2"></div>
+  <div class="expectation" style="top: 0px; width: 150px"></div>
+  <div class="anim" id="a"></div>
+  <div class="expectation" style="top: 50px; width: 187.5px"></div>
+  <div class="anim" id="b"></div>
+  <div class="expectation" style="top: 100px; width: 225px"></div>
+  <div class="anim" id="c"></div>
+  <div class="expectation" style="top: 150px; width: 168.75px"></div>
+  <div class="anim" id="d"></div>
+  <div class="expectation" style="top: 200px; width: 168.75px"></div>
+  <div class="anim" id="e"></div>
+  <div class="expectation" style="top: 250px; width: 218.75px"></div>
+  <div class="anim" id="f"></div>
+  <div class="expectation" style="top: 300px; width: 131.25px"></div>
+  <div class="anim" id="g"></div>
 </div>
+
 <script src="web-animation.js"></script>
 <script>
 
@@ -117,10 +119,13 @@ new Animation(document.querySelector("#c"), {width: "400px"}, 2);
 // 25px -> 0px linear, 12.5% -> 50% (25px -> 400px quadratic)
 new Animation(document.querySelector("#d"), {width: "50%"}, 2);
 // 50px -> 100px linear, 0% -> 37.5% (0px -> 300px quadratic)
-new Animation(document.querySelector("#e"), {width: "-webkit-calc(37.5% + 100px)"}, 2);
+new Animation(document.querySelector("#e"),
+    {width: "-webkit-calc(37.5% + 100px)"}, 2);
 // 0px -> 100px linear, 25% -> 37.5% (50px -> 300px quadratic)
-new Animation(document.querySelector("#f"), {width: "-webkit-calc(37.5% + 100px)"}, 2);
+new Animation(document.querySelector("#f"),
+    {width: "-webkit-calc(37.5% + 100px)"}, 2);
 // 100px -> 100px linear, -25% -> 37.5% (-50px -> 300px quadratic)
-new Animation(document.querySelector("#g"), {width: "-webkit-calc(37.5% + 100px)"}, 2);
+new Animation(document.querySelector("#g"),
+    {width: "-webkit-calc(37.5% + 100px)"}, 2);
 
 </script>

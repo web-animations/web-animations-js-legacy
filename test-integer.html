@@ -26,7 +26,7 @@ position:absolute;
 }
 </style>
 <body>
-<div id=test></div>
+<div id="test"></div>
 <script src="web-animation.js"></script>
 <script>
 var width = 25;
@@ -34,13 +34,15 @@ var totalWidth = 800;
 var startZ = 0;
 var endZ = 100;
 for (var i = 0; i < totalWidth; i += width) {
-  var div = document.createElement('div');
-  div.style.width = width + 'px';
-  div.style.height = '50px';
-  div.style.background = 'red';
-  div.style['z-index'] = startZ + Math.round((i / totalWidth) * (endZ - startZ));
-  div.style.position = 'relative';
+  var div = document.createElement("div");
+  div.style.width = width + "px";
+  div.style.height = "50px";
+  div.style.background = "red";
+  div.style["z-index"] = startZ +
+      Math.round((i / totalWidth) * (endZ - startZ));
+  div.style.position = "relative";
   document.body.appendChild(div);
 }
-var anim = new Animation(document.querySelector('#test'), {'z-index': [String(startZ), String(endZ)]}, 3);
+new Animation(document.querySelector("#test"),
+    {"z-index": [String(startZ), String(endZ)]}, 3);
 </script>

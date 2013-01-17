@@ -122,8 +122,7 @@ function first() {
 }
 
 function second() {
-  new Animation(document.querySelector("circle"),
-    { cx: '400px' }, 3);
+  new Animation(document.querySelector("circle"), { cx: '400px' }, 3);
 }
 
 // STEP 2
@@ -147,8 +146,7 @@ var pictureTilting = undefined;
 
 function fifth() {
   var picture = document.querySelector(".picture");
-  pictureTilting =
-    new Animation(picture,
+  pictureTilting = new Animation(picture,
       { '-webkit-transform': [ 'rotate(0deg)', 'rotate(-30deg)' ] }, 0.5);
   group = new SeqGroup([a, pictureTilting]);
   console.log(window.document.animationTimeline.currentState());
@@ -175,7 +173,7 @@ function audioAnimFunction() {
 
 function seventh() {
   var doorCreakAnim =
-    new Animation(null, new audioAnimFunction("CREEEEEEAAAAKKK"), 2);
+      new Animation(null, new audioAnimFunction("CREEEEEEAAAAKKK"), 2);
   var closeAnim = new ParGroup([ a, doorCreakAnim ]);
   closeAnim.timing.timingFunc = a.timing.timingFunc;
   a.timing.timingFunc = null;

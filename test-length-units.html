@@ -42,7 +42,9 @@ table {
 
 </style>
 
-Each cell in the table will start at the first value for the column (e.g. 5em, 5ex, 50px, etc.), then animate to the second value for the column (e.g. 1em, 1ex, etc.), then animate to the 'to' value for the row.
+Each cell in the table will start at the first value for the column (e.g. 5em,
+5ex, 50px, etc.), then animate to the second value for the column (e.g. 1em,
+1ex, etc.), then animate to the 'to' value for the row.
 
 <table></table>
 
@@ -66,7 +68,9 @@ for (var j = 0; j < to.length; j++) {
   for (var i = 0; i < from.length; i++) {
     fromVal = from[i];
     id = 'a' + toVal + fromVal;
-    table += "<td><div class='container'><div class='expectation' style='width: " + toVal + "'</div><div id="+id+" class='anim'></div></div></td>"
+    table +=
+        "<td><div class='container'><div class='expectation' style='width: " +
+        toVal + "'</div><div id="+id+" class='anim'></div></div></td>";
     anims['#' + id] = [to[i], fromVal, toVal];
   }
   table += "</tr>"
