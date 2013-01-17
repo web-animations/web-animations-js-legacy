@@ -2001,7 +2001,7 @@ var getValue = function(target, property) {
   if (propertyIsSVGAttrib(property, target)) {
     return target.actuals[property];
   } else {
-    return window.getComputedStyle(target)[property];
+    return getComputedStyle(target)[property];
   }
 }
 
@@ -2062,9 +2062,8 @@ var timeZero = useHighResTime ? 0 : Date.now();
 // playing. Maybe this is right though?
 DEFAULT_GROUP.__defineGetter__('iterationTime', function() {
   if (!isDefinedAndNotNull(timeNow)) {
-    timeNow = useHighResTime ?
-        window.performance.now() : Date.now() - timeZero;
-    window.setTimeout(function() { timeNow = undefined; }, 0);
+    timeNow = useHighResTime ? performance.now() : Date.now() - timeZero;
+    setTimeout(function() { timeNow = undefined; }, 0);
   }
   return timeNow / 1000;
 });
@@ -2086,7 +2085,7 @@ var maybeRestartAnimation = function() {
   rAFNo = requestAnimationFrame(ticker);
 };
 
-window.document.__defineGetter__('animationTimeline', function() {
+document.__defineGetter__('animationTimeline', function() {
   return DEFAULT_GROUP;
 });
 window.Animation = Animation;
