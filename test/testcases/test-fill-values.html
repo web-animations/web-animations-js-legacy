@@ -110,20 +110,22 @@ for (var i = 0; i < containers.length; i++) {
   var divs =
       document.getElementById(containers[i]).getElementsByClassName('anim');
   for (var j = 0; j < fills.length; j++) {
-    new Animation(divs[2 * j], {left: ["100px", "200px"]}, {
-      iterationCount: 4,
-      direction: directions[i],
-      duration: 1,
-      fillMode: fills[j]
-    });
+    document.timeline.createPlayer(
+        new Animation(divs[2 * j], {left: ["100px", "200px"]}, {
+          iterationCount: 4,
+          direction: directions[i],
+          duration: 1,
+          fillMode: fills[j]
+        }));
     divs[2 * j].innerHTML = "dir: " + directions[i] + " fill: " + fills[j] +
         " dur: 1";
-    new Animation(divs[2 * j + 1], {left: ["100px", "200px"]}, {
-      iterationCount: 4,
-      direction: directions[i],
-      duration: 0,
-      fillMode: fills[j]
-    });
+    document.timeline.createPlayer(
+        new Animation(divs[2 * j + 1], {left: ["100px", "200px"]}, {
+          iterationCount: 4,
+          direction: directions[i],
+          duration: 0,
+          fillMode: fills[j]
+        }));
     divs[2 * j + 1].innerHTML = "dir: " + directions[i] + " fill: " + fills[j] +
         " dur: 0";
   }

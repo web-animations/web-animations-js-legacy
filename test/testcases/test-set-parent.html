@@ -57,10 +57,9 @@ var check = function(actual, expected, failureMessage) {
 var elem = document.getElementById("anim");
 var animFunc = {left: "100px"};
 
-// Test that Animation is constructed with default parent.
+// Test that Animation is constructed with no parent.
 var anim = new Animation(elem, animFunc);
-check(anim.parentGroup, document.animationTimeline,
-    "Child should have default parent");
+check(anim.parentGroup, null, "Child should have no parent");
 
 // Test that group is constructed with zero children.
 var parent = new ParGroup();

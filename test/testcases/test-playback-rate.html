@@ -123,5 +123,6 @@ for (var i = 0; i < containers.length; i++) {
   new Animation(container.getElementsByClassName("g")[0],
       {left: ["300px", "100px"]}, {duration: 1.0, playbackRate: 0.0},
       groups[i]);
+  document.timeline.createPlayer(groups[i]);
 }
 </script>

@@ -1,4 +1,4 @@
-<!-- 
+<!--
 /*
  * Copyright 2013 Google Inc. All Rights Reserved.
  *
@@ -151,5 +151,7 @@
 
   new Animation(document.querySelector(".car"), {left: ["-500px", "10px"]}, {duration: 2, timingFunction: new TimingFunction("ease-out")}, sgroup);
 
-  document.querySelector("#buttonA").addEventListener('mousedown', function() { sgroup.play(); }, false);
+  document.querySelector("#buttonA").addEventListener('mousedown', function() {
+    document.timeline.createPlayer(sgroup);
+  }, false);
 </script>

@@ -29,7 +29,7 @@ body {
 </div>
 <script src="../../web-animation.js"></script>
 <script>
-new Animation(document.querySelector('#test'),
+document.timeline.createPlayer(new Animation(document.querySelector('#test'),
     {'display': ['none', 'block', 'none', 'block', 'none', 'block', 'none']},
-    0.5);
+    0.5));
 </script>

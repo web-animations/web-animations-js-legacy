@@ -139,15 +139,112 @@ var isDefinedAndNotNull = function(val) {
 
 
 /** @constructor */
+var DocumentTimeline = function() {
+};
+
+mixin(DocumentTimeline.prototype, {
+  currentTime: function() {
+    return documentTime();
+  },
+  createPlayer: function(timedItem) {
+    return new Player(timedItem, this);
+  },
+});
+
+
+// TODO: Remove dead Players from here?
+var PLAYERS = [];
+
+// Controls a tree of animations via its root TimedItem.
+/** @constructor */
+var Player = function(timedItem, timeline) {
+  this.timedItem = timedItem;
+  this._timeline = timeline;
+  this._startTime = this._timeline.currentTime();
+  this._timeDrift = 0.0;
+
+  this.timedItem.timeDrift = 0.0;
+  this._update();
+
+  PLAYERS.push(this);
+  maybeRestartAnimation();
+};
+
+Player.prototype.__defineSetter__('timedItem', function(timedItem) {
+  if (isDefinedAndNotNull(this.timedItem)) {
+    // To prevent infinite recursion.
+    var oldTimedItem = this.timedItem;
+    this._timedItem = null;
+    oldTimedItem._attach(null);
+  }
+  this._timedItem = timedItem;
+  if (isDefinedAndNotNull(this.timedItem)) {
+    this.timedItem._attach(this);
+  }
+});
+Player.prototype.__defineGetter__('timedItem', function() {
+  return this._timedItem;
+});
+Player.prototype.__defineSetter__('currentTime', function(currentTime) {
+  // This does not affect startTime.
+  this._timeDrift = this._timeline.currentTime() - currentTime;
+});
+Player.prototype.__defineGetter__('currentTime', function() {
+  // TODO: Reinstate pause functionality.
+  return this._timeline.currentTime() - this._timeDrift - this.startTime;
+});
+Player.prototype.__defineSetter__('startTime', function(startTime) {
+  this.currentTime += (startTime - this.startTime);
+  this._startTime = startTime;
+});
+Player.prototype.__defineGetter__('startTime', function() {
+  return this._startTime;
+});
+
+mixin(Player.prototype, {
+  pause: function() {
+    // TODO: Reinstate pause functionality.
+  },
+  unpause: function() {
+    // TODO: Reinstate pause functionality.
+  },
+  cancel: function() {
+    this.timedItem = null;
+  },
+  _update: function() {
+    if (this.timedItem !== null) {
+      this.timedItem._updateInheritedTime(this.currentTime);
+    }
+  },
+  _isPastEndOfActiveInterval: function() {
+    return this.timedItem === null ||
+        this.timedItem._isPastEndOfActiveInterval();
+  },
+  _getItemsInEffect: function() {
+    var animations = [];
+    if (this.timedItem !== null) {
+      animations = this.timedItem._getItemsInEffect();
+    }
+    return animations;
+  },
+});
+
+
+/** @constructor */
 var TimedItem = function(timing, parentGroup) {
   this.timing = new TimingProxy(interpretTimingParam(timing), function() {
     this._updateInternalState();
   }.bind(this));
+  this._inheritedTime = null;
   this.currentIteration = null;
   this.iterationTime = null;
   this.animationTime = null;
   this._reversing = false;
   this._startTime = 0.0;
+
+  // A TimedItem has either a _player, or a _parentGroup, or neither, but
+  // never both.
+  this._player = null;
 
   // Note that we don't use the public setter, because we call _addInternal()
   // below.
@@ -159,20 +256,23 @@ var TimedItem = function(timing, parentGroup) {
   this.timeDrift = 0;
 
   if (this.parentGroup) {
+    // This will set our inheritedTime via _childrenStateModified().
     this.parentGroup._addInternal(this);
   }
   this._updateInternalState();
 };
 
+// TODO: It would be good to avoid the need for this. We would need to modify
+// call sites to instead rely on a call from the parent.
 TimedItem.prototype.__defineGetter__('_effectiveParentTime', function() {
   return this.parentGroup !== null && this.parentGroup.iterationTime !== null ?
       this.parentGroup.iterationTime : 0;
 });
 TimedItem.prototype.__defineGetter__('currentTime', function() {
-  return this._effectiveParentTime - this._startTime - this.timeDrift;
+  return this._inheritedTime - this._startTime - this.timeDrift;
 });
 TimedItem.prototype.__defineSetter__('currentTime', function(seekTime) {
-  this.timeDrift = this._effectiveParentTime - this._startTime - seekTime;
+  this.timeDrift = this._inheritedTime - this._startTime - seekTime;
   this._updateTimeMarkers();
 });
 TimedItem.prototype.__defineGetter__('startTime', function() {
@@ -208,21 +308,32 @@ TimedItem.prototype.__defineGetter__('parentGroup', function() {
 });
 
 mixin(TimedItem.prototype, {
+  _attach: function(player) {
+    // Remove ourselves from our parent, if we have one. This also removes any
+    // exsisting player.
+    this._reparent(null);
+    this._player = player;
+  },
   _sanitizeParent: function(parentGroup) {
     if (parentGroup === null || parentGroup instanceof AnimationGroup) {
       return parentGroup;
     } else if (!isDefined(parentGroup)) {
-      return DEFAULT_GROUP;
-    } else {
-      throw new TypeError('parentGroup is not an AnimationGroup');
+      return null;
     }
+    throw new TypeError('parentGroup is not an AnimationGroup');
   },
-  // Takes care of updating the outgoing parent.
+  // Takes care of updating the outgoing parent. This is called with a non-null
+  // parent only from AnimationGroup.splice(), which takes care of calling
+  // AnimationGroup._childrenStateModified() for the new parent.
   _reparent: function(parentGroup) {
     if (parentGroup === this) {
       throw new Error('parentGroup can not be set to self!');
     }
-    if (this.parentGroup) {
+    if (this._player !== null) {
+      this._player.timedItem = null;
+      this._player = null;
+    }
+    if (this.parentGroup !== null) {
       this.parentGroup.remove(this.parentGroup.indexOf(this), 1);
     }
     this._parentGroup = parentGroup;
@@ -234,6 +345,9 @@ mixin(TimedItem.prototype, {
           this._stashedStartTime === undefined ? 0.0 : this._stashedStartTime;
       this._stashedStartTime = undefined;
     }
+    // In the case of the parent being non-null, _childrenStateModified() will
+    // call this via _updateChildInheritedTimes().
+    // TODO: Consider optimising this case by skipping this call.
     this._updateTimeMarkers();
   },
   _intrinsicDuration: function() {
@@ -245,12 +359,18 @@ mixin(TimedItem.prototype, {
     }
     this._updateTimeMarkers();
   },
-  _updateItemTime: function(parentTime) {
-    if (this.parentGroup !== null && this.parentGroup.iterationTime !== null) {
-      this.itemTime = this.parentGroup.iterationTime -
-          this._startTime - this.timeDrift;
-    } else if (isDefined(parentTime)) {
-      this.itemTime = parentTime;
+  // We push time down to children. We could instead have children pull from
+  // above, but this is tricky because a TImedItem may use either a parent
+  // TimedItem or an Player. This requires either logic in
+  // TimedItem, or for TimedItem and Player to implement Timeline
+  // (or an equivalent), both of which are ugly.
+  _updateInheritedTime: function(inheritedTime) {
+    this._inheritedTime = inheritedTime;
+    this._updateTimeMarkers();
+  },
+  _updateItemTime: function() {
+    if (this._inheritedTime !== null) {
+      this.itemTime = this._inheritedTime - this._startTime - this.timeDrift;
     } else {
       this.itemTime = null;
     }
@@ -342,9 +462,8 @@ mixin(TimedItem.prototype, {
       this.iterationTime = this._timeFraction * this.duration;
     }
   },
-  // Returns whether this TimedItem is currently in effect.
-  _updateTimeMarkers: function(parentTime) {
-    this._updateItemTime(parentTime);
+  _updateTimeMarkers: function() {
+    this._updateItemTime();
     if (this.itemTime === null) {
       this.animationTime = null;
       this.iterationTime = null;
@@ -363,14 +482,10 @@ mixin(TimedItem.prototype, {
       this._updateIterationParams();
     }
     maybeRestartAnimation();
-    return this._timeFraction !== null;
   },
-  // Takes a time in our iteration time space and converts it to our item time
-  // space.
-  // TODO: Ideally we would convert to inherited time space, but this doesn't
-  // work for the default group. This will become moot once we switch to Time
-  // Sources.
-  _iterationTimeToItemTime: function(inputTime) {
+  // Takes a time in our iteration time space and converts it to our inherited
+  // time space.
+  _iterationTimeToInheritedTime: function(inputTime) {
     // Get the current effective iteration time, ie the iteration time without
     // limiting it to the active interval, or applying fill.
     var effectiveAnimationTime = this.itemTime - this.timing.startDelay;
@@ -383,21 +498,20 @@ mixin(TimedItem.prototype, {
     var effectiveIterationTime =
         this._scaleIterationTime(unscaledEffectiveIterationTime);
     // Get the input time relative to the current effective iteration time,
-    // scale it, and add it to the current item time.
+    // scale it, and add it to the current item time and start time.
     var iterationTimeDelta = inputTime - effectiveIterationTime;
     var effectiveIterationDelta = this._isCurrentDirectionForwards(
         this.timing.direction, this.currentIteration) ?
         iterationTimeDelta : -iterationTimeDelta;
-    return effectiveIterationDelta / this._getEffectiveSpeed() + this.itemTime;
+    return effectiveIterationDelta / this._getEffectiveSpeed() + this.itemTime +
+        this._startTime;
   },
-  // Takes a time in our iteration time space and converts it to the item time
-  // space of the TimedItem at the root of our tree.
-  _iterationTimeToRootItemTime: function(inputTime) {
-    if (this.parentGroup === null) {
-      return this._iterationTimeToItemTime(inputTime);
-    }
-    return this.parentGroup._iterationTimeToRootItemTime(
-        this._iterationTimeToItemTime(inputTime) + this._startTime);
+  // Takes a time in our inherited time space and converts it to the inherited
+  // time space of the TimedItem at the root of our tree.
+  _inheritedTimeToRootInheritedTime: function(inputTime) {
+    return this.parentGroup === null ? inputTime :
+        this.parentGroup._inheritedTimeToRootInheritedTime(
+            this.parentGroup._iterationTimeToInheritedTime(inputTime));
   },
   seek: function(itemTime) {
     // TODO
@@ -429,15 +543,10 @@ mixin(TimedItem.prototype, {
     this.currentTime = seekTime;
     this._reversing = !(this._reversing);
   },
+  // TODO: Should we remove this?
   cancel: function() {
     if (this.parentGroup) {
       this.parentGroup.remove(this.parentGroup.indexOf(this), 1);
-    }
-  },
-  play: function() {
-    if (this.currentTime > this.animationDuration + this.timing.startDelay &&
-        this.timing.playbackRate >= 0) {
-      this.currentTime = this.timing.startDelay;
     }
   },
   _floorWithClosedOpenRange: function(x, range) {
@@ -475,8 +584,21 @@ mixin(TimedItem.prototype, {
   // the TimedItems in their active interval, as a TimedItem can have an effect
   // outside its active interval due to fill.
   _getItemsInEffect: function() {
+    if (this._timeFraction === null) {
+      return [];
+    }
+    return this._getItemsInEffectImpl();
+  },
+  _getItemsInEffectImpl: function() {
     throw new Error(
-        "Derived classes must override TimedItem._getItemsInEffect()");
+        "Derived classes must override TimedItem._getItemsInEffectImpl()");
+  },
+  _isPastEndOfActiveInterval: function() {
+    return this._player.currentTime > this.endTime;
+  },
+  getPlayer: function() {
+    return this.parentGroup === null ?
+        this._player : this.parentGroup.getPlayer();
   },
 });
 
@@ -554,22 +676,8 @@ mixin(Animation.prototype, {
         this.currentIteration, this.targetElement,
         this.underlyingValue);
   },
-  // Takes a time in our inherited time space and returns it in the document
-  // time space.
-  _inheritedTimeToDocumentTime: function(inputTime) {
-    // This should only be used if we have a parent. The default group has a
-    // start time of zero and can not be paused, so its item time is equal to
-    // the document time.
-    return this.parentGroup._iterationTimeToRootItemTime(inputTime);
-  },
-  _getItemsInEffect: function() {
-    if (!this._updateTimeMarkers()) {
-      return [];
-    }
-
-    // If we don't have a parent, we can't be in effect, so we should never
-    // reach this point.
-    this._sortOrder = this._inheritedTimeToDocumentTime(this.startTime);
+  _getItemsInEffectImpl: function() {
+    this._sortOrder = this._inheritedTimeToRootInheritedTime(this.startTime);
     return [this];
   },
   clone: function() {
@@ -620,16 +728,24 @@ mixin(AnimationGroup.prototype, {
     // So it should be sufficient to simply update start times and time markers
     // on the way down.
 
-    // This calls up to our parent, then updates our time markers.
+    // This calls up to our parent, then calls _updateTimeMarkers().
     this._updateInternalState();
+    this._updateChildInheritedTimes();
 
     // Update child start times before walking down.
     this._updateChildStartTimes();
 
-    if (!this.parentGroup) {
-      maybeRestartAnimation();
-    }
     this._isInOnChildrenStateModified = false;
+  },
+  _updateInheritedTime: function(inheritedTime) {
+    this._inheritedTime = inheritedTime;
+    this._updateTimeMarkers();
+    this._updateChildInheritedTimes();
+  },
+  _updateChildInheritedTimes: function() {
+    this.children.forEach(function(child) {
+      child._updateInheritedTime(this.iterationTime);
+    }.bind(this));
   },
   _updateChildStartTimes: function() {
     if (this.type == 'seq') {
@@ -639,10 +755,11 @@ mixin(AnimationGroup.prototype, {
           child._stashedStartTime = child._startTime;
         }
         child._startTime = cumulativeStartTime;
-        // Avoid updating the child's time markers if this is about to be done
-        // in the down phase of _childrenStateModified().
+        // Avoid updating the child's inherited time and time markers if this is
+        // about to be done in the down phase of _childrenStateModified().
         if (!child._isInOnChildrenStateModified) {
-          child._updateTimeMarkers();
+          // This calls _updateTimeMarkers() on the child.
+          child._updateInheritedTime(this.iterationTime);
         }
         cumulativeStartTime += Math.max(0, child.timing.startDelay +
             child.animationDuration);
@@ -676,8 +793,7 @@ mixin(AnimationGroup.prototype, {
       throw 'Unsupported type ' + this.type;
     }
   },
-  _getItemsInEffect: function() {
-    this._updateTimeMarkers();
+  _getItemsInEffectImpl: function() {
     var animations = [];
     this.children.forEach(function(child) {
       animations = animations.concat(child._getItemsInEffect());
@@ -2253,10 +2369,6 @@ var getValue = function(target, property) {
 
 var rAFNo = undefined;
 
-// Pass null for the parent, as TimedItem uses the default group, (ie this
-// object) as the parent if no value is provided.
-var DEFAULT_GROUP = new ParGroup([], {name: 'DEFAULT'}, null);
-
 var compositor = new Compositor();
 
 // ECMA Script does not guarantee stable sort.
@@ -2274,17 +2386,35 @@ var stableSort = function(array, compare) {
   }));
 };
 
-DEFAULT_GROUP._tick = function(parentTime) {
-  this._updateTimeMarkers(parentTime);
+// If requestAnimationFrame is unprefixed then it uses high-res time.
+var useHighResTime = 'requestAnimationFrame' in window;
+var requestAnimationFrame = window.requestAnimationFrame ||
+    window.webkitRequestAnimationFrame || // 80 wrap is so 80s
+    window.mozRequestAnimationFrame || window.msRequestAnimationFrame;
 
+// Only defined in the scope of a rAF callback.
+var rAFTime = undefined;
+// Gets the documentTime in seconds.
+var clock = function() {
+  return useHighResTime ? performance.now() : Date.now();
+};
+var clockZero = clock();
+var documentTime = function() {
+  // Use rAFTime if available, for consistency. Otherwise, use a clock.
+  return ((isDefined(rAFTime) ? rAFTime : clock()) - clockZero) / 1000;
+};
+
+var ticker = function(time) {
+  rAFTime = time;
   // Get animations for this sample
   // TODO: Consider reverting to direct application of values and sorting
   // inside the compositor.
   var animations = [];
-  var allFinished = true;
-  this.children.forEach(function(child) {
-    animations = animations.concat(child._getItemsInEffect());
-    allFinished &= parentTime > child.endTime;
+  var requiresFurtherIterations = false;
+  PLAYERS.forEach(function(player) {
+    player._update();
+    requiresFurtherIterations |= !player._isPastEndOfActiveInterval();
+    animations = animations.concat(player._getItemsInEffect());
   }.bind(this));
 
   // Apply animations in order
@@ -2304,41 +2434,19 @@ DEFAULT_GROUP._tick = function(parentTime) {
     webAnimVisUpdateAnims();
   }
 
-  return !allFinished;
-}
+  if (requiresFurtherIterations) {
+    rAFNo = requestAnimationFrame(ticker);
+  } else {
+    rAFNo = undefined;
+  }
+
+  rAFTime = undefined;
+};
 
 // Multiplication where zero multiplied by any value (including infinity)
 // gives zero.
 var multiplyZeroGivesZero = function(a, b) {
   return (a === 0 || b === 0) ? 0 : a * b;
-};
-
-// If requestAnimationFrame is unprefixed then it uses high-res time.
-var useHighResTime = 'requestAnimationFrame' in window;
-var requestAnimationFrame = window.requestAnimationFrame ||
-    window.webkitRequestAnimationFrame || // 80 wrap is so 80s
-    window.mozRequestAnimationFrame || window.msRequestAnimationFrame;
-var timeNow = undefined;
-var timeZero = useHighResTime ? 0 : Date.now();
-
-// Massive hack to allow things to be added to the parent group and start
-// playing. Maybe this is right though?
-DEFAULT_GROUP.__defineGetter__('iterationTime', function() {
-  if (!isDefinedAndNotNull(timeNow)) {
-    timeNow = useHighResTime ? performance.now() : Date.now() - timeZero;
-    setTimeout(function() { timeNow = undefined; }, 0);
-  }
-  return timeNow / 1000;
-});
-
-var ticker = function(frameTime) {
-  timeNow = frameTime - timeZero;
-  if (DEFAULT_GROUP._tick(timeNow / 1000)) {
-    rAFNo = requestAnimationFrame(ticker);
-  } else {
-    rAFNo = undefined;
-  }
-  timeNow = undefined;
 };
 
 var maybeRestartAnimation = function() {
@@ -2348,9 +2456,11 @@ var maybeRestartAnimation = function() {
   rAFNo = requestAnimationFrame(ticker);
 };
 
-document.__defineGetter__('animationTimeline', function() {
-  return DEFAULT_GROUP;
-});
+var DOCUMENT_TIMELINE = new DocumentTimeline();
+document.__defineGetter__('timeline', function() {
+  return DOCUMENT_TIMELINE;
+})
+
 window.Animation = Animation;
 window.Timing = Timing;
 // TODO: this is not in the spec

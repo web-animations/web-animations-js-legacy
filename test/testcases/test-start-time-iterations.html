@@ -105,6 +105,10 @@ for (var i = 0; i < directions.length; i++) {
   // addition, the child picks up a start time of zero. The parent then updates
   // its duration and its iteration time jumps, causing the child to start
   // playing part way through the animation.
+  var group1 = group(direction);
+  document.timeline.createPlayer(group1);
+  var group2 = groupWithFixedDuration(direction);
+  document.timeline.createPlayer(group2);
   setTimeout(function(container, group1, group2) {
     return function() {
       new Animation(container.getElementsByClassName("a")[0], animation,
@@ -112,6 +116,6 @@ for (var i = 0; i < directions.length; i++) {
       new Animation(container.getElementsByClassName("b")[0], animation,
           {duration: 1.0}, group2);
     };
-  }(container, group(direction), groupWithFixedDuration(direction)), 500);
+  }(container, group1, group2), 500);
 }
 </script>

@@ -54,7 +54,8 @@ for (var start in states) {
       testElement.classList.add('red');
     }
     testContainer.appendChild(testElement);
-    new Animation(testElement, {visibility: frames}, timing);
+    document.timeline.createPlayer(
+        new Animation(testElement, {visibility: frames}, timing));
   }
 }
 </script>

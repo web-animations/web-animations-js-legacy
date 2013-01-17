@@ -70,13 +70,14 @@ var animation = {left: ["100px", "300px"]};
 for (var i = 0; i < directions.length; i++) {
   var container = document.getElementById(containers[i]);
   // Explicit parent duration.
-  new Animation(container.getElementsByClassName("a")[0], animation,
-      {duration: 1.0},
-      new ParGroup([],
-          {iterationCount: 2.0, direction: directions[i], duration: 1.0}));
+  document.timeline.createPlayer(new ParGroup(
+      [new Animation(container.getElementsByClassName("a")[0], animation,
+          {duration: 1.0})],
+      {iterationCount: 2.0, direction: directions[i], duration: 1.0}));
   // Parent calculates intrinsic duration.
-  new Animation(container.getElementsByClassName("b")[0], animation,
-      {duration: 1.0},
-      new ParGroup([], {iterationCount: 2.0, direction: directions[i]}));
+  document.timeline.createPlayer(new ParGroup(
+      [new Animation(container.getElementsByClassName("b")[0], animation,
+          {duration: 1.0})],
+      {iterationCount: 2.0, direction: directions[i]}));
 }
 </script>
