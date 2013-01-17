@@ -76,8 +76,7 @@ var parent = new ParGroup();
 var child1 = new Animation(elem, animFunc, 1.0, parent);
 var child2 = new Animation(elem, animFunc, 1.0, parent);
 var group = new ParGroup(parent.children, 1.0, parent);
-check(parent.parentGroup, document.animationTimeline,
-    "Parent's parent should be default group");
+check(parent.parentGroup, null, "Parent's parent should be null");
 check(parent.children.length, 1, "Parent should have 1 child");
 check(parent.children[0], group, "Parent's child should be new group");
 check(group.parentGroup, parent, "New group's parent incorrect");
@@ -138,7 +137,7 @@ check(y.children.length, 0, "y.children.length");
 var x = new ParGroup();
 var y = new ParGroup([x]);
 var z = new ParGroup([x], undefined, x);
-check(y.parentGroup, document.animationTimeline, "y.parentGroup");
+check(y.parentGroup, null, "y.parentGroup");
 check(y.children.length, 0, "y.children.length");
 check(z.parentGroup, null, "z.parentGroup");
 check(z.children.length, 1, "z.children.length");
