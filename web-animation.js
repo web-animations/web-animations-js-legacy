@@ -63,7 +63,8 @@ var Timing = function(timingDict) {
   //this.playbackRate = timingDict.playbackRate || 1.0;
   this.direction = timingDict.direction || 'normal';
   if (typeof timingDict.timingFunction === 'string') {
-    this.timingFunction = TimingFunction.createFromString(timingDict.timingFunction);
+    this.timingFunction =
+        TimingFunction.createFromString(timingDict.timingFunction);
   } else {
     this.timingFunction = timingDict.timingFunction;
   }
@@ -496,7 +497,8 @@ var interpretTimingParam = function(timing) {
 };
 
 /** @constructor */
-var Animation = function(target, animationFunction, timing, parentGroup, startTime) {
+var Animation = function(target, animationFunction, timing, parentGroup,
+    startTime) {
   this.animationFunction = interpretAnimationFunction(animationFunction);
   this.timing = interpretTimingParam(timing);
 
@@ -761,7 +763,8 @@ AnimationFunction.createFromProperties = function(properties) {
 }
 
 // Step 3 - Create a KeyframesAnimationFunction object
-AnimationFunction._createKeyframeFunction = function(property, value, operation) {
+AnimationFunction._createKeyframeFunction =
+    function(property, value, operation) {
   var func = new KeyframesAnimationFunction(property);
 
   if (typeof value === 'string') {
@@ -876,7 +879,8 @@ PathAnimationFunction.prototype.__defineGetter__('segments', function() {
 });
 
 /** @constructor */
-var KeyframesAnimationFunction = function(property, operation, accumulateOperation) {
+var KeyframesAnimationFunction =
+    function(property, operation, accumulateOperation) {
   KeyframesAnimationFunction.$super.call(this, operation, accumulateOperation);
   this.property = property;
   this.frames = new KeyframeList();
@@ -1098,7 +1102,8 @@ TimingFunction.createFromString = function(spec) {
   if (stepMatch) {
     return new StepTimingFunction(Number(stepMatch[1]), stepMatch[2]);
   }
-  var bezierMatch = /cubic-bezier\(([^,]*),([^,]*),([^,]*),([^)]*)\)/.exec(spec);
+  var bezierMatch =
+      /cubic-bezier\(([^,]*),([^,]*),([^,]*),([^)]*)\)/.exec(spec);
   if (bezierMatch) {
     return new TimingFunction([
         Number(bezierMatch[1]),
@@ -1169,7 +1174,7 @@ var numberType = {
 };
 
 var integerType = {
-  interpolate: function(from, to, f) { return Math.floor(interp(from, to, f)); },
+  interpolate: function(from, to, f) { return Math.floor(interp(from, to, f)); }
 };
 integerType.__proto__ = numberType;
 
@@ -1201,7 +1206,7 @@ var valueRE = /\s*([0-9.]*)([a-zA-Z%]*)/;
 var operatorRE = /\s*([+-])/;
 var percentLengthType = {
   zero: function() { return {}; },
-  add: function(base, delta) { 
+  add: function(base, delta) {
     var out = {};
     for (value in base) {
       out[value] = base[value] + (delta[value] || 0);
@@ -1227,7 +1232,7 @@ var percentLengthType = {
     }
     return out;
   },
-  toCssValue: function(value) { 
+  toCssValue: function(value) {
     var s = '';
     var single_value = true;
     for (var item in value) {
@@ -1507,7 +1512,8 @@ visibilityType.__proto__ = nonNumericType;
 var lengthType = percentLengthType;
 
 var rgbRE = /^\s*rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/;
-var rgbaRE = /^\s*rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+|\d*\.\d+)\s*\)/;
+var rgbaRE =
+    /^\s*rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+|\d*\.\d+)\s*\)/;
 
 var namedColors = {
   aliceblue: [240, 248, 255, 1], antiquewhite: [250, 235, 215, 1],
@@ -1791,8 +1797,8 @@ var propertyTypes = {
 };
 
 var svgProperties = {
-  // TODO: For browsers that support transform as a style attribute on SVG we can
-  // delete this.
+  // TODO: For browsers that support transform as a style attribute on SVG we
+  // can delete this.
   'transform': 1,
   'cx': 1,
   'width': 1,
@@ -1992,7 +1998,7 @@ var clearValue = function(target, property) {
   if (propertyIsSVGAttrib(property, target)) {
     target.actuals[property] = null;
   } else {
-      target.style[property] = null;
+    target.style[property] = null;
   }
 }
 
@@ -2008,7 +2014,7 @@ var getValue = function(target, property) {
 var rAFNo = undefined;
 
 // Pass null for the parent, as TimedItem uses the default group, (ie this
-// object) as the parent if no value is provided. 
+// object) as the parent if no value is provided.
 var DEFAULT_GROUP = new ParGroup([], {name: 'DEFAULT'}, null);
 
 var compositor = new Compositor();
