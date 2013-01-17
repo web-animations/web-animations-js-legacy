@@ -1647,21 +1647,49 @@ var extractTranslateValue = function(length) {
 
 var extractScaleValues = function(scales) {
   var scaleX = Number(scales[1]);
-  var scaleY = scales[2] ? Number(scales[2]) : scaleX;
+  var scaleY = scales[3] ? Number(scales[3]) : scaleX;
   return [scaleX, scaleY];
 };
 
+var SPACES = '\\s*';
+var NUMBER = '[+-]?(?:\\d+|\\d*\\.\\d+)';
+var RAW_OPEN_BRACKET = '\\(';
+var RAW_CLOSE_BRACKET = '\\)';
+var RAW_COMMA = ',';
+var UNIT = '[a-zA-Z%]*';
+var START = '^';
+
+function capture(x) { return '(' + x + ')'; }
+function optional(x) { return '(?:' + x + ')?'; }
+
+var OPEN_BRACKET = [SPACES, RAW_OPEN_BRACKET, SPACES].join("");
+var CLOSE_BRACKET = [SPACES, RAW_CLOSE_BRACKET, SPACES].join("");
+var COMMA = [SPACES, RAW_COMMA, SPACES].join("");
+var UNIT_NUMBER = [capture(NUMBER), capture(UNIT)].join("");
+
+function transformRE(name, numParms, hasOptionalParm) {
+  var tokenList = [START, SPACES, name, OPEN_BRACKET];
+  for (var i = 0; i < numParms - 1; i++) {
+    tokenList.push(UNIT_NUMBER);
+    tokenList.push(COMMA);
+  }
+  tokenList.push(UNIT_NUMBER);
+  if (hasOptionalParm) {
+    tokenList.push(optional([COMMA, UNIT_NUMBER].join("")));
+  }
+  tokenList.push(CLOSE_BRACKET);
+  return new RegExp(tokenList.join("")); 
+}
+
 var transformREs = [
-  [/^\s*rotate\(([+-]?(?:\d+|\d*\.\d+))(deg|grad|rad|turn)?\)/,
-      extractDeg, 'rotate'],
-  [/^\s*rotateY\(([+-]?(?:\d+|\d*\.\d+))(deg|grad|rad|turn)\)/,
-      extractDeg, 'rotateY'],
-  [/^\s*translateZ\(([+-]?(?:\d+|\d*\.\d+))(px)?\)/,
-      extractTranslateValue, 'translateZ'],
-  [/^\s*translate\(([+-]?(?:\d+|\d*\.\d+))(px)?(?:\s*,\s*([+-]?(?:\d+|\d*\.\d+))(px)?)?\)/,
-      extractTranslationValues, 'translate'],
-  [/^\s*scale\((\d+|\d*\.\d+)(?:\s*,\s*(\d+|\d*.\d+))?\)/,
-      extractScaleValues, 'scale']
+  [transformRE('rotate', 1, false), extractDeg, 'rotate'],
+  [transformRE('rotateY', 1, false), extractDeg, 'rotateY'],
+  [transformRE('translateZ', 1, false), extractTranslateValue, 
+      'translateZ'],
+  [transformRE('translate', 1, true), extractTranslationValues,
+      'translate'],
+  [transformRE('scale', 1, true), extractScaleValues,
+      'scale']
 ];
 
 var transformType = {
@@ -1721,6 +1749,9 @@ var transformType = {
   },
   fromCssValue: function(value) {
     // TODO: fix this :)
+    if (value === undefined) {
+      return "";
+    }
     var result = []
     while (value.length > 0) {
       var r = undefined;
@@ -1733,7 +1764,7 @@ var transformType = {
           break;
         }
       }
-      if (r === undefined)
+      if (!isDefinedAndNotNull(r))
         return result;
     }
     return result;
