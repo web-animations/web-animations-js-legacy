@@ -576,12 +576,12 @@ var AnimationListMixin = {
     return this.children.indexOf(item);
   },
   splice: function(start, deleteCount, newItems) {
-    var args = [start, deleteCount];
-    if (isDefined(newItems)) {
-      args = args.concat(newItems);
-      for (var i = 2; i < args.length; i++) {
-        args[i].reparent(this);
-      }
+    var args = arguments;
+    if (args.length == 3) {
+      args = [start, deleteCount].concat(newItems);
+    }
+    for (var i = 2; i < args.length; i++) {
+      args[i].reparent(this);
     }
     var result = Array.prototype['splice'].apply(this.children, args);
     for (var i = 0; i < result.length; i++) {
