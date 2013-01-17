@@ -1633,22 +1633,28 @@ var extractDeg = function(deg) {
   }
 };
 
-var extractTranslationValues = function(lengths) {
-  // TODO: Assuming all lengths are px for now
-  var length1 = Number(lengths[1]);
-  var length2 = lengths[3] ? Number(lengths[3]) : 0;
-  return [length1, length2];
-};
+var extractValue = function(values, pos, hasUnits) {
+  var value = Number(values[pos]);
+  if (!hasUnits) {
+    return value;
+  }
+  var type = values[pos + 1];
+  if (type == '') { type = 'px'; }
+  var result = {};
+  result[type] = value;
+  return result;
+}
 
-var extractTranslateValue = function(length) {
-  // TODO: Assuming px for now
-  return Number(length[1]);
-};
-
-var extractScaleValues = function(scales) {
-  var scaleX = Number(scales[1]);
-  var scaleY = scales[3] ? Number(scales[3]) : scaleX;
-  return [scaleX, scaleY];
+var extractValues = function(values, numValues, hasOptionalValue, 
+  hasUnits) {
+  var result = [];
+  for (var i = 0; i < numValues; i++) {
+    result.push(extractValue(values, 1 + 2 * i, hasUnits));
+  }
+  if (hasOptionalValue && values[1 + 2 * numValues]) {
+    result.push(extractValue(values, 1 + 2 * numValues, hasUnits));
+  }
+  return result;
 };
 
 var SPACES = '\\s*';
@@ -1681,15 +1687,20 @@ function transformRE(name, numParms, hasOptionalParm) {
   return new RegExp(tokenList.join("")); 
 }
 
+function buildMatcher(name, numValues, hasOptionalValue, hasUnits) {
+  return [transformRE(name, numValues, hasOptionalValue),
+      function(x) { 
+        return extractValues(x, numValues, hasOptionalValue, hasUnits);
+      },
+      name];
+}
+
 var transformREs = [
   [transformRE('rotate', 1, false), extractDeg, 'rotate'],
   [transformRE('rotateY', 1, false), extractDeg, 'rotateY'],
-  [transformRE('translateZ', 1, false), extractTranslateValue, 
-      'translateZ'],
-  [transformRE('translate', 1, true), extractTranslationValues,
-      'translate'],
-  [transformRE('scale', 1, true), extractScaleValues,
-      'scale']
+  buildMatcher('translateZ', 1, false, true),
+  buildMatcher('translate', 1, true, true),
+  buildMatcher('scale', 1, true, true)
 ];
 
 var transformType = {
@@ -1708,7 +1719,23 @@ var transformType = {
         to[i].t === null,
         'Transform types should match or one should be the underlying value');
       var type = from[i].t ? from[i].t : to[i].t;
-      out.push({t: type, d:interp(from[i].d, to[i].d, f, type)});
+      switch(type) {
+        case 'rotate':
+        case 'rotateY':
+        case 'scale':
+          out.push({t: type, d:interp(from[i].d, to[i].d, f, type)});
+          break;
+        default:
+          var result = [];
+          var maxVal = Math.max(from[i].d.length, to[i].d.length);
+          for (var j = 0; j < maxVal; j++) {
+            fromVal = from[i].d[j] || {};
+            toVal = to[i].d[j] || {};
+            result.push(lengthType.interpolate(fromVal, toVal, f));
+          }
+          out.push({t: type, d: result});
+          break;
+      }
     }
     return out;
   },
@@ -1724,15 +1751,25 @@ var transformType = {
           out += value[i].t + '(' + value[i].d + unit + ') ';
           break;
         case 'translateZ':
-          out += value[i].t + '(' + value[i].d + 'px' + ') ';
+          out += value[i].t + '(' + lengthType.toCssValue(value[i].d[0]) 
+              + ') ';
           break;
         case 'translate':
-          var unit = svgMode ? '' : 'px';
+          if (svgMode) {
+            if (value[i].d[1] === 0) {
+              out += value[i].t + '(' + value[i].d[0]['px'] + ') ';
+            } else {
+              out += value[i].t + '(' + value[i].d[0]['px'] + ', ' +
+                    value[i].d[1]['px'] + ') ';
+            }
+            break;
+          }
           if (value[i].d[1] === 0) {
-            out += value[i].t + '(' + value[i].d[0] + unit + ') ';
+            out += value[i].t + '(' + lengthType.toCssValue(value[i].d[0])
+                + ') ';
           } else {
-            out += value[i].t + '(' + value[i].d[0] + unit + ', ' +
-                  value[i].d[1] + unit + ') ';
+            out += value[i].t + '(' + lengthType.toCssValue(value[i].d[0])
+                + ', ' + lengthType.toCssValue(value[i].d[1]) + ') ';
           }
           break;
         case 'scale':
