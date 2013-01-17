@@ -851,9 +851,9 @@ mixin(PathAnimationFunction.prototype, {
       var rotation = Math.atan2(dy, dx);
       value.push({t:'rotate', d: rotation / 2 / Math.PI * 360});
     }
-    DEFAULT_GROUP.compositor.setAnimatedValue(target, '-webkit-transform',
+    compositor.setAnimatedValue(target, '-webkit-transform',
         new AnimatedResult(value, this.operation, timeFraction));
-    DEFAULT_GROUP.compositor.setAnimatedValue(target, 'transform',
+    compositor.setAnimatedValue(target, 'transform',
         new AnimatedResult(value, this.operation, timeFraction));
   },
   clone: function() {
@@ -900,7 +900,7 @@ mixin(KeyframesAnimationFunction.prototype, {
         // Transforms syntax on SVG content we have to convert that to
         // 'rotate(45)' before setting.
         this.ensureRawValue(frames[i]);
-        DEFAULT_GROUP.compositor.setAnimatedValue(target, this.property,
+        compositor.setAnimatedValue(target, this.property,
             new AnimatedResult(frames[i].rawValue, this.operation,
             timeFraction));
         return;
@@ -960,7 +960,7 @@ mixin(KeyframesAnimationFunction.prototype, {
     // TODO: property-based interpolation for things that aren't simple
     var animationValue = interpolate(this.property, beforeFrame.rawValue,
         afterFrame.rawValue, localTimeFraction);
-    DEFAULT_GROUP.compositor.setAnimatedValue(target, this.property,
+    compositor.setAnimatedValue(target, this.property,
         new AnimatedResult(animationValue, this.operation, timeFraction));
   },
   getValue: function(target) {
@@ -2011,7 +2011,7 @@ var rAFNo = undefined;
 // object) as the parent if no value is provided. 
 var DEFAULT_GROUP = new ParGroup([], {name: 'DEFAULT'}, null);
 
-DEFAULT_GROUP.compositor = new Compositor();
+var compositor = new Compositor();
 
 DEFAULT_GROUP._tick = function(parentTime) {
   this.updateTimeMarkers(parentTime);
@@ -2037,7 +2037,7 @@ DEFAULT_GROUP._tick = function(parentTime) {
   }
 
   // Composite animated values into element styles
-  this.compositor.applyAnimatedValues();
+  compositor.applyAnimatedValues();
 
   if (window.webAnimVisUpdateAnims) {
     webAnimVisUpdateAnims();
