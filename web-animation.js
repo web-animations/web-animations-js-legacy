@@ -1712,14 +1712,23 @@ function buildRotationMatcher(name, numValues, hasOptionalValue) {
 
 var transformREs = [
   buildRotationMatcher('rotate', 1, false),
+  buildRotationMatcher('rotateX', 1, false),
   buildRotationMatcher('rotateY', 1, false),
+  buildRotationMatcher('rotateZ', 1, false),
+  buildRotationMatcher('skew', 1, true),
+  buildRotationMatcher('skewX', 1, false),
+  buildRotationMatcher('skewY', 1, false),
   buildMatcher('translateX', 1, false, true),
   buildMatcher('translateY', 1, false, true),
   buildMatcher('translateZ', 1, false, true),
   buildMatcher('translate', 1, true, true),
-  buildMatcher('scale', 1, true, true),
-  buildMatcher('scaleX', 1, false, true),
-  buildMatcher('scaleY', 1, false, true)
+  buildMatcher('translate3d', 3, false, true),
+  buildMatcher('scale', 1, true, false),
+  buildMatcher('scaleX', 1, false, false),
+  buildMatcher('scaleY', 1, false, false),
+  buildMatcher('scaleZ', 1, false, false),
+  buildMatcher('scale3d', 3, false, false),
+  buildMatcher('perspective', 1, false, true)
 ];
 
 var transformType = {
@@ -1740,10 +1749,17 @@ var transformType = {
       var type = from[i].t ? from[i].t : to[i].t;
       switch(type) {
         case 'rotate':
+        case 'rotateX':
         case 'rotateY':
+        case 'rotateZ':
         case 'scale':
         case 'scaleX':
         case 'scaleY':
+        case 'scaleZ':
+        case 'scale3d':
+        case 'skew':
+        case 'skewX':
+        case 'skewY':
           out.push({t: type, d:interp(from[i].d, to[i].d, f, type)});
           break;
         default:
@@ -1767,13 +1783,27 @@ var transformType = {
       console.assert(value[i].t, 'transform type should be resolved by now');
       switch (value[i].t) {
         case 'rotate':
+        case 'rotateX':
         case 'rotateY':
+        case 'rotateZ':
+        case 'skewX':
+        case 'skewY':
           var unit = svgMode ? '' : 'deg';
           out += value[i].t + '(' + value[i].d + unit + ') ';
+          break;
+        case 'skew':
+          var unit = svgMode ? '' : 'deg';
+          out += value[i].t + '(' + value[i].d[0] + unit;
+          if (value[i].d[1] === 0) {
+            out += ') ';
+          } else {
+            out += ', ' + value[i].d[1] + unit + ') ';
+          }
           break;
         case 'translateX':
         case 'translateY':
         case 'translateZ':
+        case 'perspective':
           out += value[i].t + '(' + lengthType.toCssValue(value[i].d[0]) 
               + ') ';
           break;
@@ -1795,6 +1825,11 @@ var transformType = {
                 + ', ' + lengthType.toCssValue(value[i].d[1]) + ') ';
           }
           break;
+        case 'translate3d':
+          var values = value[i].d.map(lengthType.toCssValue);
+          out += value[i].t + '(' + values[0] + ', ' + values[1] +
+              ', ' + values[2] + ') ';
+          break;
         case 'scale':
           if (value[i].d[0] === value[i].d[1]) {
             out += value[i].t + '(' + value[i].d[0] + ') ';
@@ -1805,7 +1840,12 @@ var transformType = {
           break;
         case 'scaleX':
         case 'scaleY':
+        case 'scaleZ':
           out += value[i].t + '(' + value[i].d[0] + ') ';
+          break;
+        case 'scale3d':
+          out += value[i].t + '(' + value[i].d[0] + ', ' +
+              value[i].d[1] + ', ' + value[i].d[2] + ') ';        
           break;
       }
     }
