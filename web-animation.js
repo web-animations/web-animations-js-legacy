@@ -1619,9 +1619,8 @@ var colorType = {
   }
 };
 
-var extractDeg = function(deg) {
-  var num  = Number(deg[1]);
-  switch (deg[2]) {
+var convertToDeg = function(num, type) {
+  switch (type) {
   case 'grad':
     return num / 400 * 360;
   case 'rad':
@@ -1695,12 +1694,32 @@ function buildMatcher(name, numValues, hasOptionalValue, hasUnits) {
       name];
 }
 
+function buildRotationMatcher(name, numValues, hasOptionalValue) {
+  var m = buildMatcher(name, numValues, hasOptionalValue, true);
+  return [m[0], 
+      function(x) {
+        var r = m[1](x);
+        return r.map(function(v) {
+          result = 0;
+          for (type in v) {
+            result += convertToDeg(v[type], v);
+          }
+          return result;
+        });
+      },
+      m[2]];
+}
+
 var transformREs = [
-  [transformRE('rotate', 1, false), extractDeg, 'rotate'],
-  [transformRE('rotateY', 1, false), extractDeg, 'rotateY'],
+  buildRotationMatcher('rotate', 1, false),
+  buildRotationMatcher('rotateY', 1, false),
+  buildMatcher('translateX', 1, false, true),
+  buildMatcher('translateY', 1, false, true),
   buildMatcher('translateZ', 1, false, true),
   buildMatcher('translate', 1, true, true),
-  buildMatcher('scale', 1, true, true)
+  buildMatcher('scale', 1, true, true),
+  buildMatcher('scaleX', 1, false, true),
+  buildMatcher('scaleY', 1, false, true)
 ];
 
 var transformType = {
@@ -1723,6 +1742,8 @@ var transformType = {
         case 'rotate':
         case 'rotateY':
         case 'scale':
+        case 'scaleX':
+        case 'scaleY':
           out.push({t: type, d:interp(from[i].d, to[i].d, f, type)});
           break;
         default:
@@ -1750,6 +1771,8 @@ var transformType = {
           var unit = svgMode ? '' : 'deg';
           out += value[i].t + '(' + value[i].d + unit + ') ';
           break;
+        case 'translateX':
+        case 'translateY':
         case 'translateZ':
           out += value[i].t + '(' + lengthType.toCssValue(value[i].d[0]) 
               + ') ';
@@ -1779,6 +1802,10 @@ var transformType = {
             out += value[i].t + '(' + value[i].d[0] + ', ' + value[i].d[1] +
                 ') ';
           }
+          break;
+        case 'scaleX':
+        case 'scaleY':
+          out += value[i].t + '(' + value[i].d[0] + ') ';
           break;
       }
     }
