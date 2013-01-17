@@ -1531,6 +1531,7 @@ var nonNumericType = {
   fromCssValue: function(value) {
     return value;
   }
+};
 
 var visibilityType = {
   zero: function(value) {
