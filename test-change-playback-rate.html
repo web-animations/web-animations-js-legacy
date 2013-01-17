@@ -41,9 +41,9 @@ var a1 = new Animation(document.querySelector("#a"),
 
 var a2 = new Animation(undefined,
     {sample: function(timeFraction, iteration, target) {
-        a1.changePlaybackRate(0.01 + 10 * timeFraction);
-        a2.changePlaybackRate(0.01 + 10 * timeFraction);
-        document.querySelector("#a").innerText = a1.timing.playbackRate;
+      a1.changePlaybackRate(0.01 + 10 * timeFraction);
+      a2.changePlaybackRate(0.01 + 10 * timeFraction);
+      document.querySelector("#a").innerText = a1.timing.playbackRate;
     }},
     a1.timing.clone());
 </script>

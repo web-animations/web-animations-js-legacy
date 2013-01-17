@@ -50,8 +50,10 @@ height: 500px;
 </style>
 
 <svg xmlns="http://www.w3.org/2000/svg" version="1.1">
-    <path id=path1 d="M 100,100 a 75,75 0 1,0 150,0 a 75,75 0 1,0 -150,0 " stroke="black" stroke-width="1" fill="none" />
-    <path id=path2 d="M 100 250 L 300 250 L 200 450 z" stroke="black" stroke-width="1" fill="none" />
+  <path id=path1 d="M 100,100 a 75,75 0 1,0 150,0 a 75,75 0 1,0 -150,0 "
+      stroke="black" stroke-width="1" fill="none" />
+  <path id=path2 d="M 100 250 L 300 250 L 200 450 z" stroke="black"
+      stroke-width="1" fill="none" />
 </svg>
 
 <div id="e1" class="expectation"></div>
@@ -67,15 +69,12 @@ var animFunc = new PathAnimationFunction(
     document.querySelector('#path1'));
 animFunc.rotate = true;
 
-var anim = new Animation(document.querySelector("#anim1"),
-    animFunc,
+new Animation(document.querySelector("#anim1"), animFunc,
     {duration: 2, iterationCount: 2});
 
-var animFunc2 = new PathAnimationFunction(
-    document.querySelector('#path2'));
+var animFunc2 = new PathAnimationFunction(document.querySelector('#path2'));
 animFunc2.rotate = true;
 
-var anim2 = new Animation(document.querySelector("#anim2"),
-    animFunc2,
+new Animation(document.querySelector("#anim2"), animFunc2,
     {duration: 2, iterationCount: 2});
 </script>

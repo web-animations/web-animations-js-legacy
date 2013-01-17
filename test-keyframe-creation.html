@@ -17,40 +17,40 @@ limitations under the License.
 <!DOCTYPE html>
 <style>
 .anim {
-	left: 50px;
-	width: 100px;
-	height: 100px;
-	background-color: lightsteelblue;
-	position: absolute;
+  left: 50px;
+  width: 100px;
+  height: 100px;
+  background-color: lightsteelblue;
+  position: absolute;
 }
 
 #a {
-	top: 0px
+  top: 0px
 }
 
 #b {
-	top: 100px;
+  top: 100px;
 }
 
 #c {
-	top: 200px
+  top: 200px
 }
 
 #d {
-	top: 300px;
+  top: 300px;
 }
 
 #e {
-        top: 400px;
+  top: 400px;
 }
 
 #f {
-        top: 500px;
+  top: 500px;
 }
 
 #g {
-        top: 600px;
-        left: 200px;
+  top: 600px;
+  left: 200px;
 }
 
 #expectation {
@@ -66,25 +66,39 @@ limitations under the License.
 <div id=expectation></div>
 
 <div>
-	<div id="a" class="anim"></div>
-	<div id="b" class="anim"></div>
-	<div id="c" class="anim"></div>
-	<div id="d" class="anim"></div>
-	<div id="e" class="anim"></div>
-	<div id="f" class="anim"></div>
-	<div id="g" class="anim"></div>
+  <div id="a" class="anim"></div>
+  <div id="b" class="anim"></div>
+  <div id="c" class="anim"></div>
+  <div id="d" class="anim"></div>
+  <div id="e" class="anim"></div>
+  <div id="f" class="anim"></div>
+  <div id="g" class="anim"></div>
 </div>
 
 <script src="web-animation.js"></script>
 <script>
 
-new Animation(document.querySelector("#a"), {left: ["100px", "200px"]}, {startDelay: 1, duration: 1});
-new Animation(document.querySelector("#b"), {left: "200px"}, {startDelay: 1, duration: 1});
-new Animation(document.querySelector("#c"), {left: ["100px", "200px"]}, {duration: 2});
+new Animation(document.querySelector("#a"), {left: ["100px", "200px"]},
+    {startDelay: 1, duration: 1});
+new Animation(document.querySelector("#b"), {left: "200px"},
+    {startDelay: 1, duration: 1});
+new Animation(document.querySelector("#c"), {left: ["100px", "200px"]},
+    {duration: 2});
 new Animation(document.querySelector("#d"), {left: "200px"}, {duration: 2});
-new Animation(document.querySelector("#e"), {left: [{offset: 0, value: "100px"}, {offset: 1, value: "200px"}]}, {duration: 2});
-new Animation(document.querySelector("#f"), {left: [{offset: 0, value: "200px"}, {offset: 0.25, value: "100px"}, {offset: 1, value: "200px"}]}, {duration: 2});
-new Animation(document.querySelector("#g"), {left: [{offset: 0.25, value: "200px"}, {offset: 0.5, value: "100px"}, {offset: 0.75, value: "200px"}], operation: "add"}, {duration: 2});
+new Animation(document.querySelector("#e"), {left: [
+  {offset: 0, value: "100px"},
+  {offset: 1, value: "200px"}
+]}, {duration: 2});
+new Animation(document.querySelector("#f"), {left: [
+  {offset: 0, value: "200px"},
+  {offset: 0.25, value: "100px"},
+  {offset: 1, value: "200px"}
+]}, {duration: 2});
+new Animation(document.querySelector("#g"), {left: [
+  {offset: 0.25, value: "200px"},
+  {offset: 0.5, value: "100px"},
+  {offset: 0.75, value: "200px"}
+], operation: "add"}, {duration: 2});
 
 
 </script>

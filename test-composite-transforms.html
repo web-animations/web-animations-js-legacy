@@ -17,52 +17,64 @@ limitations under the License.
 <!DOCTYPE html>
 <style>
 .anim {
-	left: 0px;
-	width: 100px;
-	height: 100px;
-	background-color: #FAA;
-	position: absolute;
+  left: 0px;
+  width: 100px;
+  height: 100px;
+  background-color: #FAA;
+  position: absolute;
 }
 
 .expected {
-	width: 100px;
-	height: 100px;
-	position: absolute;
-	border-right: 1px solid black;
+  width: 100px;
+  height: 100px;
+  position: absolute;
+  border-right: 1px solid black;
 }
 
 #a {
-	top: 50px
+  top: 50px
 }
 
 #b {
-	top: 150px;
+  top: 150px;
 }
 
 #c {
-	top: 250px;
+  top: 250px;
 }
 
 #d {
-	top: 350px;
+  top: 350px;
 }
 
 </style>
 
 <div>Right edge of each box should align with black line at end of test.</div>
-<div id="a" class="anim"></div> <div id="a" style="top: 50px; left: 200px;" class="expected"></div>
-<div id="b" class="anim"></div> <div id="b" style="top: 150px; left: 0px;" class="expected"></div>
-<div id="c" class="anim"></div> <div id="c" style="top: 250px; left: 200px;" class="expected"></div>
-<div id="d" class="anim"></div> <div id="d" style="top: 550px; left: 0px;" class="expected"></div>
+<div id="a" class="anim"></div>
+<div id="a" style="top: 50px; left: 200px;" class="expected"></div>
+<div id="b" class="anim"></div>
+<div id="b" style="top: 150px; left: 0px;" class="expected"></div>
+<div id="c" class="anim"></div>
+<div id="c" style="top: 250px; left: 200px;" class="expected"></div>
+<div id="d" class="anim"></div>
+<div id="d" style="top: 550px; left: 0px;" class="expected"></div>
 
 <script src="web-animation.js"></script>
 <script>
 
 var divs = document.querySelectorAll(".anim");
 
-new Animation(divs[0], {"-webkit-transform": ["translate(0px, 0px)", "translate(200px, 0px)"]}, 2);
-new Animation(divs[1], {"-webkit-transform": ["rotate(0deg)", "rotate(90deg)"]}, 2);
-new Animation(divs[2], {"-webkit-transform": ["translate(0px, 0px) rotate(0deg)", "translate(200px, 0px) rotate(90deg)"]}, 2);
-new Animation(divs[3], {"-webkit-transform": ["rotate(0deg) translate(0px, 0px)", "rotate(90deg) translate(200px, 0px)"]}, 2);
+new Animation(divs[0],
+    {"-webkit-transform": ["translate(0px, 0px)", "translate(200px, 0px)"]}, 2);
+new Animation(divs[1],
+    {"-webkit-transform": ["rotate(0deg)", "rotate(90deg)"]}, 2);
+new Animation(divs[2], {"-webkit-transform": [
+  "translate(0px, 0px) rotate(0deg)",
+  "translate(200px, 0px) rotate(90deg)"
+]}, 2);
+new Animation(divs[3], {"-webkit-transform": [
+  "rotate(0deg) translate(0px, 0px)",
+  "rotate(90deg) translate(200px, 0px)"
+]}, 2);
 
 </script>
