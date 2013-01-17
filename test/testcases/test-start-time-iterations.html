@@ -111,10 +111,14 @@ for (var i = 0; i < directions.length; i++) {
 
   // Interaction of start time with parent iterations. Each child should
   // complete the full animation, starting 1.0s into the parent iteration.
+  var group1 = group(direction);
+  group1.attach();
   new Animation(container.getElementsByClassName("a")[0], animation,
-      {duration: 1.0}, group(direction), 1.0);
+      {duration: 1.0}, group1, 1.0);
+  var group2 = groupWithFixedDuration(direction);
+  group2.attach();
   new Animation(container.getElementsByClassName("b")[0], animation,
-      {duration: 1.0}, groupWithFixedDuration(direction), 1.0);
+      {duration: 1.0}, group2, 1.0);
   // Interaction of default start time with parent iterations. At the time of
   // addition, the first group has a duration, and hence iteration time of
   // zero, so the child picks up a start time of zero.  The parent then updates
@@ -124,6 +128,10 @@ for (var i = 0; i < directions.length; i++) {
   // time, so plays the complete animation. In iterations where the parent
   // plays backwards, the above is reversed. Also, if the first iteration plays
   // backwards, the child will miss it altogether.
+  var group1 = group(direction);
+  group1.attach();
+  var group2 = groupWithFixedDuration(direction);
+  group2.attach();
   setTimeout(function(container, group1, group2) {
     return function() {
       new Animation(container.getElementsByClassName("c")[0], animation,
@@ -131,6 +139,6 @@ for (var i = 0; i < directions.length; i++) {
       new Animation(container.getElementsByClassName("d")[0], animation,
           {duration: 1.0}, group2);
     };
-  }(container, group(direction), groupWithFixedDuration(direction)), 500);
+  }(container, group1, group2), 500);
 }
 </script>

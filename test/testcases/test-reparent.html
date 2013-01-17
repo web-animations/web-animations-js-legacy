@@ -40,18 +40,19 @@ limitations under the License.
 <script>
 
 // Run an animation in the global group. It should animate indefinitely.
-var anim = new Animation(document.getElementById("a"),
-    {left: ["100px", "500px"]}, {iterationCount: Infinity, duration: 1.0});
+var anim = new Animation(document.getElementById("a"), {left: ["100px", "500px"]},
+    {iterationCount: Infinity, duration: 1.0});
+anim.attach();
 
 // After 2.5s, move it to a parallel group and run that.
 setTimeout(function() {
   new ParGroup([anim], {direction: "alternate", duration: 2.0,
-      iterationCount: 2.0});
+      iterationCount: 2.0}).attach();
 }, 2500);
 
 // Move it to a new group and run that.
 setTimeout(function() {
-  new ParGroup([anim], {duration: 1.5});
+  new ParGroup([anim], {duration: 1.5}).attach();
 }, 8000);
 
 </script>

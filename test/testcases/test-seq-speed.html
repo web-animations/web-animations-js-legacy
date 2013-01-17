@@ -76,6 +76,7 @@ var a4 = new Animation(document.querySelector("#d"), {left: ["100px", "200px"]},
 var pgroup1 = new ParGroup([a1, a2], {name: "p1"});
 var pgroup2 = new ParGroup([a3, a4], {name: "p2"});
 var sgroup = new SeqGroup([pgroup1, pgroup2], {name: "s"});
+sgroup.attach();
 
 window.setTimeout(function() {
   sgroup.timing.playbackRate = 2;

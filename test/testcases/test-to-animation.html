@@ -75,5 +75,6 @@ var group = new ParGroup([], 2, undefined, 1);
 for (var i = 0; i < divs.length; i++) {
   new Animation(divs[i], {left: (100 * (i+1)) + "px"}, 2, group);
 }
+group.attach();
 
 </script>

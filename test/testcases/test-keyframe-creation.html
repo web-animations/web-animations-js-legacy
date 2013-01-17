@@ -79,26 +79,27 @@ limitations under the License.
 <script>
 
 new Animation(document.querySelector("#a"), {left: ["100px", "200px"]},
-    {startDelay: 1, duration: 1});
+    {startDelay: 1, duration: 1}).attach();
 new Animation(document.querySelector("#b"), {left: "200px"},
-    {startDelay: 1, duration: 1});
+    {startDelay: 1, duration: 1}).attach();
 new Animation(document.querySelector("#c"), {left: ["100px", "200px"]},
-    {duration: 2});
-new Animation(document.querySelector("#d"), {left: "200px"}, {duration: 2});
+    {duration: 2}).attach();
+new Animation(document.querySelector("#d"), {left: "200px"},
+    {duration: 2}).attach();
 new Animation(document.querySelector("#e"), {left: [
   {offset: 0, value: "100px"},
   {offset: 1, value: "200px"}
-]}, {duration: 2});
+]}, {duration: 2}).attach();
 new Animation(document.querySelector("#f"), {left: [
   {offset: 0, value: "200px"},
   {offset: 0.25, value: "100px"},
   {offset: 1, value: "200px"}
-]}, {duration: 2});
+]}, {duration: 2}).attach();
 new Animation(document.querySelector("#g"), {left: [
   {offset: 0.25, value: "200px"},
   {offset: 0.5, value: "100px"},
   {offset: 0.75, value: "200px"}
-], operation: "add"}, {duration: 2});
+], operation: "add"}, {duration: 2}).attach();
 
 
 </script>

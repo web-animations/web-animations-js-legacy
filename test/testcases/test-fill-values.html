@@ -115,7 +115,7 @@ for (var i = 0; i < containers.length; i++) {
       direction: directions[i],
       duration: 1,
       fillMode: fills[j]
-    }, undefined, 1);
+    }, undefined, 1).attach();
     divs[2 * j].innerHTML = "dir: " + directions[i] + " fill: " + fills[j] +
         " dur: 1";
     new Animation(divs[2 * j + 1], {left: ["100px", "200px"]}, {
@@ -123,7 +123,7 @@ for (var i = 0; i < containers.length; i++) {
       direction: directions[i],
       duration: 0,
       fillMode: fills[j]
-    }, undefined, 1);
+    }, undefined, 1).attach();
     divs[2 * j + 1].innerHTML = "dir: " + directions[i] + " fill: " + fills[j] +
         " dur: 0";
   }

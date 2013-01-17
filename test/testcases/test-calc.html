@@ -108,24 +108,24 @@ completely cover the light red box when the animation has finished.
 <script src="../../web-animation.js"></script>
 <script>
 
-new Animation(document.querySelector(".outer"), {width: "800px"}, 2);
+new Animation(document.querySelector(".outer"), {width: "800px"}, 2).attach();
 
 // 50px -> 0px linear, 0% -> 50% (0px -> 400px quadratic)
-new Animation(document.querySelector("#a"), {width: "50%"}, 2);
+new Animation(document.querySelector("#a"), {width: "50%"}, 2).attach();
 // 25% -> 50% (50px -> 400px quadratic)
-new Animation(document.querySelector("#b"), {width: "50%"}, 2);
+new Animation(document.querySelector("#b"), {width: "50%"}, 2).attach();
 // 50px -> 400px linear
-new Animation(document.querySelector("#c"), {width: "400px"}, 2);
+new Animation(document.querySelector("#c"), {width: "400px"}, 2).attach();
 // 25px -> 0px linear, 12.5% -> 50% (25px -> 400px quadratic)
-new Animation(document.querySelector("#d"), {width: "50%"}, 2);
+new Animation(document.querySelector("#d"), {width: "50%"}, 2).attach();
 // 50px -> 100px linear, 0% -> 37.5% (0px -> 300px quadratic)
 new Animation(document.querySelector("#e"),
-    {width: "-webkit-calc(37.5% + 100px)"}, 2);
+    {width: "-webkit-calc(37.5% + 100px)"}, 2).attach();
 // 0px -> 100px linear, 25% -> 37.5% (50px -> 300px quadratic)
 new Animation(document.querySelector("#f"),
-    {width: "-webkit-calc(37.5% + 100px)"}, 2);
+    {width: "-webkit-calc(37.5% + 100px)"}, 2).attach();
 // 100px -> 100px linear, -25% -> 37.5% (-50px -> 300px quadratic)
 new Animation(document.querySelector("#g"),
-    {width: "-webkit-calc(37.5% + 100px)"}, 2);
+    {width: "-webkit-calc(37.5% + 100px)"}, 2).attach();
 
 </script>

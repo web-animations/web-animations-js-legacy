@@ -119,10 +119,11 @@ var a = undefined;
 function first() {
   a = new Animation(document.querySelector(".doorSpacer"),
     { '-webkit-transform': [ 'rotateY(0deg)', 'rotateY(100deg)' ] }, 2);
+  a.attach();
 }
 
 function second() {
-  new Animation(document.querySelector("circle"), { cx: '400px' }, 3);
+  new Animation(document.querySelector("circle"), { cx: '400px' }, 3).attach();
 }
 
 // STEP 2
@@ -147,6 +148,7 @@ function fifth() {
   pictureTilting = new Animation(picture,
       { '-webkit-transform': [ 'rotate(0deg)', 'rotate(-30deg)' ] }, 0.5);
   group = new SeqGroup([a, pictureTilting]);
+  group.attach();
 }
 
 function sixth() {

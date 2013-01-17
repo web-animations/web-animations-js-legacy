@@ -78,49 +78,55 @@ var animation = {left: ["100px", "300px"]};
 for (var i = 0; i < directions.length; i++) {
   var container = document.getElementById(containers[i]);
   // Explicit child start time and parent duration.
+  var group1 = new ParGroup([], {iterationCount: 2.0, direction: directions[i],
+      duration: 1.0});
   new Animation(container.getElementsByClassName("a")[0], animation,
-      {duration: 1.0},
-      new ParGroup([], {iterationCount: 2.0, direction: directions[i],
-          duration: 1.0}),
-      0.0);
+      {duration: 1.0}, group1, 0.0);
+  group1.attach();
   // Explicit child start time, parent calculates intrinsic duration.
+  var group2 =
+      new ParGroup([], {iterationCount: 2.0, direction: directions[i]});
   new Animation(container.getElementsByClassName("b")[0], animation,
-      {duration: 1.0},
-      new ParGroup([], {iterationCount: 2.0, direction: directions[i]}),
-      0.0);
+      {duration: 1.0}, group2, 0.0);
+  group2.attach();
   // Default child start time, explicit parent duration. Note that for "normal"
   // parent, child start time will be 0.0, so animation proceeds as above. For
   // "reverse" parent, child start time will be 1.0 and maximum parent
   // iteration time is 1.0, so animation never runs.
+  var group3 = new ParGroup([], {iterationCount: 2.0, direction: directions[i],
+      duration: 1.0});
   new Animation(container.getElementsByClassName("c")[0], animation,
-      {duration: 1.0},
-      new ParGroup([], {iterationCount: 2.0, direction: directions[i],
-          duration: 1.0}));
+      {duration: 1.0}, group3);
+  group3.attach();
   // Default child start time, explicit parent duration, plus explicit parent
   // group zero start time. As above, but we have to extend the parent duration
   // to avoid the "normal" child animation being clipped. This is because
   // forcing a parent start time of zero means that the parent starts with a
   // non-zero iteration time, which is used as the child start time, causing
   // the child end time to exceed 1.0.
+  var group4 = new ParGroup([], {iterationCount: 2.0, direction: directions[i],
+      duration: 2.0}, undefined, 0.0);
   new Animation(container.getElementsByClassName("d")[0], animation,
-      {duration: 1.0},
-      new ParGroup([], {iterationCount: 2.0, direction: directions[i],
-          duration: 2.0}, undefined, 0.0));
+      {duration: 1.0}, group4);
+  group4.attach();
   // Default child start time, explicit parent duration, plus explicit parent
   // group non-zero start time. Note that for both "normal" and "reverse"
   // parents, parent iteration time is null, so child start time is zero, and
   // animation proceeds as above.
+  var group5 = new ParGroup([], {iterationCount: 2.0, direction: directions[i],
+      duration: 1.0}, undefined, 0.5);
   new Animation(container.getElementsByClassName("e")[0], animation,
-      {duration: 1.0},
-      new ParGroup([], {iterationCount: 2.0, direction: directions[i],
-          duration: 1.0}, undefined, 0.5));
+      {duration: 1.0}, group5);
+  group5.attach();
   // Default child start time and parent duration. Note that for "normal"
   // parent, child start time will be 0.0, so animation proceeds as above. For
   // "reverse" parent, child start time will be 0.0, as this is the parent
   // iteration time at the time of creation, but maximum parent iteration time
   // is 1.0, so animation proceeds as above.
+  var group6 =
+      new ParGroup([], {iterationCount: 2.0, direction: directions[i]});
   new Animation(container.getElementsByClassName("f")[0], animation,
-      {duration: 1.0},
-      new ParGroup([], {iterationCount: 2.0, direction: directions[i]}));
+      {duration: 1.0}, group6);
+  group6.attach();
 }
 </script>
