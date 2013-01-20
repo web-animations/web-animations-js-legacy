@@ -72,9 +72,9 @@ function updateState(change) {
   }
   var test = tests[currentTest];
   window.location.hash = test;
-  document.querySelector('#test-num').innerText =
+  document.querySelector('#test-num').textContent =
       (currentTest + 1) + ' of ' + tests.length + ': ';
-  document.querySelector('#test-name').innerText = test;
+  document.querySelector('#test-name').textContent = test;
   document.querySelector('#test-name').href = test;
   document.querySelector('iframe').src = test;
   document.querySelector('#prev-button').disabled = currentTest <= 0;
