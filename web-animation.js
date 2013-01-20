@@ -845,14 +845,15 @@ mixin(PathAnimationFunction.prototype, {
     var x = point.x - target.offsetWidth / 2;
     var y = point.y - target.offsetHeight / 2;
     // TODO: calc(point.x - 50%) doesn't work?
-    var value = [{t: 'translate', d: [x, y]}];
+    var value = [{t: 'translate', d: [{px: x}, {px: y}]}];
     if (this.rotate) {
       // Super hacks
-      var lastPoint = this._path.getPointAtLength(timeFraction * length - 0.01);
+      var lastPoint = this._path.getPointAtLength(timeFraction * 
+          length - 0.01);
       var dx = point.x - lastPoint.x;
       var dy = point.y - lastPoint.y;
       var rotation = Math.atan2(dy, dx);
-      value.push({t:'rotate', d: rotation / 2 / Math.PI * 360});
+      value.push({t:'rotate', d: [rotation / 2 / Math.PI * 360]});
     }
     compositor.setAnimatedValue(target, '-webkit-transform',
         new AnimatedResult(value, this.operation, timeFraction));
