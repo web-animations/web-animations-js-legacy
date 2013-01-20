@@ -285,10 +285,10 @@ mixin(TimedItem.prototype, {
     return 0.0;
   },
   _updateInternalState: function() {
-    this.updateTimeMarkers();
     if (this.parentGroup) {
       this.parentGroup._childrenStateModified();
     }
+    this.updateTimeMarkers();
   },
   updateTimeMarkers: function(parentTime) {
     if (this.parentGroup !== null && this.parentGroup.iterationTime !== null) {
@@ -626,14 +626,25 @@ inherits(AnimationGroup, TimedItem);
 mixin(AnimationGroup.prototype, AnimationListMixin);
 mixin(AnimationGroup.prototype, {
   _childrenStateModified: function() {
+    // See _updateChildStartTimes().
+    this._isInOnChildrenStateModified = true;
+
+    // We need to walk up and down the tree to re-layout. endTime and the
+    // various durations (which are all calculated lazily) are the only
+    // properties of a TimedItem which can affect the layout of its ancestors.
+    // So it should be sufficient to simply update start times and time markers
+    // on the way down.
+
+    // This calls up to our parent, then updates our time markers.
     this._updateInternalState();
+
+    // Update child start times before walking down.
     this._updateChildStartTimes();
-    this.updateTimeMarkers();
-    if (this.parentGroup) {
-      this.parentGroup._childrenStateModified();
-    } else {
+
+    if (!this.parentGroup) {
       maybeRestartAnimation();
     }
+    this._isInOnChildrenStateModified = false;
   },
   _updateChildStartTimes: function() {
     if (this.type == 'seq') {
@@ -645,7 +656,11 @@ mixin(AnimationGroup.prototype, {
           child._startTimeMode = ST_FORCED;
         }
         child._startTime = cumulativeStartTime;
-        child.updateTimeMarkers();
+        // Avoid updating the child's time markers if this is about to be done
+        // in the down phase of _childrenStateModified().
+        if (!child._isInOnChildrenStateModified) {
+          child.updateTimeMarkers();
+        }
         cumulativeStartTime += Math.max(0, child.timing.startDelay +
             child.animationDuration);
       }.bind(this));
