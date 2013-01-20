@@ -16,12 +16,26 @@ limitations under the License.
 
 <!DOCTYPE html>
 <head>
-<link href='http://fonts.googleapis.com/css?family=Raleway:400,100,200,300,500,600,700,800,900' rel='stylesheet' type='text/css'>
+<link
+    href='http://fonts.googleapis.com/css?family=Raleway:400,100,200,300,500,600,700,800,900'
+    rel='stylesheet' type='text/css'>
+<style>
+  div.test {
+    font-family: Raleway;
+    font-size: 75px;
+  }
+  div.target {
+    position: absolute;
+    color: red;
+    z-index: -1;
+  }
+</style>
 </head>
 <body>
-<div style='font-family: Raleway; font-size: 75px; font-weight: 900; position: absolute; color: red; z-index: -1'>Testing font-weight!</div>
-<div style='font-family: Raleway; font-size: 75px; font-weight: 100' id=test>Testing font-weight!</div>
+<div class='test target' style='font-weight: 900;'>Testing font-weight!</div>
+<div class='test' style='font-weight: 100' id='test'>Testing font-weight!</div>
 <script src="web-animation.js"></script>
 <script>
-new Animation(document.querySelector('#test'), {'font-weight': ['100', '900']}, { duration: 1, startDelay: 1 });
+new Animation(document.querySelector('#test'), {'font-weight': ['100', '900']},
+    {duration: 1, startDelay: 1});
 </script>
