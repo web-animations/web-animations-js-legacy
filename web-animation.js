@@ -1711,11 +1711,27 @@ function buildRotationMatcher(name, numValues, hasOptionalValue) {
       m[2]];
 }
 
+function build3DRotationMatcher() {
+  var m = buildMatcher('rotate3d', 4, false, true);
+  return [m[0],
+    function(x) {
+      var r = m[1](x);
+      var out = [];
+      for (var i = 0; i < 3; i++) {
+        out.push(r[i].px);
+      }
+      out.push(r[3]);
+      return out;
+    },
+    m[2]];
+}
+
 var transformREs = [
   buildRotationMatcher('rotate', 1, false),
   buildRotationMatcher('rotateX', 1, false),
   buildRotationMatcher('rotateY', 1, false),
   buildRotationMatcher('rotateZ', 1, false),
+  build3DRotationMatcher(),
   buildRotationMatcher('skew', 1, true),
   buildRotationMatcher('skewX', 1, false),
   buildRotationMatcher('skewY', 1, false),
