@@ -1156,7 +1156,7 @@ var interpArray = function(from, to, f, type) {
   console.assert(Array.isArray(to) || to === null,
       'To is not an array or null');
   console.assert(from === null || to === null || from.length === to.length,
-      'Arrays differ in length');
+      'Arrays differ in length ' + from + " : " + to);
   var length = from ? from.length : to.length;
 
   var result = [];
@@ -1826,7 +1826,7 @@ var transformType = {
           break;
         case 'translate':
           if (svgMode) {
-            if (value[i].d[1] === 0) {
+            if (value[i].d[1] === undefined) {
               out += value[i].t + '(' + value[i].d[0]['px'] + ') ';
             } else {
               out += value[i].t + '(' + value[i].d[0]['px'] + ', ' +
@@ -1834,7 +1834,7 @@ var transformType = {
             }
             break;
           }
-          if (value[i].d[1] === 0) {
+          if (value[i].d[1] === undefined) {
             out += value[i].t + '(' + lengthType.toCssValue(value[i].d[0])
                 + ') ';
           } else {

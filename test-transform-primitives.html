@@ -1,0 +1,84 @@
+<!-- 
+Copyright 2012 Google Inc. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<!DOCTYPE html>
+<style>
+.anim {
+  left: 0px;
+  width: 30px;
+  height: 30px;
+  background-color: #FAA;
+  position: absolute;
+}
+
+.expected {
+  width: 30px;
+  height: 30px;
+  position: absolute;
+  background-color: red;
+}
+</style>
+<div></div>
+<script src="web-animation.js"></script>
+<script>
+
+var transformValues = [
+  ['translate(0px)', 'translate(20px, 40px)', 'translate(10em)', 
+   'translate(10%, 1in)'],
+  ['translateX(0px)', 'translateX(20px)', 'translateX(10em)',
+   'translateX(10%)'],
+  ['translateY(0px)', 'translateY(20px)', 'translateY(10em)',
+   'translateY(10%)'],
+  ['scale(1, 1)', 'scale(2)', 'scale(1.5, 3)'],
+  ['scaleX(1)', 'scaleX(2)', 'scaleX(1.5)'],
+  ['scaleY(1)', 'scaleY(2)', 'scaleY(1.5)'],
+  ['rotate(0deg)', 'rotate(50deg)', 'rotate(3rad)', 'rotate(200grad)'],
+  ['skew(0deg)', 'skew(20deg)', 'skew(40deg, 20deg)'],
+  ['skewX(0deg)', 'skewX(20deg)', 'skewX(40deg)'],
+  ['skewY(0deg)', 'skewY(20deg)', 'skewY(40deg)']
+];
+
+var toplevel = document.querySelector("div");
+var y = 50;
+for (var i = 0; i < transformValues.length; i++) {
+  var x = 10;
+  for (var j = 0; j < transformValues[i].length; j++) {
+    for (var k = 0; k < transformValues[i].length; k++) {
+      if (j == k) {
+        continue;
+      }
+      toplevel.appendChild(document.createElement("div"));
+      var div = toplevel.lastChild;
+      div.className = "expected";
+      div.style.top = y + 'px';
+      div.style.left = x + 'px';
+      div.style.webkitTransform = transformValues[i][k];
+      toplevel.appendChild(document.createElement("div"));
+      var div = toplevel.lastChild;
+      div.className = "anim";
+      div.style.top = y + 'px';
+      div.style.left = x + 'px';
+      console.log(transformValues[i][j], transformValues[i][k]);
+      console.log(div);
+      new Animation(div, {"-webkit-transform": 
+          [transformValues[i][j], transformValues[i][k]]}, 2);
+      x += 45;
+    }
+  }
+  y += 45;
+}
+
+</script>
