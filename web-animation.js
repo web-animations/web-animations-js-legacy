@@ -258,12 +258,15 @@ mixin(TimedItem.prototype, {
     }
     this.updateTimeMarkers();
   },
+  _intrinsicDuration: function() {
+    return 0.0;
+  },
   // TODO: take timing.iterationStart into account. Spec needs to as well.
   updateIterationDuration: function() {
     if (isDefined(this.timing.duration)) {
       this.duration = this.timing.duration;
     } else {
-      this.duration = this.intrinsicDuration();
+      this.duration = this._intrinsicDuration();
     }
     // Section 6.10: Calculating the intrinsic animation duration
     var repeatedDuration = this.duration * this.timing.iterationCount;
@@ -512,10 +515,6 @@ var Animation = function(target, animationFunction, timing, parentGroup,
 
 inherits(Animation, TimedItem);
 mixin(Animation.prototype, {
-  intrinsicDuration: function() {
-    // section 6.6
-    return Infinity;
-  },
   _sample: function() {
     this.animationFunction.sample(this._timeFraction,
         this.currentIteration, this.targetElement,
@@ -603,7 +602,7 @@ var AnimationListMixin = {
 
 /** @constructor */
 var AnimationGroup = function(type, children, timing, startTime, parentGroup) {
-  // used by TimedItem via intrinsicDuration(), so needs to be set before
+  // used by TimedItem via _intrinsicDuration(), so needs to be set before
   // initializing super.
   this.type = type || 'par';
   this.initListMixin(this._childrenStateModified);
@@ -673,7 +672,7 @@ mixin(AnimationGroup.prototype, {
     }
     return result;
   },
-  intrinsicDuration: function() {
+  _intrinsicDuration: function() {
     if (this.type == 'par') {
       var dur = Math.max.apply(undefined, this.children.map(function(a) {
         return a.endTime;
