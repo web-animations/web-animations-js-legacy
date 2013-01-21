@@ -252,6 +252,7 @@ TimedItem.prototype.__defineGetter__('duration', function() {
 TimedItem.prototype.__defineSetter__('animationDuration',
     function(animationDuration) {
   this._animationDuration = animationDuration;
+  this.updateTimeMarkers();
 });
 TimedItem.prototype.__defineGetter__('animationDuration', function() {
   if (isDefined(this._animationDuration)) {
