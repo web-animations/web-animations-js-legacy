@@ -111,4 +111,11 @@ check(seqGroup.duration, null, "Timing.duration should be overriden");
 seqGroup.duration = undefined;
 check(seqGroup.duration, 13.0, "Timing.duration should no longer be overriden");
 
+// TimedItem.animationDuration should always reflect TimedItem.duration.
+anim.timing.duration = 14.0;
+check(anim.animationDuration, 42.0, "animationDuration incorrect");
+anim.duration = 15.0;
+check(anim.animationDuration, 45.0,
+    "animationDuration should use overridden duration");
+
 </script>

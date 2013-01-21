@@ -242,6 +242,7 @@ TimedItem.prototype.__defineGetter__('paused', function() {
 });
 TimedItem.prototype.__defineSetter__('duration', function(duration) {
   this._duration = duration;
+  this.updateIterationDuration();
 });
 TimedItem.prototype.__defineGetter__('duration', function() {
   return isDefined(this._duration) ?
