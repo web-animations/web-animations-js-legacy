@@ -40,13 +40,17 @@ body.fail div#fail {
 <script src="web-animation.js"></script>
 <script>
 
+var fail = function(failureMessage) {
+  var div = document.createElement("div");
+  div.innerText = failureMessage;
+  document.body.appendChild(div);
+  document.body.className = "fail";
+};
+
 var check = function(actual, expected, failureMessage) {
   if (actual != expected) {
-    var div = document.createElement("div");
-    div.innerText =
-        failureMessage + ". Expected '" + expected + "', got '" + actual + "'.";
-    document.body.appendChild(div);
-    document.body.className = "fail";
+    fail(failureMessage + ". Expected '" + expected + "', got '" + actual +
+        "'.");
   }
 };
 
@@ -66,5 +70,15 @@ anim.duration = 4.0;
 check(anim.endTime, 6.0, "endTime does not reflect duration");
 anim.animationDuration = 5.0;
 check(anim.endTime, 7.0, "endTime does not reflect animationDuration");
+
+// Test that TimedItem.endTime is read-only.
+try {
+  anim.endTime = 6.0;
+  fail("TimedItem.endTime should throw on attempts to set");
+} catch(e) {
+  check(e.message, "NoModificationAllowedError",
+      "TimedItem.endTime should throw on attempts to set");
+}
+check(anim.endTime, 7.0, "TimedItem.endTime should be read-only");
 
 </script>

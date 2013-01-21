@@ -261,6 +261,12 @@ TimedItem.prototype.__defineGetter__('animationDuration', function() {
   var repeatedDuration = this.duration * this.timing.iterationCount;
   return repeatedDuration / Math.abs(this.timing.playbackRate);
 });
+TimedItem.prototype.__defineSetter__('endTime', function() {
+  throw new Error('NoModificationAllowedError');
+});
+TimedItem.prototype.__defineGetter__('endTime', function() {
+  return this._endTime;
+});
 
 mixin(TimedItem.prototype, {
   reparent: function(parentGroup) {
@@ -292,9 +298,9 @@ mixin(TimedItem.prototype, {
   },
   updateTimeMarkers: function(parentTime) {
     if (this.locallyPaused) {
-      this.endTime = Infinity;
+      this._endTime = Infinity;
     } else {
-      this.endTime = this._startTime + this.animationDuration +
+      this._endTime = this._startTime + this.animationDuration +
           this.timing.startDelay + this.timeDrift;
     }
     if (this.parentGroup !== null && this.parentGroup.iterationTime !== null) {
