@@ -2051,10 +2051,6 @@ DEFAULT_GROUP._tick = function(parentTime) {
 
   return !allFinished;
 }
-DEFAULT_GROUP.currentState = function() {
-  return this.iterationTime + ' ' +
-      (isDefinedAndNotNull(rAFNo) ? 'ticking ' : 'stopped ') + this.toString();
-}.bind(DEFAULT_GROUP);
 
 // If requestAnimationFrame is unprefixed then it uses high-res time.
 var useHighResTime = 'requestAnimationFrame' in window;
