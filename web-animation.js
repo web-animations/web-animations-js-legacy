@@ -1646,7 +1646,7 @@ var extractValue = function(values, pos, hasUnits) {
 }
 
 var extractValues = function(values, numValues, hasOptionalValue, 
-  hasUnits) {
+    hasUnits) {
   var result = [];
   for (var i = 0; i < numValues; i++) {
     result.push(extractValue(values, 1 + 2 * i, hasUnits));
@@ -1687,23 +1687,52 @@ function transformRE(name, numParms, hasOptionalParm) {
   return new RegExp(tokenList.join("")); 
 }
 
-function buildMatcher(name, numValues, hasOptionalValue, hasUnits) {
+function buildMatcher(name, numValues, hasOptionalValue, hasUnits,
+    baseValue) {
+  var baseName = name;
+  if (baseValue) {
+    if (name[name.length - 1] == 'X' || name[name.length - 1] == 'Y') {
+      baseName = name.substring(0, name.length - 1);
+    } else if (name[name.length - 1] == 'Z') {
+      baseName = name.substring(0, name.length - 1) + "3d";
+    }
+  }
+  
   return [transformRE(name, numValues, hasOptionalValue),
       function(x) { 
-        return extractValues(x, numValues, hasOptionalValue, hasUnits);
+        var r = extractValues(x, numValues, hasOptionalValue, hasUnits);
+        if (baseValue !== undefined) {
+          if (name[name.length - 1] == 'X') {
+            r.push(baseValue);
+          } else if (name[name.length - 1] == 'Y') {
+            r = [baseValue].concat(r);
+          } else if (name[name.length - 1] == 'Z') {
+            r = [baseValue, baseValue].concat(r);
+          } else if (hasOptionalValue) {
+            while (r.length < 2) {
+              if (baseValue == "copy") {
+                r.push(r[0]);
+              } else {
+                r.push(baseValue);
+              }
+            }
+          }
+        }
+        return r;
       },
-      name];
+      baseName];
 }
 
-function buildRotationMatcher(name, numValues, hasOptionalValue) {
-  var m = buildMatcher(name, numValues, hasOptionalValue, true);
+function buildRotationMatcher(name, numValues, hasOptionalValue, 
+    baseValue) {
+  var m = buildMatcher(name, numValues, hasOptionalValue, true, baseValue);
   return [m[0], 
       function(x) {
         var r = m[1](x);
         return r.map(function(v) {
           result = 0;
           for (type in v) {
-            result += convertToDeg(v[type], v);
+            result += convertToDeg(v[type], type);
           }
           return result;
         });
@@ -1732,18 +1761,18 @@ var transformREs = [
   buildRotationMatcher('rotateY', 1, false),
   buildRotationMatcher('rotateZ', 1, false),
   build3DRotationMatcher(),
-  buildRotationMatcher('skew', 1, true),
+  buildRotationMatcher('skew', 1, true, 0),
   buildRotationMatcher('skewX', 1, false),
   buildRotationMatcher('skewY', 1, false),
-  buildMatcher('translateX', 1, false, true),
-  buildMatcher('translateY', 1, false, true),
-  buildMatcher('translateZ', 1, false, true),
-  buildMatcher('translate', 1, true, true),
+  buildMatcher('translateX', 1, false, true, {px: 0}),
+  buildMatcher('translateY', 1, false, true, {px: 0}),
+  buildMatcher('translateZ', 1, false, true, {px: 0}),
+  buildMatcher('translate', 1, true, true, {px: 0}),
   buildMatcher('translate3d', 3, false, true),
-  buildMatcher('scale', 1, true, false),
-  buildMatcher('scaleX', 1, false, false),
-  buildMatcher('scaleY', 1, false, false),
-  buildMatcher('scaleZ', 1, false, false),
+  buildMatcher('scale', 1, true, false, "copy"),
+  buildMatcher('scaleX', 1, false, false, 1),
+  buildMatcher('scaleY', 1, false, false, 1),
+  buildMatcher('scaleZ', 1, false, false, 1),
   buildMatcher('scale3d', 3, false, false),
   buildMatcher('perspective', 1, false, true)
 ];

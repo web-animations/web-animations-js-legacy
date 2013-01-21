@@ -20,7 +20,7 @@ limitations under the License.
   left: 0px;
   width: 30px;
   height: 30px;
-  background-color: #FAA;
+  background-color: lightsteelblue;
   position: absolute;
 }
 
@@ -37,19 +37,19 @@ limitations under the License.
 
 var transformValues = [
   ['translate(0px)', 'translate(20px, 40px)', 'translate(10em)', 
-   'translate(10%, 1in)'],
-  ['translateX(0px)', 'translateX(20px)', 'translateX(10em)',
-   'translateX(10%)'],
-  ['translateY(0px)', 'translateY(20px)', 'translateY(10em)',
-   'translateY(10%)'],
-  ['scale(1, 1)', 'scale(2)', 'scale(1.5, 3)'],
-  ['scaleX(1)', 'scaleX(2)', 'scaleX(1.5)'],
-  ['scaleY(1)', 'scaleY(2)', 'scaleY(1.5)'],
+   'translate(10%, 1in)', 'translateX(0px)', 'translateX(20px)', 
+   'translateX(10em)', 'translateX(10%)', 'translateY(0px)', 
+   'translateY(20px)', 'translateY(10em)', 'translateY(10%)'],
+  ['scale(1, 1)', 'scale(2)', 'scale(1.5, 3)', 'scaleX(1)', 'scaleX(2)', 'scaleX(1.5)', 'scaleY(1)', 'scaleY(2)', 'scaleY(1.5)'],
   ['rotate(0deg)', 'rotate(50deg)', 'rotate(3rad)', 'rotate(200grad)'],
   ['skew(0deg)', 'skew(20deg)', 'skew(40deg, 20deg)'],
   ['skewX(0deg)', 'skewX(20deg)', 'skewX(40deg)'],
   ['skewY(0deg)', 'skewY(20deg)', 'skewY(40deg)']
 ];
+
+var separation_x = 100;
+var separation_y = 50;
+var max_x = 1000;
 
 var toplevel = document.querySelector("div");
 var y = 50;
@@ -71,14 +71,16 @@ for (var i = 0; i < transformValues.length; i++) {
       div.className = "anim";
       div.style.top = y + 'px';
       div.style.left = x + 'px';
-      console.log(transformValues[i][j], transformValues[i][k]);
-      console.log(div);
       new Animation(div, {"-webkit-transform": 
           [transformValues[i][j], transformValues[i][k]]}, 2);
-      x += 45;
+      x += separation_x;
+      if (x > max_x) {
+        x = 20;
+        y += separation_y;
+      }
     }
   }
-  y += 45;
+  y += separation_y;
 }
 
 </script>
