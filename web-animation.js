@@ -240,6 +240,14 @@ TimedItem.prototype.__defineGetter__('paused', function() {
   return this.locallyPaused ||
       (isDefinedAndNotNull(this.parentGroup) && this.parentGroup.paused);
 });
+TimedItem.prototype.__defineSetter__('duration', function(duration) {
+  this._duration = duration;
+});
+TimedItem.prototype.__defineGetter__('duration', function() {
+  return isDefined(this._duration) ?
+      this._duration : (isDefined(this.timing.duration) ?
+          this.timing.duration : this._intrinsicDuration());
+});
 
 mixin(TimedItem.prototype, {
   reparent: function(parentGroup) {
@@ -263,11 +271,6 @@ mixin(TimedItem.prototype, {
   },
   // TODO: take timing.iterationStart into account. Spec needs to as well.
   updateIterationDuration: function() {
-    if (isDefined(this.timing.duration)) {
-      this.duration = this.timing.duration;
-    } else {
-      this.duration = this._intrinsicDuration();
-    }
     // Section 6.10: Calculating the intrinsic animation duration
     var repeatedDuration = this.duration * this.timing.iterationCount;
     this.animationDuration = repeatedDuration /

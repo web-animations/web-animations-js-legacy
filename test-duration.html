@@ -73,4 +73,42 @@ check(seqGroup.duration, 3.0, "Duration should be derived from child");
 seqGroup.timing.duration = 4.0;
 check(seqGroup.duration, 4.0, "Duration should use specified value");
 
+// TimedItem.duration should override TimedItem.timing.duration until explicitly
+// set to undefined.
+// Animation
+anim.timing.duration = 5.0;
+check(anim.duration, 5.0, "Failed to update duration");
+anim.duration = 6.0;
+check(anim.duration, 6.0, "Failed to override Timing.duration");
+anim.timing.duration = 7.0;
+check(anim.duration, 6.0, "Timing.duration should be overriden");
+anim.duration = null;
+check(anim.duration, null, "Timing.duration should be overriden");
+anim.duration = undefined;
+check(anim.duration, 7.0, "Timing.duration should no longer be overriden");
+// ParGroup
+parGroup.add(anim);
+parGroup.timing.duration = 8.0;
+check(parGroup.duration, 8.0, "Failed to update duration");
+parGroup.duration = 9.0;
+check(parGroup.duration, 9.0, "Failed to override Timing.duration");
+parGroup.timing.duration = 10.0;
+check(parGroup.duration, 9.0, "Timing.duration should be overriden");
+parGroup.duration = null;
+check(parGroup.duration, null, "Timing.duration should be overriden");
+parGroup.duration = undefined;
+check(parGroup.duration, 10.0, "Timing.duration should no longer be overriden");
+// SeqGroup
+seqGroup.add(anim);
+seqGroup.timing.duration = 11.0;
+check(seqGroup.duration, 11.0, "Failed to update duration");
+seqGroup.duration = 12.0;
+check(seqGroup.duration, 12.0, "Failed to override Timing.duration");
+seqGroup.timing.duration = 13.0;
+check(seqGroup.duration, 12.0, "Timing.duration should be overriden");
+seqGroup.duration = null;
+check(seqGroup.duration, null, "Timing.duration should be overriden");
+seqGroup.duration = undefined;
+check(seqGroup.duration, 13.0, "Timing.duration should no longer be overriden");
+
 </script>
