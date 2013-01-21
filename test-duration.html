@@ -118,4 +118,16 @@ anim.duration = 15.0;
 check(anim.animationDuration, 45.0,
     "animationDuration should use overridden duration");
 
+// TimedItem.animationDuration should override value calculated from duration
+// and iterationCount, until explicitly set to undefined.
+anim.animationDuration = 16.0;
+check(anim.animationDuration, 16.0,
+    "animationDuration should override calculated value");
+anim.animationDuration = null;
+check(anim.animationDuration, null,
+    "animationDuration should override calculated value");
+anim.animationDuration = undefined;
+check(anim.animationDuration, 45.0,
+    "animationDuration should use calculated value");
+
 </script>

@@ -249,6 +249,17 @@ TimedItem.prototype.__defineGetter__('duration', function() {
       this._duration : (isDefined(this.timing.duration) ?
           this.timing.duration : this._intrinsicDuration());
 });
+TimedItem.prototype.__defineSetter__('animationDuration',
+    function(animationDuration) {
+  this._animationDuration = animationDuration;
+});
+TimedItem.prototype.__defineGetter__('animationDuration', function() {
+  if (isDefined(this._animationDuration)) {
+    return this._animationDuration;
+  }
+  var repeatedDuration = this.duration * this.timing.iterationCount;
+  return repeatedDuration / Math.abs(this.timing.playbackRate);
+});
 
 mixin(TimedItem.prototype, {
   reparent: function(parentGroup) {
@@ -271,11 +282,8 @@ mixin(TimedItem.prototype, {
     return 0.0;
   },
   // TODO: take timing.iterationStart into account. Spec needs to as well.
+  // TODO: Consider removing this method and doing all work lazily in getters.
   updateIterationDuration: function() {
-    // Section 6.10: Calculating the intrinsic animation duration
-    var repeatedDuration = this.duration * this.timing.iterationCount;
-    this.animationDuration = repeatedDuration /
-        Math.abs(this.timing.playbackRate);
     this.updateTimeMarkers();
     if (this.parentGroup) {
       this.parentGroup._childrenStateModified();
