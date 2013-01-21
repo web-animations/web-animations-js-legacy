@@ -16,43 +16,54 @@ limitations under the License.
 
 <!DOCTYPE html>
 <style>
+
+.container {
+  -webkit-perspective: 200px;
+  -webkit-perspective-origin: 400px 200px;
+  position: absolute;
+  top: 300px;
+}
+
 .anim {
   left: 0px;
-  width: 30px;
-  height: 30px;
+  width: 50px;
+  height: 50px;
   background-color: lightsteelblue;
   position: absolute;
+  -webkit-transform-style: preserve-3d;
+  font-size: 8px;
 }
 
 .expected {
-  width: 30px;
-  height: 30px;
+  width: 50px;
+  height: 50px;
   position: absolute;
   background-color: red;
+  font-size: 8px;
+  -webkit-transform-style: preserve-3d;
 }
 </style>
-<div></div>
+<div class="container"></div>
 <script src="web-animation.js"></script>
 <script>
 
 var transformValues = [
-  ['translate(0px)', 'translate(30px)', 'translate(20px, 40px)',
-   'translateX(20px)', 'translateY(20px)'],
-  ['scale(1, 1)', 'scale(1.5, 3)', 'scale(2)', 'scaleX(2)', 'scaleY(2)'],
-  ['rotate(0deg)', 'rotate(50deg)'],
-  ['skew(0deg)', 'skew(20deg)', 'skew(40deg, 20deg)'],
-  ['skewX(0deg)', 'skewX(40deg)'],
-  ['skewY(0deg)', 'skewY(40deg)']
+  ['translate3d(0px, 0px, 0px)', 'translate3d(20px, 40px, 60px)',
+   'translateZ(20px)'],
+  ['translateZ(50px) scale3d(1, 1, 1)', 'translateZ(50px) scale3d(1.5, 3, 5)', 'translateZ(50px) scaleZ(2)'],
+  ['rotateX(0deg)', 'rotateX(50deg)'],
+  ['rotateY(0deg)', 'rotateY(50deg)'],
+  ['rotateZ(0deg)', 'rotateZ(50deg)'],
 ];
 
-var separation_x = 100;
-var separation_y = 50;
+var separation_x = 70;
+var separation_y = 70;
 var max_x = 1000;
 
 var toplevel = document.querySelector("div");
 var y = 50;
 for (var i = 0; i < transformValues.length; i++) {
-  var x = 10;
+  var x = 300;
   for (var j = 0; j < transformValues[i].length; j++) {
     for (var k = 0; k < transformValues[i].length; k++) {
       if (j == k) {
@@ -69,6 +80,7 @@ for (var i = 0; i < transformValues.length; i++) {
       div.className = "anim";
       div.style.top = y + 'px';
       div.style.left = x + 'px';
+      div.textContent = "perspective";
       new Animation(div, {"-webkit-transform": 
           [transformValues[i][j], transformValues[i][k]]}, 2);
       x += separation_x;
