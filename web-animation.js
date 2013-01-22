@@ -202,9 +202,6 @@ TimedItem.prototype.__defineSetter__('currentTime', function(seekTime) {
         seekTime;
   }
   this.updateTimeMarkers();
-  if (this.parentGroup) {
-    this.parentGroup._childrenStateModified();
-  }
 });
 TimedItem.prototype.__defineGetter__('startTime', function() {
   return this._startTime;
@@ -215,10 +212,7 @@ TimedItem.prototype.__defineSetter__('startTime', function(newStartTime) {
   }
   this._startTime = newStartTime;
   this._startTimeMode = ST_MANUAL;
-  this.updateTimeMarkers();
-  if (this.parentGroup) {
-    this.parentGroup._childrenStateModified();
-  }
+  this.updateIterationDuration();
 });
 TimedItem.prototype.__defineGetter__('locallyPaused', function() {
   return this._locallyPaused;
@@ -240,6 +234,33 @@ TimedItem.prototype.__defineGetter__('paused', function() {
   return this.locallyPaused ||
       (isDefinedAndNotNull(this.parentGroup) && this.parentGroup.paused);
 });
+TimedItem.prototype.__defineSetter__('duration', function(duration) {
+  this._duration = duration;
+  this.updateIterationDuration();
+});
+TimedItem.prototype.__defineGetter__('duration', function() {
+  return isDefined(this._duration) ?
+      this._duration : (isDefined(this.timing.duration) ?
+          this.timing.duration : this._intrinsicDuration());
+});
+TimedItem.prototype.__defineSetter__('animationDuration',
+    function(animationDuration) {
+  this._animationDuration = animationDuration;
+  this.updateIterationDuration();
+});
+TimedItem.prototype.__defineGetter__('animationDuration', function() {
+  if (isDefined(this._animationDuration)) {
+    return this._animationDuration;
+  }
+  var repeatedDuration = this.duration * this.timing.iterationCount;
+  return repeatedDuration / Math.abs(this.timing.playbackRate);
+});
+TimedItem.prototype.__defineSetter__('endTime', function() {
+  throw new Error('NoModificationAllowedError');
+});
+TimedItem.prototype.__defineGetter__('endTime', function() {
+  return this._endTime;
+});
 
 mixin(TimedItem.prototype, {
   reparent: function(parentGroup) {
@@ -258,17 +279,12 @@ mixin(TimedItem.prototype, {
     }
     this.updateTimeMarkers();
   },
+  _intrinsicDuration: function() {
+    return 0.0;
+  },
   // TODO: take timing.iterationStart into account. Spec needs to as well.
+  // TODO: Consider removing this method and doing all work lazily in getters.
   updateIterationDuration: function() {
-    if (isDefined(this.timing.duration)) {
-      this.duration = this.timing.duration;
-    } else {
-      this.duration = this.intrinsicDuration();
-    }
-    // Section 6.10: Calculating the intrinsic animation duration
-    var repeatedDuration = this.duration * this.timing.iterationCount;
-    this.animationDuration = repeatedDuration /
-        Math.abs(this.timing.playbackRate);
     this.updateTimeMarkers();
     if (this.parentGroup) {
       this.parentGroup._childrenStateModified();
@@ -276,9 +292,9 @@ mixin(TimedItem.prototype, {
   },
   updateTimeMarkers: function(parentTime) {
     if (this.locallyPaused) {
-      this.endTime = Infinity;
+      this._endTime = Infinity;
     } else {
-      this.endTime = this._startTime + this.animationDuration +
+      this._endTime = this._startTime + this.animationDuration +
           this.timing.startDelay + this.timeDrift;
     }
     if (this.parentGroup !== null && this.parentGroup.iterationTime !== null) {
@@ -512,10 +528,6 @@ var Animation = function(target, animationFunction, timing, parentGroup,
 
 inherits(Animation, TimedItem);
 mixin(Animation.prototype, {
-  intrinsicDuration: function() {
-    // section 6.6
-    return Infinity;
-  },
   _sample: function() {
     this.animationFunction.sample(this._timeFraction,
         this.currentIteration, this.targetElement,
@@ -603,7 +615,7 @@ var AnimationListMixin = {
 
 /** @constructor */
 var AnimationGroup = function(type, children, timing, startTime, parentGroup) {
-  // used by TimedItem via intrinsicDuration(), so needs to be set before
+  // used by TimedItem via _intrinsicDuration(), so needs to be set before
   // initializing super.
   this.type = type || 'par';
   this.initListMixin(this._childrenStateModified);
@@ -673,7 +685,7 @@ mixin(AnimationGroup.prototype, {
     }
     return result;
   },
-  intrinsicDuration: function() {
+  _intrinsicDuration: function() {
     if (this.type == 'par') {
       var dur = Math.max.apply(undefined, this.children.map(function(a) {
         return a.endTime;
@@ -2051,10 +2063,6 @@ DEFAULT_GROUP._tick = function(parentTime) {
 
   return !allFinished;
 }
-DEFAULT_GROUP.currentState = function() {
-  return this.iterationTime + ' ' +
-      (isDefinedAndNotNull(rAFNo) ? 'ticking ' : 'stopped ') + this.toString();
-}.bind(DEFAULT_GROUP);
 
 // If requestAnimationFrame is unprefixed then it uses high-res time.
 var useHighResTime = 'requestAnimationFrame' in window;
