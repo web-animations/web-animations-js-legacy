@@ -1,4 +1,4 @@
-<!-- 
+<!--
 Copyright 2012 Google Inc. All Rights Reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -50,7 +50,7 @@ limitations under the License.
 }
 </style>
 
-<div id=expectation></div>
+<div id="expectation"></div>
 
 <div>
   <div id="a" class="anim a"></div>
@@ -77,16 +77,16 @@ var pgroup1 = new ParGroup([a1, a2], {name: "p1"});
 var pgroup2 = new ParGroup([a3, a4], {name: "p2"});
 var sgroup = new SeqGroup([pgroup1, pgroup2], {name: "s"});
 
-window.setTimeout(function() {
+setTimeout(function() {
   sgroup.pause();
 }, 1000);
-window.setTimeout(function() {
+setTimeout(function() {
   sgroup.play();
 }, 2000);
-window.setTimeout(function() {
+setTimeout(function() {
   sgroup.pause();
 }, 4000);
-window.setTimeout(function() {
+setTimeout(function() {
   sgroup.play();
 }, 5000);
 </script>
