@@ -115,4 +115,62 @@ check(parGroup.duration, 17.0,
 check(parGroup.endTime, 17.0,
     "Parallel group end time should reflect updated child animationDuration");
 
+// Test that updates to a TimedItem's startDelay and animationDuration cause
+// re-layout of a parent sequence group.
+anim.duration = undefined;
+anim.animationDuration = undefined;
+var siblingAnim = new Animation(document.getElementById("anim"), {top: "100px"},
+    1.0);
+var seqGroup = new SeqGroup([anim, siblingAnim], undefined, undefined, 0.0);
+check(anim.startTime, 0.0, "Sequence group should reset child startTime");
+check(siblingAnim.startTime, 8.0, "Sequence group should set child startTime");
+check(seqGroup.duration, 9.0,
+    "Sequence group duration should reflect child durations");
+check(seqGroup.endTime, 9.0,
+    "Sequence group end time should reflect child durations");
+// startDelay
+anim.timing.startDelay = 11.0;
+check(siblingAnim.startTime, 19.0,
+    "Sequence group should update sibling after updated child startDelay");
+check(seqGroup.duration, 20.0,
+    "Sequence group duration should reflect updated child startDelay");
+check(seqGroup.endTime, 20.0,
+    "Sequence group end time should reflect updated child startDelay");
+// animationDuration via Timing.duration
+anim.timing.duration = 12.0;
+check(siblingAnim.startTime, 23.0,
+    "Sequence group should update sibling after updated child Timing.duration");
+check(seqGroup.duration, 24.0,
+    "Sequence group duration should reflect updated child Timing.duration");
+check(seqGroup.endTime, 24.0,
+    "Sequence group end time should reflect updated child Timing.duration");
+// animationDuration via duration
+anim.duration = 13.0;
+check(siblingAnim.startTime, 24.0,
+    "Sequence group should update sibling after updated child duration");
+check(seqGroup.duration, 25.0,
+    "Sequence group duration should reflect updated child duration");
+check(seqGroup.endTime, 25.0,
+    "Sequence group end time should reflect updated child duration");
+// animationDuration
+anim.animationDuration = 14.0;
+check(siblingAnim.startTime, 25.0, "Sequence group should update sibling " +
+    "after updated child animationDuration");
+check(seqGroup.duration, 26.0,
+    "Sequence group duration should reflect updated child animationDuration");
+check(seqGroup.endTime, 26.0,
+    "Sequence group end time should reflect updated child animationDuration");
+
+// Test that an attempt to modify the startTime of an Animation in a sequence
+// group causes an exception.
+try {
+  anim.startTime = 11.0;
+  fail("Attempt to set startTime of child of sequence group should throw");
+} catch(e) {
+  check(e.message, "NoModificationAllowedError",
+      "Attempt to set startTime of child of sequence group should throw");
+}
+check(anim.startTime, 0.0,
+    "startTime of child of sequence group should be read-only");
+
 </script>
