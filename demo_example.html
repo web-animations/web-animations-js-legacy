@@ -1,4 +1,4 @@
-<!-- 
+<!--
 Copyright 2012 Google Inc. All Rights Reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -130,13 +130,11 @@ function second() {
 function third() {
   a.timing.timingFunc = new TimingFunction('ease-in');
   a.play();
-  console.log(window.document.animationTimeline.currentState());  
 }
 
 function fourth() {
   a.timing.timingFunc = new TimingFunction([0, 0.2,0.8, 1]);
   a.play();
-  console.log(window.document.animationTimeline.currentState());  
 }
 
 // STEP 3
@@ -149,7 +147,6 @@ function fifth() {
   pictureTilting = new Animation(picture,
       { '-webkit-transform': [ 'rotate(0deg)', 'rotate(-30deg)' ] }, 0.5);
   group = new SeqGroup([a, pictureTilting]);
-  console.log(window.document.animationTimeline.currentState());
 }
 
 function sixth() {
@@ -157,7 +154,6 @@ function sixth() {
   var dustPuff = new Animation(dust, { opacity: ["0", "0.4", "0"] }, 0.3);
   group.add(new ParGroup([ pictureTilting, dustPuff ]));
   group.play();
-  console.log(window.document.animationTimeline.currentState());
 }
 
 // STEP 4
@@ -179,7 +175,6 @@ function seventh() {
   a.timing.timingFunc = null;
   group.splice(0, 0, closeAnim);
   group.play();
-  console.log(window.document.animationTimeline.currentState());
 }
 
 // STEP 5
