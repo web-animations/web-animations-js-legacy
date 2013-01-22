@@ -50,8 +50,10 @@ var check = function(actual, expected, failureMessage) {
   }
 }
 
+// Force the startTime to zero, rather than the delayed value used by the
+// polyfill due to start-up time.
 var anim = new Animation(document.getElementById("anim"), {left: ["100px"]},
-    {iterationCount: 3.0});
+    {iterationCount: 3.0}, undefined, 0.0);
 var parGroup = new ParGroup();
 var seqGroup = new SeqGroup();
 
