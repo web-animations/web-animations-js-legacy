@@ -259,7 +259,9 @@ TimedItem.prototype.__defineSetter__('endTime', function() {
   throw new Error('NoModificationAllowedError');
 });
 TimedItem.prototype.__defineGetter__('endTime', function() {
-  return this._endTime;
+  return this.locallyPaused ? Infinity :
+      this._startTime + this.animationDuration + this.timing.startDelay +
+      this.timeDrift;
 });
 
 mixin(TimedItem.prototype, {
@@ -289,12 +291,6 @@ mixin(TimedItem.prototype, {
     }
   },
   updateTimeMarkers: function(parentTime) {
-    if (this.locallyPaused) {
-      this._endTime = Infinity;
-    } else {
-      this._endTime = this._startTime + this.animationDuration +
-          this.timing.startDelay + this.timeDrift;
-    }
     if (this.parentGroup !== null && this.parentGroup.iterationTime !== null) {
       this.itemTime = this.parentGroup.iterationTime -
           this._startTime - this.timeDrift;
