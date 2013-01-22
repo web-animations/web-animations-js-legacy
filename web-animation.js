@@ -215,10 +215,7 @@ TimedItem.prototype.__defineSetter__('startTime', function(newStartTime) {
   }
   this._startTime = newStartTime;
   this._startTimeMode = ST_MANUAL;
-  this.updateTimeMarkers();
-  if (this.parentGroup) {
-    this.parentGroup._childrenStateModified();
-  }
+  this.updateIterationDuration();
 });
 TimedItem.prototype.__defineGetter__('locallyPaused', function() {
   return this._locallyPaused;
@@ -252,7 +249,7 @@ TimedItem.prototype.__defineGetter__('duration', function() {
 TimedItem.prototype.__defineSetter__('animationDuration',
     function(animationDuration) {
   this._animationDuration = animationDuration;
-  this.updateTimeMarkers();
+  this.updateIterationDuration();
 });
 TimedItem.prototype.__defineGetter__('animationDuration', function() {
   if (isDefined(this._animationDuration)) {

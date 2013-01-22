@@ -81,4 +81,38 @@ try {
 }
 check(anim.endTime, 7.0, "TimedItem.endTime should be read-only");
 
+// Test that updates to a TimedItem's endTime cause re-layout of a parent
+// parallel group.
+anim.duration = undefined;
+anim.animationDuration = undefined;
+var parGroup = new ParGroup([anim], undefined, undefined, 0.0);
+check(parGroup.duration, 5.0,
+    "Parallel group duration should reflect child endTime");
+check(parGroup.endTime, 5.0,
+    "Parallel group end time should reflect child endTime");
+// Update via startTime
+anim.startTime = 7.0;
+check(parGroup.duration, 10.0,
+    "Parallel group duration should reflect updated child startTime");
+check(parGroup.endTime, 10.0,
+    "Parallel group end time should reflect updated child startTime");
+// Update via Timing.duration
+anim.timing.duration = 8.0;
+check(parGroup.duration, 15.0,
+    "Parallel group duration should reflect updated child Timing.duration");
+check(parGroup.endTime, 15.0,
+    "Parallel group end time should reflect updated child Timing.duration");
+// Update via duration
+anim.duration = 9.0;
+check(parGroup.duration, 16.0,
+    "Parallel group duration should reflect updated child duration");
+check(parGroup.endTime, 16.0,
+    "Parallel group end time should reflect updated child duration");
+// Update via animationDuration
+anim.animationDuration = 10.0;
+check(parGroup.duration, 17.0,
+    "Parallel group duration should reflect updated child animationDuration");
+check(parGroup.endTime, 17.0,
+    "Parallel group end time should reflect updated child animationDuration");
+
 </script>
