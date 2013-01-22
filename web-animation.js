@@ -143,7 +143,7 @@ var ST_FORCED = 2;
 /** @constructor */
 var TimedItem = function(timing, startTime, parentGroup) {
   this.timing = new TimingProxy(interpretTimingParam(timing), function() {
-    this.updateIterationDuration();
+    this._updateInternalState();
   }.bind(this));
   this._startTime = startTime;
   this.currentIteration = null;
@@ -176,7 +176,7 @@ var TimedItem = function(timing, startTime, parentGroup) {
   if (this.parentGroup) {
     this.parentGroup._addInternal(this);
   }
-  this.updateIterationDuration();
+  this._updateInternalState();
   this._pauseStartTime = 0;
 };
 
@@ -212,7 +212,7 @@ TimedItem.prototype.__defineSetter__('startTime', function(newStartTime) {
   }
   this._startTime = newStartTime;
   this._startTimeMode = ST_MANUAL;
-  this.updateIterationDuration();
+  this._updateInternalState();
 });
 TimedItem.prototype.__defineGetter__('locallyPaused', function() {
   return this._locallyPaused;
@@ -236,7 +236,7 @@ TimedItem.prototype.__defineGetter__('paused', function() {
 });
 TimedItem.prototype.__defineSetter__('duration', function(duration) {
   this._duration = duration;
-  this.updateIterationDuration();
+  this._updateInternalState();
 });
 TimedItem.prototype.__defineGetter__('duration', function() {
   return isDefined(this._duration) ?
@@ -246,7 +246,7 @@ TimedItem.prototype.__defineGetter__('duration', function() {
 TimedItem.prototype.__defineSetter__('animationDuration',
     function(animationDuration) {
   this._animationDuration = animationDuration;
-  this.updateIterationDuration();
+  this._updateInternalState();
 });
 TimedItem.prototype.__defineGetter__('animationDuration', function() {
   if (isDefined(this._animationDuration)) {
@@ -282,9 +282,7 @@ mixin(TimedItem.prototype, {
   _intrinsicDuration: function() {
     return 0.0;
   },
-  // TODO: take timing.iterationStart into account. Spec needs to as well.
-  // TODO: Consider removing this method and doing all work lazily in getters.
-  updateIterationDuration: function() {
+  _updateInternalState: function() {
     this.updateTimeMarkers();
     if (this.parentGroup) {
       this.parentGroup._childrenStateModified();
@@ -632,7 +630,7 @@ inherits(AnimationGroup, TimedItem);
 mixin(AnimationGroup.prototype, AnimationListMixin);
 mixin(AnimationGroup.prototype, {
   _childrenStateModified: function() {
-    this.updateIterationDuration();
+    this._updateInternalState();
     this._updateChildStartTimes();
     this.updateTimeMarkers();
     if (this.parentGroup) {
