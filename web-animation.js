@@ -202,9 +202,6 @@ TimedItem.prototype.__defineSetter__('currentTime', function(seekTime) {
         seekTime;
   }
   this.updateTimeMarkers();
-  if (this.parentGroup) {
-    this.parentGroup._childrenStateModified();
-  }
 });
 TimedItem.prototype.__defineGetter__('startTime', function() {
   return this._startTime;
