@@ -471,8 +471,7 @@ mixin(TimedItem.prototype, {
   _parentToGlobalTime: function(parentTime) {
     if (!this.parentGroup)
       return parentTime;
-    return parentTime + DEFAULT_GROUP.currentTime -
-        this.parentGroup.iterationTime;
+    return parentTime + DEFAULT_GROUP.itemTime - this.parentGroup.iterationTime;
   },
 });
 
