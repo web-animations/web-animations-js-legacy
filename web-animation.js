@@ -153,6 +153,9 @@ var TimedItem = function(timing, startTime, parentGroup) {
 
   // Note that we don't use the public setter, because we call _addInternal()
   // below.
+  if (parentGroup === this) {
+    throw new Error('parentGroup can not be set to self!');
+  }
   this._parentGroup = this._sanitizeParent(parentGroup);
 
   if (!isDefined(startTime)) {
@@ -284,6 +287,9 @@ mixin(TimedItem.prototype, {
   },
   // Takes care of updating the outgoing parent.
   _reparent: function(parentGroup) {
+    if (parentGroup === this) {
+      throw new Error('parentGroup can not be set to self!');
+    }
     if (this.parentGroup) {
       this.parentGroup.remove(this.parentGroup.indexOf(this), 1);
     }
@@ -626,15 +632,18 @@ var AnimationListMixin = {
 
 /** @constructor */
 var AnimationGroup = function(type, children, timing, startTime, parentGroup) {
+  // Take a copy of the children array, as it could be modified as a side-effect
+  // of creating this object. See
+  // https://github.com/web-animations/web-animations-js/issues/65 for details.
+  var childrenCopy = (children && Array.isArray(children)) ?
+      children.slice() : [];
   // used by TimedItem via _intrinsicDuration(), so needs to be set before
   // initializing super.
   this.type = type || 'par';
   this.initListMixin(this._childrenStateModified);
   AnimationGroup.$super.call(this, timing, startTime, parentGroup);
-  if (children && Array.isArray(children)) {
-    for (var i = 0; i < children.length; i++) {
-      this.add(children[i]);
-    }
+  for (var i = 0; i < childrenCopy.length; i++) {
+    this.add(childrenCopy[i]);
   }
   // TODO: Work out where to expose name in the API
   // this.name = properties.name || '<anon>';
