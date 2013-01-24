@@ -265,7 +265,7 @@ TimedItem.prototype.__defineGetter__('endTime', function() {
 });
 
 mixin(TimedItem.prototype, {
-  reparent: function(parentGroup) {
+  _reparent: function(parentGroup) {
     if (this.parentGroup) {
       this.parentGroup.remove(this.parentGroup.indexOf(this), 1);
     }
@@ -588,7 +588,7 @@ var AnimationListMixin = {
       args = [start, deleteCount].concat(newItems);
     }
     for (var i = 2; i < args.length; i++) {
-      args[i].reparent(this);
+      args[i]._reparent(this);
     }
     var result = Array.prototype['splice'].apply(this.children, args);
     for (var i = 0; i < result.length; i++) {
