@@ -151,13 +151,9 @@ var TimedItem = function(timing, startTime, parentGroup) {
   this.animationTime = null;
   this._reversing = false;
 
-  if (parentGroup === null || parentGroup instanceof AnimationGroup) {
-    this.parentGroup = parentGroup;
-  } else if (!isDefined(parentGroup)) {
-    this.parentGroup = DEFAULT_GROUP;
-  } else {
-    throw new TypeError('parentGroup is not an AnimationGroup');
-  }
+  // Note that we don't use the public setter, because we call _addInternal()
+  // below.
+  this._parentGroup = this._sanitizeParent(parentGroup);
 
   if (!isDefined(startTime)) {
     this._startTimeMode = ST_AUTO;
@@ -263,13 +259,35 @@ TimedItem.prototype.__defineGetter__('endTime', function() {
       this._startTime + this.animationDuration + this.timing.startDelay +
       this.timeDrift;
 });
+TimedItem.prototype.__defineSetter__('parentGroup', function(parentGroup) {
+  var newParent = this._sanitizeParent(parentGroup);
+  if (newParent === null) {
+    this._reparent(null);
+  } else {
+    // This updates the parent and calls _reparent() on this object.
+    newParent.add(this);
+  }
+});
+TimedItem.prototype.__defineGetter__('parentGroup', function() {
+  return this._parentGroup;
+});
 
 mixin(TimedItem.prototype, {
+  _sanitizeParent: function(parentGroup) {
+    if (parentGroup === null || parentGroup instanceof AnimationGroup) {
+      return parentGroup;
+    } else if (!isDefined(parentGroup)) {
+      return DEFAULT_GROUP;
+    } else {
+      throw new TypeError('parentGroup is not an AnimationGroup');
+    }
+  },
+  // Takes care of updating the outgoing parent.
   _reparent: function(parentGroup) {
     if (this.parentGroup) {
       this.parentGroup.remove(this.parentGroup.indexOf(this), 1);
     }
-    this.parentGroup = parentGroup;
+    this._parentGroup = parentGroup;
     this._timeDrift = 0;
     if (this._startTimeMode == ST_FORCED &&
         (!this.parentGroup || this.parentGroup.type != 'seq')) {
@@ -592,7 +610,7 @@ var AnimationListMixin = {
     }
     var result = Array.prototype['splice'].apply(this.children, args);
     for (var i = 0; i < result.length; i++) {
-      result[i].parentGroup = null;
+      result[i]._parentGroup = null;
     }
     this._lengthChanged();
     this.onListChange();

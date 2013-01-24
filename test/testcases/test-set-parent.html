@@ -1,0 +1,137 @@
+<!--
+Copyright 2013 Google Inc. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<!DOCTYPE html>
+<style>
+body {
+  background-color: green;
+}
+body div#fail {
+  display: none;
+}
+body.fail {
+  background-color: red;
+}
+body.fail div#pass {
+  display: none;
+}
+body.fail div#fail {
+  display: block;
+}
+</style>
+
+<div id="pass">PASS</div>
+<div id="fail">FAIL</div>
+<div id="anim"></div>
+
+<script src="../../web-animation.js"></script>
+<script>
+
+var fail = function(failureMessage) {
+  var div = document.createElement("div");
+  div.innerText = failureMessage;
+  document.body.appendChild(div);
+  document.body.className = "fail";
+};
+
+var check = function(actual, expected, failureMessage) {
+  if (actual != expected) {
+    fail(failureMessage + ". Expected '" + expected + "', got '" + actual +
+        "'.");
+  }
+};
+
+var elem = document.getElementById("anim");
+var animFunc = {left: "100px"};
+
+// Test that Animation is constructed with default parent.
+var anim = new Animation(elem, animFunc);
+check(anim.parentGroup, document.animationTimeline,
+    "Child should have default parent");
+
+// Test that group is constructed with zero children.
+var parent = new ParGroup();
+check(parent.children.length, 0, "Parent should have zero children");
+
+// Test that parent must be an AnimationGroup when constructing.
+try {
+  new Animation(elem, animFunc, 1.0, anim);
+  fail("Creating group with Animation as parent should throw");
+} catch(e) {
+  check(e.message, "parentGroup is not an AnimationGroup",
+      "Expected error exception message");
+}
+
+// Test that parent must be an AnimationGroup when assigning to parentGroup.
+var child = new Animation(elem, animFunc);
+try {
+  child.parentGroup = anim;
+  fail("Setting parentGroup to an Animation should throw");
+} catch(e) {
+  check(e.message, "parentGroup is not an AnimationGroup",
+      "Expected error exception message");
+}
+check(child.parentGroup, document.animationTimeline,
+    "Child's parent should still be document.animationTimeline");
+
+// Test that updates are made to child when constructing parent.
+var parent = new ParGroup([anim]);
+check(anim.parentGroup, parent, "Child's parentGroup should be set to parent");
+check(parent.children.length, 1, "Parent should have 1 child");
+check(parent.children[0], anim, "Parent should have correct child");
+
+// Test that updates are made to parent when constructing child.
+var parent = new ParGroup();
+var child = new Animation(elem, animFunc, 1.0, parent);
+check(child.parentGroup, parent, "Child's parentGroup should be set");
+check(parent.children.length, 1, "Parent should now have 1 child");
+check(parent.children[0], child, "Parent should have correct child");
+
+// Test that updates are made to previous and new parents when constructing new
+// parent.
+var newParent = new ParGroup([child]);
+check(child.parentGroup, newParent,
+    "Child's parentGroup should be updated to new parent");
+check(parent.children.length, 0,
+    "Previous parent should no longer have children");
+check(newParent.children.length, 1, "New parent should now have 1 child");
+check(newParent.children[0], child, "New parent should now have correct child");
+
+// Test that updates are made to previous and new parent when assigning to
+// parentGroup.
+var newerParent = new ParGroup();
+child.parentGroup = newerParent;
+check(child.parentGroup, newerParent,
+    "Child's parentGroup should be updated to new parent");
+check(newParent.children.length, 0,
+    "Previous parent should no longer have children");
+check(newerParent.children.length, 1, "New parent should now have 1 child");
+check(newerParent.children[0], child,
+    "New parent should now have correct child");
+
+// Test that updates are made to previous and new parent when using add().
+// parentGroup.
+var newestParent = new ParGroup();
+newestParent.add(child);
+check(child.parentGroup, newestParent,
+    "Child's parentGroup should be updated to new parent");
+check(newerParent.children.length, 0,
+    "Previous parent should no longer have children");
+check(newestParent.children.length, 1, "New parent should now have 1 child");
+check(newestParent.children[0], child,
+    "New parent should now have correct child");
+
+</script>
