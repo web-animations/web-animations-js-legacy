@@ -612,7 +612,17 @@ var AnimationListMixin = {
       args = [start, deleteCount].concat(newItems);
     }
     for (var i = 2; i < args.length; i++) {
-      args[i]._reparent(this);
+      var newChild = args[i];
+      // Check whether the new child is an ancestor. If so, we need to break the
+      // chain immediately below the new child.
+      for (var ancestor = this; ancestor.parentGroup != null;
+          ancestor = ancestor.parentGroup) {
+        if (ancestor.parentGroup === newChild) {
+          newChild.remove(ancestor);
+          break;
+        }
+      }
+      newChild._reparent(this);
     }
     var result = Array.prototype['splice'].apply(this.children, args);
     for (var i = 0; i < result.length; i++) {
@@ -642,6 +652,9 @@ var AnimationGroup = function(type, children, timing, startTime, parentGroup) {
   this.type = type || 'par';
   this.initListMixin(this._childrenStateModified);
   AnimationGroup.$super.call(this, timing, startTime, parentGroup);
+  // We add children after setting the parent. This means that if an ancestor
+  // (including the parent) is specified as a child, it will be removed from our
+  // ancestors and used as a child,
   for (var i = 0; i < childrenCopy.length; i++) {
     this.add(childrenCopy[i]);
   }
