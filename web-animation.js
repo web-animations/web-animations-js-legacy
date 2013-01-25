@@ -706,22 +706,6 @@ mixin(AnimationGroup.prototype, {
       }.bind(this));
     }
   },
-  getActiveAnimations: function() {
-    var result = [];
-    if (this._timeFraction === null) {
-      return result;
-    }
-    for (var i = 0; i < this.children.length; i++) {
-      if (this.children[i]._timeFraction !== null) {
-        if (this.children[i].getActiveAnimations) {
-          result = result.concat(this.children[i].getActiveAnimations());
-        } else {
-          result.push(this.children[i]);
-        }
-      }
-    }
-    return result;
-  },
   getAnimationsForElement: function(elem) {
     var result = [];
     for (var i = 0; i < this.children.length; i++) {
