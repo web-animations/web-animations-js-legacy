@@ -315,6 +315,7 @@ mixin(TimedItem.prototype, {
     }
     this.updateTimeMarkers();
   },
+  // Returns whether this TimedItem is currently in effect.
   updateTimeMarkers: function(parentTime) {
     if (this.parentGroup !== null && this.parentGroup.iterationTime !== null) {
       this.itemTime = this.parentGroup.iterationTime -
@@ -496,6 +497,13 @@ mixin(TimedItem.prototype, {
     throw new Error(
         "Derived classes must override TimedItem.clone()");
   },
+  // Gets the TimedItems currently in effect. Note that this is a superset of
+  // the TimedItems in their active interval, as a TimedItem can have an effect
+  // outside its active interval due to fill.
+  _getItemsInEffect: function() {
+    throw new Error(
+        "Derived classes must override TimedItem._getItemsInEffect()");
+  },
 });
 
 var isCustomAnimationFunction = function(animationFunction) {
@@ -573,7 +581,7 @@ mixin(Animation.prototype, {
         this.currentIteration, this.targetElement,
         this.underlyingValue);
   },
-  _getActiveAnimations: function() {
+  _getItemsInEffect: function() {
     if (!this.updateTimeMarkers()) {
       return [];
     }
@@ -760,11 +768,11 @@ mixin(AnimationGroup.prototype, {
       throw 'Unsupported type ' + this.type;
     }
   },
-  _getActiveAnimations: function() {
+  _getItemsInEffect: function() {
     this.updateTimeMarkers();
     var animations = [];
     this.children.forEach(function(child) {
-      animations = animations.concat(child._getActiveAnimations());
+      animations = animations.concat(child._getItemsInEffect());
     }.bind(this));
     return animations;
   },
@@ -2108,7 +2116,7 @@ DEFAULT_GROUP._tick = function(parentTime) {
   var animations = [];
   var allFinished = true;
   this.children.forEach(function(child) {
-    animations = animations.concat(child._getActiveAnimations());
+    animations = animations.concat(child._getItemsInEffect());
     allFinished &= parentTime > child.endTime;
   }.bind(this));
 
