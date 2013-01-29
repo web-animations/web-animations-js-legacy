@@ -72,6 +72,7 @@ var Timing = function(timingDict) {
 };
 
 mixin(Timing.prototype, {
+  // TODO: Is this supposed to be public?
   clone: function() {
     return new Timing({
       startDelay: this.startDelay,
@@ -491,16 +492,24 @@ mixin(TimedItem.prototype, {
       return parentTime;
     return parentTime + DEFAULT_GROUP.itemTime - this.parentGroup.iterationTime;
   },
+  clone: function() {
+    throw new Error(
+        "Derived classes must override TimedItem.clone()");
+  },
 });
+
+var isCustomAnimationFunction = function(animationFunction) {
+  // TODO: How does WebIDL actually differentiate different callback interfaces?
+  return typeof animationFunction === "object" &&
+      animationFunction.hasOwnProperty("sample") &&
+      typeof animationFunction.sample === "function";
+};
 
 var interpretAnimationFunction = function(animationFunction) {
   if (animationFunction instanceof AnimationFunction) {
     return animationFunction;
-  } else if (typeof(animationFunction) === 'object') {
-    // Test if the object is actually a CustomAnimationFunction
-    // (how does WebIDL actually differentiate different callback interfaces?)
-    if (animationFunction.hasOwnProperty('sample') &&
-        typeof(animationFunction.sample) === 'function') {
+  } else if (typeof animationFunction === 'object') {
+    if (isCustomAnimationFunction(animationFunction)) {
       return animationFunction;
     } else {
       return AnimationFunction.createFromProperties(animationFunction);
@@ -509,6 +518,20 @@ var interpretAnimationFunction = function(animationFunction) {
     try {
       throw new Error('TypeError');
     } catch (e) { console.log(e.stack); throw e; }
+  }
+};
+
+var cloneAnimationFunction = function(animationFunction) {
+  if (animationFunction instanceof AnimationFunction) {
+    return animationFunction.clone();
+  } else if (isCustomAnimationFunction(animationFunction)) {
+    if (typeof animationFunction.clone === "function") {
+      return animationFunction.clone();
+    } else {
+      return animationFunction;
+    }
+  } else {
+    return null;
   }
 };
 
@@ -557,6 +580,10 @@ mixin(Animation.prototype, {
 
     this._sortOrder = this._parentToGlobalTime(this.startTime);
     return [this];
+  },
+  clone: function() {
+    return new Animation(this.targetElement,
+        cloneAnimationFunction(this.animationFunction), this.timing.clone());
   },
   toString: function() {
     var funcDescr = this.animationFunction instanceof AnimationFunction ?
@@ -740,6 +767,15 @@ mixin(AnimationGroup.prototype, {
       animations = animations.concat(child._getActiveAnimations());
     }.bind(this));
     return animations;
+  },
+  clone: function() {
+    var children = [];
+    this.children.forEach(function(child) {
+      children.push(child.clone());
+    }.bind(this));
+    return this.type === "par" ?
+        new ParGroup(children, this.timing.clone()) :
+        new SeqGroup(children, this.timing.clone());
   },
   toString: function() {
     return this.type + ' ' + this.startTime + '-' + this.endTime + ' (' +
