@@ -71,16 +71,12 @@ check(clone.timing.duration, 1.0, "Clone should take Timing.duration");
 check(clone.targetElement, elem, "Clone should take targetElement");
 checkNotEqual(clone.startTime, 2.0, "Clone should not take startTime");
 
-/*
-TODO: Reinstate pause functionality.
-
-anim.pause();
+anim.attach().pause();
 anim.iterationTime = 0.1;
-clone.pause();
+clone.attach().pause();
 clone.iterationTime = 0.2;
 check(anim.iterationTime, 0.1, "Original should have own iterationTime");
 check(clone.iterationTime, 0.2, "Clone should have own iterationTime");
-*/
 
 // ParGroup
 var parGroup = new ParGroup([anim, clone], 4.0, undefined, 3.0);
@@ -101,18 +97,14 @@ check(parGroupClone.children[1].duration, 1.0,
 checkNotEqual(parGroupClone.startTime, 3.0,
     "ParGroup clone should not take startTime");
 
-/*
-TODO: Reinstate pause functionality.
-
-parGroup.pause();
+parGroup.attach().pause();
 parGroup.iterationTime = 0.3;
-parGroupClone.pause();
+parGroupClone.attach().pause();
 parGroupClone.iterationTime = 0.4;
 check(parGroup.iterationTime, 0.3,
     "ParGroup original should have own iterationTime");
 check(parGroupClone.iterationTime, 0.4,
     "ParGroup clone should have own iterationTime");
-*/
 
 // SeqGroup
 var seqGroup = new SeqGroup([anim, clone], 6.0, undefined, 5.0);
@@ -133,18 +125,14 @@ check(seqGroupClone.children[1].duration, 1.0,
 checkNotEqual(seqGroupClone.startTime, 5.0,
     "SeqGroup clone should not take startTime");
 
-/*
-TODO: Reinstate pause functionality.
-
-seqGroup.pause();
+seqGroup.attach().pause();
 seqGroup.iterationTime = 0.5;
-seqGroupClone.pause();
+seqGroupClone.attach().pause();
 seqGroupClone.iterationTime = 0.6;
 check(seqGroup.iterationTime, 0.5,
     "SeqGroup original should have own iterationTime");
 check(seqGroupClone.iterationTime, 0.6,
     "SeqGroup clone should have own iterationTime");
-*/
 
 // Child
 var childClone = anim.clone();

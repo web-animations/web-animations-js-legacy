@@ -211,6 +211,32 @@ mixin(DefaultTimeSource.prototype, {
   time: function() {
     return documentTime() - this._timeZero;
   },
+  // Updates the inherited time for all TimedItems controlled by this object's
+  // controllers.
+  _update: function() {
+    this._controllers.forEach(function(controller) {
+      controller._update();
+    }.bind(this));
+  },
+  _isPastEndOfActiveInterval: function() {
+    for (var i in this._controllers) {
+      if (this._controllers[i].timedItem &&
+          !this._controllers[i].timedItem._isPastEndOfActiveInterval()) {
+        return false;
+      }
+    }
+    return true;
+  },
+  _getItemsInEffect: function() {
+    var animations = [];
+    this._controllers.forEach(function(controller) {
+      if (controller.timedItem !== null) {
+        animations =
+            animations.concat(controller.timedItem._getItemsInEffect());
+      }
+    });
+    return animations;
+  },
 });
 
 // Controls a tree of animations via its root TimedItem. Uses a TimeSource to
@@ -222,6 +248,8 @@ var AnimationController = function(timeSource, timedItem) {
   this._timeSource = timeSource;
   this.timedItem = timedItem;
   this.timeSource._attach(this);
+  this._timeDrift = 0.0;
+  this._pauseTime = null;
 };
 
 AnimationController.prototype.__defineSetter__('timeSource', function() {
@@ -253,8 +281,23 @@ AnimationController.prototype.__defineSetter__('currentTime', function() {
   throw new Error("AnimationController.currentTime is readonly")
 });
 AnimationController.prototype.__defineGetter__('currentTime', function() {
-  // TODO: Handle pausing.
-  return this.timeSource.time();
+  return this._pauseTime === null ?
+      this.timeSource.time() - this._timeDrift : this._pauseTime;
+});
+
+mixin(AnimationController.prototype, {
+  play: function() {
+    this._timeDrift = this.timeSource.time() - this._pauseTime;
+    this._pauseTime = null;
+  },
+  pause: function() {
+    this._pauseTime = this.currentTime;
+  },
+  _update: function() {
+    if (this.timedItem !== null) {
+      this.timedItem._updateInheritedTime(this.currentTime);
+    }
+  },
 });
 
 
