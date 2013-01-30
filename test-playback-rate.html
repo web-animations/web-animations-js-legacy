@@ -19,7 +19,6 @@ limitations under the License.
 .animContainer {
   position: absolute;
   left: 0px;
-  height: 100px;
 }
 
 .anim {
@@ -31,23 +30,16 @@ limitations under the License.
 }
 
 #ca {
-  top: 0px;
+  top: 50px;
 }
 
 #cb {
-  top: 200px;
+  top: 250px;
 }
 
-#cc {
-  top: 400px;
-}
-
-#cd {
-  top: 600px;
-}
 #expectation1 {
   position: absolute;
-  top: 0px;
+  top: 50px;
   left: 300px;
   width: 100px;
   height: 175px;
@@ -55,7 +47,7 @@ limitations under the License.
 }
 #expectation2 {
   position: absolute;
-  top: 200px;
+  top: 250px;
   left: 0px;
   width: 100px;
   height: 175px;
@@ -63,8 +55,11 @@ limitations under the License.
 }
 </style>
 
-<div id=expectation1></div>
-<div id=expectation2></div>
+<div>All squares should line up at the end of each iteration (or start if
+reversed). All movement should be at the same speed.</div>
+
+<div id="expectation1"></div>
+<div id="expectation2"></div>
 
 <div class="animContainer" id="ca">
   <div class="anim a"></div>
@@ -102,8 +97,6 @@ for (var i = 0; i < directions.length; i++) {
 
 for (var i = 0; i < containers.length; i++) {
   var container = document.getElementById(containers[i]);
-  // All squares should line up at the end of each iteration (or start if
-  // reversed). All movement should be at the same speed.
   // Test basic use.
   new Animation(container.getElementsByClassName("a")[0],
       {left: ["100px", "300px"]}, {duration: 1.0}, groups[i]);
