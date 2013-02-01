@@ -315,8 +315,7 @@ mixin(TimedItem.prototype, {
     }
     this._updateTimeMarkers();
   },
-  // Returns whether this TimedItem is currently in effect.
-  _updateTimeMarkers: function(parentTime) {
+  _updateItemTime: function(parentTime) {
     if (this.parentGroup !== null && this.parentGroup.iterationTime !== null) {
       this.itemTime = this.parentGroup.iterationTime -
           this._startTime - this.timeDrift;
@@ -325,6 +324,10 @@ mixin(TimedItem.prototype, {
     } else {
       this.itemTime = null;
     }
+  },
+  // Returns whether this TimedItem is currently in effect.
+  _updateTimeMarkers: function(parentTime) {
+    this._updateItemTime(parentTime);
     if (this.itemTime !== null) {
       if (this.itemTime <= this.timing.startDelay) {
         if (((this.timing.fillMode == 'backwards') && !this._reversing)
