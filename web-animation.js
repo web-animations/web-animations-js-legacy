@@ -369,18 +369,19 @@ mixin(TimedItem.prototype, {
           this._timeFraction);
     }
   },
-  _updateIterationParams: function() {
+  _getAdjustedAnimationTime: function(animationTime) {
     var startOffset = this.timing.iterationStart * this.duration;
     var effectiveSpeed = this._reversing ?
         -this.timing.playbackRate : this.timing.playbackRate;
-    if (effectiveSpeed < 0) {
-      var adjustedAnimationTime = (this.animationTime -
-          this.animationDuration) * effectiveSpeed + startOffset;
-    } else {
-      var adjustedAnimationTime = this.animationTime * effectiveSpeed +
-          startOffset;
-    }
+    return (effectiveSpeed < 0 ?
+        (animationTime - this.animationDuration) : animationTime) *
+        effectiveSpeed + startOffset;
+  },
+  _updateIterationParams: function() {
+    var adjustedAnimationTime =
+        this._getAdjustedAnimationTime(this.animationTime);
     var repeatedDuration = this.duration * this.timing.iterationCount;
+    var startOffset = this.timing.iterationStart * this.duration;
     var isAtEndOfIterations = (this.timing.iterationCount != 0) &&
         (adjustedAnimationTime - startOffset == repeatedDuration);
     this.currentIteration = isAtEndOfIterations ?
