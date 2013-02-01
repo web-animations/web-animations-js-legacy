@@ -201,7 +201,7 @@ TimedItem.prototype.__defineSetter__('currentTime', function(seekTime) {
     this._timeDrift = this._effectiveParentTime - this._startTime -
         seekTime;
   }
-  this.updateTimeMarkers();
+  this._updateTimeMarkers();
 });
 TimedItem.prototype.__defineGetter__('startTime', function() {
   return this._startTime;
@@ -228,7 +228,7 @@ TimedItem.prototype.__defineSetter__('locallyPaused', function(newVal) {
     this._pauseStartTime = this.currentTime;
   }
   this._locallyPaused = newVal;
-  this.updateTimeMarkers();
+  this._updateTimeMarkers();
 });
 TimedItem.prototype.__defineGetter__('paused', function() {
   return this.locallyPaused ||
@@ -304,7 +304,7 @@ mixin(TimedItem.prototype, {
     if (this._startTimeMode == ST_AUTO) {
       this._startTime = this._effectiveParentTime;
     }
-    this.updateTimeMarkers();
+    this._updateTimeMarkers();
   },
   _intrinsicDuration: function() {
     return 0.0;
@@ -313,10 +313,10 @@ mixin(TimedItem.prototype, {
     if (this.parentGroup) {
       this.parentGroup._childrenStateModified();
     }
-    this.updateTimeMarkers();
+    this._updateTimeMarkers();
   },
   // Returns whether this TimedItem is currently in effect.
-  updateTimeMarkers: function(parentTime) {
+  _updateTimeMarkers: function(parentTime) {
     if (this.parentGroup !== null && this.parentGroup.iterationTime !== null) {
       this.itemTime = this.parentGroup.iterationTime -
           this._startTime - this.timeDrift;
@@ -582,7 +582,7 @@ mixin(Animation.prototype, {
         this.underlyingValue);
   },
   _getItemsInEffect: function() {
-    if (!this.updateTimeMarkers()) {
+    if (!this._updateTimeMarkers()) {
       return [];
     }
 
@@ -734,7 +734,7 @@ mixin(AnimationGroup.prototype, {
         // Avoid updating the child's time markers if this is about to be done
         // in the down phase of _childrenStateModified().
         if (!child._isInOnChildrenStateModified) {
-          child.updateTimeMarkers();
+          child._updateTimeMarkers();
         }
         cumulativeStartTime += Math.max(0, child.timing.startDelay +
             child.animationDuration);
@@ -769,7 +769,7 @@ mixin(AnimationGroup.prototype, {
     }
   },
   _getItemsInEffect: function() {
-    this.updateTimeMarkers();
+    this._updateTimeMarkers();
     var animations = [];
     this.children.forEach(function(child) {
       animations = animations.concat(child._getItemsInEffect());
@@ -2108,7 +2108,7 @@ var DEFAULT_GROUP = new ParGroup([], {name: 'DEFAULT'}, null);
 var compositor = new Compositor();
 
 DEFAULT_GROUP._tick = function(parentTime) {
-  this.updateTimeMarkers(parentTime);
+  this._updateTimeMarkers(parentTime);
 
   // Get animations for this sample
   // TODO: Consider reverting to direct application of values and sorting
