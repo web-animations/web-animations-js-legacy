@@ -328,93 +328,93 @@ mixin(TimedItem.prototype, {
   // Returns whether this TimedItem is currently in effect.
   _updateTimeMarkers: function(parentTime) {
     this._updateItemTime(parentTime);
-    if (this.itemTime !== null) {
-      if (this.itemTime <= this.timing.startDelay) {
-        if (((this.timing.fillMode == 'backwards') && !this._reversing)
-          || this.timing.fillMode == 'both'
-          || ((this.timing.fillMode == 'forwards') && this._reversing)) {
-          this.animationTime = 0;
-        } else {
-          this.animationTime = null;
-        }
-      } else if (this.itemTime <
-          this.timing.startDelay + this.animationDuration) {
-        this.animationTime = this.itemTime - this.timing.startDelay;
-      } else {
-        if (((this.timing.fillMode == 'forwards') && !this._reversing)
-          || this.timing.fillMode == 'both'
-          || ((this.timing.fillMode == 'backwards') && this._reversing)) {
-          this.animationTime = this.animationDuration;
-        } else {
-          this.animationTime = null;
-        }
-      }
-      if (this.animationTime === null) {
-        this.iterationTime = null;
-        this.currentIteration = null;
-        this._timeFraction = null;
-      } else if (this.duration == 0) {
-        this.iterationTime = 0;
-        var isAtEndOfIterations = (this.timing.iterationCount != 0) &&
-            ((this.itemTime < this.timing.startDelay) == this._reversing);
-        this.currentIteration = isAtEndOfIterations ?
-           this._floorWithOpenClosedRange(this.timing.iterationStart +
-               this.timing.iterationCount, 1.0) :
-           this._floorWithClosedOpenRange(this.timing.iterationStart, 1.0);
-        // Equivalent to unscaledIterationTime below.
-        var unscaledFraction = isAtEndOfIterations ?
-            this._modulusWithOpenClosedRange(this.timing.iterationStart +
-                this.timing.iterationCount, 1.0) :
-            this._modulusWithClosedOpenRange(this.timing.iterationStart, 1.0);
-        this._timeFraction = this._isCurrentDirectionForwards(
-            this.timing.direction, this.currentIteration) ?
-                unscaledFraction :
-                1.0 - unscaledFraction;
-        if (this.timing.timingFunction) {
-          this._timeFraction = this.timing.timingFunction.scaleTime(
-              this._timeFraction);
-        }
-      } else {
-        var startOffset = this.timing.iterationStart * this.duration;
-        var effectiveSpeed = this._reversing ?
-            -this.timing.playbackRate : this.timing.playbackRate;
-        if (effectiveSpeed < 0) {
-          var adjustedAnimationTime = (this.animationTime -
-              this.animationDuration) * effectiveSpeed + startOffset;
-        } else {
-          var adjustedAnimationTime = this.animationTime * effectiveSpeed +
-              startOffset;
-        }
-        var repeatedDuration = this.duration * this.timing.iterationCount;
-        var isAtEndOfIterations = (this.timing.iterationCount != 0) &&
-            (adjustedAnimationTime - startOffset == repeatedDuration);
-        this.currentIteration = isAtEndOfIterations ?
-            this._floorWithOpenClosedRange(
-                adjustedAnimationTime, this.duration) :
-            this._floorWithClosedOpenRange(
-                adjustedAnimationTime, this.duration);
-        var unscaledIterationTime = isAtEndOfIterations ?
-            this._modulusWithOpenClosedRange(
-                adjustedAnimationTime, this.duration) :
-            this._modulusWithClosedOpenRange(
-                adjustedAnimationTime, this.duration);
-        var scaledIterationTime = unscaledIterationTime;
-        this.iterationTime = this._isCurrentDirectionForwards(
-            this.timing.direction, this.currentIteration) ?
-                scaledIterationTime :
-                this.duration - scaledIterationTime;
-        this._timeFraction = this.iterationTime / this.duration;
-        if (this.timing.timingFunction) {
-          this._timeFraction = this.timing.timingFunction.scaleTime(
-              this._timeFraction);
-          this.iterationTime = this._timeFraction * this.duration;
-        }
-      }
-    } else {
+    if (this.itemTime === null) {
       this.animationTime = null;
       this.iterationTime = null;
       this.currentIteration = null;
       this._timeFraction = null;
+      return false;
+    }
+    if (this.itemTime <= this.timing.startDelay) {
+      if (((this.timing.fillMode == 'backwards') && !this._reversing)
+        || this.timing.fillMode == 'both'
+        || ((this.timing.fillMode == 'forwards') && this._reversing)) {
+        this.animationTime = 0;
+      } else {
+        this.animationTime = null;
+      }
+    } else if (this.itemTime <
+        this.timing.startDelay + this.animationDuration) {
+      this.animationTime = this.itemTime - this.timing.startDelay;
+    } else {
+      if (((this.timing.fillMode == 'forwards') && !this._reversing)
+        || this.timing.fillMode == 'both'
+        || ((this.timing.fillMode == 'backwards') && this._reversing)) {
+        this.animationTime = this.animationDuration;
+      } else {
+        this.animationTime = null;
+      }
+    }
+    if (this.animationTime === null) {
+      this.iterationTime = null;
+      this.currentIteration = null;
+      this._timeFraction = null;
+    } else if (this.duration == 0) {
+      this.iterationTime = 0;
+      var isAtEndOfIterations = (this.timing.iterationCount != 0) &&
+          ((this.itemTime < this.timing.startDelay) == this._reversing);
+      this.currentIteration = isAtEndOfIterations ?
+         this._floorWithOpenClosedRange(this.timing.iterationStart +
+             this.timing.iterationCount, 1.0) :
+         this._floorWithClosedOpenRange(this.timing.iterationStart, 1.0);
+      // Equivalent to unscaledIterationTime below.
+      var unscaledFraction = isAtEndOfIterations ?
+          this._modulusWithOpenClosedRange(this.timing.iterationStart +
+              this.timing.iterationCount, 1.0) :
+          this._modulusWithClosedOpenRange(this.timing.iterationStart, 1.0);
+      this._timeFraction = this._isCurrentDirectionForwards(
+          this.timing.direction, this.currentIteration) ?
+              unscaledFraction :
+              1.0 - unscaledFraction;
+      if (this.timing.timingFunction) {
+        this._timeFraction = this.timing.timingFunction.scaleTime(
+            this._timeFraction);
+      }
+    } else {
+      var startOffset = this.timing.iterationStart * this.duration;
+      var effectiveSpeed = this._reversing ?
+          -this.timing.playbackRate : this.timing.playbackRate;
+      if (effectiveSpeed < 0) {
+        var adjustedAnimationTime = (this.animationTime -
+            this.animationDuration) * effectiveSpeed + startOffset;
+      } else {
+        var adjustedAnimationTime = this.animationTime * effectiveSpeed +
+            startOffset;
+      }
+      var repeatedDuration = this.duration * this.timing.iterationCount;
+      var isAtEndOfIterations = (this.timing.iterationCount != 0) &&
+          (adjustedAnimationTime - startOffset == repeatedDuration);
+      this.currentIteration = isAtEndOfIterations ?
+          this._floorWithOpenClosedRange(
+              adjustedAnimationTime, this.duration) :
+          this._floorWithClosedOpenRange(
+              adjustedAnimationTime, this.duration);
+      var unscaledIterationTime = isAtEndOfIterations ?
+          this._modulusWithOpenClosedRange(
+              adjustedAnimationTime, this.duration) :
+          this._modulusWithClosedOpenRange(
+              adjustedAnimationTime, this.duration);
+      var scaledIterationTime = unscaledIterationTime;
+      this.iterationTime = this._isCurrentDirectionForwards(
+          this.timing.direction, this.currentIteration) ?
+              scaledIterationTime :
+              this.duration - scaledIterationTime;
+      this._timeFraction = this.iterationTime / this.duration;
+      if (this.timing.timingFunction) {
+        this._timeFraction = this.timing.timingFunction.scaleTime(
+            this._timeFraction);
+        this.iterationTime = this._timeFraction * this.duration;
+      }
     }
     return this._timeFraction !== null;
   },
