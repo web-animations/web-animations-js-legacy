@@ -325,16 +325,7 @@ mixin(TimedItem.prototype, {
       this.itemTime = null;
     }
   },
-  // Returns whether this TimedItem is currently in effect.
-  _updateTimeMarkers: function(parentTime) {
-    this._updateItemTime(parentTime);
-    if (this.itemTime === null) {
-      this.animationTime = null;
-      this.iterationTime = null;
-      this.currentIteration = null;
-      this._timeFraction = null;
-      return false;
-    }
+  _updateAnimationTime: function() {
     if (this.itemTime <= this.timing.startDelay) {
       if (((this.timing.fillMode == 'backwards') && !this._reversing)
         || this.timing.fillMode == 'both'
@@ -355,6 +346,18 @@ mixin(TimedItem.prototype, {
         this.animationTime = null;
       }
     }
+  },
+  // Returns whether this TimedItem is currently in effect.
+  _updateTimeMarkers: function(parentTime) {
+    this._updateItemTime(parentTime);
+    if (this.itemTime === null) {
+      this.animationTime = null;
+      this.iterationTime = null;
+      this.currentIteration = null;
+      this._timeFraction = null;
+      return false;
+    }
+    this._updateAnimationTime();
     if (this.animationTime === null) {
       this.iterationTime = null;
       this.currentIteration = null;
