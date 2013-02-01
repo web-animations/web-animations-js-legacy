@@ -369,10 +369,13 @@ mixin(TimedItem.prototype, {
           this._timeFraction);
     }
   },
+  _getEffectiveSpeed: function() {
+    return this._reversing ?
+        -this.timing.playbackRate : this.timing.playbackRate;
+  },
   _getAdjustedAnimationTime: function(animationTime) {
     var startOffset = this.timing.iterationStart * this.duration;
-    var effectiveSpeed = this._reversing ?
-        -this.timing.playbackRate : this.timing.playbackRate;
+    var effectiveSpeed = this._getEffectiveSpeed();
     return (effectiveSpeed < 0 ?
         (animationTime - this.animationDuration) : animationTime) *
         effectiveSpeed + startOffset;
