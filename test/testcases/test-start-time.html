@@ -1,0 +1,126 @@
+<!--
+Copyright 2012 Google Inc. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<!DOCTYPE html>
+<style>
+.animContainer {
+  position: absolute;
+  left: 0px;
+  height: 225px;
+}
+
+.expected {
+  border-right: 1px solid black;
+}
+
+.anim {
+  left: 0px;
+  width: 100px;
+  height: 25px;
+  background-color: #FAA;
+  position: relative;
+}
+
+#ca {
+  top: 50px;
+  width: 400px;
+}
+
+#cb {
+  top: 300px;
+  width: 200px;
+}
+
+</style>
+
+<div>Right edge of each box should align with black line at end of test.</div>
+
+<div class="animContainer" id="ca">
+  <div style="width: 400px;" class="expected"><div class="anim a"></div></div>
+  <div style="width: 400px;" class="expected"><div class="anim b"></div></div>
+  <div style="width: 400px;" class="expected"><div class="anim c"></div></div>
+  <div style="width: 400px;" class="expected"><div class="anim d"></div></div>
+  <div style="width: 400px;" class="expected"><div class="anim e"></div></div>
+  <div style="width: 400px;" class="expected"><div class="anim f"></div></div>
+</div>
+
+<div class="animContainer" id="cb">
+  <div style="width: 100px;" class="expected"><div class="anim a"></div></div>
+  <div style="width: 100px;" class="expected"><div class="anim b"></div></div>
+  <div style="width: 100px;" class="expected"><div class="anim c"></div></div>
+  <div style="width: 100px;" class="expected"><div class="anim d"></div></div>
+  <div style="width: 100px;" class="expected"><div class="anim e"></div></div>
+  <div style="width: 100px;" class="expected"><div class="anim f"></div></div>
+</div>
+
+<script src="../../web-animation.js"></script>
+<script>
+
+var containers = ["ca", "cb"];
+
+var directions = ["normal", "reverse"];
+
+var animation = {left: ["100px", "300px"]};
+
+for (var i = 0; i < directions.length; i++) {
+  var container = document.getElementById(containers[i]);
+  // Explicit child start time and parent duration.
+  new Animation(container.getElementsByClassName("a")[0], animation,
+      {duration: 1.0},
+      new ParGroup([], {iterationCount: 2.0, direction: directions[i],
+          duration: 1.0}),
+      0.0);
+  // Explicit child start time, parent calculates intrinsic duration.
+  new Animation(container.getElementsByClassName("b")[0], animation,
+      {duration: 1.0},
+      new ParGroup([], {iterationCount: 2.0, direction: directions[i]}),
+      0.0);
+  // Default child start time, explicit parent duration. Note that for "normal"
+  // parent, child start time will be 0.0, so animation proceeds as above. For
+  // "reverse" parent, child start time will be 1.0 and maximum parent
+  // iteration time is 1.0, so animation never runs.
+  new Animation(container.getElementsByClassName("c")[0], animation,
+      {duration: 1.0},
+      new ParGroup([], {iterationCount: 2.0, direction: directions[i],
+          duration: 1.0}));
+  // Default child start time, explicit parent duration, plus explicit parent
+  // group zero start time. As above, but we have to extend the parent duration
+  // to avoid the "normal" child animation being clipped. This is because
+  // forcing a parent start time of zero means that the parent starts with a
+  // non-zero iteration time, which is used as the child start time, causing
+  // the child end time to exceed 1.0.
+  new Animation(container.getElementsByClassName("d")[0], animation,
+      {duration: 1.0},
+      new ParGroup([], {iterationCount: 2.0, direction: directions[i],
+          duration: 2.0}, undefined, 0.0));
+  // Default child start time, explicit parent duration, plus explicit parent
+  // group non-zero start time. Note that for both "normal" and "reverse"
+  // parents, parent iteration time is null, so child start time is zero, and
+  // animation proceeds as above.
+  new Animation(container.getElementsByClassName("e")[0], animation,
+      {duration: 1.0},
+      new ParGroup([], {iterationCount: 2.0, direction: directions[i],
+          duration: 1.0}, undefined, 0.5));
+  // Default child start time and parent duration. Note that for "normal"
+  // parent, child start time will be 0.0, so animation proceeds as above. For
+  // "reverse" parent, child start time will be 0.0, as this is the parent
+  // iteration time at the time of creation, but maximum parent iteration time
+  // is 1.0, so animation proceeds as above.
+  new Animation(container.getElementsByClassName("f")[0], animation,
+      {duration: 1.0},
+      new ParGroup([], {iterationCount: 2.0, direction: directions[i]}));
+}
+</script>
