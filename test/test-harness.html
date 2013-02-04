@@ -1,0 +1,88 @@
+<!--
+Copyright 2012 Google Inc. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<script>
+var tests = [
+  'test-calc.html',
+  'test-change-playback-rate.html',
+  'test-color.html',
+  'test-color-names.html',
+  'test-composite-transforms.html',
+  'test-compositor.html',
+  'test-duration.html',
+  'test-fill-values.html',
+  'test-font-weight.html',
+  'test-grouped-anim-func.html',
+  'test-integer.html',
+  'test-iterations-basic.html',
+  'test-iterations-fill.html',
+  'test-iteration-start.html',
+  'test-keyframe-creation.html',
+  'test-length-units.html',
+  'test-modify-timing-params.html',
+  'test-non-numeric.html',
+  'test-parent.html',
+  'test-path.html',
+  'test-pause.html',
+  'test-playback-rate.html',
+  'test-preset-timings.html',
+  'test-rectangle.html',
+  'test-reparent.html',
+  'test-seq-speed.html',
+  'test-start-time.html',
+  'test-start-time-iterations.html',
+  'test-step.html',
+  'test-svg-anim.html',
+  'test-text-shadow.html',
+  'test-timing-functions.html',
+  'test-to-animation.html',
+  'test-visibility.html',
+];
+</script>
+<style>
+iframe {
+  width: 800px;
+  height: 600px;
+}
+</style>
+<button id="prev-button" onclick="updateState(-1)">Prev</button>
+<button id="reload-button" onclick="updateState()">Reload</button>
+<button id="next-button" onclick="updateState(1)">Next</button><br>
+<span id="test-num"></span><a id="test-name"></a><br>
+<iframe></iframe>
+<script>
+var currentTest = 0;
+if (window.location.hash && tests.indexOf(window.location.hash.substr(1))) {
+  currentTest = tests.indexOf(window.location.hash.substr(1));
+}
+
+function updateState(change) {
+  if (change) {
+    currentTest += change;
+  }
+  var test = tests[currentTest];
+  window.location.hash = test;
+  document.querySelector('#test-num').textContent =
+      (currentTest + 1) + ' of ' + tests.length + ': ';
+  document.querySelector('#test-name').textContent = test;
+  document.querySelector('#test-name').href = test;
+  document.querySelector('iframe').src = 'testcases/' + test;
+  document.querySelector('#prev-button').disabled = currentTest <= 0;
+  document.querySelector('#next-button').disabled =
+      currentTest >= tests.length - 1;
+}
+
+updateState();
+</script>
