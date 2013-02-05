@@ -124,6 +124,7 @@ var siblingAnim = new Animation(document.getElementById("anim"), {top: "100px"},
 var seqGroup = new SeqGroup([anim, siblingAnim], undefined, undefined, 0.0);
 check(anim.startTime, 0.0, "Sequence group should reset child startTime");
 check(siblingAnim.startTime, 8.0, "Sequence group should set child startTime");
+check(siblingAnim.endTime, 9.0, "Sequence group should set child endTime");
 check(seqGroup.duration, 9.0,
     "Sequence group duration should reflect child durations");
 check(seqGroup.endTime, 9.0,
