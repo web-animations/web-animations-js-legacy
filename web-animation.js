@@ -72,6 +72,7 @@ var Timing = function(timingDict) {
 };
 
 mixin(Timing.prototype, {
+  // TODO: Is this supposed to be public?
   clone: function() {
     return new Timing({
       startDelay: this.startDelay,
@@ -143,7 +144,7 @@ var ST_FORCED = 2;
 /** @constructor */
 var TimedItem = function(timing, startTime, parentGroup) {
   this.timing = new TimingProxy(interpretTimingParam(timing), function() {
-    this.updateIterationDuration();
+    this._updateInternalState();
   }.bind(this));
   this._startTime = startTime;
   this.currentIteration = null;
@@ -151,13 +152,12 @@ var TimedItem = function(timing, startTime, parentGroup) {
   this.animationTime = null;
   this._reversing = false;
 
-  if (parentGroup === null || parentGroup instanceof AnimationGroup) {
-    this.parentGroup = parentGroup;
-  } else if (!isDefined(parentGroup)) {
-    this.parentGroup = DEFAULT_GROUP;
-  } else {
-    throw new TypeError('parentGroup is not an AnimationGroup');
+  // Note that we don't use the public setter, because we call _addInternal()
+  // below.
+  if (parentGroup === this) {
+    throw new Error('parentGroup can not be set to self!');
   }
+  this._parentGroup = this._sanitizeParent(parentGroup);
 
   if (!isDefined(startTime)) {
     this._startTimeMode = ST_AUTO;
@@ -176,7 +176,7 @@ var TimedItem = function(timing, startTime, parentGroup) {
   if (this.parentGroup) {
     this.parentGroup._addInternal(this);
   }
-  this.updateIterationDuration();
+  this._updateInternalState();
   this._pauseStartTime = 0;
 };
 
@@ -201,7 +201,7 @@ TimedItem.prototype.__defineSetter__('currentTime', function(seekTime) {
     this._timeDrift = this._effectiveParentTime - this._startTime -
         seekTime;
   }
-  this.updateTimeMarkers();
+  this._updateTimeMarkers();
 });
 TimedItem.prototype.__defineGetter__('startTime', function() {
   return this._startTime;
@@ -212,7 +212,7 @@ TimedItem.prototype.__defineSetter__('startTime', function(newStartTime) {
   }
   this._startTime = newStartTime;
   this._startTimeMode = ST_MANUAL;
-  this.updateIterationDuration();
+  this._updateInternalState();
 });
 TimedItem.prototype.__defineGetter__('locallyPaused', function() {
   return this._locallyPaused;
@@ -228,7 +228,7 @@ TimedItem.prototype.__defineSetter__('locallyPaused', function(newVal) {
     this._pauseStartTime = this.currentTime;
   }
   this._locallyPaused = newVal;
-  this.updateTimeMarkers();
+  this._updateTimeMarkers();
 });
 TimedItem.prototype.__defineGetter__('paused', function() {
   return this.locallyPaused ||
@@ -236,7 +236,7 @@ TimedItem.prototype.__defineGetter__('paused', function() {
 });
 TimedItem.prototype.__defineSetter__('duration', function(duration) {
   this._duration = duration;
-  this.updateIterationDuration();
+  this._updateInternalState();
 });
 TimedItem.prototype.__defineGetter__('duration', function() {
   return isDefined(this._duration) ?
@@ -246,7 +246,7 @@ TimedItem.prototype.__defineGetter__('duration', function() {
 TimedItem.prototype.__defineSetter__('animationDuration',
     function(animationDuration) {
   this._animationDuration = animationDuration;
-  this.updateIterationDuration();
+  this._updateInternalState();
 });
 TimedItem.prototype.__defineGetter__('animationDuration', function() {
   if (isDefined(this._animationDuration)) {
@@ -259,15 +259,42 @@ TimedItem.prototype.__defineSetter__('endTime', function() {
   throw new Error('NoModificationAllowedError');
 });
 TimedItem.prototype.__defineGetter__('endTime', function() {
-  return this._endTime;
+  return this.locallyPaused ? Infinity :
+      this._startTime + this.animationDuration + this.timing.startDelay +
+      this.timeDrift;
+});
+TimedItem.prototype.__defineSetter__('parentGroup', function(parentGroup) {
+  var newParent = this._sanitizeParent(parentGroup);
+  if (newParent === null) {
+    this._reparent(null);
+  } else {
+    // This updates the parent and calls _reparent() on this object.
+    newParent.add(this);
+  }
+});
+TimedItem.prototype.__defineGetter__('parentGroup', function() {
+  return this._parentGroup;
 });
 
 mixin(TimedItem.prototype, {
-  reparent: function(parentGroup) {
+  _sanitizeParent: function(parentGroup) {
+    if (parentGroup === null || parentGroup instanceof AnimationGroup) {
+      return parentGroup;
+    } else if (!isDefined(parentGroup)) {
+      return DEFAULT_GROUP;
+    } else {
+      throw new TypeError('parentGroup is not an AnimationGroup');
+    }
+  },
+  // Takes care of updating the outgoing parent.
+  _reparent: function(parentGroup) {
+    if (parentGroup === this) {
+      throw new Error('parentGroup can not be set to self!');
+    }
     if (this.parentGroup) {
       this.parentGroup.remove(this.parentGroup.indexOf(this), 1);
     }
-    this.parentGroup = parentGroup;
+    this._parentGroup = parentGroup;
     this._timeDrift = 0;
     if (this._startTimeMode == ST_FORCED &&
         (!this.parentGroup || this.parentGroup.type != 'seq')) {
@@ -277,26 +304,19 @@ mixin(TimedItem.prototype, {
     if (this._startTimeMode == ST_AUTO) {
       this._startTime = this._effectiveParentTime;
     }
-    this.updateTimeMarkers();
+    this._updateTimeMarkers();
   },
   _intrinsicDuration: function() {
     return 0.0;
   },
-  // TODO: take timing.iterationStart into account. Spec needs to as well.
-  // TODO: Consider removing this method and doing all work lazily in getters.
-  updateIterationDuration: function() {
-    this.updateTimeMarkers();
+  _updateInternalState: function() {
     if (this.parentGroup) {
       this.parentGroup._childrenStateModified();
     }
+    this._updateTimeMarkers();
   },
-  updateTimeMarkers: function(parentTime) {
-    if (this.locallyPaused) {
-      this._endTime = Infinity;
-    } else {
-      this._endTime = this._startTime + this.animationDuration +
-          this.timing.startDelay + this.timeDrift;
-    }
+  // Returns whether this TimedItem is currently in effect.
+  _updateTimeMarkers: function(parentTime) {
     if (this.parentGroup !== null && this.parentGroup.iterationTime !== null) {
       this.itemTime = this.parentGroup.iterationTime -
           this._startTime - this.timeDrift;
@@ -471,19 +491,33 @@ mixin(TimedItem.prototype, {
   _parentToGlobalTime: function(parentTime) {
     if (!this.parentGroup)
       return parentTime;
-    return parentTime + DEFAULT_GROUP.currentTime -
-        this.parentGroup.iterationTime;
+    return parentTime + DEFAULT_GROUP.itemTime - this.parentGroup.iterationTime;
+  },
+  clone: function() {
+    throw new Error(
+        "Derived classes must override TimedItem.clone()");
+  },
+  // Gets the TimedItems currently in effect. Note that this is a superset of
+  // the TimedItems in their active interval, as a TimedItem can have an effect
+  // outside its active interval due to fill.
+  _getItemsInEffect: function() {
+    throw new Error(
+        "Derived classes must override TimedItem._getItemsInEffect()");
   },
 });
+
+var isCustomAnimationFunction = function(animationFunction) {
+  // TODO: How does WebIDL actually differentiate different callback interfaces?
+  return typeof animationFunction === "object" &&
+      animationFunction.hasOwnProperty("sample") &&
+      typeof animationFunction.sample === "function";
+};
 
 var interpretAnimationFunction = function(animationFunction) {
   if (animationFunction instanceof AnimationFunction) {
     return animationFunction;
-  } else if (typeof(animationFunction) === 'object') {
-    // Test if the object is actually a CustomAnimationFunction
-    // (how does WebIDL actually differentiate different callback interfaces?)
-    if (animationFunction.hasOwnProperty('sample') &&
-        typeof(animationFunction.sample) === 'function') {
+  } else if (typeof animationFunction === 'object') {
+    if (isCustomAnimationFunction(animationFunction)) {
       return animationFunction;
     } else {
       return AnimationFunction.createFromProperties(animationFunction);
@@ -492,6 +526,20 @@ var interpretAnimationFunction = function(animationFunction) {
     try {
       throw new Error('TypeError');
     } catch (e) { console.log(e.stack); throw e; }
+  }
+};
+
+var cloneAnimationFunction = function(animationFunction) {
+  if (animationFunction instanceof AnimationFunction) {
+    return animationFunction.clone();
+  } else if (isCustomAnimationFunction(animationFunction)) {
+    if (typeof animationFunction.clone === "function") {
+      return animationFunction.clone();
+    } else {
+      return animationFunction;
+    }
+  } else {
+    return null;
   }
 };
 
@@ -533,13 +581,17 @@ mixin(Animation.prototype, {
         this.currentIteration, this.targetElement,
         this.underlyingValue);
   },
-  _getActiveAnimations: function() {
-    if (!this.updateTimeMarkers()) {
+  _getItemsInEffect: function() {
+    if (!this._updateTimeMarkers()) {
       return [];
     }
 
     this._sortOrder = this._parentToGlobalTime(this.startTime);
     return [this];
+  },
+  clone: function() {
+    return new Animation(this.targetElement,
+        cloneAnimationFunction(this.animationFunction), this.timing.clone());
   },
   toString: function() {
     var funcDescr = this.animationFunction instanceof AnimationFunction ?
@@ -595,11 +647,21 @@ var AnimationListMixin = {
       args = [start, deleteCount].concat(newItems);
     }
     for (var i = 2; i < args.length; i++) {
-      args[i].reparent(this);
+      var newChild = args[i];
+      // Check whether the new child is an ancestor. If so, we need to break the
+      // chain immediately below the new child.
+      for (var ancestor = this; ancestor.parentGroup != null;
+          ancestor = ancestor.parentGroup) {
+        if (ancestor.parentGroup === newChild) {
+          newChild.remove(ancestor);
+          break;
+        }
+      }
+      newChild._reparent(this);
     }
     var result = Array.prototype['splice'].apply(this.children, args);
     for (var i = 0; i < result.length; i++) {
-      result[i].parentGroup = null;
+      result[i]._parentGroup = null;
     }
     this._lengthChanged();
     this.onListChange();
@@ -615,15 +677,21 @@ var AnimationListMixin = {
 
 /** @constructor */
 var AnimationGroup = function(type, children, timing, startTime, parentGroup) {
+  // Take a copy of the children array, as it could be modified as a side-effect
+  // of creating this object. See
+  // https://github.com/web-animations/web-animations-js/issues/65 for details.
+  var childrenCopy = (children && Array.isArray(children)) ?
+      children.slice() : [];
   // used by TimedItem via _intrinsicDuration(), so needs to be set before
   // initializing super.
   this.type = type || 'par';
   this.initListMixin(this._childrenStateModified);
   AnimationGroup.$super.call(this, timing, startTime, parentGroup);
-  if (children && Array.isArray(children)) {
-    for (var i = 0; i < children.length; i++) {
-      this.add(children[i]);
-    }
+  // We add children after setting the parent. This means that if an ancestor
+  // (including the parent) is specified as a child, it will be removed from our
+  // ancestors and used as a child,
+  for (var i = 0; i < childrenCopy.length; i++) {
+    this.add(childrenCopy[i]);
   }
   // TODO: Work out where to expose name in the API
   // this.name = properties.name || '<anon>';
@@ -633,14 +701,25 @@ inherits(AnimationGroup, TimedItem);
 mixin(AnimationGroup.prototype, AnimationListMixin);
 mixin(AnimationGroup.prototype, {
   _childrenStateModified: function() {
-    this.updateIterationDuration();
+    // See _updateChildStartTimes().
+    this._isInOnChildrenStateModified = true;
+
+    // We need to walk up and down the tree to re-layout. endTime and the
+    // various durations (which are all calculated lazily) are the only
+    // properties of a TimedItem which can affect the layout of its ancestors.
+    // So it should be sufficient to simply update start times and time markers
+    // on the way down.
+
+    // This calls up to our parent, then updates our time markers.
+    this._updateInternalState();
+
+    // Update child start times before walking down.
     this._updateChildStartTimes();
-    this.updateTimeMarkers();
-    if (this.parentGroup) {
-      this.parentGroup._childrenStateModified();
-    } else {
+
+    if (!this.parentGroup) {
       maybeRestartAnimation();
     }
+    this._isInOnChildrenStateModified = false;
   },
   _updateChildStartTimes: function() {
     if (this.type == 'seq') {
@@ -652,27 +731,15 @@ mixin(AnimationGroup.prototype, {
           child._startTimeMode = ST_FORCED;
         }
         child._startTime = cumulativeStartTime;
-        child.updateTimeMarkers();
+        // Avoid updating the child's time markers if this is about to be done
+        // in the down phase of _childrenStateModified().
+        if (!child._isInOnChildrenStateModified) {
+          child._updateTimeMarkers();
+        }
         cumulativeStartTime += Math.max(0, child.timing.startDelay +
             child.animationDuration);
       }.bind(this));
     }
-  },
-  getActiveAnimations: function() {
-    var result = [];
-    if (this._timeFraction === null) {
-      return result;
-    }
-    for (var i = 0; i < this.children.length; i++) {
-      if (this.children[i]._timeFraction !== null) {
-        if (this.children[i].getActiveAnimations) {
-          result = result.concat(this.children[i].getActiveAnimations());
-        } else {
-          result.push(this.children[i]);
-        }
-      }
-    }
-    return result;
   },
   getAnimationsForElement: function(elem) {
     var result = [];
@@ -701,13 +768,22 @@ mixin(AnimationGroup.prototype, {
       throw 'Unsupported type ' + this.type;
     }
   },
-  _getActiveAnimations: function() {
-    this.updateTimeMarkers();
+  _getItemsInEffect: function() {
+    this._updateTimeMarkers();
     var animations = [];
     this.children.forEach(function(child) {
-      animations = animations.concat(child._getActiveAnimations());
+      animations = animations.concat(child._getItemsInEffect());
     }.bind(this));
     return animations;
+  },
+  clone: function() {
+    var children = [];
+    this.children.forEach(function(child) {
+      children.push(child.clone());
+    }.bind(this));
+    return this.type === "par" ?
+        new ParGroup(children, this.timing.clone()) :
+        new SeqGroup(children, this.timing.clone());
   },
   toString: function() {
     return this.type + ' ' + this.startTime + '-' + this.endTime + ' (' +
@@ -2032,7 +2108,7 @@ var DEFAULT_GROUP = new ParGroup([], {name: 'DEFAULT'}, null);
 var compositor = new Compositor();
 
 DEFAULT_GROUP._tick = function(parentTime) {
-  this.updateTimeMarkers(parentTime);
+  this._updateTimeMarkers(parentTime);
 
   // Get animations for this sample
   // TODO: Consider reverting to direct application of values and sorting
@@ -2040,7 +2116,7 @@ DEFAULT_GROUP._tick = function(parentTime) {
   var animations = [];
   var allFinished = true;
   this.children.forEach(function(child) {
-    animations = animations.concat(child._getActiveAnimations());
+    animations = animations.concat(child._getItemsInEffect());
     allFinished &= parentTime > child.endTime;
   }.bind(this));
 
