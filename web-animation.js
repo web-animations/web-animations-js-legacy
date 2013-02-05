@@ -374,7 +374,8 @@ mixin(TimedItem.prototype, {
         -this.timing.playbackRate : this.timing.playbackRate;
   },
   _getAdjustedAnimationTime: function(animationTime) {
-    var startOffset = this.timing.iterationStart * this.duration;
+    var startOffset =
+        multiplyZeroGivesZero(this.timing.iterationStart, this.duration);
     var effectiveSpeed = this._getEffectiveSpeed();
     return (effectiveSpeed < 0 ?
         (animationTime - this.animationDuration) : animationTime) *
@@ -432,6 +433,37 @@ mixin(TimedItem.prototype, {
       this._updateIterationParams();
     }
     return this._timeFraction !== null;
+  },
+  // Takes a time in our iteration time space and converts it to the our
+  // item time space.
+  // TODO: Ideally we would convert to inherited time space, but this doesn't
+  // work for the default group. This will become moot once we switch to Time
+  // Sources.
+  _iterationTimeToItemTime: function(inputTime) {
+    // Get the current effective iteration time, ie the iteration time without
+    // limiting it to the active interval, or applying fill.
+    var effectiveAnimationTime = this.itemTime - this.timing.startDelay;
+    var adjustedEffectiveAnimationTime =
+        this._getAdjustedAnimationTime(effectiveAnimationTime);
+    var iterationStartTime =
+        multiplyZeroGivesZero(this.currentIteration, this.duration);
+    var unscaledEffectiveIterationTime = adjustedEffectiveAnimationTime -
+        iterationStartTime;
+    var effectiveIterationTime =
+        this._scaleIterationTime(unscaledEffectiveIterationTime);
+    // Get the input time relative to the current effective iteration time,
+    // scale it, and add it to the current item time.
+    return (inputTime - effectiveIterationTime) / this._getEffectiveSpeed() +
+        this.itemTime;
+  },
+  // Takes a time in our iteration time space and converts it to the item time
+  // space of the TimedItem at the root of our tree.
+  _iterationTimeToRootItemTime: function(inputTime) {
+    if (this.parentGroup === null) {
+      return this._iterationTimeToItemTime(inputTime);
+    }
+    return this.parentGroup._iterationTimeToRootItemTime(
+        this._iterationTimeToItemTime(inputTime) + this._startTime);
   },
   pause: function() {
     this.locallyPaused = true;
@@ -505,11 +537,6 @@ mixin(TimedItem.prototype, {
     }
     // TODO: 6.13.3 step 3. wtf?
     return d % 2 == 0;
-  },
-  _parentToGlobalTime: function(parentTime) {
-    if (!this.parentGroup)
-      return parentTime;
-    return parentTime + DEFAULT_GROUP.itemTime - this.parentGroup.iterationTime;
   },
   clone: function() {
     throw new Error(
@@ -599,12 +626,22 @@ mixin(Animation.prototype, {
         this.currentIteration, this.targetElement,
         this.underlyingValue);
   },
+  // Takes a time in our inherited time space and returns it in the document
+  // time space.
+  _inheritedTimeToDocumentTime: function(inputTime) {
+    // This should only be used if we have a parent. The default group, has a
+    // start time of zero and can not be paused, so its item time is equal to
+    // the document time.
+    return this.parentGroup._iterationTimeToRootItemTime(inputTime);
+  },
   _getItemsInEffect: function() {
     if (!this._updateTimeMarkers()) {
       return [];
     }
 
-    this._sortOrder = this._parentToGlobalTime(this.startTime);
+    // If we don't have a parent, we can't be in effect, so we should never
+    // reach this point.
+    this._sortOrder = this._inheritedTimeToDocumentTime(this.startTime);
     return [this];
   },
   clone: function() {
@@ -2157,6 +2194,12 @@ DEFAULT_GROUP._tick = function(parentTime) {
 
   return !allFinished;
 }
+
+// Multiplication where zero multiplied by any value (including infinity)
+// gives zero.
+var multiplyZeroGivesZero = function(a, b) {
+  return (a === 0 || b === 0) ? 0 : a * b;
+};
 
 // If requestAnimationFrame is unprefixed then it uses high-res time.
 var useHighResTime = 'requestAnimationFrame' in window;
