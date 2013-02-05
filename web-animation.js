@@ -377,6 +377,12 @@ mixin(TimedItem.prototype, {
         (animationTime - this.animationDuration) : animationTime) *
         effectiveSpeed + startOffset;
   },
+  _scaleIterationTime: function(unscaledIterationTime) {
+    return this._isCurrentDirectionForwards(
+        this.timing.direction, this.currentIteration) ?
+        unscaledIterationTime :
+        this.duration - unscaledIterationTime;
+  },
   _updateIterationParams: function() {
     var adjustedAnimationTime =
         this._getAdjustedAnimationTime(this.animationTime);
@@ -394,11 +400,7 @@ mixin(TimedItem.prototype, {
             adjustedAnimationTime, this.duration) :
         this._modulusWithClosedOpenRange(
             adjustedAnimationTime, this.duration);
-    var scaledIterationTime = unscaledIterationTime;
-    this.iterationTime = this._isCurrentDirectionForwards(
-        this.timing.direction, this.currentIteration) ?
-            scaledIterationTime :
-            this.duration - scaledIterationTime;
+    this.iterationTime = this._scaleIterationTime(unscaledIterationTime);
     this._timeFraction = this.iterationTime / this.duration;
     if (this.timing.timingFunction) {
       this._timeFraction = this.timing.timingFunction.scaleTime(
