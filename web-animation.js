@@ -147,7 +147,7 @@ var TimedItem = function(timing, startTime, parentGroup) {
   }.bind(this));
   this._startTime = startTime;
   this.currentIteration = null;
-  this._iterationTime = null;
+  this.iterationTime = null;
   this.animationTime = null;
   this._reversing = false;
 
@@ -179,14 +179,6 @@ var TimedItem = function(timing, startTime, parentGroup) {
   this.updateIterationDuration();
   this._pauseStartTime = 0;
 };
-
-TimedItem.prototype.__defineGetter__('iterationTime', function() {
-  return this._iterationTime;
-});
-
-TimedItem.prototype.__defineSetter__('iterationTime', function(time) {
-  this._iterationTime = time;
-});
 
 TimedItem.prototype.__defineGetter__('timeDrift', function() {
   if (this.locallyPaused) {
@@ -2089,9 +2081,6 @@ Object.defineProperty(DEFAULT_GROUP, 'iterationTime', {
       setTimeout(function() { timeNow = undefined; }, 0);
     }
     return timeNow / 1000;
-  },
-  set: function(time) {
-    this._iterationTime = time;
   }
 });
 
