@@ -70,11 +70,11 @@ var animFunc = new PathAnimationFunction(
 animFunc.rotate = true;
 
 new Animation(document.querySelector("#anim1"), animFunc,
-    {duration: 2, iterationCount: 2});
+    {duration: 2, iterationCount: 2}).attach();
 
 var animFunc2 = new PathAnimationFunction(document.querySelector('#path2'));
 animFunc2.rotate = true;
 
 new Animation(document.querySelector("#anim2"), animFunc2,
-    {duration: 2, iterationCount: 2});
+    {duration: 2, iterationCount: 2}).attach();
 </script>

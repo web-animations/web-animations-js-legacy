@@ -1,0 +1,123 @@
+<!--
+Copyright 2013 Google Inc. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+Written by Steph McArthur
+-->
+
+<!DOCTYPE html>
+<style>
+body {
+  background-color: green;
+}
+body div#fail {
+  display: none;
+}
+body.fail {
+  background-color: red;
+}
+body.fail div#pass {
+  display: none;
+}
+body.fail div#fail {
+  display: block;
+}
+</style>
+
+<div id="pass">PASS</div>
+<div id="fail">FAIL</div>
+<div id="anim"></div>
+
+<script src="../../web-animation.js"></script>
+<script>
+
+var fail = function(failureMessage) {
+  var div = document.createElement("div");
+  div.innerText = failureMessage;
+  document.body.appendChild(div);
+  document.body.className = "fail";
+};
+
+var check = function(actual, expected, failureMessage) {
+  if (actual !== expected) {
+    fail(failureMessage + ". Expected '" + expected + "', got '" + actual +
+        "'.");
+  }
+};
+
+var checkNotEqual = function(actual, unexpected, failureMessage) {
+  if (actual === unexpected) {
+    fail(failureMessage + ". Got unexpected '" + unexpected + "'");
+  }
+};
+
+var animation = new Animation(document.getElementById("anim"), {left: "100px"});
+
+// Test that default use of TimedItem.attach() returns an AnimationController.
+var controller1 = animation.attach();
+check(controller1 instanceof AnimationController, true,
+    "Controller should be an AnimationController");
+check(animation.controller, controller1, "TimedItem.controller incorrect");
+check(controller1.timedItem, animation,
+    "AnimationController.timedItem incorrect");
+
+// Test that default use of TimedItem.attach() always returns a new
+// AnimationController.
+var controller2 = animation.attach();
+checkNotEqual(controller2, controller1,
+    "Repeated calls to TimedItem.attach() should set new controller");
+check(animation.controller, controller2,
+    "Repeated attach(): TimedItem.controller incorrect");
+check(controller2.timedItem, animation,
+    "Repeated attach(): AnimationController.timedItem incorrect");
+check(controller2.currentTime < controller1.currentTime, true,
+    "Repeated attach(): controller1 should have later start time");
+
+// Test explicit setting of TimedItem.controller.
+animation.controller = controller1;
+check(controller2.timedItem, null,
+    "Set controller: Old AnimationController.timedItem incorrect");
+check(animation.controller, controller1,
+    "Set controller: AnimationController.controller incorrect");
+check(controller1.timedItem, animation,
+    "Set controller: New AnimationController.timedItem incorrect");
+
+// Test explicit setting of AnimationController.timedItem.
+controller2.timedItem = animation;
+check(controller1.timedItem, null,
+    "Set timedItem: Old AnimationController.timedItem incorrect");
+check(animation.controller, controller2,
+    "Set timedItem: TimedItem.controller incorrect");
+check(controller2.timedItem, animation,
+    "Set timedItem: New AnimationController.timedItem incorrect");
+
+// Test that setting a parent on a TimedItem with an AnimationController causes
+// the controller to be disconnected
+animation.parentGroup = new ParGroup();
+check(animation.controller, null, "Animation.controller should be updated");
+check(controller2.timedItem, null,
+    "AnimationController.timedItem should be updated");
+
+// Test that attach()ing a TimedItem with a parent results in a clone.
+var animation2 =
+    new Animation(document.getElementById("anim"), {left: "100px"});
+var parGroup = new ParGroup([animation2]);
+var controller3 = animation2.attach();
+check(animation2.parentGroup, parGroup,
+    "Original animation should retain parent");
+checkNotEqual(controller3.timedItem, animation2, "Animation should be cloned");
+check(controller3.timedItem instanceof Animation, true,
+    "Cloned Animation has incorrect type");
+
+</script>

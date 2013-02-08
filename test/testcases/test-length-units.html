@@ -79,7 +79,7 @@ for (var j = 0; j < to.length; j++) {
 document.querySelector("table").innerHTML = table;
 
 for (var id in anims) {
-  new Animation(document.querySelector(id), {width: anims[id]}, 2);
+  new Animation(document.querySelector(id), {width: anims[id]}, 2).attach();
 }
 
 </script>

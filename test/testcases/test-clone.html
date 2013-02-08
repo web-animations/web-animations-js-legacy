@@ -64,24 +64,22 @@ var elem = document.getElementById("anim");
 var animFunc = {left: "100px"};
 
 // Animation
-var anim = new Animation(elem, animFunc, 1.0, null, 2.0);
+var anim = new Animation(elem, animFunc, 1.0, undefined, 2.0);
 var clone = anim.clone();
 check(clone instanceof Animation, true, "Clone should be an Animation");
 check(clone.timing.duration, 1.0, "Clone should take Timing.duration");
 check(clone.targetElement, elem, "Clone should take targetElement");
 checkNotEqual(clone.startTime, 2.0, "Clone should not take startTime");
-check(clone.parentGroup, document.animationTimeline,
-    "Clone should not take parentGroup");
 
-anim.pause();
+anim.attach().pause();
 anim.iterationTime = 0.1;
-clone.pause();
+clone.attach().pause();
 clone.iterationTime = 0.2;
 check(anim.iterationTime, 0.1, "Original should have own iterationTime");
 check(clone.iterationTime, 0.2, "Clone should have own iterationTime");
 
 // ParGroup
-var parGroup = new ParGroup([anim, clone], 4.0, null, 3.0);
+var parGroup = new ParGroup([anim, clone], 4.0, undefined, 3.0);
 var parGroupClone = parGroup.clone();
 check(parGroupClone instanceof ParGroup, true,
     "ParGroup clone should be a ParGroup");
@@ -98,12 +96,10 @@ check(parGroupClone.children[1].duration, 1.0,
     "ParGroup clone should clone first child");
 checkNotEqual(parGroupClone.startTime, 3.0,
     "ParGroup clone should not take startTime");
-check(parGroupClone.parentGroup, document.animationTimeline,
-    "ParGroup clone should not take parentGroup");
 
-parGroup.pause();
+parGroup.attach().pause();
 parGroup.iterationTime = 0.3;
-parGroupClone.pause();
+parGroupClone.attach().pause();
 parGroupClone.iterationTime = 0.4;
 check(parGroup.iterationTime, 0.3,
     "ParGroup original should have own iterationTime");
@@ -111,7 +107,7 @@ check(parGroupClone.iterationTime, 0.4,
     "ParGroup clone should have own iterationTime");
 
 // SeqGroup
-var seqGroup = new SeqGroup([anim, clone], 6.0, null, 5.0);
+var seqGroup = new SeqGroup([anim, clone], 6.0, undefined, 5.0);
 var seqGroupClone = seqGroup.clone();
 check(seqGroupClone instanceof SeqGroup, true,
     "SeqGroup clone should be a SeqGroup");
@@ -128,12 +124,10 @@ check(seqGroupClone.children[1].duration, 1.0,
     "SeqGroup clone should clone first child");
 checkNotEqual(seqGroupClone.startTime, 5.0,
     "SeqGroup clone should not take startTime");
-check(seqGroupClone.parentGroup, document.animationTimeline,
-    "SeqGroup clone should not take parentGroup");
 
-seqGroup.pause();
+seqGroup.attach().pause();
 seqGroup.iterationTime = 0.5;
-seqGroupClone.pause();
+seqGroupClone.attach().pause();
 seqGroupClone.iterationTime = 0.6;
 check(seqGroup.iterationTime, 0.5,
     "SeqGroup original should have own iterationTime");
@@ -143,7 +137,7 @@ check(seqGroupClone.iterationTime, 0.6,
 // Child
 var childClone = anim.clone();
 check(anim.parentGroup, seqGroup);
-check(childClone.parentGroup, document.animationTimeline,
+check(childClone.parentGroup, null,
     "Child clone should not take parentGroup");
 
 </script>

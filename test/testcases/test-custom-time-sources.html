@@ -1,0 +1,133 @@
+<!--
+Copyright 2013 Google Inc. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<!DOCTYPE html>
+<style>
+body {
+  background-color: green;
+}
+body div#fail {
+  display: none;
+}
+body.fail {
+  background-color: red;
+}
+body.fail div#pass {
+  display: none;
+}
+body.fail div#fail {
+  display: block;
+}
+div#anim {
+  position: relative;
+  width: 100px;
+  height: 25px;
+  background-color: #FAA;
+}
+div#source {
+  margin-top: 100px;
+  overflow-x: scroll;
+  width: 500px;
+  height: 50px;
+  border: 1px solid black;
+}
+div#source div {
+  width: 2500px;
+}
+</style>
+
+<div id="pass">PASS</div>
+<div id="fail">FAIL</div>
+<div id="anim"></div>
+<div id="source"><div>Scroll this div to move the target</div></div>
+
+<script src="../../web-animation.js"></script>
+<script>
+
+var fail = function(failureMessage) {
+  var div = document.createElement("div");
+  div.innerText = failureMessage;
+  document.body.appendChild(div);
+  document.body.className = "fail";
+};
+
+var check = function(actual, expected, failureMessage) {
+  if (actual !== expected) {
+    fail(failureMessage + ". Expected '" + expected + "', got '" + actual +
+        "'.");
+  }
+};
+
+var inherits = function(child, parent) {
+  var tmp = function() {};
+  tmp.prototype = parent.prototype;
+  child.$super = parent;
+  child.prototype = new tmp();
+  child.prototype.constructor = child;
+};
+
+var mixin = function(target, source) {
+  for (var k in source) {
+    target[k] = source[k];
+  }
+};
+
+// Test trivial custom TimeSource.
+var ManualTimeSource = function() {
+  ManualTimeSource.$super.call(this);
+  this._time = 0.0;
+};
+inherits(ManualTimeSource, TimeSource);
+mixin(ManualTimeSource.prototype, {
+  time: function() {
+    return this._time;
+  },
+  setTime: function(time) {
+    this._time = time;
+  },
+});
+var animation = new Animation(document.getElementById("anim"), {left: "100px"});
+var timeSource = new ManualTimeSource();
+var controller = animation.attach(timeSource);
+check(controller.currentTime, 0.0, "");
+timeSource.setTime(42.0);
+check(controller.currentTime, 42.0, "");
+
+// Test scroll TimeSource.
+var ScrollTimeSource = function(element, offset, scale) {
+  ManualTimeSource.$super.call(this);
+  this._element = element;
+  this._offset = offset === undefined ? 0.0 : offset;
+  this._scale = scale === undefined ? 1.0 : scale;
+};
+inherits(ScrollTimeSource, TimeSource);
+mixin(ScrollTimeSource.prototype, {
+  time: function() {
+    return ret = this._offset + this._scale * this._element.scrollLeft /
+        (this._element.scrollWidth - this._element.clientWidth);
+  },
+});
+var animation = new Animation(document.getElementById("anim"),
+    {left: ["100px", "400px"]}, 1.0);
+var controller = animation.attach(new ScrollTimeSource(
+    document.getElementById("source")));
+document.getElementById("source").scrollLeft = 1000;
+setTimeout(function() {
+  check(animation.itemTime, 0.5,
+      "Animation time should be set by scroll position");
+}, 100);
+
+</script>

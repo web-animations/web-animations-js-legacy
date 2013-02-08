@@ -1,0 +1,116 @@
+<!--
+Copyright 2013 Google Inc. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+Written by Steph McArthur
+-->
+
+<!DOCTYPE html>
+<style>
+body {
+  background-color: green;
+}
+body div#fail {
+  display: none;
+}
+body.fail {
+  background-color: red;
+}
+body.fail div#pass {
+  display: none;
+}
+body.fail div#fail {
+  display: block;
+}
+</style>
+
+<div id="pass">PASS</div>
+<div id="fail">FAIL</div>
+<div id="anim"></div>
+
+<script src="../../web-animation.js"></script>
+<script>
+
+var fail = function(failureMessage) {
+  var div = document.createElement("div");
+  div.innerText = failureMessage;
+  document.body.appendChild(div);
+  document.body.className = "fail";
+};
+
+var check = function(actual, expected, failureMessage) {
+  if (actual !== expected) {
+    fail(failureMessage + ". Expected '" + expected + "', got '" + actual +
+        "'.");
+  }
+};
+
+var checkNotEqual = function(actual, unexpected, failureMessage) {
+  if (actual === unexpected) {
+    fail(failureMessage + ". Got unexpected '" + unexpected + "'");
+  }
+};
+
+var animation = new Animation(document.getElementById("anim"), {left: "100px"});
+
+// Test that default use of TimedItem.attach() returns an AnimationController
+// with a TimeSource.
+var timeSource1 = animation.attach().timeSource;
+check(timeSource1 instanceof TimeSource, true,
+    "Controller.timeSource should be a TimeSource");
+
+// Test that default use of TimedItem.attach() always produces a new
+// TimeSource.
+var controller2 = animation.attach();
+var timeSource2 = controller2.timeSource;
+checkNotEqual(timeSource2, timeSource1,
+    "Repeated calls to TimedItem.attach() should create new TimeSource");
+
+// Test that AnimationController.timeSource is read-only.
+try {
+  controller2.timeSource = timeSource1;
+  fail("AnimationController.timeSource should be read-only");
+} catch(e) {
+  check(e.message, "AnimationController.timeSource is readonly",
+      "Incorrect exception message");
+}
+check(controller2.timeSource, timeSource2,
+    "AnimationControler.timeSource should be unchanged");
+
+// Test supplying a TimeSource to attach().
+var controller3 =
+    (new Animation(document.getElementById("anim"), {left: "100px"})).attach(
+        timeSource2);
+check(controller3.timeSource, timeSource2,
+    "New controller should use specified TimeSource");
+
+// Test sharing a TimeSource between multiple AnimationControllers.
+check(controller2.timeSource, timeSource2,
+    "TimeSources should be able to be shared");
+// Note that the reported values from AnimationController.currentTime will
+// differ because we can't sample both controllers at the same instant.
+check(Math.abs(controller2.currentTime - controller3.currentTime) < 0.001,
+    true, "Controllers sharing a TimeSource should have the same time");
+
+// Test that pausing an AnimationController does not pause other
+// AnimationControllers sharing the same TimeSource.
+controller3.pause();
+var time = controller3.currentTime;
+setTimeout(function() {
+  check(controller3.currentTime, time, "Controller should be paused");
+  check(Math.abs(controller2.currentTime - controller3.currentTime) > 0.001,
+      true, "Controllers sharing a TimeSource should pause independently");
+}, 10);
+
+</script>

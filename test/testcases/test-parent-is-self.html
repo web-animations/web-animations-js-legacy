@@ -50,7 +50,7 @@ var fail = function(failureMessage) {
 };
 
 var check = function(actual, expected, failureMessage) {
-  if (actual != expected) {
+  if (actual !== expected) {
     fail(failureMessage + ". Expected '" + expected + "', got '" + actual +
         "'.");
   }
@@ -59,25 +59,12 @@ var check = function(actual, expected, failureMessage) {
 var elem = document.getElementById("anim");
 var animFunc = {left: "100px"};
 
-// Test that we can reparent from the default group.
-var child1 = new Animation(elem, animFunc);
-var child2 = new Animation(elem, animFunc);
-var parent = new ParGroup(document.animationTimeline.children);
-check(parent.parentGroup, document.animationTimeline,
-    "Parent's parent should be default group");
-check(parent.children.length, 2, "Parent should have 2 children");
-check(parent.children[0], child1, "Unexpected first child");
-check(parent.children[1], child2, "Unexpected second child");
-check(child1.parentGroup, parent, "First child's parent incorrect");
-check(child2.parentGroup, parent, "Sceond child's parent incorrect");
-
-// Test general case of inserting a group between a parent and its children.
+// Test inserting a group between a parent and its children.
 var parent = new ParGroup();
 var child1 = new Animation(elem, animFunc, 1.0, parent);
 var child2 = new Animation(elem, animFunc, 1.0, parent);
 var group = new ParGroup(parent.children, 1.0, parent);
-check(parent.parentGroup, document.animationTimeline,
-    "Parent's parent should be default group");
+check(parent.parentGroup, null, "Parent's parent should be null");
 check(parent.children.length, 1, "Parent should have 1 child");
 check(parent.children[0], group, "Parent's child should be new group");
 check(group.parentGroup, parent, "New group's parent incorrect");
@@ -138,7 +125,7 @@ check(y.children.length, 0, "y.children.length");
 var x = new ParGroup();
 var y = new ParGroup([x]);
 var z = new ParGroup([x], undefined, x);
-check(y.parentGroup, document.animationTimeline, "y.parentGroup");
+check(y.parentGroup, null, "y.parentGroup");
 check(y.children.length, 0, "y.children.length");
 check(z.parentGroup, null, "z.parentGroup");
 check(z.children.length, 1, "z.children.length");

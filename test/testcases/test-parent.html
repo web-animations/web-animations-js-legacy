@@ -23,40 +23,45 @@ limitations under the License.
   background-color: #FAA;
   position: relative;
 }
-.expect {
+.expected {
   border-right: 1px solid black;
+  width: 300px;
 }
 
 </style>
 
 <div>Right edge of each box should align with black line at end of test.</div>
-<div style="width: 300px;" class="expect"><div id="a" class="anim"></div></div>
-<div style="width: 300px;" class="expect"><div id="b" class="anim"></div></div>
-<div style="width: 100px;" class="expect"><div id="c" class="anim"></div></div>
-<div style="width: 300px;" class="expect"><div id="d" class="anim"></div></div>
-<div style="width: 300px;" class="expect"><div id="e" class="anim"></div></div>
-<div style="width: 100px;" class="expect"><div id="f" class="anim"></div></div>
+<div class="expected"><div id="a" class="anim"></div></div>
+<div class="expected"><div id="b" class="anim"></div></div>
+<div class="expected"><div id="c" class="anim"></div></div>
+<div class="expected"><div id="d" class="anim"></div></div>
+<div class="expected"><div id="e" class="anim"></div></div>
+<div class="expected"><div id="f" class="anim"></div></div>
 
 <script src="../../web-animation.js"></script>
 <script>
 
-// Lone animation with default parent. Should use default group.
-new Animation(document.getElementById("a"), {left: ["100px", "200px"]}, 1.0);
-// Lone animation with explicit default parent. Should use default group.
+// These should use no parent and should attach to a default time source.
+new Animation(document.getElementById("a"), {left: ["100px", "200px"]},
+              1.0).attach();
 new Animation(document.getElementById("b"), {left: ["100px", "200px"]}, 1.0,
-              undefined);
-// Lone animation with explicit no parent. Should use no group.
+              undefined).attach();
 new Animation(document.getElementById("c"), {left: ["100px", "200px"]}, 1.0,
-              null);
+              null).attach();
 
-// Animation in group with default parent. Should use default group.
+// These should use the group as a parent, which in turn has no parent and
+// should attach to a default time source.
+var group1 = new ParGroup([], {iterationCount: 3});
 new Animation(document.getElementById("d"), {left: ["100px", "200px"]}, 1.0,
-              new ParGroup([], {iterationCount: 3}));
-// Animation in group with explicit default parent. Should use default group.
+              group1);
+group1.attach();
+var group2 = new ParGroup([], {iterationCount: 3}, undefined);
 new Animation(document.getElementById("e"), {left: ["100px", "200px"]}, 1.0,
-              new ParGroup([], {iterationCount: 3}, undefined));
-// Animationation in group with explicit no parent. Should use no group.
+              group2);
+group2.attach();
+var group3 = new ParGroup([], {iterationCount: 3}, null);
 new Animation(document.getElementById("f"), {left: ["100px", "200px"]}, 1.0,
-              new ParGroup([], {iterationCount: 3}, null));
+              group3);
+group3.attach();
 
 </script>
