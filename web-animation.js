@@ -500,11 +500,6 @@ mixin(TimedItem.prototype, {
     // TODO: 6.13.3 step 3. wtf?
     return d % 2 == 0;
   },
-  _parentToGlobalTime: function(parentTime) {
-    if (!this.parentGroup)
-      return parentTime;
-    return parentTime + DEFAULT_GROUP.itemTime - this.parentGroup.iterationTime;
-  },
   clone: function() {
     throw new Error(
         "Derived classes must override TimedItem.clone()");
@@ -592,6 +587,11 @@ mixin(Animation.prototype, {
     this.animationFunction.sample(this._timeFraction,
         this.currentIteration, this.targetElement,
         this.underlyingValue);
+  },
+  _parentToGlobalTime: function(parentTime) {
+    if (!this.parentGroup)
+      return parentTime;
+    return parentTime + DEFAULT_GROUP.itemTime - this.parentGroup.iterationTime;
   },
   _getItemsInEffect: function() {
     if (!this._updateTimeMarkers()) {
