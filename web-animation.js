@@ -2162,12 +2162,14 @@ var timeZero = useHighResTime ? 0 : Date.now();
 
 // Massive hack to allow things to be added to the parent group and start
 // playing. Maybe this is right though?
-DEFAULT_GROUP.__defineGetter__('iterationTime', function() {
-  if (!isDefinedAndNotNull(timeNow)) {
-    timeNow = useHighResTime ? performance.now() : Date.now() - timeZero;
-    setTimeout(function() { timeNow = undefined; }, 0);
+Object.defineProperty(DEFAULT_GROUP, 'iterationTime', {
+  get: function() {
+    if (!isDefinedAndNotNull(timeNow)) {
+      timeNow = useHighResTime ? performance.now() : Date.now() - timeZero;
+      setTimeout(function() { timeNow = undefined; }, 0);
+    }
+    return timeNow / 1000;
   }
-  return timeNow / 1000;
 });
 
 var ticker = function(frameTime) {
