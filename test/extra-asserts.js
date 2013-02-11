@@ -15,17 +15,50 @@
  */
 
  /**
- * Features: Just the menu bars and the page structure
+ * Features:
+ *  - The menu bars and the page structure
+ *  - Tests can be created via check()
  */
 
 (function() {
 // Boolean flag for whether the program is running in automatic mode
 var runInAutoMode;
+// Each index holds all the tests that occur at the same time
+var testPackets = [];
+// The parGroup all animations need to be added to to achieve 'global' pause
+var parentAnimation;
+// To clearly store if a test is a refTest & if it's the last one
+var TestTypeEnum = {
+  REGULAR : 0,
+  IS_REF : 1,
+  LAST_REF : 2
+};
+// To store checks before processing
+var checkStack = [];
 
 // How long it takes an individual test to timeout in millisecs.
-var testTimeout = 10000;
+var testTimeout = 1000;
 // How long it takes for the whole test system to timeout in millisecs.
-var frameworkTimeout = 20000;
+var frameworkTimeout = 2000;
+
+function TestRecord(test, object, targets, time, message, cssStyle,
+                    offsets, isRefTest){
+  this.test = test;
+  this.object = object;
+  this.targets = targets;
+  this.time = time;
+  this.message = message;
+  this.cssStyle = cssStyle;
+  this.offsets = offsets;
+  this.isRefTest = isRefTest;
+}
+
+function CheckStore(object, targets, time, testName){
+  this.object = object;
+  this.targets = targets;
+  this.time = time;
+  this.testName = testName;
+}
 
 // Call this function before setting up any checks.
 // It generates the testing buttons and log and the testharness setup.
@@ -67,7 +100,7 @@ function setupTests(timeouts){
 
   // Set the inital selected drop down list item
   select.selectedIndex = runInAutoMode;
-  setup({ explicit_done: true, timeout: frameworkTimeout});
+  setup({explicit_done: true, timeout: frameworkTimeout});
 }
 
 // Allows tutorial harness to edit runInAutoMode
@@ -76,13 +109,69 @@ function setAutoMode(isAuto){
 }
 
 // Adds each test to a list to be processed when runTests is called.
-function check(object, targets, time, message){
-  // TODO
+// @object: Html element to test
+// @targets: Css style expected e.g. {left:"100px", top:"10px"}
+// For ref tests pass an object for the property to be compared against
+// e.g. {left:baseObject, top:baseObject}
+// @time: The time the test will occur OR the interval between tests if refTest
+// @testName: The name of the test
+function check(object, targets, time, testName){
+  checkStack.push(new CheckStore(object, targets, time, testName));
+}
+
+// Creates all the tests and TestRecords required based on the passed in check.
+// Processing after runTests is called allows for animations and checks to be
+// called in any order.
+function checkProcessor(object, targets, time, testName){
+  var test = async_test(testName);
+  test.timeout_length = testTimeout;
+
+  // Store the inital css style of the animated object so it can be
+  // used for manual flashing.
+  var css = object.currentStyle || getComputedStyle(object, null);
+  var offsets = [];
+  offsets.top = getOffset(object).top - parseInt(css.top);
+  offsets.left = getOffset(object).left- parseInt(css.left);
+  // Error message strings
+  var m1 = "Property ";
+  var m2 = " is not satisfied";
+  if (targets.refTest){
+    var maxTime = document.animationTimeline.children[0].animationDuration;
+    // Generate a test for each time you want to check the objects.
+    for (var x = 0; x < maxTime/time; x++){
+      testPackets.push(new TestRecord(test, object, targets, time * x,
+          m1 + targets + m2, css, offsets, TestTypeEnum.IS_REF));
+    }
+    testPackets.push(new TestRecord(test, object, targets, maxTime, m1
+        + targets + m2, css, offsets, TestTypeEnum.LAST_REF));
+  } else {
+    testPackets.push(new TestRecord(test, object, targets, time, m1
+        + targets + m2, css, offsets, TestTypeEnum.REGULAR));
+  }
+}
+
+// Helper function which gets the current absolute position of an object.
+// From http://tiny.cc/vpbtrw
+function getOffset(el){
+  var x = 0;
+  var y = 0;
+  while (el && !isNaN(el.offsetLeft) && !isNaN(el.offsetTop)){
+    x += el.offsetLeft - el.scrollLeft;
+    y += el.offsetTop - el.scrollTop;
+    el = el.offsetParent;
+  }
+  return {top:y, left:x};
 }
 
 //Call this after lining up the tests with check
 function runTests(){
-  // TODO
+  // All animations are put into a single parGroup to allow a global pause
+  // When a global pause is implented this can be removed
+  parentAnimation = new ParGroup(document.animationTimeline.children);
+  for (var x in checkStack){
+    var c = checkStack[x];
+    checkProcessor(c.object, c.targets, c.time, c.testName);
+  }
 }
 
 function restart(){
