@@ -83,8 +83,11 @@ function setupTests(timeouts){
   button.setAttribute("onclick", "restart()");
   button.innerHTML = "Restart";
   document.body.appendChild(optionBar);
+  var timeOfAnimation = document.createElement('div');
+  timeOfAnimation.id = "animViewerText";
   optionBar.appendChild(select);
   optionBar.appendChild(button);
+  optionBar.appendChild(timeOfAnimation);
 
   // Generate the log div
   var log = document.createElement('div');
@@ -172,6 +175,16 @@ function runTests(){
     var c = checkStack[x];
     checkProcessor(c.object, c.targets, c.time, c.testName);
   }
+  animTimeViewer();
+}
+
+// Displays the current animation time on the screen.
+function animTimeViewer(){
+  var currTime = parentAnimation.iterationTime === null ?
+      0.0 : parentAnimation.iterationTime.toFixed(2);
+  var object = document.getElementById("animViewerText");
+  object.innerHTML = "Current animation time " + currTime;
+  window.webkitRequestAnimationFrame(animTimeViewer);
 }
 
 function restart(){
