@@ -326,7 +326,7 @@ mixin(TimedItem.prototype, {
     }
   },
   _updateAnimationTime: function() {
-    if (this.itemTime <= this.timing.startDelay) {
+    if (this.itemTime < this.timing.startDelay) {
       if (((this.timing.fillMode == 'backwards') && !this._reversing)
         || this.timing.fillMode == 'both'
         || ((this.timing.fillMode == 'forwards') && this._reversing)) {
@@ -334,7 +334,7 @@ mixin(TimedItem.prototype, {
       } else {
         this.animationTime = null;
       }
-    } else if (this.itemTime <
+    } else if (this.itemTime <=
         this.timing.startDelay + this.animationDuration) {
       this.animationTime = this.itemTime - this.timing.startDelay;
     } else {
