@@ -432,6 +432,7 @@ mixin(TimedItem.prototype, {
     } else {
       this._updateIterationParams();
     }
+    maybeRestartAnimation();
     return this._timeFraction !== null;
   },
   // Takes a time in our iteration time space and converts it to the our
@@ -504,7 +505,6 @@ mixin(TimedItem.prototype, {
     }
   },
   play: function() {
-    // TODO: This should unpause as well
     if (this.currentTime > this.animationDuration + this.timing.startDelay &&
         this.timing.playbackRate >= 0) {
       this.currentTime = this.timing.startDelay;
