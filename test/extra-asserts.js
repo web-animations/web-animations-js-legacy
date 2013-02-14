@@ -23,6 +23,8 @@
 (function() {
 // Boolean flag for whether the program is running in automatic mode
 var runInAutoMode;
+// Stores all the tests for later processing
+var testStack = [];
 // Each index holds all the tests that occur at the same time
 var testPackets = [];
 // The parGroup all animations need to be added to to achieve 'global' pause
@@ -35,11 +37,18 @@ var TestTypeEnum = {
 };
 // To store checks before processing
 var checkStack = [];
+// Keeps track of which testPacket it's up to
+var testIndex = 0;
 
 // How long it takes an individual test to timeout in millisecs.
 var testTimeout = 1000;
 // How long it takes for the whole test system to timeout in millisecs.
 var frameworkTimeout = 2000;
+
+// Wraps the different requestAnimation frame functions
+var requestFrame = window.requestAnimationFrame ||
+                   window.webkitRequestAnimationFrame ||
+                   window.mozRequestAnimationFrame;
 
 function TestRecord(test, object, targets, time, message, cssStyle,
                     offsets, isRefTest){
@@ -142,13 +151,13 @@ function checkProcessor(object, targets, time, testName){
     var maxTime = document.animationTimeline.children[0].animationDuration;
     // Generate a test for each time you want to check the objects.
     for (var x = 0; x < maxTime/time; x++){
-      testPackets.push(new TestRecord(test, object, targets, time * x,
+      testStack.push(new TestRecord(test, object, targets, time * x,
           m1 + targets + m2, css, offsets, TestTypeEnum.IS_REF));
     }
-    testPackets.push(new TestRecord(test, object, targets, maxTime, m1
+    testStack.push(new TestRecord(test, object, targets, maxTime, m1
         + targets + m2, css, offsets, TestTypeEnum.LAST_REF));
   } else {
-    testPackets.push(new TestRecord(test, object, targets, time, m1
+    testStack.push(new TestRecord(test, object, targets, time, m1
         + targets + m2, css, offsets, TestTypeEnum.REGULAR));
   }
 }
@@ -176,6 +185,9 @@ function runTests(){
     checkProcessor(c.object, c.targets, c.time, c.testName);
   }
   animTimeViewer();
+  sortTests();
+  parentAnimation.pause();
+  autoTestRunner();
 }
 
 // Displays the current animation time on the screen.
@@ -184,7 +196,7 @@ function animTimeViewer(){
       0.0 : parentAnimation.iterationTime.toFixed(2);
   var object = document.getElementById("animViewerText");
   object.innerHTML = "Current animation time " + currTime;
-  window.webkitRequestAnimationFrame(animTimeViewer);
+  requestFrame(animTimeViewer);
 }
 
 function restart(){
@@ -192,6 +204,49 @@ function restart(){
   var runType = document.getElementById("runType");
   var url = window.location.href.split("?");
   window.location.href = url[0] + "?" + runType.options[runType.selectedIndex].value;
+}
+
+// Check for all tests that happen at the same time
+// and add them to the test packet.
+function sortTests(){
+  var i = 0;
+  testPackets = [];
+  testStack.sort(testPacketComparator);
+  for (var x = 0; x < testStack.length; x++){
+    testPackets[i] = [];
+    testPackets[i].push(testStack[x]);
+    while ((x < (testStack.length - 1)) && (testStack[x].time === testStack[x + 1].time)){
+      x++;
+      testPackets[i].push(testStack[x]);
+    }
+    i++;
+  }
+}
+
+function testPacketComparator(a,b) { return(a.time - b.time) };
+
+function autoTestRunner(){
+  if (testIndex != 0 && testIndex <= testPackets.length){
+    for (var x in testPackets[testIndex - 1]){
+      var currTest = testPackets[testIndex - 1][x];
+      assert_properties(currTest);
+      if (currTest.isRefTest == TestTypeEnum.REGULAR ||
+          currTest.isRefTest == TestTypeEnum.LAST_REF) currTest.test.done();
+    }
+  }
+  if (testIndex < testPackets.length){
+    var nextTest = testPackets[testIndex][0];
+    parentAnimation.currentTime = nextTest.time;
+    testIndex++;
+    requestFrame(autoTestRunner);
+  } else {
+    parentAnimation.pause();
+    done();
+  }
+}
+
+function assert_properties(test){
+  //TODO
 }
 
 ///////////////////////////////////////////////////////////////////////////////
