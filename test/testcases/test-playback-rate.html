@@ -37,29 +37,33 @@ limitations under the License.
   top: 250px;
 }
 
-#expectation1 {
+.expectation {
   position: absolute;
-  top: 50px;
-  left: 300px;
   width: 100px;
-  height: 175px;
   background: red;
 }
-#expectation2 {
-  position: absolute;
-  top: 250px;
-  left: 0px;
-  width: 100px;
+#expectation1 {
+  top: 50px;
+  left: 300px;
   height: 175px;
-  background: red;
+}
+#expectation2 {
+  top: 250px;
+  left: 100px;
+  height: 150px;
+}
+#expectation3 {
+  top: 400px;
+  left: 300px;
+  height: 25px;
 }
 </style>
 
-<div>All squares should line up at the end of each iteration (or start if
-reversed). All movement should be at the same speed.</div>
+<div>All movement should be at the same speed.</div>
 
-<div id="expectation1"></div>
-<div id="expectation2"></div>
+<div class="expectation" id="expectation1"></div>
+<div class="expectation" id="expectation2"></div>
+<div class="expectation" id="expectation3"></div>
 
 <div class="animContainer" id="ca">
   <div class="anim a"></div>
