@@ -48,7 +48,7 @@ var fail = function(failureMessage) {
 };
 
 var check = function(actual, expected, failureMessage) {
-  if (actual != expected) {
+  if (actual !== expected) {
     fail(failureMessage + ". Expected '" + expected + "', got '" + actual +
         "'.");
   }

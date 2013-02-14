@@ -41,7 +41,7 @@ body.fail div#fail {
 <script>
 
 var check = function(actual, expected, failureMessage) {
-  if (actual != expected) {
+  if (actual !== expected) {
     var div = document.createElement("div");
     div.innerText =
         failureMessage + ". Expected '" + expected + "', got '" + actual + "'.";
