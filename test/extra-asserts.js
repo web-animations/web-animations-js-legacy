@@ -51,7 +51,7 @@ var requestFrame = window.requestAnimationFrame ||
                    window.mozRequestAnimationFrame;
 
 function TestRecord(test, object, targets, time, message, cssStyle,
-                    offsets, isRefTest){
+                    offsets, isRefTest) {
   this.test = test;
   this.object = object;
   this.targets = targets;
@@ -62,18 +62,19 @@ function TestRecord(test, object, targets, time, message, cssStyle,
   this.isRefTest = isRefTest;
 }
 
-function CheckStore(object, targets, time, testName){
+function CheckStore(object, targets, time, testName, isRefTest) {
   this.object = object;
   this.targets = targets;
   this.time = time;
   this.testName = testName;
+  this.isRefTest = isRefTest;
 }
 
 // Call this function before setting up any checks.
 // It generates the testing buttons and log and the testharness setup.
-function setupTests(timeouts){
+function setupTests(timeouts) {
   // Use any user supplied timeouts
-  for(var x in timeouts){
+  for (var x in timeouts) {
    if (x == "frameworkTimeout") frameworkTimeout = timeouts.frameworkTimeout;
    else if (x == "testTimeout") testTimeout = timeouts.testTimeout;
   }
@@ -116,7 +117,7 @@ function setupTests(timeouts){
 }
 
 // Allows tutorial harness to edit runInAutoMode
-function setAutoMode(isAuto){
+function setAutoMode(isAuto) {
   runInAutoMode = isAuto;
 }
 
@@ -127,14 +128,14 @@ function setAutoMode(isAuto){
 // e.g. {left:baseObject, top:baseObject}
 // @time: The time the test will occur OR the interval between tests if refTest
 // @testName: The name of the test
-function check(object, targets, time, testName){
-  checkStack.push(new CheckStore(object, targets, time, testName));
+function check(object, targets, time, testName, isRefTest) {
+  checkStack.push(new CheckStore(object, targets, time, testName, isRefTest));
 }
 
 // Creates all the tests and TestRecords required based on the passed in check.
 // Processing after runTests is called allows for animations and checks to be
 // called in any order.
-function checkProcessor(object, targets, time, testName){
+function checkProcessor(object, targets, time, testName, isRefTest) {
   var test = async_test(testName);
   test.timeout_length = testTimeout;
 
@@ -147,10 +148,10 @@ function checkProcessor(object, targets, time, testName){
   // Error message strings
   var m1 = "Property ";
   var m2 = " is not satisfied";
-  if (targets.refTest){
-    var maxTime = document.animationTimeline.children[0].animationDuration;
+  if (isRefTest) {
+    var maxTime = parentAnimation.animationDuration;
     // Generate a test for each time you want to check the objects.
-    for (var x = 0; x < maxTime/time; x++){
+    for (var x = 0; x < maxTime/time; x++) {
       testStack.push(new TestRecord(test, object, targets, time * x,
           m1 + targets + m2, css, offsets, TestTypeEnum.IS_REF));
     }
@@ -164,10 +165,10 @@ function checkProcessor(object, targets, time, testName){
 
 // Helper function which gets the current absolute position of an object.
 // From http://tiny.cc/vpbtrw
-function getOffset(el){
+function getOffset(el) {
   var x = 0;
   var y = 0;
-  while (el && !isNaN(el.offsetLeft) && !isNaN(el.offsetTop)){
+  while (el && !isNaN(el.offsetLeft) && !isNaN(el.offsetTop)) {
     x += el.offsetLeft - el.scrollLeft;
     y += el.offsetTop - el.scrollTop;
     el = el.offsetParent;
@@ -176,13 +177,14 @@ function getOffset(el){
 }
 
 //Call this after lining up the tests with check
-function runTests(){
+function runTests() {
   // All animations are put into a single parGroup to allow a global pause
   // When a global pause is implented this can be removed
-  parentAnimation = new ParGroup(document.animationTimeline.children);
-  for (var x in checkStack){
+  // parentAnimation = new ParGroup(document.animationTimeline.children);
+  reparent();
+  for (var x in checkStack) {
     var c = checkStack[x];
-    checkProcessor(c.object, c.targets, c.time, c.testName);
+    checkProcessor(c.object, c.targets, c.time, c.testName, c.isRefTest);
   }
   animTimeViewer();
   sortTests();
@@ -190,8 +192,17 @@ function runTests(){
   autoTestRunner();
 }
 
+// Put all the animations into a par group to get around global pause issue.
+function reparent(){
+  var childList = [];
+  for (var i = 0; i < document.animationTimeline.children.length; i++) {
+    childList.push(document.animationTimeline.children[i]);
+  }
+  parentAnimation = new ParGroup(childList);
+}
+
 // Displays the current animation time on the screen.
-function animTimeViewer(){
+function animTimeViewer() {
   var currTime = parentAnimation.iterationTime === null ?
       0.0 : parentAnimation.iterationTime.toFixed(2);
   var object = document.getElementById("animViewerText");
@@ -199,7 +210,7 @@ function animTimeViewer(){
   requestFrame(animTimeViewer);
 }
 
-function restart(){
+function restart() {
   // State only gets updated on init and Restart button push.
   var runType = document.getElementById("runType");
   var url = window.location.href.split("?");
@@ -208,14 +219,14 @@ function restart(){
 
 // Check for all tests that happen at the same time
 // and add them to the test packet.
-function sortTests(){
+function sortTests() {
   var i = 0;
   testPackets = [];
   testStack.sort(testPacketComparator);
-  for (var x = 0; x < testStack.length; x++){
+  for (var x = 0; x < testStack.length; x++) {
     testPackets[i] = [];
     testPackets[i].push(testStack[x]);
-    while ((x < (testStack.length - 1)) && (testStack[x].time === testStack[x + 1].time)){
+    while ((x < (testStack.length - 1)) && (testStack[x].time === testStack[x + 1].time)) {
       x++;
       testPackets[i].push(testStack[x]);
     }
@@ -225,16 +236,18 @@ function sortTests(){
 
 function testPacketComparator(a,b) { return(a.time - b.time) };
 
-function autoTestRunner(){
-  if (testIndex != 0 && testIndex <= testPackets.length){
-    for (var x in testPackets[testIndex - 1]){
+function autoTestRunner() {
+  if (testIndex != 0 && testIndex <= testPackets.length) {
+    for (var x in testPackets[testIndex - 1]) {
       var currTest = testPackets[testIndex - 1][x];
       assert_properties(currTest);
       if (currTest.isRefTest == TestTypeEnum.REGULAR ||
-          currTest.isRefTest == TestTypeEnum.LAST_REF) currTest.test.done();
+          currTest.isRefTest == TestTypeEnum.LAST_REF) {
+        currTest.test.done();
+      }
     }
   }
-  if (testIndex < testPackets.length){
+  if (testIndex < testPackets.length) {
     var nextTest = testPackets[testIndex][0];
     parentAnimation.currentTime = nextTest.time;
     testIndex++;
@@ -245,7 +258,84 @@ function autoTestRunner(){
   }
 }
 
-function assert_properties(test){
+// Takes in a testRecord
+function assert_properties(test) {
+  var object = test.object;
+  var targetProperties = test.targets;
+  var message = test.message;
+  // Displays the actual current time, not just the time the test
+  // thinks it is (from test.time)
+  var time = Number(parentAnimation.iterationTime);
+
+  // SVGs have to be handled differently to divs
+  var isSVG = object.nodeName !== "DIV";
+
+  // Create an element of the same type as testing so the style can be applied
+  // from the test. This is so the css property (not the -webkit-does-something
+  // tag) can be read.
+  var referenceElement = isSVG ? document.createElementNS("http://www.w3.org/2000/svg",
+      object.nodeName) : document.createElement(object.nodeName);
+  referenceElement.style.position = "absolute";
+  object.parentNode.appendChild(referenceElement);
+
+  // Apply the style
+  for (var propName in targetProperties) {
+    // If the passed in value is an element then grab its current style for
+    // that property
+    if (targetProperties[propName] instanceof HTMLElement ||
+        targetProperties[propName] instanceof SVGElement) {
+      var propertyValue = getComputedStyle(targetProperties[propName],
+                                           null)[propName];
+    } else {
+      var propertyValue = targetProperties[propName];
+    }
+    if (isSVG) {
+      if (propName.indexOf("transform") == -1) {
+        referenceElement.setAttribute(propName, propertyValue);
+      }
+    } else {
+      referenceElement.style[propName] = propertyValue;
+    }
+  }
+
+  // Reads back the style as list of css properties
+  if (isSVG) {
+    var currentStyle = object.attributes;
+    var targetStyle = referenceElement.attributes;
+  } else {
+    var currentStyle = getComputedStyle(object, null);
+    var targetStyle = getComputedStyle(referenceElement, null);
+  }
+
+  // For each css property strip it down to just numbers then
+  // apply the assert
+  for (var propName in targetProperties) {
+    if (isSVG && propName.indexOf("transform") != -1) {
+      assert_transform(object, targetProperties[propName], message);
+    } else {
+      if (isSVG) {
+        var target = targetStyle[propName].value;
+        var curr = currentStyle[propName].value;
+      } else {
+        var target = targetStyle[propName];
+        var curr = currentStyle[propName];
+      }
+      var t = target.replace(/[^0-9.\s]/g, "").split(" ");
+      var c = curr.replace(/[^0-9.\s]/g, "").split(" ");
+      for (var x in t) {
+        test.test.step(function () {
+          assert_equals(Number(c[x]), Number(t[x]), "At time " +
+               time + ", " + propName + " is not correct. Target: " + target +
+               " Current state: " + curr);
+        });
+      }
+    }
+  }
+  referenceElement.parentNode.removeChild(referenceElement);
+}
+
+// Deals with the svg transforms special case.
+function assert_transform(object, target, message) {
   //TODO
 }
 
