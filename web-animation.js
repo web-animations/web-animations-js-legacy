@@ -268,15 +268,6 @@ TimedItem.prototype.__defineGetter__('endTime', function() {
       this._startTime + this.animationDuration + this.timing.startDelay +
       this.timeDrift;
 });
-TimedItem.prototype.__defineSetter__('parentGroup', function(parentGroup) {
-  var newParent = this._sanitizeParent(parentGroup);
-  if (newParent === null) {
-    this._reparent(null);
-  } else {
-    // This updates the parent and calls _reparent() on this object.
-    newParent.add(this);
-  }
-});
 TimedItem.prototype.__defineGetter__('parentGroup', function() {
   return this._parentGroup;
 });
