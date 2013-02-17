@@ -42,6 +42,14 @@ var IndexSizeError = function(message) {
 
 inherits(IndexSizeError, Error);
 
+var InvalidStateError = function(message) {
+  InvalidStateError.$super.call(this);
+  this.name = "InvalidStateError";
+  this.message = message;
+}
+
+inherits(InvalidStateError, Error);
+
 /** @constructor */
 var Timing = function(timingDict) {
   this.startDelay = timingDict.startDelay || 0.0;
@@ -208,7 +216,7 @@ TimedItem.prototype.__defineGetter__('startTime', function() {
 });
 TimedItem.prototype.__defineSetter__('startTime', function(newStartTime) {
   if (this.parentGroup && this.parentGroup.type === 'seq') {
-    throw new Error('NoModificationAllowedError');
+    throw new InvalidStateError('Can not set startTime when in SeqGroup');
   }
   this._startTime = newStartTime;
   this._startTimeMode = ST_MANUAL;
@@ -254,9 +262,6 @@ TimedItem.prototype.__defineGetter__('animationDuration', function() {
   }
   var repeatedDuration = this.duration * this.timing.iterationCount;
   return repeatedDuration / Math.abs(this.timing.playbackRate);
-});
-TimedItem.prototype.__defineSetter__('endTime', function() {
-  throw new Error('NoModificationAllowedError');
 });
 TimedItem.prototype.__defineGetter__('endTime', function() {
   return this.locallyPaused ? Infinity :

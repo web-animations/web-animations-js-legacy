@@ -72,13 +72,7 @@ anim.animationDuration = 5.0;
 check(anim.endTime, 7.0, "endTime does not reflect animationDuration");
 
 // Test that TimedItem.endTime is read-only.
-try {
-  anim.endTime = 6.0;
-  fail("TimedItem.endTime should throw on attempts to set");
-} catch(e) {
-  check(e.message, "NoModificationAllowedError",
-      "TimedItem.endTime should throw on attempts to set");
-}
+anim.endTime = 6.0;
 check(anim.endTime, 7.0, "TimedItem.endTime should be read-only");
 
 // Test that updates to a TimedItem's endTime cause re-layout of a parent
@@ -168,8 +162,7 @@ try {
   anim.startTime = 11.0;
   fail("Attempt to set startTime of child of sequence group should throw");
 } catch(e) {
-  check(e.message, "NoModificationAllowedError",
-      "Attempt to set startTime of child of sequence group should throw");
+  check(e.name, "InvalidStateError", "Incorrect exception type");
 }
 check(anim.startTime, 0.0,
     "startTime of child of sequence group should be read-only");
