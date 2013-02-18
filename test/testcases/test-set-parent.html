@@ -112,7 +112,7 @@ check(newerParent.children[0], child,
 // Test that calling add() with an existing child causes that child to be moved
 // to the end of the list of children.
 var sibling = new Animation(elem, animFunc, 1.0);
-var seqGroup = new SeqGroup([child, sibling], undefined, undefined, 0.0);
+var seqGroup = new SeqGroup([child, sibling]);
 check(seqGroup.children.length, 2, "seqGroup.children.length");
 check(seqGroup.children[0], child, "First child should be 'child'");
 check(seqGroup.children[1], sibling, "Second child should be 'sibling'");

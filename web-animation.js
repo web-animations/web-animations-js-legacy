@@ -145,16 +145,12 @@ var isDefinedAndNotNull = function(val) {
   return isDefined(val) && (val !== null);
 };
 
-var ST_MANUAL = 0;
-var ST_AUTO = 1;
-var ST_FORCED = 2;
 
 /** @constructor */
 var TimedItem = function(timing, startTime, parentGroup) {
   this.timing = new TimingProxy(interpretTimingParam(timing), function() {
     this._updateInternalState();
   }.bind(this));
-  this._startTime = startTime;
   this.currentIteration = null;
   this.iterationTime = null;
   this.animationTime = null;
@@ -167,16 +163,7 @@ var TimedItem = function(timing, startTime, parentGroup) {
   }
   this._parentGroup = this._sanitizeParent(parentGroup);
 
-  if (!isDefined(startTime)) {
-    this._startTimeMode = ST_AUTO;
-    // We take _effectiveParentTime at the moment this TimedItem is
-    // created. Note that the call to _addChild() below may cause the parent
-    // to update its timing properties, including its iterationTime.
-    this._startTime = this._effectiveParentTime;
-  } else {
-    this._startTimeMode = ST_MANUAL;
-    this._startTime = startTime;
-  }
+  this._startTime = isDefined(startTime) ? startTime : 0.0;
 
   this._timeDrift = 0;
   this._locallyPaused = false;
@@ -217,7 +204,6 @@ TimedItem.prototype.__defineSetter__('startTime', function(newStartTime) {
     throw new InvalidStateError('Can not set startTime when in SeqGroup');
   }
   this._startTime = newStartTime;
-  this._startTimeMode = ST_MANUAL;
   this._updateInternalState();
 });
 TimedItem.prototype.__defineGetter__('locallyPaused', function() {
@@ -290,13 +276,12 @@ mixin(TimedItem.prototype, {
     }
     this._parentGroup = parentGroup;
     this._timeDrift = 0;
-    if (this._startTimeMode == ST_FORCED &&
-        (!this.parentGroup || this.parentGroup.type != 'seq')) {
-      this._startTime = this._stashedStartTime;
-      this._startTimeMode = this._stashedStartTimeMode;
-    }
-    if (this._startTimeMode == ST_AUTO) {
-      this._startTime = this._effectiveParentTime;
+    // In the case of a SeqGroup parent, _startTime will be updated by
+    // AnimationGroup.splice().
+    if (this.parentGroup === null || this.parentGroup.type !== 'seq') {
+      this._startTime =
+          this._stashedStartTime === undefined ? 0.0 : this._stashedStartTime;
+      this._stashedStartTime = undefined;
     }
     this._updateTimeMarkers();
   },
@@ -704,10 +689,8 @@ mixin(AnimationGroup.prototype, {
     if (this.type == 'seq') {
       var cumulativeStartTime = 0;
       this.children.forEach(function(child) {
-        if (child._startTimeMode != ST_FORCED) {
+        if (child._stashedStartTime === undefined) {
           child._stashedStartTime = child._startTime;
-          child._stashedStartTimeMode = child._startTimeMode;
-          child._startTimeMode = ST_FORCED;
         }
         child._startTime = cumulativeStartTime;
         // Avoid updating the child's time markers if this is about to be done

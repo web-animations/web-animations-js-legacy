@@ -54,10 +54,8 @@ var check = function(actual, expected, failureMessage) {
   }
 };
 
-// Force the startTime to zero, rather than the delayed value used by the
-// polyfill due to start-up time.
 var anim = new Animation(document.getElementById("anim"), {left: "100px"},
-    1.0, undefined, 0.0);
+    1.0);
 
 // Test that updates to a TimedItem's startTime, duration or animationDuration
 // cause corresponding updates to its endTime.
@@ -79,10 +77,10 @@ check(anim.endTime, 7.0, "TimedItem.endTime should be read-only");
 // parallel group.
 anim.duration = undefined;
 anim.animationDuration = undefined;
-var parGroup = new ParGroup([anim], undefined, undefined, 0.0);
-check(parGroup.duration, 5.0,
+var parGroup = new ParGroup([anim]);
+check(parGroup.duration, 3.0,
     "Parallel group duration should reflect child endTime");
-check(parGroup.endTime, 5.0,
+check(parGroup.endTime, 3.0,
     "Parallel group end time should reflect child endTime");
 // Update via startTime
 anim.startTime = 7.0;
@@ -115,7 +113,7 @@ anim.duration = undefined;
 anim.animationDuration = undefined;
 var siblingAnim = new Animation(document.getElementById("anim"), {top: "100px"},
     1.0);
-var seqGroup = new SeqGroup([anim, siblingAnim], undefined, undefined, 0.0);
+var seqGroup = new SeqGroup([anim, siblingAnim]);
 check(anim.startTime, 0.0, "Sequence group should reset child startTime");
 check(siblingAnim.startTime, 8.0, "Sequence group should set child startTime");
 check(siblingAnim.endTime, 9.0, "Sequence group should set child endTime");

@@ -70,7 +70,7 @@ var anim = new ParGroup([
   new ParGroup([
     new Animation(target1, leftToRight, 1.0),
   ]),
-  new Animation(target1, rightToLeft, 1.0, undefined, 2.0),
+  new Animation(target1, rightToLeft, {duration: 1.0, startDelay: 2.0}),
 ]);
 
 anim.pause();
@@ -80,7 +80,6 @@ setTimeout(function() {
       "Nested animation should have earlier compositing order");
 }, 100.0);
 
-
 // Test that compositing order takes account of playback rate.
 //
 // The start time of the first animation is 0.0. The inner ParGroup has a
@@ -88,10 +87,10 @@ setTimeout(function() {
 // 2.0. So the the div should end up on the left at time 3.0.
 var target2 = document.getElementById("target2");
 var anim = new ParGroup([
-  new Animation(target2, leftToRight, 1.0, undefined, 0.0),
+  new Animation(target2, leftToRight, 1.0),
   new ParGroup([
-    new Animation(target2, rightToLeft, 4.0, undefined, 8.0),
-  ], {playbackRate: 4.0}, undefined, 0.0),
+    new Animation(target2, rightToLeft, {duration: 4.0, startDelay: 8.0}),
+  ], {playbackRate: 4.0}),
 ]);
 
 anim.pause();

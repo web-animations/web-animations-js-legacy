@@ -60,8 +60,8 @@ limitations under the License.
 <div class="animContainer" id="cb">
   <div style="width: 200px;" class="expected"><div class="anim a"></div></div>
   <div style="width: 200px;" class="expected"><div class="anim b"></div></div>
-  <div style="width: 100px;" class="expected"><div class="anim c"></div></div>
-  <div style="width: 100px;" class="expected"><div class="anim d"></div></div>
+  <div style="width: 200px;" class="expected"><div class="anim c"></div></div>
+  <div style="width: 200px;" class="expected"><div class="anim d"></div></div>
   <div style="width: 200px;" class="expected"><div class="anim e"></div></div>
   <div style="width: 200px;" class="expected"><div class="anim f"></div></div>
 </div>
@@ -88,25 +88,17 @@ for (var i = 0; i < directions.length; i++) {
       {duration: 1.0},
       new ParGroup([], {iterationCount: 2.0, direction: directions[i]}),
       0.0);
-  // Default child start time, explicit parent duration. Note that for "normal"
-  // parent, child start time will be 0.0, so animation proceeds as above. For
-  // "reverse" parent, child start time will be 1.0 and maximum parent
-  // iteration time is 1.0, so animation never runs.
+  // Default child start time, explicit parent duration.
   new Animation(container.getElementsByClassName("c")[0], animation,
       {duration: 1.0},
       new ParGroup([],
           {iterationCount: 2.0, direction: directions[i], duration: 1.0}));
   // Default child start time, explicit parent duration, plus explicit parent
-  // group zero start time. As above, but we have to extend the parent duration
-  // to avoid the "normal" child animation being clipped. This is because
-  // forcing a parent start time of zero means that the parent starts with a
-  // non-zero iteration time, which is used as the child start time, causing
-  // the child end time to exceed 1.0.
+  // group zero start time.
   new Animation(container.getElementsByClassName("d")[0], animation,
       {duration: 1.0},
       new ParGroup([],
-	  {iterationCount: 2.0, direction: directions[i], duration: 2.0},
-          undefined, 0.0));
+          {iterationCount: 2.0, direction: directions[i], duration: 1.0}));
   // Default child start time, explicit parent duration, plus explicit parent
   // group non-zero start time. Note that for both "normal" and "reverse"
   // parents, parent iteration time is null, so child start time is zero, and
