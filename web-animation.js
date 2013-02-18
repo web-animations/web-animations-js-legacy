@@ -42,14 +42,6 @@ var IndexSizeError = function(message) {
 
 inherits(IndexSizeError, Error);
 
-var InvalidStateError = function(message) {
-  InvalidStateError.$super.call(this);
-  this.name = "InvalidStateError";
-  this.message = message;
-}
-
-inherits(InvalidStateError, Error);
-
 /** @constructor */
 var Timing = function(timingDict) {
   this.startDelay = timingDict.startDelay || 0.0;
@@ -147,7 +139,7 @@ var isDefinedAndNotNull = function(val) {
 
 
 /** @constructor */
-var TimedItem = function(timing, startTime, parentGroup) {
+var TimedItem = function(timing, parentGroup) {
   this.timing = new TimingProxy(interpretTimingParam(timing), function() {
     this._updateInternalState();
   }.bind(this));
@@ -155,6 +147,7 @@ var TimedItem = function(timing, startTime, parentGroup) {
   this.iterationTime = null;
   this.animationTime = null;
   this._reversing = false;
+  this._startTime = 0.0;
 
   // Note that we don't use the public setter, because we call _addInternal()
   // below.
@@ -162,8 +155,6 @@ var TimedItem = function(timing, startTime, parentGroup) {
     throw new Error('parentGroup can not be set to self!');
   }
   this._parentGroup = this._sanitizeParent(parentGroup);
-
-  this._startTime = isDefined(startTime) ? startTime : 0.0;
 
   this._timeDrift = 0;
   this._locallyPaused = false;
@@ -198,13 +189,6 @@ TimedItem.prototype.__defineSetter__('currentTime', function(seekTime) {
 });
 TimedItem.prototype.__defineGetter__('startTime', function() {
   return this._startTime;
-});
-TimedItem.prototype.__defineSetter__('startTime', function(newStartTime) {
-  if (this.parentGroup && this.parentGroup.type === 'seq') {
-    throw new InvalidStateError('Can not set startTime when in SeqGroup');
-  }
-  this._startTime = newStartTime;
-  this._updateInternalState();
 });
 TimedItem.prototype.__defineGetter__('locallyPaused', function() {
   return this._locallyPaused;
@@ -588,12 +572,11 @@ var interpretTimingParam = function(timing) {
 };
 
 /** @constructor */
-var Animation = function(target, animationFunction, timing, parentGroup,
-    startTime) {
+var Animation = function(target, animationFunction, timing, parentGroup) {
   this.animationFunction = interpretAnimationFunction(animationFunction);
   this.timing = interpretTimingParam(timing);
 
-  Animation.$super.call(this, timing, startTime, parentGroup);
+  Animation.$super.call(this, timing, parentGroup);
 
   this.targetElement = target;
   this.name = this.animationFunction instanceof KeyframesAnimationFunction ?
@@ -640,7 +623,7 @@ mixin(Animation.prototype, {
 
 
 /** @constructor */
-var AnimationGroup = function(type, children, timing, startTime, parentGroup) {
+var AnimationGroup = function(type, children, timing, parentGroup) {
   // Take a copy of the children array, as it could be modified as a side-effect
   // of creating this object. See
   // https://github.com/web-animations/web-animations-js/issues/65 for details.
@@ -651,7 +634,7 @@ var AnimationGroup = function(type, children, timing, startTime, parentGroup) {
   this.type = type || 'par';
   this.children = [];
   this.length = 0;
-  AnimationGroup.$super.call(this, timing, startTime, parentGroup);
+  AnimationGroup.$super.call(this, timing, parentGroup);
   // We add children after setting the parent. This means that if an ancestor
   // (including the parent) is specified as a child, it will be removed from our
   // ancestors and used as a child,
@@ -820,17 +803,15 @@ mixin(AnimationGroup.prototype, {
 });
 
 /** @constructor */
-var ParGroup = function(children, timing, parentGroup, startTime) {
-  ParGroup.$super.call(
-      this, 'par', children, timing, startTime, parentGroup);
+var ParGroup = function(children, timing, parentGroup) {
+  ParGroup.$super.call(this, 'par', children, timing, parentGroup);
 };
 
 inherits(ParGroup, AnimationGroup);
 
 /** @constructor */
-var SeqGroup = function(children, timing, parentGroup, startTime) {
-  SeqGroup.$super.call(
-      this, 'seq', children, timing, startTime, parentGroup);
+var SeqGroup = function(children, timing, parentGroup) {
+  SeqGroup.$super.call(this, 'seq', children, timing, parentGroup);
 };
 
 inherits(SeqGroup, AnimationGroup);

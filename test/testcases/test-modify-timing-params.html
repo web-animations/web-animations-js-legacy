@@ -61,17 +61,17 @@ var anim = new Animation(document.getElementById("anim"), {left: "100px"},
 // cause corresponding updates to its endTime.
 check(anim.endTime, 1.0, "Incorrect endTime");
 anim.startTime = 2.0;
-check(anim.endTime, 3.0, "endTime does not reflect startTime");
+check(anim.startTime, 0.0, "startTime should be read only");
 anim.timing.duration = 3.0;
-check(anim.endTime, 5.0, "endTime does not reflect Timing.duration");
+check(anim.endTime, 3.0, "endTime does not reflect Timing.duration");
 anim.duration = 4.0;
-check(anim.endTime, 6.0, "endTime does not reflect duration");
+check(anim.endTime, 4.0, "endTime does not reflect duration");
 anim.animationDuration = 5.0;
-check(anim.endTime, 7.0, "endTime does not reflect animationDuration");
+check(anim.endTime, 5.0, "endTime does not reflect animationDuration");
 
 // Test that TimedItem.endTime is read-only.
 anim.endTime = 6.0;
-check(anim.endTime, 7.0, "TimedItem.endTime should be read-only");
+check(anim.endTime, 5.0, "TimedItem.endTime should be read-only");
 
 // Test that updates to a TimedItem's endTime cause re-layout of a parent
 // parallel group.
@@ -82,29 +82,23 @@ check(parGroup.duration, 3.0,
     "Parallel group duration should reflect child endTime");
 check(parGroup.endTime, 3.0,
     "Parallel group end time should reflect child endTime");
-// Update via startTime
-anim.startTime = 7.0;
-check(parGroup.duration, 10.0,
-    "Parallel group duration should reflect updated child startTime");
-check(parGroup.endTime, 10.0,
-    "Parallel group end time should reflect updated child startTime");
 // Update via Timing.duration
 anim.timing.duration = 8.0;
-check(parGroup.duration, 15.0,
+check(parGroup.duration, 8.0,
     "Parallel group duration should reflect updated child Timing.duration");
-check(parGroup.endTime, 15.0,
+check(parGroup.endTime, 8.0,
     "Parallel group end time should reflect updated child Timing.duration");
 // Update via duration
 anim.duration = 9.0;
-check(parGroup.duration, 16.0,
+check(parGroup.duration, 9.0,
     "Parallel group duration should reflect updated child duration");
-check(parGroup.endTime, 16.0,
+check(parGroup.endTime, 9.0,
     "Parallel group end time should reflect updated child duration");
 // Update via animationDuration
 anim.animationDuration = 10.0;
-check(parGroup.duration, 17.0,
+check(parGroup.duration, 10.0,
     "Parallel group duration should reflect updated child animationDuration");
-check(parGroup.endTime, 17.0,
+check(parGroup.endTime, 10.0,
     "Parallel group end time should reflect updated child animationDuration");
 
 // Test that updates to a TimedItem's startDelay and animationDuration cause
@@ -153,16 +147,5 @@ check(seqGroup.duration, 26.0,
     "Sequence group duration should reflect updated child animationDuration");
 check(seqGroup.endTime, 26.0,
     "Sequence group end time should reflect updated child animationDuration");
-
-// Test that an attempt to modify the startTime of an Animation in a sequence
-// group causes an exception.
-try {
-  anim.startTime = 11.0;
-  fail("Attempt to set startTime of child of sequence group should throw");
-} catch(e) {
-  check(e.name, "InvalidStateError", "Incorrect exception type");
-}
-check(anim.startTime, 0.0,
-    "startTime of child of sequence group should be read-only");
 
 </script>

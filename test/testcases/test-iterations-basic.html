@@ -93,9 +93,8 @@ var groups = [];
 
 for (var i = 0; i < directions.length; i++) {
   var dir = directions[i];
-  var group = new ParGroup([], {iterationCount: 2, direction: dir, duration: 4},
-      undefined, 1);
-  groups.push(group);
+  groups.push(
+      new ParGroup([], {iterationCount: 2, direction: dir, duration: 4}));
 }
 
 for (var i = 0; i < containers.length; i++) {
