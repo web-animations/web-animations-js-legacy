@@ -190,8 +190,7 @@ var TimedItem = function(timing, startTime, parentGroup) {
 
 TimedItem.prototype.__defineGetter__('timeDrift', function() {
   if (this.locallyPaused) {
-    return this._effectiveParentTime - this.startTime -
-        this._pauseStartTime;
+    return this._effectiveParentTime - this.startTime - this._pauseStartTime;
   }
   return this._timeDrift;
 });
@@ -206,8 +205,7 @@ TimedItem.prototype.__defineSetter__('currentTime', function(seekTime) {
   if (this._locallyPaused) {
     this._pauseStartTime = seekTime;
   } else {
-    this._timeDrift = this._effectiveParentTime - this._startTime -
-        seekTime;
+    this._timeDrift = this._effectiveParentTime - this._startTime - seekTime;
   }
   this._updateTimeMarkers();
 });
@@ -431,8 +429,8 @@ mixin(TimedItem.prototype, {
     maybeRestartAnimation();
     return this._timeFraction !== null;
   },
-  // Takes a time in our iteration time space and converts it to the our
-  // item time space.
+  // Takes a time in our iteration time space and converts it to our item time
+  // space.
   // TODO: Ideally we would convert to inherited time space, but this doesn't
   // work for the default group. This will become moot once we switch to Time
   // Sources.
@@ -625,7 +623,7 @@ mixin(Animation.prototype, {
   // Takes a time in our inherited time space and returns it in the document
   // time space.
   _inheritedTimeToDocumentTime: function(inputTime) {
-    // This should only be used if we have a parent. The default group, has a
+    // This should only be used if we have a parent. The default group has a
     // start time of zero and can not be paused, so its item time is equal to
     // the document time.
     return this.parentGroup._iterationTimeToRootItemTime(inputTime);
