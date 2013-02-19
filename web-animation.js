@@ -162,6 +162,7 @@ var Player = function(timedItem, timeline) {
   this._timeline = timeline;
   this._startTime = this._timeline.currentTime();
   this._timeDrift = 0.0;
+  this._pauseTime = null;
 
   this.timedItem.timeDrift = 0.0;
   this._update();
@@ -187,11 +188,16 @@ Player.prototype.__defineGetter__('timedItem', function() {
 });
 Player.prototype.__defineSetter__('currentTime', function(currentTime) {
   // This does not affect startTime.
-  this._timeDrift = this._timeline.currentTime() - currentTime;
+  if (this._pauseTime === null) {
+    this._timeDrift = this._timeline.currentTime() - currentTime;
+  } else {
+    this._pauseTime = currentTime;
+  }
 });
 Player.prototype.__defineGetter__('currentTime', function() {
-  // TODO: Reinstate pause functionality.
-  return this._timeline.currentTime() - this._timeDrift - this.startTime;
+  return this._pauseTime === null ?
+      this._timeline.currentTime() - this._timeDrift - this.startTime :
+      this._pauseTime;
 });
 Player.prototype.__defineSetter__('startTime', function(startTime) {
   this.currentTime += (startTime - this.startTime);
@@ -203,10 +209,11 @@ Player.prototype.__defineGetter__('startTime', function() {
 
 mixin(Player.prototype, {
   pause: function() {
-    // TODO: Reinstate pause functionality.
+    this._pauseTime = this.currentTime;
   },
   unpause: function() {
-    // TODO: Reinstate pause functionality.
+    this._timeDrift = this._timeline.currentTime() - this._pauseTime;
+    this._pauseTime = null;
   },
   cancel: function() {
     this.timedItem = null;

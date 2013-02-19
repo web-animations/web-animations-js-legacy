@@ -50,22 +50,15 @@ limitations under the License.
 }
 </style>
 
-<div>This test is temporarily disabled.</div>
-
-<!--
 <div id="expectation"></div>
 
 <div id="a" class="anim a"></div>
 <div id="b" class="anim b"></div>
 <div id="c" class="anim a"></div>
 <div id="d" class="anim b"></div>
--->
 
 <script src="../../web-animation.js"></script>
 <script>
-
-/*
-TODO: Reinstate pause functionality.
 
 var a1 = new Animation(document.querySelector("#a"), {left: ["100px", "200px"]},
     2.6);
@@ -77,20 +70,20 @@ var a4 = new Animation(document.querySelector("#d"), {left: ["100px", "200px"]},
     2.3);
 var pgroup1 = new ParGroup([a1, a2], {name: "p1"});
 var pgroup2 = new ParGroup([a3, a4], {name: "p2"});
-var sgroup = new SeqGroup([pgroup1, pgroup2], {name: "s"});
+var player = document.timeline.createPlayer(
+    new SeqGroup([pgroup1, pgroup2], {name: "s"}));
 
 setTimeout(function() {
-  sgroup.pause();
+  player.pause();
 }, 1000);
 setTimeout(function() {
-  sgroup.play();
+  player.unpause();
 }, 2000);
 setTimeout(function() {
-  sgroup.pause();
+  player.pause();
 }, 4000);
 setTimeout(function() {
-  sgroup.play();
+  player.unpause();
 }, 5000);
-*/
 
 </script>

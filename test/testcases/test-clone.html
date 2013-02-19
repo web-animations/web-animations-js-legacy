@@ -70,16 +70,10 @@ check(clone instanceof Animation, true, "Clone should be an Animation");
 check(clone.timing.duration, 1.0, "Clone should take Timing.duration");
 check(clone.targetElement, elem, "Clone should take targetElement");
 
-/*
-TODO: Reinstate pause functionality.
-
-anim.pause();
 anim.iterationTime = 0.1;
-clone.pause();
 clone.iterationTime = 0.2;
 check(anim.iterationTime, 0.1, "Original should have own iterationTime");
 check(clone.iterationTime, 0.2, "Clone should have own iterationTime");
-*/
 
 // ParGroup
 var parGroup = new ParGroup([anim, clone], 4.0);
@@ -98,18 +92,12 @@ checkNotEqual(parGroupClone.children[1], clone,
 check(parGroupClone.children[1].duration, 1.0,
     "ParGroup clone should clone first child");
 
-/*
-TODO: Reinstate pause functionality.
-
-parGroup.pause();
 parGroup.iterationTime = 0.3;
-parGroupClone.pause();
 parGroupClone.iterationTime = 0.4;
 check(parGroup.iterationTime, 0.3,
     "ParGroup original should have own iterationTime");
 check(parGroupClone.iterationTime, 0.4,
     "ParGroup clone should have own iterationTime");
-*/
 
 // SeqGroup
 var seqGroup = new SeqGroup([anim, clone], 6.0);
@@ -128,18 +116,12 @@ checkNotEqual(seqGroupClone.children[1], clone,
 check(seqGroupClone.children[1].duration, 1.0,
     "SeqGroup clone should clone first child");
 
-/*
-TODO: Reinstate pause functionality.
-
-seqGroup.pause();
 seqGroup.iterationTime = 0.5;
-seqGroupClone.pause();
 seqGroupClone.iterationTime = 0.6;
 check(seqGroup.iterationTime, 0.5,
     "SeqGroup original should have own iterationTime");
 check(seqGroupClone.iterationTime, 0.6,
     "SeqGroup clone should have own iterationTime");
-*/
 
 // Child
 var childClone = anim.clone();
