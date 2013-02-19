@@ -988,14 +988,15 @@ mixin(PathAnimationFunction.prototype, {
     var x = point.x - target.offsetWidth / 2;
     var y = point.y - target.offsetHeight / 2;
     // TODO: calc(point.x - 50%) doesn't work?
-    var value = [{t: 'translate', d: [x, y]}];
+    var value = [{t: 'translate', d: [{px: x}, {px: y}]}];
     if (this.rotate) {
       // Super hacks
-      var lastPoint = this._path.getPointAtLength(timeFraction * length - 0.01);
+      var lastPoint = this._path.getPointAtLength(timeFraction * 
+          length - 0.01);
       var dx = point.x - lastPoint.x;
       var dy = point.y - lastPoint.y;
       var rotation = Math.atan2(dy, dx);
-      value.push({t:'rotate', d: rotation / 2 / Math.PI * 360});
+      value.push({t:'rotate', d: [rotation / 2 / Math.PI * 360]});
     }
     compositor.setAnimatedValue(target, '-webkit-transform',
         new AnimatedResult(value, this.operation, timeFraction));
@@ -1298,7 +1299,7 @@ var interpArray = function(from, to, f, type) {
   console.assert(Array.isArray(to) || to === null,
       'To is not an array or null');
   console.assert(from === null || to === null || from.length === to.length,
-      'Arrays differ in length');
+      'Arrays differ in length ' + from + " : " + to);
   var length = from ? from.length : to.length;
 
   var result = [];
@@ -1762,9 +1763,8 @@ var colorType = {
   }
 };
 
-var extractDeg = function(deg) {
-  var num  = Number(deg[1]);
-  switch (deg[2]) {
+var convertToDeg = function(num, type) {
+  switch (type) {
   case 'grad':
     return num / 400 * 360;
   case 'rad':
@@ -1776,35 +1776,148 @@ var extractDeg = function(deg) {
   }
 };
 
-var extractTranslationValues = function(lengths) {
-  // TODO: Assuming all lengths are px for now
-  var length1 = Number(lengths[1]);
-  var length2 = lengths[3] ? Number(lengths[3]) : 0;
-  return [length1, length2];
+var extractValue = function(values, pos, hasUnits) {
+  var value = Number(values[pos]);
+  if (!hasUnits) {
+    return value;
+  }
+  var type = values[pos + 1];
+  if (type == '') { type = 'px'; }
+  var result = {};
+  result[type] = value;
+  return result;
+}
+
+var extractValues = function(values, numValues, hasOptionalValue, 
+    hasUnits) {
+  var result = [];
+  for (var i = 0; i < numValues; i++) {
+    result.push(extractValue(values, 1 + 2 * i, hasUnits));
+  }
+  if (hasOptionalValue && values[1 + 2 * numValues]) {
+    result.push(extractValue(values, 1 + 2 * numValues, hasUnits));
+  }
+  return result;
 };
 
-var extractTranslateValue = function(length) {
-  // TODO: Assuming px for now
-  return Number(length[1]);
-};
+var SPACES = '\\s*';
+var NUMBER = '[+-]?(?:\\d+|\\d*\\.\\d+)';
+var RAW_OPEN_BRACKET = '\\(';
+var RAW_CLOSE_BRACKET = '\\)';
+var RAW_COMMA = ',';
+var UNIT = '[a-zA-Z%]*';
+var START = '^';
 
-var extractScaleValues = function(scales) {
-  var scaleX = Number(scales[1]);
-  var scaleY = scales[2] ? Number(scales[2]) : scaleX;
-  return [scaleX, scaleY];
-};
+function capture(x) { return '(' + x + ')'; }
+function optional(x) { return '(?:' + x + ')?'; }
+
+var OPEN_BRACKET = [SPACES, RAW_OPEN_BRACKET, SPACES].join("");
+var CLOSE_BRACKET = [SPACES, RAW_CLOSE_BRACKET, SPACES].join("");
+var COMMA = [SPACES, RAW_COMMA, SPACES].join("");
+var UNIT_NUMBER = [capture(NUMBER), capture(UNIT)].join("");
+
+function transformRE(name, numParms, hasOptionalParm) {
+  var tokenList = [START, SPACES, name, OPEN_BRACKET];
+  for (var i = 0; i < numParms - 1; i++) {
+    tokenList.push(UNIT_NUMBER);
+    tokenList.push(COMMA);
+  }
+  tokenList.push(UNIT_NUMBER);
+  if (hasOptionalParm) {
+    tokenList.push(optional([COMMA, UNIT_NUMBER].join("")));
+  }
+  tokenList.push(CLOSE_BRACKET);
+  return new RegExp(tokenList.join("")); 
+}
+
+function buildMatcher(name, numValues, hasOptionalValue, hasUnits,
+    baseValue) {
+  var baseName = name;
+  if (baseValue) {
+    if (name[name.length - 1] == 'X' || name[name.length - 1] == 'Y') {
+      baseName = name.substring(0, name.length - 1);
+    } else if (name[name.length - 1] == 'Z') {
+      baseName = name.substring(0, name.length - 1) + "3d";
+    }
+  }
+  
+  return [transformRE(name, numValues, hasOptionalValue),
+      function(x) { 
+        var r = extractValues(x, numValues, hasOptionalValue, hasUnits);
+        if (baseValue !== undefined) {
+          if (name[name.length - 1] == 'X') {
+            r.push(baseValue);
+          } else if (name[name.length - 1] == 'Y') {
+            r = [baseValue].concat(r);
+          } else if (name[name.length - 1] == 'Z') {
+            r = [baseValue, baseValue].concat(r);
+          } else if (hasOptionalValue) {
+            while (r.length < 2) {
+              if (baseValue == "copy") {
+                r.push(r[0]);
+              } else {
+                r.push(baseValue);
+              }
+            }
+          }
+        }
+        return r;
+      },
+      baseName];
+}
+
+function buildRotationMatcher(name, numValues, hasOptionalValue, 
+    baseValue) {
+  var m = buildMatcher(name, numValues, hasOptionalValue, true, baseValue);
+  return [m[0], 
+      function(x) {
+        var r = m[1](x);
+        return r.map(function(v) {
+          result = 0;
+          for (type in v) {
+            result += convertToDeg(v[type], type);
+          }
+          return result;
+        });
+      },
+      m[2]];
+}
+
+function build3DRotationMatcher() {
+  var m = buildMatcher('rotate3d', 4, false, true);
+  return [m[0],
+    function(x) {
+      var r = m[1](x);
+      var out = [];
+      for (var i = 0; i < 3; i++) {
+        out.push(r[i].px);
+      }
+      out.push(r[3]);
+      return out;
+    },
+    m[2]];
+}
 
 var transformREs = [
-  [/^\s*rotate\(([+-]?(?:\d+|\d*\.\d+))(deg|grad|rad|turn)?\)/,
-      extractDeg, 'rotate'],
-  [/^\s*rotateY\(([+-]?(?:\d+|\d*\.\d+))(deg|grad|rad|turn)\)/,
-      extractDeg, 'rotateY'],
-  [/^\s*translateZ\(([+-]?(?:\d+|\d*\.\d+))(px)?\)/,
-      extractTranslateValue, 'translateZ'],
-  [/^\s*translate\(([+-]?(?:\d+|\d*\.\d+))(px)?(?:\s*,\s*([+-]?(?:\d+|\d*\.\d+))(px)?)?\)/,
-      extractTranslationValues, 'translate'],
-  [/^\s*scale\((\d+|\d*\.\d+)(?:\s*,\s*(\d+|\d*.\d+))?\)/,
-      extractScaleValues, 'scale']
+  buildRotationMatcher('rotate', 1, false),
+  buildRotationMatcher('rotateX', 1, false),
+  buildRotationMatcher('rotateY', 1, false),
+  buildRotationMatcher('rotateZ', 1, false),
+  build3DRotationMatcher(),
+  buildRotationMatcher('skew', 1, true, 0),
+  buildRotationMatcher('skewX', 1, false),
+  buildRotationMatcher('skewY', 1, false),
+  buildMatcher('translateX', 1, false, true, {px: 0}),
+  buildMatcher('translateY', 1, false, true, {px: 0}),
+  buildMatcher('translateZ', 1, false, true, {px: 0}),
+  buildMatcher('translate', 1, true, true, {px: 0}),
+  buildMatcher('translate3d', 3, false, true),
+  buildMatcher('scale', 1, true, false, "copy"),
+  buildMatcher('scaleX', 1, false, false, 1),
+  buildMatcher('scaleY', 1, false, false, 1),
+  buildMatcher('scaleZ', 1, false, false, 1),
+  buildMatcher('scale3d', 3, false, false),
+  buildMatcher('perspective', 1, false, true)
 ];
 
 var transformType = {
@@ -1823,7 +1936,32 @@ var transformType = {
         to[i].t === null,
         'Transform types should match or one should be the underlying value');
       var type = from[i].t ? from[i].t : to[i].t;
-      out.push({t: type, d:interp(from[i].d, to[i].d, f, type)});
+      switch(type) {
+        case 'rotate':
+        case 'rotateX':
+        case 'rotateY':
+        case 'rotateZ':
+        case 'scale':
+        case 'scaleX':
+        case 'scaleY':
+        case 'scaleZ':
+        case 'scale3d':
+        case 'skew':
+        case 'skewX':
+        case 'skewY':
+          out.push({t: type, d:interp(from[i].d, to[i].d, f, type)});
+          break;
+        default:
+          var result = [];
+          var maxVal = Math.max(from[i].d.length, to[i].d.length);
+          for (var j = 0; j < maxVal; j++) {
+            fromVal = from[i].d[j] || {};
+            toVal = to[i].d[j] || {};
+            result.push(lengthType.interpolate(fromVal, toVal, f));
+          }
+          out.push({t: type, d: result});
+          break;
+      }
     }
     return out;
   },
@@ -1834,21 +1972,52 @@ var transformType = {
       console.assert(value[i].t, 'transform type should be resolved by now');
       switch (value[i].t) {
         case 'rotate':
+        case 'rotateX':
         case 'rotateY':
+        case 'rotateZ':
+        case 'skewX':
+        case 'skewY':
           var unit = svgMode ? '' : 'deg';
           out += value[i].t + '(' + value[i].d + unit + ') ';
           break;
+        case 'skew':
+          var unit = svgMode ? '' : 'deg';
+          out += value[i].t + '(' + value[i].d[0] + unit;
+          if (value[i].d[1] === 0) {
+            out += ') ';
+          } else {
+            out += ', ' + value[i].d[1] + unit + ') ';
+          }
+          break;
+        case 'translateX':
+        case 'translateY':
         case 'translateZ':
-          out += value[i].t + '(' + value[i].d + 'px' + ') ';
+        case 'perspective':
+          out += value[i].t + '(' + lengthType.toCssValue(value[i].d[0]) 
+              + ') ';
           break;
         case 'translate':
-          var unit = svgMode ? '' : 'px';
-          if (value[i].d[1] === 0) {
-            out += value[i].t + '(' + value[i].d[0] + unit + ') ';
-          } else {
-            out += value[i].t + '(' + value[i].d[0] + unit + ', ' +
-                  value[i].d[1] + unit + ') ';
+          if (svgMode) {
+            if (value[i].d[1] === undefined) {
+              out += value[i].t + '(' + value[i].d[0]['px'] + ') ';
+            } else {
+              out += value[i].t + '(' + value[i].d[0]['px'] + ', ' +
+                    value[i].d[1]['px'] + ') ';
+            }
+            break;
           }
+          if (value[i].d[1] === undefined) {
+            out += value[i].t + '(' + lengthType.toCssValue(value[i].d[0])
+                + ') ';
+          } else {
+            out += value[i].t + '(' + lengthType.toCssValue(value[i].d[0])
+                + ', ' + lengthType.toCssValue(value[i].d[1]) + ') ';
+          }
+          break;
+        case 'translate3d':
+          var values = value[i].d.map(lengthType.toCssValue);
+          out += value[i].t + '(' + values[0] + ', ' + values[1] +
+              ', ' + values[2] + ') ';
           break;
         case 'scale':
           if (value[i].d[0] === value[i].d[1]) {
@@ -1858,12 +2027,24 @@ var transformType = {
                 ') ';
           }
           break;
+        case 'scaleX':
+        case 'scaleY':
+        case 'scaleZ':
+          out += value[i].t + '(' + value[i].d[0] + ') ';
+          break;
+        case 'scale3d':
+          out += value[i].t + '(' + value[i].d[0] + ', ' +
+              value[i].d[1] + ', ' + value[i].d[2] + ') ';        
+          break;
       }
     }
     return out.substring(0, out.length - 1);
   },
   fromCssValue: function(value) {
     // TODO: fix this :)
+    if (value === undefined) {
+      return "";
+    }
     var result = []
     while (value.length > 0) {
       var r = undefined;
@@ -1876,7 +2057,7 @@ var transformType = {
           break;
         }
       }
-      if (r === undefined)
+      if (!isDefinedAndNotNull(r))
         return result;
     }
     return result;
