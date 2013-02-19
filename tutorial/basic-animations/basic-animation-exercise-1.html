@@ -17,6 +17,8 @@ specific language governing permissions and limitations under the License.
 
 <div class="content">
 
+  <div id="animNum">1</div>
+
   <div class="heading subTitle">Create a new basic animation</div>
 
   <div class="heading exercises">Exercise 1 - Moving Right</div>
@@ -26,7 +28,6 @@ specific language governing permissions and limitations under the License.
   and ID named 'a' coloured in red. If you don't like the colour, you can
   always change it around. Click on 'Update' when you have finished typing in
   your code.</p> 
-  
   <p class="description">Now we want to make the red rounded
   rectangle move to 300px from left for 2 seconds. We should do the
   following:</p>
@@ -42,20 +43,20 @@ specific language governing permissions and limitations under the License.
   <div id="tryIt"></div>
 
   <ol class="description">
-    <li><code>'new Animation()'</code> creates a newanimation object.</li>
-
-    <li><code>'document.querySelector("#a")'</code> is a DOM method 
-    which gets the element with id equals to 'a' from the HTML file. 
-    You can always use <code>'document.getElementById("a")'</code> 
-    which would result the same thing. Since we have defined its 
-    class name as well, we can also select it using 
-    <code>'document.querySelector(".test")'.</code></li>
-
-    <li><code>'{left: "300px"}'</code> is the effects of the animation.
+    <li><code>'new Animation()'</code> creates a new animation object.</li>
+    <li>
+      <code>'document.querySelector("#a")'</code> is a DOM method which 
+      gets the element with id equals to 'a' from the HTML file. You 
+      can always use <code>'document.getElementById("a")'</code> which 
+      would result the same thing. Since we have defined its class 
+      name as well, we can also select it using 
+      <code>'document.querySelector(".test")'.</code>
+    </li>
+    <li><code>'{left: "300px"}'</code> is the effects of the animation. 
     In this case we are letting it move to 300px from left.</li>
-
-    <li><code>'2'</code> will set the duration of the animation to 2 seconds. 
-    The bigger the number, the slower the animation speed and vice versa.</li>
+    <li><code>'2'</code> will set the duration of the animation to 
+    2 seconds. The bigger the number, the slower the animation 
+    speed and vice versa.</li>
     </ol>
 
-</div> <!-- content ending div -->
+</div>  <!-- content ending div -->
