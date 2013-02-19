@@ -68,7 +68,6 @@ $(document.body).ready(function() {
 var loadEditor = function() {
   var html = '', currentId = 'a';
 
-
   // Get the number of animation divs needed
   var animNum = findDivNum();
 
@@ -85,16 +84,16 @@ var loadEditor = function() {
   editor.setDefaultHtml(html);
 
   // common css for all divs
-  var css = '.anim {'
-    +'\n' + 'background-color: red;'
-    +'\n' + 'border-radius: 10px;'
-    +'\n' + 'width: 100px;'
-    +'\n' + 'height: 50px;'
-    +'\n' + 'top: 0px;'
-    +'\n' + 'left: 0px;'
-    +'\n' + 'position: relative;'
-    +'\n' + 'border: 1px solid black;'
-    +'\n' + '}';
+  var css = '.anim {' + 
+    '\n' + 'background-color: red;' + 
+    '\n' + 'border-radius: 10px;' + 
+    '\n' + 'width: 100px;' + 
+    '\n' + 'height: 50px;' + 
+    '\n' + 'top: 0px;' + 
+    '\n' + 'left: 0px;' + 
+    '\n' + 'position: relative;' + 
+    '\n' + 'border: 1px solid black;' + 
+    '\n' + '}';
   editor.setDefaultCss(css);
   editor.update();
 }
