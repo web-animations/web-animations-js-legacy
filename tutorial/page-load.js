@@ -54,9 +54,60 @@ $(document.body).ready(function() {
         success: function() {
           $('.content').load(url + ' .content', function() {
             $(this).children().unwrap();
+            loadEditor();
           });
         }
       });
     }
   });
 });
+
+// This generate an editor object and put it into
+// a div called 'tryIt' as well as passing in
+// default HTML and CSS codes as animation divs
+var loadEditor = function() {
+  var html = '', currentId = 'a';
+
+  // Get the number of animation divs needed
+  var animNum = findDivNum();
+
+  // generate a number of animation divs according to
+  // the requirements of the exercise
+  // such as in sequence section
+  for (var i = 0; i < animNum; i++) {
+    html += '<div id=\"' + currentId + '\" class=\"anim\"></div>' + '\n';
+    currentId = nextId(currentId);
+  }
+
+  // create a new editor object
+  var editor = new TryItDisplay(document.getElementById("tryIt"));
+  editor.setDefaultHtml(html);
+
+  // common css for all divs
+  var css = '.anim {' + 
+    '\n' + 'background-color: red;' + 
+    '\n' + 'border-radius: 10px;' + 
+    '\n' + 'width: 100px;' + 
+    '\n' + 'height: 50px;' + 
+    '\n' + 'top: 0px;' + 
+    '\n' + 'left: 0px;' + 
+    '\n' + 'position: relative;' + 
+    '\n' + 'border: 1px solid black;' + 
+    '\n' + '}';
+  editor.setDefaultCss(css);
+  editor.update();
+}
+
+// Get the number of animation divs required
+// which is stored in an invisible div with id
+// 'animNum' and returns the value.
+var findDivNum = function() {
+  var value = document.getElementById('animNum').innerHTML;
+  value = parseInt(value);
+  return value;
+}
+
+// Generate 'a', 'b', 'c', 'd'... to put in as id.
+var nextId = function(currentId) {
+  return String.fromCharCode(currentId.charCodeAt() + 1);
+}
