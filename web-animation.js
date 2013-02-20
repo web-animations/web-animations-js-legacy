@@ -2346,6 +2346,21 @@ var DEFAULT_GROUP = new ParGroup([], {name: 'DEFAULT'}, null);
 
 var compositor = new Compositor();
 
+// ECMA Script does not guarantee stable sort.
+var stableSort = function(array, compare) {
+  var indicesAndValues = array.map(function(value, index) {
+    return { index: index, value: value };
+  });
+  indicesAndValues.sort(function(a, b) {
+    var r = compare(a.value, b.value);
+    return r == 0 ? a.index - b.index : r;
+  });
+  array.length = 0;
+  array.push.apply(array, indicesAndValues.map(function(value) {
+    return value.value;
+  }));
+};
+
 DEFAULT_GROUP._tick = function(parentTime) {
   this._updateTimeMarkers(parentTime);
 
@@ -2360,7 +2375,7 @@ DEFAULT_GROUP._tick = function(parentTime) {
   }.bind(this));
 
   // Apply animations in order
-  animations.sort(function(funcA, funcB) {
+  stableSort(animations, function(funcA, funcB) {
     return funcA._sortOrder < funcB._sortOrder ?
         -1 :
         funcA._sortOrder === funcB._sortOrder ? 0 : 1;
