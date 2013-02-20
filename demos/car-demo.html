@@ -150,7 +150,7 @@
   new Animation(document.querySelector("#orangeLight"), {"background-color": lightOff}, {duration: 0.5}, stop);
   new Animation(document.querySelector("#redLight"), {"background-color": "red"}, {duration: 0.5}, stop);
 
-  new Animation(document.querySelector(".car"), {left: ["-500px", "10px"]}, {duration: 2, timingFunction: new TimingFunction("ease-out")}, sgroup);	
-	
+  new Animation(document.querySelector(".car"), {left: ["-500px", "10px"]}, {duration: 2, timingFunction: new TimingFunction("ease-out")}, sgroup);
+
   document.querySelector("#buttonA").addEventListener('mousedown', function() { sgroup.play(); }, false);
 </script>
