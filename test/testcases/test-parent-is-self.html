@@ -96,17 +96,6 @@ check(x.children[0], y, "x's first child");
 check(y.parentGroup, x, "y.parentGroup");
 check(y.children.length, 0, "y.children.length");
 
-// Test case of immediate circular reference when assigning to parentGroup.
-// Should end up with null -> x -> y.
-var x = new ParGroup();
-var y = new ParGroup([x]);
-y.parentGroup = x;
-check(x.parentGroup, null, "x.parentGroup");
-check(x.children.length, 1, "x.children.length");
-check(x.children[0], y, "x's first child");
-check(y.parentGroup, x, "y.parentGroup");
-check(y.children.length, 0, "y.children.length");
-
 // Test case of immediate circular reference when constructing a new group.
 // Should end up with null -> y -> x.
 var x = new ParGroup();

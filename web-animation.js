@@ -42,6 +42,14 @@ var IndexSizeError = function(message) {
 
 inherits(IndexSizeError, Error);
 
+var InvalidStateError = function(message) {
+  InvalidStateError.$super.call(this);
+  this.name = "InvalidStateError";
+  this.message = message;
+}
+
+inherits(InvalidStateError, Error);
+
 /** @constructor */
 var Timing = function(timingDict) {
   this.startDelay = timingDict.startDelay || 0.0;
@@ -182,8 +190,7 @@ var TimedItem = function(timing, startTime, parentGroup) {
 
 TimedItem.prototype.__defineGetter__('timeDrift', function() {
   if (this.locallyPaused) {
-    return this._effectiveParentTime - this.startTime -
-        this._pauseStartTime;
+    return this._effectiveParentTime - this.startTime - this._pauseStartTime;
   }
   return this._timeDrift;
 });
@@ -198,8 +205,7 @@ TimedItem.prototype.__defineSetter__('currentTime', function(seekTime) {
   if (this._locallyPaused) {
     this._pauseStartTime = seekTime;
   } else {
-    this._timeDrift = this._effectiveParentTime - this._startTime -
-        seekTime;
+    this._timeDrift = this._effectiveParentTime - this._startTime - seekTime;
   }
   this._updateTimeMarkers();
 });
@@ -208,7 +214,7 @@ TimedItem.prototype.__defineGetter__('startTime', function() {
 });
 TimedItem.prototype.__defineSetter__('startTime', function(newStartTime) {
   if (this.parentGroup && this.parentGroup.type === 'seq') {
-    throw new Error('NoModificationAllowedError');
+    throw new InvalidStateError('Can not set startTime when in SeqGroup');
   }
   this._startTime = newStartTime;
   this._startTimeMode = ST_MANUAL;
@@ -255,22 +261,10 @@ TimedItem.prototype.__defineGetter__('animationDuration', function() {
   var repeatedDuration = this.duration * this.timing.iterationCount;
   return repeatedDuration / Math.abs(this.timing.playbackRate);
 });
-TimedItem.prototype.__defineSetter__('endTime', function() {
-  throw new Error('NoModificationAllowedError');
-});
 TimedItem.prototype.__defineGetter__('endTime', function() {
   return this.locallyPaused ? Infinity :
       this._startTime + this.animationDuration + this.timing.startDelay +
       this.timeDrift;
-});
-TimedItem.prototype.__defineSetter__('parentGroup', function(parentGroup) {
-  var newParent = this._sanitizeParent(parentGroup);
-  if (newParent === null) {
-    this._reparent(null);
-  } else {
-    // This updates the parent and calls _reparent() on this object.
-    newParent.add(this);
-  }
 });
 TimedItem.prototype.__defineGetter__('parentGroup', function() {
   return this._parentGroup;
@@ -435,8 +429,8 @@ mixin(TimedItem.prototype, {
     maybeRestartAnimation();
     return this._timeFraction !== null;
   },
-  // Takes a time in our iteration time space and converts it to the our
-  // item time space.
+  // Takes a time in our iteration time space and converts it to our item time
+  // space.
   // TODO: Ideally we would convert to inherited time space, but this doesn't
   // work for the default group. This will become moot once we switch to Time
   // Sources.
@@ -629,7 +623,7 @@ mixin(Animation.prototype, {
   // Takes a time in our inherited time space and returns it in the document
   // time space.
   _inheritedTimeToDocumentTime: function(inputTime) {
-    // This should only be used if we have a parent. The default group, has a
+    // This should only be used if we have a parent. The default group has a
     // start time of zero and can not be paused, so its item time is equal to
     // the document time.
     return this.parentGroup._iterationTimeToRootItemTime(inputTime);
