@@ -454,8 +454,11 @@ mixin(TimedItem.prototype, {
         this._scaleIterationTime(unscaledEffectiveIterationTime);
     // Get the input time relative to the current effective iteration time,
     // scale it, and add it to the current item time.
-    return (inputTime - effectiveIterationTime) / this._getEffectiveSpeed() +
-        this.itemTime;
+    var iterationTimeDelta = inputTime - effectiveIterationTime;
+    var effectiveIterationDelta = this._isCurrentDirectionForwards(
+        this.timing.direction, this.currentIteration) ?
+        iterationTimeDelta : -iterationTimeDelta;
+    return effectiveIterationDelta / this._getEffectiveSpeed() + this.itemTime;
   },
   // Takes a time in our iteration time space and converts it to the item time
   // space of the TimedItem at the root of our tree.
