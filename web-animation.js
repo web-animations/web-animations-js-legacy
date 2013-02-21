@@ -653,79 +653,6 @@ mixin(Animation.prototype, {
   }
 });
 
-// To use this, need to have children and length member variables.
-var AnimationListMixin = {
-  initListMixin: function(onListChange) {
-    this.children = [];
-    this.length = 0;
-    this.onListChange = onListChange;
-  },
-  _lengthChanged: function() {
-    while (this.length < this.children.length) {
-      var i = this.length++;
-      this.__defineSetter__(i, function(x) { this.children[i] = x; });
-      this.__defineGetter__(i, function() { return this.children[i]; });
-    }
-    while (this.length > this.children.length) {
-      var i = --this.length;
-      delete this[i];
-    }
-  },
-  clear: function() {
-    // TODO: call cancel on children? Update timing?
-    this.children = [];
-    this._lengthChanged();
-    this.onListChange();
-  },
-  add: function() {
-    var newItems = [];
-    for (var i = 0; i < arguments.length; i++) {
-      newItems.push(arguments[i]);
-    }
-    this.splice(this.length, 0, newItems);
-    return newItems;
-  },
-  _addInternal: function(child) {
-    this.children.push(child);
-    this._lengthChanged();
-    this.onListChange();
-  },
-  indexOf: function(item) {
-    return this.children.indexOf(item);
-  },
-  splice: function(start, deleteCount, newItems) {
-    var args = arguments;
-    if (args.length == 3) {
-      args = [start, deleteCount].concat(newItems);
-    }
-    for (var i = 2; i < args.length; i++) {
-      var newChild = args[i];
-      // Check whether the new child is an ancestor. If so, we need to break the
-      // chain immediately below the new child.
-      for (var ancestor = this; ancestor.parentGroup != null;
-          ancestor = ancestor.parentGroup) {
-        if (ancestor.parentGroup === newChild) {
-          newChild.remove(ancestor);
-          break;
-        }
-      }
-      newChild._reparent(this);
-    }
-    var result = Array.prototype['splice'].apply(this.children, args);
-    for (var i = 0; i < result.length; i++) {
-      result[i]._parentGroup = null;
-    }
-    this._lengthChanged();
-    this.onListChange();
-    return result;
-  },
-  remove: function(index, count) {
-    if (!isDefined(count)) {
-      count = 1;
-    }
-    return this.splice(index, count);
-  }
-}
 
 /** @constructor */
 var AnimationGroup = function(type, children, timing, startTime, parentGroup) {
@@ -737,7 +664,8 @@ var AnimationGroup = function(type, children, timing, startTime, parentGroup) {
   // used by TimedItem via _intrinsicDuration(), so needs to be set before
   // initializing super.
   this.type = type || 'par';
-  this.initListMixin(this._childrenStateModified);
+  this.children = [];
+  this.length = 0;
   AnimationGroup.$super.call(this, timing, startTime, parentGroup);
   // We add children after setting the parent. This means that if an ancestor
   // (including the parent) is specified as a child, it will be removed from our
@@ -750,7 +678,6 @@ var AnimationGroup = function(type, children, timing, startTime, parentGroup) {
 };
 
 inherits(AnimationGroup, TimedItem);
-mixin(AnimationGroup.prototype, AnimationListMixin);
 mixin(AnimationGroup.prototype, {
   _childrenStateModified: function() {
     // See _updateChildStartTimes().
@@ -837,11 +764,76 @@ mixin(AnimationGroup.prototype, {
         new ParGroup(children, this.timing.clone()) :
         new SeqGroup(children, this.timing.clone());
   },
+  _lengthChanged: function() {
+    while (this.length < this.children.length) {
+      var i = this.length++;
+      this.__defineSetter__(i, function(x) { this.children[i] = x; });
+      this.__defineGetter__(i, function() { return this.children[i]; });
+    }
+    while (this.length > this.children.length) {
+      var i = --this.length;
+      delete this[i];
+    }
+  },
+  clear: function() {
+    // TODO: call cancel on children? Update timing?
+    this.children = [];
+    this._lengthChanged();
+    this._childrenStateModified();
+  },
+  add: function() {
+    var newItems = [];
+    for (var i = 0; i < arguments.length; i++) {
+      newItems.push(arguments[i]);
+    }
+    this.splice(this.length, 0, newItems);
+    return newItems;
+  },
+  _addInternal: function(child) {
+    this.children.push(child);
+    this._lengthChanged();
+    this._childrenStateModified();
+  },
+  indexOf: function(item) {
+    return this.children.indexOf(item);
+  },
+  splice: function(start, deleteCount, newItems) {
+    var args = arguments;
+    if (args.length == 3) {
+      args = [start, deleteCount].concat(newItems);
+    }
+    for (var i = 2; i < args.length; i++) {
+      var newChild = args[i];
+      // Check whether the new child is an ancestor. If so, we need to break the
+      // chain immediately below the new child.
+      for (var ancestor = this; ancestor.parentGroup != null;
+          ancestor = ancestor.parentGroup) {
+        if (ancestor.parentGroup === newChild) {
+          newChild.remove(ancestor);
+          break;
+        }
+      }
+      newChild._reparent(this);
+    }
+    var result = Array.prototype['splice'].apply(this.children, args);
+    for (var i = 0; i < result.length; i++) {
+      result[i]._parentGroup = null;
+    }
+    this._lengthChanged();
+    this._childrenStateModified();
+    return result;
+  },
+  remove: function(index, count) {
+    if (!isDefined(count)) {
+      count = 1;
+    }
+    return this.splice(index, count);
+  },
   toString: function() {
     return this.type + ' ' + this.startTime + '-' + this.endTime + ' (' +
         this.timeDrift + ' @' + this.currentTime + ') ' + ' [' +
         this.children.map(function(a) { return a.toString(); }) + ']'
-  }
+  },
 });
 
 /** @constructor */
