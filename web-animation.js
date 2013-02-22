@@ -187,9 +187,10 @@ Player.prototype.__defineGetter__('timedItem', function() {
   return this._timedItem;
 });
 Player.prototype.__defineSetter__('currentTime', function(currentTime) {
-  // This does not affect startTime.
+  // This seeks by updating _drift. It does not affect the startTime.
   if (this._pauseTime === null) {
-    this._timeDrift = this._timeline.currentTime() - currentTime;
+    this._timeDrift =
+        this._timeline.currentTime() - this.startTime - currentTime;
   } else {
     this._pauseTime = currentTime;
   }
@@ -200,7 +201,8 @@ Player.prototype.__defineGetter__('currentTime', function() {
       this._pauseTime;
 });
 Player.prototype.__defineSetter__('startTime', function(startTime) {
-  this.currentTime += (startTime - this.startTime);
+  // This seeks by updating _startTime and hence the currentTime. It does not
+  // affect _drift.
   this._startTime = startTime;
 });
 Player.prototype.__defineGetter__('startTime', function() {
