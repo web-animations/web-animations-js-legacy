@@ -39,17 +39,17 @@ limitations under the License.
 }
 
 #cb {
-  top: 250px;
+  top: 150px;
   width: 200px;
 }
 
 #cc {
-  top: 450px;
+  top: 250px;
   width: 200px;
 }
 
 #cd {
-  top: 650px;
+  top: 350px;
   width: 200px;
 }
 
@@ -61,29 +61,21 @@ that the position of the last element in each group is approximate.</div>
 <div class="animContainer" id="ca">
   <div style="width: 600px;" class="expected"><div class="anim a"></div></div>
   <div style="width: 600px;" class="expected"><div class="anim b"></div></div>
-  <div style="width: 600px;" class="expected"><div class="anim c"></div></div>
-  <div style="width: 600px;" class="expected"><div class="anim d"></div></div>
 </div>
 
 <div class="animContainer" id="cb">
-  <div style="width: 100px;" class="expected"><div class="anim a"></div></div>
-  <div style="width: 100px;" class="expected"><div class="anim b"></div></div>
-  <div style="width: 200px;" class="expected"><div class="anim c"></div></div>
-  <div style="width: 100px;" class="expected"><div class="anim d"></div></div>
+  <div style="width: 200px;" class="expected"><div class="anim a"></div></div>
+  <div style="width: 200px;" class="expected"><div class="anim b"></div></div>
 </div>
 
 <div class="animContainer" id="cc">
-  <div style="width: 100px;" class="expected"><div class="anim a"></div></div>
-  <div style="width: 100px;" class="expected"><div class="anim b"></div></div>
-  <div style="width: 200px;" class="expected"><div class="anim c"></div></div>
-  <div style="width: 100px;" class="expected"><div class="anim d"></div></div>
+  <div style="width: 200px;" class="expected"><div class="anim a"></div></div>
+  <div style="width: 200px;" class="expected"><div class="anim b"></div></div>
 </div>
 
 <div class="animContainer" id="cd">
   <div style="width: 600px;" class="expected"><div class="anim a"></div></div>
   <div style="width: 600px;" class="expected"><div class="anim b"></div></div>
-  <div style="width: 600px;" class="expected"><div class="anim c"></div></div>
-  <div style="width: 400px;" class="expected"><div class="anim d"></div></div>
 </div>
 
 <script src="../../web-animation.js"></script>
@@ -109,28 +101,21 @@ for (var i = 0; i < directions.length; i++) {
   var container = document.getElementById(containers[i]);
   var direction = directions[i];
 
-  // Interaction of start time with parent iterations. Each child should
-  // complete the full animation, starting 1.0s into the parent iteration.
-  new Animation(container.getElementsByClassName("a")[0], animation,
-      {duration: 1.0}, group(direction), 1.0);
-  new Animation(container.getElementsByClassName("b")[0], animation,
-      {duration: 1.0}, groupWithFixedDuration(direction), 1.0);
   // Interaction of default start time with parent iterations. At the time of
-  // addition, the first group has a duration, and hence iteration time of
-  // zero, so the child picks up a start time of zero.  The parent then updates
+  // addition, the child picks up a start time of zero. The parent then updates
   // its duration and its iteration time jumps, causing the child to start
-  // playing part way through the animation, The second group has finite
-  // duration, so the child picks up its current iteration time as its start
-  // time, so plays the complete animation. In iterations where the parent
-  // plays backwards, the above is reversed. Also, if the first iteration plays
-  // backwards, the child will miss it altogether.
+  // playing part way through the animation.
+  var group1 = group(direction);
+  document.timeline.createPlayer(group1);
+  var group2 = groupWithFixedDuration(direction);
+  document.timeline.createPlayer(group2);
   setTimeout(function(container, group1, group2) {
     return function() {
-      new Animation(container.getElementsByClassName("c")[0], animation,
+      new Animation(container.getElementsByClassName("a")[0], animation,
           {duration: 1.0}, group1);
-      new Animation(container.getElementsByClassName("d")[0], animation,
+      new Animation(container.getElementsByClassName("b")[0], animation,
           {duration: 1.0}, group2);
     };
-  }(container, group(direction), groupWithFixedDuration(direction)), 500);
+  }(container, group1, group2), 500);
 }
 </script>

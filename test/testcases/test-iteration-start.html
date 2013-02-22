@@ -124,9 +124,8 @@ var groups = [];
 
 for (var i = 0; i < directions.length; i++) {
   var dir = directions[i];
-  var group = new ParGroup([], {iterationCount: 2, direction: dir, duration: 4},
-      undefined, 1);
-  groups.push(group);
+  groups.push(
+      new ParGroup([], {iterationCount: 2, direction: dir, duration: 4}));
 }
 
 for (var i = 0; i < containers.length; i++) {
@@ -172,5 +171,6 @@ for (var i = 0; i < containers.length; i++) {
       {left: ["100px", "180px"]},
       {duration: 1, iterationCount: 2.8, iterationStart: 0.2},
       groups[i]);
+  document.timeline.createPlayer(groups[i]);
 }
 </script>

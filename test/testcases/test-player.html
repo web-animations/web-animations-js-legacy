@@ -1,0 +1,129 @@
+<!--
+Copyright 2013 Google Inc. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+Written by Steph McArthur
+-->
+
+<!DOCTYPE html>
+<style>
+body {
+  background-color: green;
+}
+body div#fail {
+  display: none;
+}
+body.fail {
+  background-color: red;
+}
+body.fail div#pass {
+  display: none;
+}
+body.fail div#fail {
+  display: block;
+}
+</style>
+
+<div id="pass">PASS</div>
+<div id="fail">FAIL</div>
+<div id="anim"></div>
+
+<script src="../../web-animation.js"></script>
+<script>
+
+var fail = function(failureMessage) {
+  var div = document.createElement("div");
+  div.innerText = failureMessage;
+  document.body.appendChild(div);
+  document.body.className = "fail";
+};
+
+var check = function(actual, expected, failureMessage) {
+  if (actual !== expected) {
+    fail(failureMessage + ". Expected '" + expected + "', got '" + actual +
+        "'.");
+  }
+};
+
+var checkNotEqual = function(actual, unexpected, failureMessage) {
+  if (actual === unexpected) {
+    fail(failureMessage + ". Got unexpected '" + unexpected + "'");
+  }
+};
+
+var animation = new Animation(document.getElementById("anim"), {left: "100px"});
+var dt = document.timeline;
+
+// Test that TimedItem.getPlayer() and Player.timedItem are consistent.
+var player1 = dt.createPlayer(animation);
+checkNotEqual(player1, null, "Player should not be null");
+check(player1.timedItem, animation, "Player.timedItem incorrect");
+check(animation.getPlayer(), player1, "TimedItem.getPlayer() incorrect");
+
+// Test that createPlayer() always returns a new Player.
+var player2 = dt.createPlayer(animation);
+checkNotEqual(player2, player1,
+    "Repeated calls to createPlayer() should create a new Player");
+check(animation.getPlayer(), player2,
+    "Repeated createPlayer(): TimedItem.getPlayer() incorrect");
+check(player2.timedItem, animation,
+    "Repeated createPlayer(): Player.timedItem incorrect");
+check(player2.startTime > player1.startTime, true,
+    "Repeated createPlayer(): player2 should have later start time");
+check(player2.currentTime < player1.currentTime, true,
+    "Repeated createPlayer(): player1 should have later current time");
+
+// Test explicit setting of Player.timedItem.
+player1.timedItem = animation;
+check(player2.timedItem, null,
+    "Set Player.timedItem: Old Player.timedItem incorrect");
+check(player1.timedItem, animation,
+    "Set Player.timedItem: New Player.timedItem incorrect");
+check(animation.getPlayer(), player1,
+    "Set Player.timedItem: TimedItem.getPlayer() incorrect");
+
+// Test that TImedItem.getPlayer() gives null on a detached tree.
+var animation2 =
+    new Animation(document.getElementById("anim"), {left: "100px"});
+var parGroup = new ParGroup([animation2]);
+check(parGroup.getPlayer(), null,
+    "TimedItem.getPlayer() should be null for root");
+check(animation2.getPlayer(), null,
+    "TimedItem.getPlayer() should be null for leaf");
+
+// Test that TimedItem.getPlayer() remotes to the root of the tree.
+var player3 = dt.createPlayer(parGroup);
+check(animation2.getPlayer(), player3, "TimedItem.getPlayer() should remote");
+
+// Test that calling createPlayer() on a TimedItem with a parent results in
+// reparenting.
+var player4 = dt.createPlayer(animation2);
+check(animation2.parentGroup, null, "Animation should be reparented");
+check(parGroup.children.length, 0, "Animation parent should be updated");
+check(player4.timedItem, animation2, "Player should use reparented animation");
+
+// Test that setting a parent on a TimedItem with a Player causes the player to
+// be disconnected.
+parGroup.add(animation2);
+check(parGroup.getPlayer(), player3,
+    "TimedItem.getPlayer() should be updated for root");
+check(animation2.getPlayer(), player3,
+    "TimedItem.getPlayer() should be updated for leaf");
+check(player4.timedItem, null, "Player.timedItem should be updated");
+check(animation2.parentGroup, parGroup,
+    "Animation.parentGroup should be updated");
+check(parGroup.children.length, 1, "Animation parent should be updated");
+check(parGroup.children[0], animation2, "Animation parent should be updated");
+
+</script>

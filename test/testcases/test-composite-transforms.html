@@ -64,17 +64,20 @@ limitations under the License.
 
 var divs = document.querySelectorAll(".anim");
 
-new Animation(divs[0],
-    {"-webkit-transform": ["translate(0px, 0px)", "translate(200px, 0px)"]}, 2);
-new Animation(divs[1],
-    {"-webkit-transform": ["rotate(0deg)", "rotate(90deg)"]}, 2);
-new Animation(divs[2], {"-webkit-transform": [
+var dt = document.timeline;
+
+dt.createPlayer(new Animation(divs[0],
+    {"-webkit-transform": ["translate(0px, 0px)", "translate(200px, 0px)"]},
+    2));
+dt.createPlayer(new Animation(divs[1],
+    {"-webkit-transform": ["rotate(0deg)", "rotate(90deg)"]}, 2));
+dt.createPlayer(new Animation(divs[2], {"-webkit-transform": [
   "translate(0px, 0px) rotate(0deg)",
   "translate(200px, 0px) rotate(90deg)"
-]}, 2);
-new Animation(divs[3], {"-webkit-transform": [
+]}, 2));
+dt.createPlayer(new Animation(divs[3], {"-webkit-transform": [
   "rotate(0deg) translate(0px, 0px)",
   "rotate(90deg) translate(200px, 0px)"
-]}, 2);
+]}, 2));
 
 </script>

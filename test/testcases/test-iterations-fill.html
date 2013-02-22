@@ -109,14 +109,13 @@ var groups = [];
 
 for (var i = 0; i < directions.length; i++) {
   var dir = directions[i];
-  var group = new ParGroup([], {
+  groups.push(new ParGroup([], {
     startDelay: 1,
     duration: 8,
     iterationCount: 3,
     playbackRate: 2,
-    direction: dir
-  }, undefined, 1);
-  groups.push(group);
+    direction: dir,
+  }));
 }
 
 function sampleFunc(timeFraction, iteration, target) {
@@ -132,14 +131,17 @@ for (var i = 0; i < fillModes.length; i++) {
       iterationCount: 2,
       fillMode: fillModes[i],
       playbackRate: 0.8
-    }, groups[j], 1);
+    }, groups[j]);
     new Animation(divs[j], {sample: sampleFunc}, {
       startDelay: 1,
       duration: 1,
       iterationCount: 2,
       fillMode: fillModes[i],
       playbackRate: 0.8
-    }, groups[j], 1);
+    }, groups[j]);
   }
+}
+for (var j = 0; j < divs.length; j++) {
+  document.timeline.createPlayer(groups[j]);
 }
 </script>

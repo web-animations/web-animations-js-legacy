@@ -63,13 +63,14 @@ var animFunc = {left: ["100px", "200px"]};
 
 // Test that the animation interval uses inclusive start and end bounds.
 var elem1 = document.getElementById("anim1");
-var anim1 = new Animation(elem1, animFunc, 1.0);
-anim1.pause();
-anim1.currentTime = 0.0;
+var player1 =
+    document.timeline.createPlayer(new Animation(elem1, animFunc, 1.0));
+player1.pause();
+player1.currentTime = 0.0;
 setTimeout(function() {
   check(getComputedStyle(elem1).left, "100px",
       "Start bound should be inclusive");
-  anim1.currentTime = 1.0;
+  player1.currentTime = 1.0;
   setTimeout(function() {
     check(getComputedStyle(elem1).left, "200px",
         "End bound should be inclusive");
@@ -78,17 +79,18 @@ setTimeout(function() {
 
 // Test that startDelay is applied correctly.
 var elem2 = document.getElementById("anim2");
-var anim2 = new Animation(elem2, animFunc, {duration: 1.0, startDelay: 1.0});
-anim2.pause();
-anim2.currentTime = 0;
+var player2 = document.timeline.createPlayer(
+    new Animation(elem2, animFunc, {duration: 1.0, startDelay: 1.0}));
+player2.pause();
+player2.currentTime = 0;
 setTimeout(function() {
   check(getComputedStyle(elem2).left, "0px",
       "Start bound should include startDelay");
-  anim2.currentTime = 1.0;
+  player2.currentTime = 1.0;
   setTimeout(function() {
     check(getComputedStyle(elem2).left, "100px",
         "Start bound should be inclusive");
-    anim2.currentTime = 2.0;
+    player2.currentTime = 2.0;
     setTimeout(function() {
       check(getComputedStyle(elem2).left, "200px",
           "End bound should be inclusive");

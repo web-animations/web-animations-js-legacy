@@ -59,14 +59,16 @@ All three boxes should end up the same color as the outline.
 <script src="../../web-animation.js"></script>
 <script>
 
-new Animation(document.querySelector("#a"),
-    {"background-color": ["red", "green"]}, 2);
-new Animation(document.querySelector("#b"),
-    {"background-color": "rgb(0, 128, 0)"}, 2);
-new Animation(document.querySelector("#c"), {"background-color": [
-  {offset: 0.25, value: "rgb(255, 0, 0)"},
-  {offset: 0.75, value: "rgb(0, 0, 255)"}
-], operation: "add"}, 2);
+var dt = document.timeline;
 
+dt.createPlayer(new Animation(document.querySelector("#a"),
+    {"background-color": ["red", "green"]}, 2));
+dt.createPlayer(new Animation(document.querySelector("#b"),
+    {"background-color": "rgb(0, 128, 0)"}, 2));
+dt.createPlayer(new Animation(document.querySelector("#c"),
+    {"background-color": [
+      {offset: 0.25, value: "rgb(255, 0, 0)"},
+      {offset: 0.75, value: "rgb(0, 0, 255)"}
+    ], operation: "add"}, 2));
 
 </script>
