@@ -212,8 +212,10 @@ mixin(Player.prototype, {
     this._pauseTime = this.currentTime;
   },
   unpause: function() {
-    this._timeDrift = this._timeline.currentTime() - this._pauseTime;
-    this._pauseTime = null;
+    if (this._pauseTime !== null) {
+      this._timeDrift = this._timeline.currentTime() - this._pauseTime;
+      this._pauseTime = null;
+    }
   },
   cancel: function() {
     this.timedItem = null;
