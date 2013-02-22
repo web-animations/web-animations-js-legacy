@@ -194,6 +194,7 @@ Player.prototype.__defineSetter__('currentTime', function(currentTime) {
   } else {
     this._pauseTime = currentTime;
   }
+  maybeRestartAnimation();
 });
 Player.prototype.__defineGetter__('currentTime', function() {
   return this._pauseTime === null ?
@@ -204,6 +205,7 @@ Player.prototype.__defineSetter__('startTime', function(startTime) {
   // This seeks by updating _startTime and hence the currentTime. It does not
   // affect _drift.
   this._startTime = startTime;
+  maybeRestartAnimation();
 });
 Player.prototype.__defineGetter__('startTime', function() {
   return this._startTime;
