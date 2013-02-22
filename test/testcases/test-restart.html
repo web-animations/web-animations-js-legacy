@@ -61,14 +61,16 @@ var check = function(actual, expected, failureMessage) {
 
 var animFunc = {left: "100px"};
 var anim1 = new Animation(document.getElementById("anim1"), animFunc, 1.0);
+document.timeline.createPlayer(anim1);
 var anim2 = new Animation(document.getElementById("anim2"), animFunc, 1.0);
+document.timeline.createPlayer(anim2);
 
-// Check that once an animation is completed, play() restarts it.
+// Check that once an animation is completed, cteating a new Player restarts it.
 anim1.currentTime = 1.0;
 setTimeout(function() {
   check(getComputedStyle(anim1.targetElement).left, "100px",
       "Animation 1 should be in end state");
-  anim1.play();
+  document.timeline.createPlayer(anim1);
   setTimeout(function() {
     check(parseInt(getComputedStyle(anim1.targetElement).left) > 0, true,
         "Animation 1 should not be in start state");

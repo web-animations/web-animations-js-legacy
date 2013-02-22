@@ -37,25 +37,27 @@ limitations under the License.
 var rect = document.querySelector(".anim")
 var rect2 = document.querySelector(".anim2")
 
-new Animation(rect, {x: ["0px", "400px"]}, 3);
-new Animation(rect, {x: ["0px", "200px"], operation: 'add'},
-    {startDelay: 1, duration: 4});
-new Animation(rect, {x: ["0px", "200px"], operation: 'merge'},
-    {startDelay: 2, duration: 5});
+var dt = document.timeline;
 
-new Animation(rect2,
+dt.createPlayer(new Animation(rect, {x: ["0px", "400px"]}, 3));
+dt.createPlayer(new Animation(rect, {x: ["0px", "200px"], operation: 'add'},
+   {startDelay: 1, duration: 4}));
+dt.createPlayer(new Animation(rect, {x: ["0px", "200px"], operation: 'merge'},
+    {startDelay: 2, duration: 5}));
+
+dt.createPlayer(new Animation(rect2,
     {"-webkit-transform": ["translate(0px, 0px)", "translate(200px, 200px)"]},
-    3);
-new Animation(rect2,
+    3));
+dt.createPlayer(new Animation(rect2,
     {"-webkit-transform": [
       "rotate(0deg) translate(0px, 0px)",
       "rotate(90deg) translate(100px, 0px)"
     ], operation: 'add'},
-    {startDelay: 1, duration: 4});
-new Animation(rect2,
+    {startDelay: 1, duration: 4}));
+dt.createPlayer(new Animation(rect2,
     {"-webkit-transform": [
       "translate(0px, 0px) rotate(0deg) translate(0px, 0px) scale(1, 1)",
       "translate(0px, 0px) rotate(0deg) translate(0px, 0px) scale(2, 2)"
     ], operation: 'merge'},
-    {startDelay: 2, duration: 5});
+    {startDelay: 2, duration: 5}));
 </script>
