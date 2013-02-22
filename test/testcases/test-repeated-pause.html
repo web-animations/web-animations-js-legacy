@@ -74,8 +74,8 @@ setTimeout(function() {
   setTimeout(function() {
     currentTime = player.currentTime;
     player.unpause();
-    check(player.currentTime > currentTime, true, "Player.currentTime should " +
-        "be unaffected by repeated calls to Player.unpause()");
+    check(player.currentTime, currentTime, "Player.currentTime should be " +
+        "unaffected by repeated calls to Player.unpause()");
   }, 100);
 }, 100);
 

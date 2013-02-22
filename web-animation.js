@@ -177,7 +177,7 @@ var Player = function(timedItem, timeline) {
   this._timeline = timeline;
   this._startTime = this._timeline.currentTime;
   this._timeDrift = 0.0;
-  this._pauseTime = null;
+  this._pauseTime = undefined;
 
   this.timedItem.timeDrift = 0.0;
   this._update();
@@ -206,7 +206,7 @@ Object.defineProperty(Player.prototype, 'timedItem', configureDescriptor({
 Object.defineProperty(Player.prototype, 'currentTime', configureDescriptor({
   set: function(currentTime) {
     // This seeks by updating _drift. It does not affect the startTime.
-    if (this._pauseTime === null) {
+    if (!isDefined(this._pauseTime)) {
       this._timeDrift =
           this._timeline.currentTime - this.startTime - currentTime;
     } else {
@@ -215,7 +215,10 @@ Object.defineProperty(Player.prototype, 'currentTime', configureDescriptor({
     maybeRestartAnimation();
   },
   get: function() {
-    return this._pauseTime === null ?
+    if (this._timeline.currentTime === null) {
+      return null;
+    }
+    return !isDefined(this._pauseTime) ?
         this._timeline.currentTime - this._timeDrift - this.startTime :
         this._pauseTime;
   },
@@ -237,9 +240,9 @@ mixin(Player.prototype, {
     this._pauseTime = this.currentTime;
   },
   unpause: function() {
-    if (this._pauseTime !== null) {
+    if (isDefined(this._pauseTime)) {
       this._timeDrift = this._timeline.currentTime - this._pauseTime;
-      this._pauseTime = null;
+      this._pauseTime = undefined;
     }
   },
   cancel: function() {
@@ -2084,7 +2087,7 @@ var transformType = {
         case 'translateY':
         case 'translateZ':
         case 'perspective':
-          out += value[i].t + '(' + lengthType.toCssValue(value[i].d[0]) 
+          out += value[i].t + '(' + lengthType.toCssValue(value[i].d[0])
               + ') ';
           break;
         case 'translate':
@@ -2125,7 +2128,7 @@ var transformType = {
           break;
         case 'scale3d':
           out += value[i].t + '(' + value[i].d[0] + ', ' +
-              value[i].d[1] + ', ' + value[i].d[2] + ') ';        
+              value[i].d[1] + ', ' + value[i].d[2] + ') ';
           break;
       }
     }
@@ -2448,28 +2451,66 @@ var stableSort = function(array, compare) {
   }));
 };
 
-// If requestAnimationFrame is unprefixed then it uses high-res time.
-var useHighResTime = 'requestAnimationFrame' in window;
+// We don't use performance timing unless RAF is unprefixed because of concerns
+// over the time origin used in this case.
+// TODO: Investigate this.
+var usePerformanceTiming =
+    typeof performance === "object" &&
+    typeof performance.timing === "object" &&
+    typeof performance.now === "function" &&
+    typeof requestAnimationFrame === "function";
 
 // Don't use a local named requestAnimationFrame, to avoid potential problems
 // with hoisting.
 var raf = window.requestAnimationFrame || window.webkitRequestAnimationFrame ||
     window.mozRequestAnimationFrame || window.msRequestAnimationFrame;
 
-// Only defined in the scope of a rAF callback.
-var rafTime = undefined;
-// Gets the documentTime in seconds.
-var clock = function() {
-  return useHighResTime ? performance.now() : Date.now();
+var clockMillis = function() {
+  return usePerformanceTiming ? performance.now() : Date.now();
 };
-var clockZero = clock();
+// Set up the zero times for document time. Document time is relative to the
+// document load event.
+var documentTimeZeroAsRafTime = undefined;
+var documentTimeZeroAsClockTime = undefined;
+if (usePerformanceTiming) {
+  addEventListener('load', function() {
+    // RAF time is relative to the navigationStart event.
+    documentTimeZeroAsRafTime =
+        performance.timing.loadEventStart - performance.timing.navigationStart;
+    // performance.now() uses the same origin as RAF time.
+    documentTimeZeroAsClockTime = documentTimeZeroAsRafTime;
+  });
+} else {
+  // The best approximation we have for the relevant clock and RAF times is to
+  // listen to the load event.
+  addEventListener('load', function() {
+    raf(function(rafTime) {
+      documentTimeZeroAsRafTime = rafTime;
+    });
+    documentTimeZeroAsClockTime = Date.now();
+  });
+}
+// A cached document time for use during the current callstack.
+var cachedDocumentTimeMillis = undefined;
+// Calculates one time relative to another, returning null if the zero time is
+// undefined.
+var relativeTime = function(time, zeroTime) {
+  return isDefined(zeroTime) ? time - zeroTime : null;
+}
+
 var documentTime = function() {
-  // Use rafTime if available, for consistency. Otherwise, use a clock.
-  return ((isDefined(rafTime) ? rafTime : clock()) - clockZero) / 1000;
+  // Cache a document time for the remainder of this callstack.
+  if (!isDefined(cachedDocumentTimeMillis)) {
+    cachedDocumentTimeMillis =
+        relativeTime(clockMillis(), documentTimeZeroAsClockTime);
+    setTimeout(function() { cachedDocumentTimeMillis = undefined; }, 0);
+  }
+  return cachedDocumentTimeMillis === null ?
+      null : cachedDocumentTimeMillis / 1000;
 };
 
-var ticker = function(time) {
-  rafTime = time;
+var ticker = function(rafTime) {
+  cachedDocumentTimeMillis = relativeTime(rafTime, documentTimeZeroAsRafTime);
   // Get animations for this sample
   // TODO: Consider reverting to direct application of values and sorting
   // inside the compositor.
@@ -2504,7 +2545,7 @@ var ticker = function(time) {
     rafNo = undefined;
   }
 
-  rafTime = undefined;
+  cachedDocumentTimeMillis = undefined;
 };
 
 // Multiplication where zero multiplied by any value (including infinity)

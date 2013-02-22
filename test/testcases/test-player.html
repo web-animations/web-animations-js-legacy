@@ -79,10 +79,8 @@ check(animation.getPlayer(), player2,
     "Repeated createPlayer(): TimedItem.getPlayer() incorrect");
 check(player2.timedItem, animation,
     "Repeated createPlayer(): Player.timedItem incorrect");
-check(player2.startTime > player1.startTime, true,
-    "Repeated createPlayer(): player2 should have later start time");
-check(player2.currentTime < player1.currentTime, true,
-    "Repeated createPlayer(): player1 should have later current time");
+check(player2.startTime, player1.startTime,
+    "Repeated createPlayer(): players should have same start time");
 
 // Test explicit setting of Player.timedItem.
 player1.timedItem = animation;
