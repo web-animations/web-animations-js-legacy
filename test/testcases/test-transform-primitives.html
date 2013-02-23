@@ -1,4 +1,4 @@
-<!-- 
+<!--
 Copyright 2012 Google Inc. All Rights Reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -69,8 +69,8 @@ for (var i = 0; i < transformValues.length; i++) {
       div.className = "anim";
       div.style.top = y + 'px';
       div.style.left = x + 'px';
-      new Animation(div, {"-webkit-transform": 
-          [transformValues[i][j], transformValues[i][k]]}, 2);
+      document.timeline.createPlayer(new Animation(div, {"-webkit-transform":
+          [transformValues[i][j], transformValues[i][k]]}, 2));
       x += separation_x;
       if (x > max_x) {
         x = 20;
