@@ -142,10 +142,11 @@ var isDefinedAndNotNull = function(val) {
 var DocumentTimeline = function() {
 };
 
+DocumentTimeline.prototype.__defineGetter__('currentTime', function() {
+  return documentTime();
+});
+
 mixin(DocumentTimeline.prototype, {
-  currentTime: function() {
-    return documentTime();
-  },
   createPlayer: function(timedItem) {
     return new Player(timedItem, this);
   },
@@ -160,7 +161,7 @@ var PLAYERS = [];
 var Player = function(timedItem, timeline) {
   this.timedItem = timedItem;
   this._timeline = timeline;
-  this._startTime = this._timeline.currentTime();
+  this._startTime = this._timeline.currentTime;
   this._timeDrift = 0.0;
   this._pauseTime = null;
 
@@ -190,7 +191,7 @@ Player.prototype.__defineSetter__('currentTime', function(currentTime) {
   // This seeks by updating _drift. It does not affect the startTime.
   if (this._pauseTime === null) {
     this._timeDrift =
-        this._timeline.currentTime() - this.startTime - currentTime;
+        this._timeline.currentTime - this.startTime - currentTime;
   } else {
     this._pauseTime = currentTime;
   }
@@ -198,7 +199,7 @@ Player.prototype.__defineSetter__('currentTime', function(currentTime) {
 });
 Player.prototype.__defineGetter__('currentTime', function() {
   return this._pauseTime === null ?
-      this._timeline.currentTime() - this._timeDrift - this.startTime :
+      this._timeline.currentTime - this._timeDrift - this.startTime :
       this._pauseTime;
 });
 Player.prototype.__defineSetter__('startTime', function(startTime) {
@@ -217,7 +218,7 @@ mixin(Player.prototype, {
   },
   unpause: function() {
     if (this._pauseTime !== null) {
-      this._timeDrift = this._timeline.currentTime() - this._pauseTime;
+      this._timeDrift = this._timeline.currentTime - this._pauseTime;
       this._pauseTime = null;
     }
   },
