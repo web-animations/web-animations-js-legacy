@@ -66,15 +66,16 @@ player.pause();
 var currentTime = player.currentTime;
 setTimeout(function() {
   player.pause();
-  check(player.currentTime, currentTime, "");
+  check(player.currentTime, currentTime, "Player.currentTime should be " +
+      "unaffected by repeated calls to Player.pause()");
 
   // Test that repeated calls to unpause() have no effect.
   player.unpause();
-  check(player.currentTime >= currentTime, true, "");
-  var drift = player._timeDrift;
   setTimeout(function() {
+    currentTime = player.currentTime;
     player.unpause();
-    check(player._timeDrift, drift, "");
+    check(player.currentTime > currentTime, true, "Player.currentTime should " +
+        "be unaffected by repeated calls to Player.unpause()");
   }, 100);
 }, 100);
 
