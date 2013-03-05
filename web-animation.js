@@ -2380,7 +2380,7 @@ var getValue = function(target, property) {
   }
 }
 
-var rAFNo = undefined;
+var rafNo = undefined;
 
 var compositor = new Compositor();
 
@@ -2401,24 +2401,26 @@ var stableSort = function(array, compare) {
 
 // If requestAnimationFrame is unprefixed then it uses high-res time.
 var useHighResTime = 'requestAnimationFrame' in window;
-var requestAnimationFrame = window.requestAnimationFrame ||
-    window.webkitRequestAnimationFrame || // 80 wrap is so 80s
+
+// Don't use a local named requestAnimationFrame, to avoid potential problems
+// with hoisting.
+var raf = window.requestAnimationFrame || window.webkitRequestAnimationFrame ||
     window.mozRequestAnimationFrame || window.msRequestAnimationFrame;
 
 // Only defined in the scope of a rAF callback.
-var rAFTime = undefined;
+var rafTime = undefined;
 // Gets the documentTime in seconds.
 var clock = function() {
   return useHighResTime ? performance.now() : Date.now();
 };
 var clockZero = clock();
 var documentTime = function() {
-  // Use rAFTime if available, for consistency. Otherwise, use a clock.
-  return ((isDefined(rAFTime) ? rAFTime : clock()) - clockZero) / 1000;
+  // Use rafTime if available, for consistency. Otherwise, use a clock.
+  return ((isDefined(rafTime) ? rafTime : clock()) - clockZero) / 1000;
 };
 
 var ticker = function(time) {
-  rAFTime = time;
+  rafTime = time;
   // Get animations for this sample
   // TODO: Consider reverting to direct application of values and sorting
   // inside the compositor.
@@ -2448,12 +2450,12 @@ var ticker = function(time) {
   }
 
   if (requiresFurtherIterations) {
-    rAFNo = requestAnimationFrame(ticker);
+    rafNo = raf(ticker);
   } else {
-    rAFNo = undefined;
+    rafNo = undefined;
   }
 
-  rAFTime = undefined;
+  rafTime = undefined;
 };
 
 // Multiplication where zero multiplied by any value (including infinity)
@@ -2463,10 +2465,10 @@ var multiplyZeroGivesZero = function(a, b) {
 };
 
 var maybeRestartAnimation = function() {
-  if (isDefinedAndNotNull(rAFNo)) {
+  if (isDefinedAndNotNull(rafNo)) {
     return;
   }
-  rAFNo = requestAnimationFrame(ticker);
+  rafNo = raf(ticker);
 };
 
 var DOCUMENT_TIMELINE = new DocumentTimeline();
