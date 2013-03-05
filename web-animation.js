@@ -93,21 +93,32 @@ var TimingProxy = function(timing, setter) {
   this._setter = setter;
 };
 
+// Configures an accessor descriptor for use with Object.defineProperty() to
+// allow the property to be changed and enumerated, to match __defineGetter__()
+// and __defineSetter__().
+var configureDescriptor = function(descriptor) {
+  descriptor.configurable = true,
+  descriptor.enumerable = true;
+  return descriptor;
+};
+
 ['startDelay', 'duration', 'iterationCount', 'iterationStart', 'playbackRate',
     'direction', 'timingFunction', 'fillMode'].forEach(function(s) {
-  TimingProxy.prototype.__defineGetter__(s, function() {
-    return this._timing[s];
-  });
-  TimingProxy.prototype.__defineSetter__(s, function(v) {
-    var old = this._timing[s];
-    this._timing[s] = v;
-    try {
-      this._setter(v);
-    } catch (e) {
-      this._timing[s] = old;
-      throw e;
-    }
-  });
+  Object.defineProperty(TimingProxy.prototype, s, configureDescriptor({
+    get: function() {
+      return this._timing[s];
+    },
+    set: function(v) {
+      var old = this._timing[s];
+      this._timing[s] = v;
+      try {
+        this._setter(v);
+      } catch (e) {
+        this._timing[s] = old;
+        throw e;
+      }
+    },
+  }));
 });
 
 mixin(TimingProxy.prototype, {
@@ -142,10 +153,14 @@ var isDefinedAndNotNull = function(val) {
 var DocumentTimeline = function() {
 };
 
-mixin(DocumentTimeline.prototype, {
-  currentTime: function() {
+Object.defineProperty(DocumentTimeline.prototype, 'currentTime',
+    configureDescriptor({
+  get: function() {
     return documentTime();
   },
+}));
+
+mixin(DocumentTimeline.prototype, {
   createPlayer: function(timedItem) {
     return new Player(timedItem, this);
   },
@@ -160,7 +175,7 @@ var PLAYERS = [];
 var Player = function(timedItem, timeline) {
   this.timedItem = timedItem;
   this._timeline = timeline;
-  this._startTime = this._timeline.currentTime();
+  this._startTime = this._timeline.currentTime;
   this._timeDrift = 0.0;
   this._pauseTime = null;
 
@@ -171,45 +186,51 @@ var Player = function(timedItem, timeline) {
   maybeRestartAnimation();
 };
 
-Player.prototype.__defineSetter__('timedItem', function(timedItem) {
-  if (isDefinedAndNotNull(this.timedItem)) {
-    // To prevent infinite recursion.
-    var oldTimedItem = this.timedItem;
-    this._timedItem = null;
-    oldTimedItem._attach(null);
-  }
-  this._timedItem = timedItem;
-  if (isDefinedAndNotNull(this.timedItem)) {
-    this.timedItem._attach(this);
-  }
-});
-Player.prototype.__defineGetter__('timedItem', function() {
-  return this._timedItem;
-});
-Player.prototype.__defineSetter__('currentTime', function(currentTime) {
-  // This seeks by updating _drift. It does not affect the startTime.
-  if (this._pauseTime === null) {
-    this._timeDrift =
-        this._timeline.currentTime() - this.startTime - currentTime;
-  } else {
-    this._pauseTime = currentTime;
-  }
-  maybeRestartAnimation();
-});
-Player.prototype.__defineGetter__('currentTime', function() {
-  return this._pauseTime === null ?
-      this._timeline.currentTime() - this._timeDrift - this.startTime :
-      this._pauseTime;
-});
-Player.prototype.__defineSetter__('startTime', function(startTime) {
-  // This seeks by updating _startTime and hence the currentTime. It does not
-  // affect _drift.
-  this._startTime = startTime;
-  maybeRestartAnimation();
-});
-Player.prototype.__defineGetter__('startTime', function() {
-  return this._startTime;
-});
+Object.defineProperty(Player.prototype, 'timedItem', configureDescriptor({
+  set: function(timedItem) {
+    if (isDefinedAndNotNull(this.timedItem)) {
+      // To prevent infinite recursion.
+      var oldTimedItem = this.timedItem;
+      this._timedItem = null;
+      oldTimedItem._attach(null);
+    }
+    this._timedItem = timedItem;
+    if (isDefinedAndNotNull(this.timedItem)) {
+      this.timedItem._attach(this);
+    }
+  },
+  get: function() {
+    return this._timedItem;
+  },
+}));
+Object.defineProperty(Player.prototype, 'currentTime', configureDescriptor({
+  set: function(currentTime) {
+    // This seeks by updating _drift. It does not affect the startTime.
+    if (this._pauseTime === null) {
+      this._timeDrift =
+          this._timeline.currentTime - this.startTime - currentTime;
+    } else {
+      this._pauseTime = currentTime;
+    }
+    maybeRestartAnimation();
+  },
+  get: function() {
+    return this._pauseTime === null ?
+        this._timeline.currentTime - this._timeDrift - this.startTime :
+        this._pauseTime;
+  },
+}));
+Object.defineProperty(Player.prototype, 'startTime', configureDescriptor({
+  set: function(startTime) {
+    // This seeks by updating _startTime and hence the currentTime. It does not
+    // affect _drift.
+    this._startTime = startTime;
+    maybeRestartAnimation();
+  },
+  get: function() {
+    return this._startTime;
+  },
+}));
 
 mixin(Player.prototype, {
   pause: function() {
@@ -217,7 +238,7 @@ mixin(Player.prototype, {
   },
   unpause: function() {
     if (this._pauseTime !== null) {
-      this._timeDrift = this._timeline.currentTime() - this._pauseTime;
+      this._timeDrift = this._timeline.currentTime - this._pauseTime;
       this._pauseTime = null;
     }
   },
@@ -277,48 +298,64 @@ var TimedItem = function(timing, parentGroup) {
 
 // TODO: It would be good to avoid the need for this. We would need to modify
 // call sites to instead rely on a call from the parent.
-TimedItem.prototype.__defineGetter__('_effectiveParentTime', function() {
-  return this.parentGroup !== null && this.parentGroup.iterationTime !== null ?
-      this.parentGroup.iterationTime : 0;
-});
-TimedItem.prototype.__defineGetter__('currentTime', function() {
-  return this._inheritedTime - this._startTime - this.timeDrift;
-});
-TimedItem.prototype.__defineSetter__('currentTime', function(seekTime) {
-  this.timeDrift = this._inheritedTime - this._startTime - seekTime;
-  this._updateTimeMarkers();
-});
-TimedItem.prototype.__defineGetter__('startTime', function() {
-  return this._startTime;
-});
-TimedItem.prototype.__defineSetter__('duration', function(duration) {
-  this._duration = duration;
-  this._updateInternalState();
-});
-TimedItem.prototype.__defineGetter__('duration', function() {
-  return isDefined(this._duration) ?
-      this._duration : (isDefined(this.timing.duration) ?
-          this.timing.duration : this._intrinsicDuration());
-});
-TimedItem.prototype.__defineSetter__('animationDuration',
-    function(animationDuration) {
-  this._animationDuration = animationDuration;
-  this._updateInternalState();
-});
-TimedItem.prototype.__defineGetter__('animationDuration', function() {
-  if (isDefined(this._animationDuration)) {
-    return this._animationDuration;
-  }
-  var repeatedDuration = this.duration * this.timing.iterationCount;
-  return repeatedDuration / Math.abs(this.timing.playbackRate);
-});
-TimedItem.prototype.__defineGetter__('endTime', function() {
-  return this._startTime + this.animationDuration + this.timing.startDelay +
-      this.timeDrift;
-});
-TimedItem.prototype.__defineGetter__('parentGroup', function() {
-  return this._parentGroup;
-});
+Object.defineProperty(TimedItem.prototype, '_effectiveParentTime',
+    configureDescriptor({
+  get: function() {
+    return
+        this.parentGroup !== null && this.parentGroup.iterationTime !== null ?
+        this.parentGroup.iterationTime : 0;
+  },
+}));
+Object.defineProperty(TimedItem.prototype, 'currentTime', configureDescriptor({
+  get: function() {
+    return this._inheritedTime - this._startTime - this.timeDrift;
+  },
+  set: function(seekTime) {
+    this.timeDrift = this._inheritedTime - this._startTime - seekTime;
+    this._updateTimeMarkers();
+  },
+}));
+Object.defineProperty(TimedItem.prototype, 'startTime', configureDescriptor({
+  get: function() {
+    return this._startTime;
+  },
+}));
+Object.defineProperty(TimedItem.prototype, 'duration', configureDescriptor({
+  set: function(duration) {
+    this._duration = duration;
+    this._updateInternalState();
+  },
+  get: function() {
+    return isDefined(this._duration) ?
+        this._duration : (isDefined(this.timing.duration) ?
+            this.timing.duration : this._intrinsicDuration());
+  },
+}));
+Object.defineProperty(TimedItem.prototype, 'animationDuration',
+    configureDescriptor({
+  set: function(animationDuration) {
+    this._animationDuration = animationDuration;
+    this._updateInternalState();
+  },
+  get: function() {
+    if (isDefined(this._animationDuration)) {
+      return this._animationDuration;
+    }
+    var repeatedDuration = this.duration * this.timing.iterationCount;
+    return repeatedDuration / Math.abs(this.timing.playbackRate);
+  },
+}));
+Object.defineProperty(TimedItem.prototype, 'endTime', configureDescriptor({
+  get: function() {
+    return this._startTime + this.animationDuration + this.timing.startDelay +
+        this.timeDrift;
+  },
+}));
+Object.defineProperty(TimedItem.prototype, 'parentGroup', configureDescriptor({
+  get: function() {
+    return this._parentGroup;
+  },
+}));
 
 mixin(TimedItem.prototype, {
   _attach: function(player) {
@@ -825,8 +862,10 @@ mixin(AnimationGroup.prototype, {
   _lengthChanged: function() {
     while (this.length < this.children.length) {
       var i = this.length++;
-      this.__defineSetter__(i, function(x) { this.children[i] = x; });
-      this.__defineGetter__(i, function() { return this.children[i]; });
+      Object.defineProperty(this, i, configureDescriptor({
+        set: function(x) { this.children[i] = x; },
+        get: function() { return this.children[i]; },
+      }));
     }
     while (this.length > this.children.length) {
       var i = --this.length;
@@ -1013,9 +1052,12 @@ mixin(GroupedAnimationFunction.prototype, {
   }
 });
 
-GroupedAnimationFunction.prototype.__defineGetter__('length', function() {
-  return this.children.length;
-});
+Object.defineProperty(GroupedAnimationFunction.prototype, 'length',
+    configureDescriptor({
+  get: function() {
+    return this.children.length;
+  },
+}));
 
 /** @constructor */
 var PathAnimationFunction = function(path, operation, accumulateOperation) {
@@ -1053,19 +1095,21 @@ mixin(PathAnimationFunction.prototype, {
   }
 });
 
-PathAnimationFunction.prototype.__defineSetter__('segments', function(segments) {
-  // TODO: moving the path segments is not entirely correct, but we can't
-  // assign the list to the path.
-  var targetSegments = this._path.pathSegList;
-  targetSegments.clear();
-  for (var i = 0; i < segments.numberOfItems; i++) {
-    this._path.pathSegList.appendItem(segments.getItem(i));
-  }
-});
-
-PathAnimationFunction.prototype.__defineGetter__('segments', function() {
-  return this._path.pathSegList;
-});
+Object.defineProperty(PathAnimationFunction.prototype, 'segments',
+    configureDescriptor({
+  set: function(segments) {
+    // TODO: moving the path segments is not entirely correct, but we can't
+    // assign the list to the path.
+    var targetSegments = this._path.pathSegList;
+    targetSegments.clear();
+    for (var i = 0; i < segments.numberOfItems; i++) {
+      this._path.pathSegList.appendItem(segments.getItem(i));
+    }
+  },
+  get: function() {
+    return this._path.pathSegList;
+  },
+}));
 
 /** @constructor */
 var KeyframesAnimationFunction =
@@ -1235,9 +1279,11 @@ mixin(KeyframeList.prototype, {
   }
 });
 
-KeyframeList.prototype.__defineGetter__('length', function() {
-  return this.frames.length;
-});
+Object.defineProperty(KeyframeList.prototype, 'length', configureDescriptor({
+  get: function() {
+    return this.frames.length;
+  },
+}));
 
 var presetTimings = {
   'ease': [0.25, 0.1, 0.25, 1.0],
@@ -2337,18 +2383,21 @@ var initializeIfSVGAndUninitialized = function(property, target) {
       var baseVal = target.getAttribute(property);
       target._actuals[property] = 0;
       target._bases[property] = baseVal;
-      target.actuals.__defineSetter__(property, function(value) {
-        if (value == null) {
-          target._actuals[property] = target._bases[property];
-          target._setAttribute(property, target._bases[property]);
-        } else {
-          target._actuals[property] = value;
-          target._setAttribute(property, value)
-        }
-      });
-      target.actuals.__defineGetter__(property, function() {
-        return target._actuals[property];
-      });
+
+      Object.defineProperty(target.actuals, property, configureDescriptor({
+        set: function(value) {
+          if (value == null) {
+            target._actuals[property] = target._bases[property];
+            target._setAttribute(property, target._bases[property]);
+          } else {
+            target._actuals[property] = value;
+            target._setAttribute(property, value)
+          }
+        },
+        get: function() {
+          return target._actuals[property];
+        },
+      }));
     }
   }
 }
@@ -2470,9 +2519,11 @@ var maybeRestartAnimation = function() {
 };
 
 var DOCUMENT_TIMELINE = new DocumentTimeline();
-document.__defineGetter__('timeline', function() {
-  return DOCUMENT_TIMELINE;
-})
+Object.defineProperty(document, 'timeline', configureDescriptor({
+  get: function() {
+    return DOCUMENT_TIMELINE;
+  },
+}));
 
 window.Animation = Animation;
 window.Timing = Timing;
