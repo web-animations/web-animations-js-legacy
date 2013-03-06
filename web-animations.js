@@ -257,8 +257,10 @@ mixin(Player.prototype, {
     return this.timedItem === null ||
         this.timedItem._isPastEndOfActiveInterval();
   },
-  _getItemsInEffect: function() {
-    return this.timedItem === null ? [] : this.timedItem._getItemsInEffect();
+  _getItemsInEffect: function(animations) {
+    if (this.timedItem) {
+      this.timedItem._getItemsInEffect(animations);
+    }
   },
 });
 
@@ -599,13 +601,12 @@ mixin(TimedItem.prototype, {
   // Gets the TimedItems currently in effect. Note that this is a superset of
   // the TimedItems in their active interval, as a TimedItem can have an effect
   // outside its active interval due to fill.
-  _getItemsInEffect: function() {
-    if (this._timeFraction === null) {
-      return [];
+  _getItemsInEffect: function(animations) {
+    if (this._timeFraction !== null) {
+      this._getItemsInEffectImpl(animations);
     }
-    return this._getItemsInEffectImpl();
   },
-  _getItemsInEffectImpl: function() {
+  _getItemsInEffectImpl: function(animations) {
     throw new Error(
         "Derived classes must override TimedItem._getItemsInEffectImpl()");
   },
@@ -691,8 +692,8 @@ mixin(Animation.prototype, {
         this.currentIteration, this.targetElement,
         this.underlyingValue);
   },
-  _getItemsInEffectImpl: function() {
-    return [this];
+  _getItemsInEffectImpl: function(animations) {
+    animations.push(this);
   },
   clone: function() {
     return new Animation(this.targetElement,
@@ -757,14 +758,16 @@ mixin(AnimationGroup.prototype, {
     this._updateChildInheritedTimes();
   },
   _updateChildInheritedTimes: function() {
-    this.children.forEach(function(child) {
+    for (var i = 0; i < this.children.length; i++) {
+      var child = this.children[i];
       child._updateInheritedTime(this.iterationTime);
-    }.bind(this));
+    }
   },
   _updateChildStartTimes: function() {
     if (this.type == 'seq') {
       var cumulativeStartTime = 0;
-      this.children.forEach(function(child) {
+      for (var i = 0; i < this.children.length; i++) {
+        var child = this.children[i];
         if (child._stashedStartTime === undefined) {
           child._stashedStartTime = child._startTime;
         }
@@ -777,7 +780,7 @@ mixin(AnimationGroup.prototype, {
         }
         cumulativeStartTime += Math.max(0, child.timing.startDelay +
             child.animationDuration);
-      }.bind(this));
+      }
     }
   },
   getAnimationsForElement: function(elem) {
@@ -807,18 +810,16 @@ mixin(AnimationGroup.prototype, {
       throw 'Unsupported type ' + this.type;
     }
   },
-  _getItemsInEffectImpl: function() {
-    var animations = [];
-    this.children.forEach(function(child) {
-      animations = animations.concat(child._getItemsInEffect());
-    }.bind(this));
-    return animations;
+  _getItemsInEffectImpl: function(animations) {
+    for (var i = 0; i < this.children.length; i++) {
+      this.children[i]._getItemsInEffect(animations);
+    }
   },
   clone: function() {
     var children = [];
     this.children.forEach(function(child) {
       children.push(child.clone());
-    }.bind(this));
+    });
     return this.type === "par" ?
         new ParGroup(children, this.timing.clone()) :
         new SeqGroup(children, this.timing.clone());
@@ -2484,7 +2485,7 @@ var ticker = function(rafTime) {
   sortedPlayers.forEach(function(player) {
     player._update();
     requiresFurtherIterations |= !player._isPastEndOfActiveInterval();
-    animations = animations.concat(player._getItemsInEffect());
+    player._getItemsInEffect(animations);
   });
 
   // Apply animations in order
