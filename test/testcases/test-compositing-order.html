@@ -58,9 +58,6 @@ var check = function(actual, expected, failureMessage) {
 var leftToRight = {left: ["100px", "200px"]};
 var rightToLeft = {left: ["200px", "100px"]};
 
-/*
-TODO: Reinstate pause functionality.
-
 // Test that an animation uses the correct compositing order when it has a
 // grandparent that remains active longer than its parent.
 //
@@ -69,15 +66,15 @@ TODO: Reinstate pause functionality.
 // because the second animation has a later start time, it should be composited
 // second, so the div should end up on the left.
 var target1 = document.getElementById("target1");
-var anim = new ParGroup([
+var player = document.timeline.createPlayer(new ParGroup([
   new ParGroup([
     new Animation(target1, leftToRight, 1.0),
   ]),
   new Animation(target1, rightToLeft, {duration: 1.0, startDelay: 2.0}),
-]);
+]));
 
-anim.pause();
-anim.currentTime = 3.0;
+player.pause();
+player.currentTime = 3.0;
 setTimeout(function() {
   check(getComputedStyle(target1).getPropertyValue("left"), "100px",
       "Nested animation should have earlier compositing order");
@@ -89,19 +86,18 @@ setTimeout(function() {
 // playback rate of 4.0, so the effective start time of its child animation is
 // 2.0. So the the div should end up on the left at time 3.0.
 var target2 = document.getElementById("target2");
-var anim = new ParGroup([
+var player = document.timeline.createPlayer(new ParGroup([
   new Animation(target2, leftToRight, 1.0),
   new ParGroup([
     new Animation(target2, rightToLeft, {duration: 4.0, startDelay: 8.0}),
   ], {playbackRate: 4.0}),
-]);
+]));
 
-anim.pause();
-anim.currentTime = 3.0;
+player.pause();
+player.currentTime = 3.0;
 setTimeout(function() {
   check(getComputedStyle(target2).getPropertyValue("left"), "100px",
       "Nested animation should have later compositing order");
 }, 100.0);
-*/
 
 </script>
