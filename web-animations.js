@@ -16,18 +16,13 @@
  */
 (function() {
 
-var inherits = function(child, parent) {
-  var tmp = function() {};
-  tmp.prototype = parent.prototype;
-  child.$super = parent;
-  child.prototype = new tmp();
-  child.prototype.constructor = child;
-};
-
-var mixin = function(target, source) {
-  for (var k in source) {
-    target[k] = source[k];
-  }
+var createObject = function(proto, obj) {
+  var newObject = Object.create(proto);
+  Object.getOwnPropertyNames(obj).forEach(function(name) {
+    Object.defineProperty(newObject, name,
+                          Object.getOwnPropertyDescriptor(obj, name));
+  });
+  return newObject;
 };
 
 var strip = function(str) {
@@ -35,12 +30,12 @@ var strip = function(str) {
 };
 
 var IndexSizeError = function(message) {
-  IndexSizeError.$super.call(this);
+  Error.call(this);
   this.name = "IndexSizeError";
   this.message = message;
-}
+};
 
-inherits(IndexSizeError, Error);
+IndexSizeError.prototype = Object.create(Error.prototype);
 
 /** @constructor */
 var Timing = function(timingDict) {
@@ -71,7 +66,7 @@ var Timing = function(timingDict) {
   this.fillMode = timingDict.fillMode || 'forwards';
 };
 
-mixin(Timing.prototype, {
+Timing.prototype = {
   // TODO: Is this supposed to be public?
   clone: function() {
     return new Timing({
@@ -84,13 +79,32 @@ mixin(Timing.prototype, {
       timingFunction: this.timingFunction ? this.timingFunction.clone() : null,
       fillMode: this.fillMode
     });
-  },
-});
+  }
+};
 
 /** @constructor */
 var TimingProxy = function(timing, setter) {
   this._timing = timing;
   this._setter = setter;
+};
+
+TimingProxy.prototype = {
+  extractMutableTiming: function() {
+    return new Timing({
+      startDelay: this._timing.startDelay,
+      duration: this._timing.duration,
+      iterationCount: this._timing.iterationCount,
+      iterationStart: this._timing.iterationStart,
+      playbackRate: this._timing.playbackRate,
+      direction: this._timing.direction,
+      timingFunction: this._timing.timingFunction ?
+                  this._timing.timingFunction.clone() : null,
+      fillMode: this._timing.fillMode
+    });
+  },
+  clone: function() {
+    return this._timing.clone();
+  }
 };
 
 // Configures an accessor descriptor for use with Object.defineProperty() to
@@ -121,25 +135,6 @@ var configureDescriptor = function(descriptor) {
   }));
 });
 
-mixin(TimingProxy.prototype, {
-  extractMutableTiming: function() {
-    return new Timing({
-      startDelay: this._timing.startDelay,
-      duration: this._timing.duration,
-      iterationCount: this._timing.iterationCount,
-      iterationStart: this._timing.iterationStart,
-      playbackRate: this._timing.playbackRate,
-      direction: this._timing.direction,
-      timingFunction: this._timing.timingFunction ?
-                  this._timing.timingFunction.clone() : null,
-      fillMode: this._timing.fillMode
-    });
-  },
-  clone: function() {
-    return this._timing.clone();
-  }
-});
-
 var isDefined = function(val) {
   return typeof val !== 'undefined';
 };
@@ -153,19 +148,14 @@ var isDefinedAndNotNull = function(val) {
 var DocumentTimeline = function() {
 };
 
-Object.defineProperty(DocumentTimeline.prototype, 'currentTime',
-    configureDescriptor({
-  get: function() {
+DocumentTimeline.prototype = {
+  get currentTime() {
     return documentTime();
   },
-}));
-
-mixin(DocumentTimeline.prototype, {
   createPlayer: function(timedItem) {
     return new Player(timedItem, this);
-  },
-});
-
+  }
+};
 
 // TODO: Remove dead Players from here?
 var PLAYERS = [];
@@ -186,8 +176,8 @@ var Player = function(timedItem, timeline) {
   maybeRestartAnimation();
 };
 
-Object.defineProperty(Player.prototype, 'timedItem', configureDescriptor({
-  set: function(timedItem) {
+Player.prototype = {
+  set timedItem(timedItem) {
     if (isDefinedAndNotNull(this.timedItem)) {
       // To prevent infinite recursion.
       var oldTimedItem = this.timedItem;
@@ -199,12 +189,10 @@ Object.defineProperty(Player.prototype, 'timedItem', configureDescriptor({
       this.timedItem._attach(this);
     }
   },
-  get: function() {
+  get timedItem() {
     return this._timedItem;
   },
-}));
-Object.defineProperty(Player.prototype, 'currentTime', configureDescriptor({
-  set: function(currentTime) {
+  set currentTime(currentTime) {
     // This seeks by updating _drift. It does not affect the startTime.
     if (!isDefined(this._pauseTime)) {
       this._timeDrift =
@@ -214,7 +202,7 @@ Object.defineProperty(Player.prototype, 'currentTime', configureDescriptor({
     }
     maybeRestartAnimation();
   },
-  get: function() {
+  get currentTime() {
     if (this._timeline.currentTime === null) {
       return null;
     }
@@ -222,20 +210,16 @@ Object.defineProperty(Player.prototype, 'currentTime', configureDescriptor({
         this._timeline.currentTime - this._timeDrift - this.startTime :
         this._pauseTime;
   },
-}));
-Object.defineProperty(Player.prototype, 'startTime', configureDescriptor({
-  set: function(startTime) {
+  set startTime(startTime) {
     // This seeks by updating _startTime and hence the currentTime. It does not
     // affect _drift.
     this._startTime = startTime;
     maybeRestartAnimation();
   },
-  get: function() {
+  get startTime() {
     return this._startTime;
   },
-}));
-Object.defineProperty(Player.prototype, 'paused', configureDescriptor({
-  set: function(isPaused) {
+  set paused(isPaused) {
     if (isPaused) {
       this._pauseTime = this.currentTime;
     } else if (isDefined(this._pauseTime)) {
@@ -243,12 +227,9 @@ Object.defineProperty(Player.prototype, 'paused', configureDescriptor({
       this._pauseTime = undefined;
     }
   },
-  get: function() {
+  get paused() {
     return isDefined(this._pauseTime);
   },
-}));
-
-mixin(Player.prototype, {
   cancel: function() {
     this.timedItem = null;
   },
@@ -265,8 +246,8 @@ mixin(Player.prototype, {
     if (this.timedItem) {
       this.timedItem._getLeafItemsInEffect(items);
     }
-  },
-});
+  }
+};
 
 
 /** @constructor */
@@ -301,68 +282,51 @@ var TimedItem = function(timing, parentGroup) {
   this._updateInternalState();
 };
 
-// TODO: It would be good to avoid the need for this. We would need to modify
-// call sites to instead rely on a call from the parent.
-Object.defineProperty(TimedItem.prototype, '_effectiveParentTime',
-    configureDescriptor({
-  get: function() {
+TimedItem.prototype = {
+  // TODO: It would be good to avoid the need for this. We would need to modify
+  // call sites to instead rely on a call from the parent.
+  get _effectiveParentTime() {
     return
         this.parentGroup !== null && this.parentGroup.iterationTime !== null ?
         this.parentGroup.iterationTime : 0;
   },
-}));
-Object.defineProperty(TimedItem.prototype, 'currentTime', configureDescriptor({
-  get: function() {
+  get currentTime() {
     return this._inheritedTime - this._startTime - this.timeDrift;
   },
-  set: function(seekTime) {
+  set currentTime(seekTime) {
     this.timeDrift = this._inheritedTime - this._startTime - seekTime;
     this._updateTimeMarkers();
   },
-}));
-Object.defineProperty(TimedItem.prototype, 'startTime', configureDescriptor({
-  get: function() {
+  get startTime() {
     return this._startTime;
   },
-}));
-Object.defineProperty(TimedItem.prototype, 'duration', configureDescriptor({
-  set: function(duration) {
+  set duration(duration) {
     this._duration = duration;
     this._updateInternalState();
   },
-  get: function() {
+  get duration() {
     return isDefined(this._duration) ?
         this._duration : (isDefined(this.timing.duration) ?
             this.timing.duration : this._intrinsicDuration());
   },
-}));
-Object.defineProperty(TimedItem.prototype, 'animationDuration',
-    configureDescriptor({
-  set: function(animationDuration) {
+  set animationDuration(animationDuration) {
     this._animationDuration = animationDuration;
     this._updateInternalState();
   },
-  get: function() {
+  get animationDuration() {
     if (isDefined(this._animationDuration)) {
       return this._animationDuration;
     }
     var repeatedDuration = this.duration * this.timing.iterationCount;
     return repeatedDuration / Math.abs(this.timing.playbackRate);
   },
-}));
-Object.defineProperty(TimedItem.prototype, 'endTime', configureDescriptor({
-  get: function() {
+  get endTime() {
     return this._startTime + this.animationDuration + this.timing.startDelay +
         this.timeDrift;
   },
-}));
-Object.defineProperty(TimedItem.prototype, 'parentGroup', configureDescriptor({
-  get: function() {
+  get parentGroup() {
     return this._parentGroup;
   },
-}));
-
-mixin(TimedItem.prototype, {
   _attach: function(player) {
     // Remove ourselves from our parent, if we have one. This also removes any
     // exsisting player.
@@ -620,8 +584,8 @@ mixin(TimedItem.prototype, {
   getPlayer: function() {
     return this.parentGroup === null ?
         this._player : this.parentGroup.getPlayer();
-  },
-});
+  }
+};
 
 var isCustomAnimationFunction = function(animationFunction) {
   // TODO: How does WebIDL actually differentiate different callback interfaces?
@@ -682,15 +646,14 @@ var Animation = function(target, animationFunction, timing, parentGroup) {
   this.animationFunction = interpretAnimationFunction(animationFunction);
   this.timing = interpretTimingParam(timing);
 
-  Animation.$super.call(this, timing, parentGroup);
+  TimedItem.call(this, timing, parentGroup);
 
   this.targetElement = target;
   this.name = this.animationFunction instanceof KeyframesAnimationFunction ?
       this.animationFunction.property : '<anon>';
 };
 
-inherits(Animation, TimedItem);
-mixin(Animation.prototype, {
+Animation.prototype = createObject(TimedItem.prototype, {
   _sample: function() {
     this.animationFunction.sample(this._timeFraction,
         this.currentIteration, this.targetElement,
@@ -724,7 +687,7 @@ var AnimationGroup = function(type, children, timing, parentGroup) {
   this.type = type || 'par';
   this.children = [];
   this.length = 0;
-  AnimationGroup.$super.call(this, timing, parentGroup);
+  TimedItem.call(this, timing, parentGroup);
   // We add children after setting the parent. This means that if an ancestor
   // (including the parent) is specified as a child, it will be removed from our
   // ancestors and used as a child,
@@ -735,8 +698,7 @@ var AnimationGroup = function(type, children, timing, parentGroup) {
   // this.name = properties.name || '<anon>';
 };
 
-inherits(AnimationGroup, TimedItem);
-mixin(AnimationGroup.prototype, {
+AnimationGroup.prototype = createObject(TimedItem.prototype, {
   _childrenStateModified: function() {
     // See _updateChildStartTimes().
     this._isInOnChildrenStateModified = true;
@@ -903,18 +865,18 @@ mixin(AnimationGroup.prototype, {
 });
 
 /** @constructor */
-var ParGroup = function(children, timing, parentGroup) {
-  ParGroup.$super.call(this, 'par', children, timing, parentGroup);
+var  ParGroup = function(children, timing, parentGroup) {
+  AnimationGroup.call(this, 'par', children, timing, parentGroup);
 };
 
-inherits(ParGroup, AnimationGroup);
+ParGroup.prototype = Object.create(AnimationGroup.prototype);
 
 /** @constructor */
 var SeqGroup = function(children, timing, parentGroup) {
-  SeqGroup.$super.call(this, 'seq', children, timing, parentGroup);
+  AnimationGroup.call(this, 'seq', children, timing, parentGroup);
 };
 
-inherits(SeqGroup, AnimationGroup);
+SeqGroup.prototype = Object.create(AnimationGroup.prototype);
 
 /** @constructor */
 var AnimationFunction = function(operation, accumulateOperation) {
@@ -923,7 +885,7 @@ var AnimationFunction = function(operation, accumulateOperation) {
       accumulateOperation == undefined ? 'replace' : operation;
 };
 
-mixin(AnimationFunction.prototype, {
+AnimationFunction.prototype = {
   sample: function(timeFraction, currentIteration, target) {
     throw 'Unimplemented sample function';
   },
@@ -933,7 +895,7 @@ mixin(AnimationFunction.prototype, {
   clone: function() {
     throw 'Unimplemented clone method'
   }
-});
+};
 
 AnimationFunction.createFromProperties = function(properties) {
   // Step 1 - determine set of animation properties
@@ -993,12 +955,11 @@ AnimationFunction._createKeyframeFunction =
 
 /** @constructor */
 var GroupedAnimationFunction = function() {
-  GroupedAnimationFunction.$super.call(this);
+  AnimationFunction.call(this);
   this.children = [];
 };
 
-inherits(GroupedAnimationFunction, AnimationFunction);
-mixin(GroupedAnimationFunction.prototype, {
+GroupedAnimationFunction.prototype = createObject(AnimationFunction.prototype, {
   item: function(i) {
     return this.children[i];
   },
@@ -1018,26 +979,21 @@ mixin(GroupedAnimationFunction.prototype, {
     for (var i = 0; i < this.children.length; i++) {
       result.add(this.children[i].clone());
     }
+  },
+  get length() {
+    return this.children.length;
   }
 });
 
-Object.defineProperty(GroupedAnimationFunction.prototype, 'length',
-    configureDescriptor({
-  get: function() {
-    return this.children.length;
-  },
-}));
-
 /** @constructor */
 var PathAnimationFunction = function(path, operation, accumulateOperation) {
-  PathAnimationFunction.$super.call(this, operation, accumulateOperation);
+  AnimationFunction.call(this, operation, accumulateOperation);
   // TODO: path argument is not in the spec -- seems useful since
   // SVGPathSegList doesn't have a constructor.
   this._path = path;
 };
 
-inherits(PathAnimationFunction, AnimationFunction);
-mixin(PathAnimationFunction.prototype, {
+PathAnimationFunction.prototype = createObject(AnimationFunction.prototype, {
   sample: function(timeFraction, currentIteration, target) {
     var length = this._path.getTotalLength();
     var point = this._path.getPointAtLength(timeFraction * length);
@@ -1061,12 +1017,8 @@ mixin(PathAnimationFunction.prototype, {
   },
   clone: function() {
     return new PathAnimationFunction(this._path.getAttribute('d'));
-  }
-});
-
-Object.defineProperty(PathAnimationFunction.prototype, 'segments',
-    configureDescriptor({
-  set: function(segments) {
+  },
+  set segments(segments) {
     // TODO: moving the path segments is not entirely correct, but we can't
     // assign the list to the path.
     var targetSegments = this._path.pathSegList;
@@ -1075,21 +1027,21 @@ Object.defineProperty(PathAnimationFunction.prototype, 'segments',
       this._path.pathSegList.appendItem(segments.getItem(i));
     }
   },
-  get: function() {
+  get segments() {
     return this._path.pathSegList;
-  },
-}));
+  }
+});
 
 /** @constructor */
 var KeyframesAnimationFunction =
     function(property, operation, accumulateOperation) {
-  KeyframesAnimationFunction.$super.call(this, operation, accumulateOperation);
+  AnimationFunction.call(this, operation, accumulateOperation);
   this.property = property;
   this.frames = new KeyframeList();
 };
 
-inherits(KeyframesAnimationFunction, AnimationFunction);
-mixin(KeyframesAnimationFunction.prototype, {
+KeyframesAnimationFunction.prototype = createObject(
+    AnimationFunction.prototype, {
   sample: function(timeFraction, currentIteration, target) {
     var frames = this.frames._sorted();
     if (frames.length == 0) {
@@ -1203,7 +1155,7 @@ var KeyframeList = function() {
   this._isSorted = true;
 };
 
-mixin(KeyframeList.prototype, {
+KeyframeList.prototype = {
   _sorted: function() {
     if (!this._isSorted) {
       this.frames.sort(function(a, b) {
@@ -1245,14 +1197,11 @@ mixin(KeyframeList.prototype, {
           this.frames[i].timingFunction));
     }
     return result;
-  }
-});
-
-Object.defineProperty(KeyframeList.prototype, 'length', configureDescriptor({
-  get: function() {
-    return this.frames.length;
   },
-}));
+  get length() {
+    return this.frames.length;
+  }
+};
 
 var presetTimings = {
   'ease': [0.25, 0.1, 0.25, 1.0],
@@ -1278,7 +1227,7 @@ var TimingFunction = function(spec) {
   }
 };
 
-mixin(TimingFunction.prototype, {
+TimingFunction.prototype = {
   scaleTime: function(fraction) {
     var fst = 0;
     while (fst != 100 && fraction > this.map[fst][0]) {
@@ -1295,7 +1244,7 @@ mixin(TimingFunction.prototype, {
   clone: function() {
     return new TimingFunction(this.params);
   }
-});
+};
 
 TimingFunction.createFromString = function(spec) {
   var preset = presetTimings[spec];
@@ -1322,10 +1271,9 @@ TimingFunction.createFromString = function(spec) {
 var StepTimingFunction = function(numSteps, position) {
   this.numSteps = numSteps;
   this.position = position || 'end';
-}
+};
 
-inherits(StepTimingFunction, TimingFunction);
-mixin(StepTimingFunction.prototype, {
+StepTimingFunction.prototype = createObject(TimingFunction.prototype, {
   scaleTime: function(fraction) {
     if (fraction >= 1)
       return 1;
@@ -1377,10 +1325,9 @@ var numberType = {
   fromCssValue: function(value) { return value !== '' ? Number(value): null; }
 };
 
-var integerType = {
+var integerType = createObject(numberType, {
   interpolate: function(from, to, f) { return Math.floor(interp(from, to, f)); }
-};
-integerType.__proto__ = numberType;
+});
 
 var fontWeightType = {
   zero: function() { return 0; },
@@ -1697,7 +1644,7 @@ var nonNumericType = {
   }
 };
 
-var visibilityType = {
+var visibilityType = createObject(nonNumericType, {
   interpolate: function(from, to, f) {
     if (from != 'visible' && to != 'visible') {
       return nonNumericType.interpolate(from, to, f);
@@ -1710,8 +1657,7 @@ var visibilityType = {
     }
     return 'visible';
   },
-};
-visibilityType.__proto__ = nonNumericType;
+});
 
 var lengthType = percentLengthType;
 
@@ -2248,7 +2194,7 @@ var CompositedPropertyMap = function(target) {
   this.target = target;
 };
 
-mixin(CompositedPropertyMap.prototype, {
+CompositedPropertyMap.prototype = {
   addValue: function(property, animValue) {
     if (!(property in this.properties)) {
       this.properties[property] = [];
@@ -2303,14 +2249,14 @@ mixin(CompositedPropertyMap.prototype, {
       }
     }
   }
-});
+};
 
 /** @constructor */
 var Compositor = function() {
   this.targets = []
 };
 
-mixin(Compositor.prototype, {
+Compositor.prototype = {
   setAnimatedValue: function(target, property, animValue) {
     if (target._anim_properties === undefined) {
       target._anim_properties = new CompositedPropertyMap(target);
@@ -2324,7 +2270,7 @@ mixin(Compositor.prototype, {
       target._anim_properties.applyAnimatedValues();
     }
   }
-});
+};
 
 var initializeIfSVGAndUninitialized = function(property, target) {
   if (propertyIsSVGAttrib(property, target)) {
