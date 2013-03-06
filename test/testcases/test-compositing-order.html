@@ -41,6 +41,8 @@ div.anim {
 <div id="fail">FAIL</div>
 <div id="target1" class="anim"></div>
 <div id="target2" class="anim"></div>
+<div id="target3" class="anim"></div>
+<div id="target4" class="anim"></div>
 
 <script src="../../web-animations.js"></script>
 <script>
@@ -103,6 +105,47 @@ player.currentTime = 3.0;
 setTimeout(function() {
   check(getComputedStyle(target2).getPropertyValue("left"), "100px",
       "Second animation should have later compositing order");
+}, 100.0);
+
+// Test compositing order follows Player start time order.
+var target3 = document.getElementById("target3");
+var player1 = document.timeline.createPlayer(
+  new Animation(target3, {left: ["100px", "200px"]}, 1.0));
+player1.startTime += 1.0;
+var player2 = document.timeline.createPlayer(
+  new Animation(target3, {left: ["100px", "1000px"]}, 2.0));
+
+player1.pause();
+player1.currentTime = 2.0;
+player2.pause();
+player2.currentTime = 2.0;
+setTimeout(function() {
+  check(getComputedStyle(target3).getPropertyValue("left"), "200px",
+      "First animation should have latest compositing order");
+}, 100.0);
+
+// Test compositing order follows tree order.
+var target4 = document.getElementById("target4");
+var player = document.timeline.createPlayer(new ParGroup([
+  new Animation(target4, {left: ["100px", "1000px"]}, 1.0),
+  new SeqGroup([
+    new Animation(target4, {left: ["100px", "1000px"]}, 1.0),
+    new ParGroup([
+      new Animation(target4, {left: ["100px", "1000px"]}, 1.0),
+      new Animation(target4, {left: ["100px", "1000px"]}, 1.0),
+    ]),
+  ]),
+  new ParGroup([
+    new Animation(target4, {left: ["100px", "1000px"]}, 1.0),
+    new Animation(target4, {left: ["100px", "200px"]}, 1.0),
+  ]),
+]));
+
+player.pause();
+player.currentTime = 2.0;
+setTimeout(function() {
+  check(getComputedStyle(target4).getPropertyValue("left"), "200px",
+      "Last animation should have latest compositing order");
 }, 100.0);
 
 </script>

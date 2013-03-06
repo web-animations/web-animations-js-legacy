@@ -258,11 +258,7 @@ mixin(Player.prototype, {
         this.timedItem._isPastEndOfActiveInterval();
   },
   _getItemsInEffect: function() {
-    var animations = [];
-    if (this.timedItem !== null) {
-      animations = this.timedItem._getItemsInEffect();
-    }
-    return animations;
+    return this.timedItem === null ? [] : this.timedItem._getItemsInEffect();
   },
 });
 
@@ -472,14 +468,11 @@ mixin(TimedItem.prototype, {
           this._timeFraction);
     }
   },
-  _getEffectiveSpeed: function() {
-    return this._reversing ?
-        -this.timing.playbackRate : this.timing.playbackRate;
-  },
   _getAdjustedAnimationTime: function(animationTime) {
     var startOffset =
         multiplyZeroGivesZero(this.timing.iterationStart, this.duration);
-    var effectiveSpeed = this._getEffectiveSpeed();
+    var effectiveSpeed = this._reversing ?
+        -this.timing.playbackRate : this.timing.playbackRate;
     return (effectiveSpeed < 0 ?
         (animationTime - this.animationDuration) : animationTime) *
         effectiveSpeed + startOffset;
@@ -535,36 +528,6 @@ mixin(TimedItem.prototype, {
       this._updateIterationParams();
     }
     maybeRestartAnimation();
-  },
-  // Takes a time in our iteration time space and converts it to our inherited
-  // time space.
-  _iterationTimeToInheritedTime: function(inputTime) {
-    // Get the current effective iteration time, ie the iteration time without
-    // limiting it to the active interval, or applying fill.
-    var effectiveAnimationTime = this.itemTime - this.timing.startDelay;
-    var adjustedEffectiveAnimationTime =
-        this._getAdjustedAnimationTime(effectiveAnimationTime);
-    var iterationStartTime =
-        multiplyZeroGivesZero(this.currentIteration, this.duration);
-    var unscaledEffectiveIterationTime = adjustedEffectiveAnimationTime -
-        iterationStartTime;
-    var effectiveIterationTime =
-        this._scaleIterationTime(unscaledEffectiveIterationTime);
-    // Get the input time relative to the current effective iteration time,
-    // scale it, and add it to the current item time and start time.
-    var iterationTimeDelta = inputTime - effectiveIterationTime;
-    var effectiveIterationDelta = this._isCurrentDirectionForwards(
-        this.timing.direction, this.currentIteration) ?
-        iterationTimeDelta : -iterationTimeDelta;
-    return effectiveIterationDelta / this._getEffectiveSpeed() + this.itemTime +
-        this._startTime;
-  },
-  // Takes a time in our inherited time space and converts it to the inherited
-  // time space of the TimedItem at the root of our tree.
-  _inheritedTimeToRootInheritedTime: function(inputTime) {
-    return this.parentGroup === null ? inputTime :
-        this.parentGroup._inheritedTimeToRootInheritedTime(
-            this.parentGroup._iterationTimeToInheritedTime(inputTime));
   },
   seek: function(itemTime) {
     // TODO
@@ -719,7 +682,6 @@ var Animation = function(target, animationFunction, timing, parentGroup) {
   this.targetElement = target;
   this.name = this.animationFunction instanceof KeyframesAnimationFunction ?
       this.animationFunction.property : '<anon>';
-  this._sortOrder = 0;
 };
 
 inherits(Animation, TimedItem);
@@ -730,7 +692,6 @@ mixin(Animation.prototype, {
         this.underlyingValue);
   },
   _getItemsInEffectImpl: function() {
-    this._sortOrder = this._inheritedTimeToRootInheritedTime(this.startTime);
     return [this];
   },
   clone: function() {
@@ -2511,23 +2472,22 @@ var documentTime = function() {
 
 var ticker = function(rafTime) {
   cachedDocumentTimeMillis = relativeTime(rafTime, documentTimeZeroAsRafTime);
-  // Get animations for this sample
-  // TODO: Consider reverting to direct application of values and sorting
-  // inside the compositor.
-  var animations = [];
+
+  // Get animations for this sample. We order first by Player start time, and
+  // second by DFS order within each Player's tree.
+  var sortedPlayers = PLAYERS;
+  stableSort(sortedPlayers, function(a, b) {
+    return a.startTime - b.startTime;
+  });
   var requiresFurtherIterations = false;
-  PLAYERS.forEach(function(player) {
+  var animations = [];
+  sortedPlayers.forEach(function(player) {
     player._update();
     requiresFurtherIterations |= !player._isPastEndOfActiveInterval();
     animations = animations.concat(player._getItemsInEffect());
-  }.bind(this));
+  });
 
   // Apply animations in order
-  stableSort(animations, function(funcA, funcB) {
-    return funcA._sortOrder < funcB._sortOrder ?
-        -1 :
-        funcA._sortOrder === funcB._sortOrder ? 0 : 1;
-  });
   for (var i = 0; i < animations.length; i++) {
     animations[i]._sample();
   }
