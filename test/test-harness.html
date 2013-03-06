@@ -89,7 +89,7 @@ function updateState(change) {
   document.querySelector('#test-num').textContent =
       (currentTest + 1) + ' of ' + tests.length + ': ';
   document.querySelector('#test-name').textContent = test;
-  document.querySelector('#test-name').href = test;
+  document.querySelector('#test-name').href = 'testcases/' + test;
   document.querySelector('iframe').src = 'testcases/' + test;
   document.querySelector('#prev-button').disabled = currentTest <= 0;
   document.querySelector('#next-button').disabled =
