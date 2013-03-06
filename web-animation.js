@@ -2527,6 +2527,12 @@ Object.defineProperty(document, 'timeline', configureDescriptor({
   },
 }));
 
+window.Element.prototype.animate = function(effect, timing) {
+  var anim = new Animation(this, effect, timing);
+  DOCUMENT_TIMELINE.createPlayer(anim);
+  return anim;
+};
+
 window.Animation = Animation;
 window.Timing = Timing;
 // TODO: this is not in the spec
