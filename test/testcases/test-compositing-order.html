@@ -57,6 +57,7 @@ var check = function(actual, expected, failureMessage) {
 
 var leftToRight = {left: ["100px", "200px"]};
 var rightToLeft = {left: ["200px", "100px"]};
+var noop = {color: "red"};
 
 // Test that an animation uses the correct compositing order when it has a
 // grandparent that remains active longer than its parent.
@@ -70,26 +71,30 @@ var player = document.timeline.createPlayer(new ParGroup([
   new ParGroup([
     new Animation(target1, leftToRight, 1.0),
   ]),
-  new Animation(target1, rightToLeft, {duration: 1.0, startDelay: 2.0}),
+  new SeqGroup([
+    new Animation(target1, noop, 2.0),
+    new Animation(target1, rightToLeft, 1.0),
+  ]),
 ]));
 
 player.pause();
 player.currentTime = 3.0;
 setTimeout(function() {
   check(getComputedStyle(target1).getPropertyValue("left"), "100px",
-      "Nested animation should have earlier compositing order");
+      "First animation should have earlier compositing order");
 }, 100.0);
 
 // Test that compositing order takes account of playback rate.
 //
-// The start time of the first animation is 0.0. The inner ParGroup has a
-// playback rate of 4.0, so the effective start time of its child animation is
-// 2.0. So the the div should end up on the left at time 3.0.
+// The start time of the first animation is 0.0. The SeqGroup has a playback
+// rate of 4.0, so the effective start time of its child animation is 2.0. So
+// the the div should end up on the left at time 3.0.
 var target2 = document.getElementById("target2");
 var player = document.timeline.createPlayer(new ParGroup([
   new Animation(target2, leftToRight, 1.0),
-  new ParGroup([
-    new Animation(target2, rightToLeft, {duration: 4.0, startDelay: 8.0}),
+  new SeqGroup([
+    new Animation(target1, noop, 8.0),
+    new Animation(target2, rightToLeft, 4.0),
   ], {playbackRate: 4.0}),
 ]));
 
@@ -97,7 +102,7 @@ player.pause();
 player.currentTime = 3.0;
 setTimeout(function() {
   check(getComputedStyle(target2).getPropertyValue("left"), "100px",
-      "Nested animation should have later compositing order");
+      "Second animation should have later compositing order");
 }, 100.0);
 
 </script>
