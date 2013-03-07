@@ -56,7 +56,7 @@ var frameworkTimeout = 2000000;
 // The time between each frame render in seconds
 var framePeriod = 0.016;
 // Stops tests being triggered when the user is scrubbing
-var scrubbing = false;
+var isScrubbing = false;
 // Allows users to input the desired animation time
 var userInput = false;
 
@@ -129,13 +129,7 @@ function setupTests(timeouts) {
   skipFrameBack.setAttribute("onclick", "skipFrameBack()");
   skipFrameBack.textContent = "<";
 
-  var timeBar = document.createElement('div');
-  timeBar.id = "timeBar";
-  timeBar.addEventListener('mousedown', startSlide, false);
-  timeBar.addEventListener('mouseup', stopSlide, false);
-
-  var slider = document.createElement('div');
-  slider.id = "slider";
+  var timeBar = new TimeBar();
 
   var select = document.createElement("select");
   select.setAttribute("id", "runType");
@@ -231,20 +225,56 @@ function skipFrameBack() {
   setTestCurrentTime(testCurrentTime - framePeriod);
 }
 
-// Start editing the animation time with the slider. It disables the tests so
-// they won't trigger whilst this is happening.
-function startSlide(event) {
-  //TODO
+function TimeBar() {
+  this.timeBar = document.createElement('div');
+  this.slider = document.createElement('div');
+  this.timeBar.id = "timeBar";
+  this.slider.id = "slider";
+  this.timeBar.appendChild(this.slider);
+  this.timeBar.addEventListener(
+      'mousedown',
+      (function(me) {
+        return function() { me.startSlide() };
+      })(this),
+      false);
+  this.timeBar.addEventListener(
+      'mouseup',
+      (function(me) {
+        return function() { me.stopSlide() };
+      })(this),
+      false);
+  this.timeBar.addEventListener(
+      'mousemove',
+      (function(me) {
+        return function() { me.updateSlider() };
+      })(this),
+      false);
+  return this.timeBar;
 }
 
-// Updates the animation whilst the slider is moving
-function moveSlide(event) {
-  //TODO
+TimeBar.prototype.updateSlider = function() {
+  if (!isScrubbing) return;
+  var setPercent =
+      ((event.clientX - this.timeBar.offsetLeft) / this.timeBar.offsetWidth).toFixed(2);
+  this.slider.style.width = (setPercent * 100) + '%';
+  setTestCurrentTime(setPercent * testLength);
+}
+
+// Start editing the animation time with the slider. It disables the tests so
+// they won't trigger whilst this is happening.
+TimeBar.prototype.startSlide = function() {
+  if (isScrubbing) return;
+  isScrubbing = true;
+  pause();
+  this.updateSlider();
 }
 
 // Cleans up after scrubbing and re-enables the tests.
-function stopSlide(event) {
-  //TODO
+TimeBar.prototype.stopSlide = function() {
+  if (!isScrubbing) return;
+  resetTestIndex();
+  play();
+  isScrubbing = false;
 }
 
 // Move testIndex to the right location. This not only re runs flashes that
@@ -413,7 +443,7 @@ function testRunner(){
       throw new Error("Test after animation end.");
     }
     // Forces the frame closest to the test to be exactly the test time
-    if (!scrubbing) {
+    if (!isScrubbing) {
       if (currTest.time < testCurrentTime + framePeriod) {
         pause();
         setTestCurrentTime(currTest.time);
@@ -472,7 +502,20 @@ function restart() {
 
 // Makes it easier to see whats going on in the test.
 function animPause() {
-  //TODO
+  if (runInAutoMode) return;
+  if (userPaused) {
+    document.getElementById("pausePlayButton").textContent = "Pause";
+    play();
+    // Get the flashes ready to play again when the animation replays
+    if (testCurrentTime == 0) testIndex = 0;
+    userPaused = false;
+    document.getElementById("test").style.backgroundColor = "white";
+  } else {
+    document.getElementById("pausePlayButton").textContent = "Play";
+    pause();
+    userPaused = true;
+    document.getElementById("test").style.backgroundColor = "yellow";
+  }
 }
 
 // Create elements at appropriate locations and flash the elements for
@@ -549,7 +592,7 @@ function flash(test) {
 
 function flashCleanUp(victim) {
   setTimeout(function() {
-    if (userPaused && !scrubbing) {
+    if (userPaused && !isScrubbing) {
       // Since the user has paused, keep any displayed divs up and set new timeout
       flashCleanUp(victim);
     } else {
