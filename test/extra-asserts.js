@@ -603,7 +603,24 @@ function flashCleanUp(victim) {
 }
 
 function toggleFlash() {
-  //TODO
+  var elements = document.getElementById("svgBox").childNodes;
+  for (var i = 0; i < elements.length; i++){
+    if (elements[i].getAttribute("fill-opacity") == 1){
+      elements[i].setAttribute("fill-opacity", 0);
+      elements[i].setAttribute("stroke-width", "0px");
+    } else {
+      elements[i].setAttribute("fill-opacity", 1);
+      elements[i].setAttribute("stroke-width", "3px");
+    }
+  }
+  elements = document.getElementsByClassName("flash");
+  for (var i = 0; i < elements.length; i++) {
+    if (elements[i].style.display == 'block') {
+      elements[i].style.display = 'none';
+    } else {
+      elements[i].style.display = 'block';
+    }
+  }
 }
 
 add_completion_callback(function (allRes, status) {
@@ -696,7 +713,26 @@ function assert_properties(test) {
 
 // Deals with the svg transforms special case.
 function assert_transform(object, target){
-  //TODO
+  var currStyle = object.attributes["style"].value;
+  currStyle = currStyle.replace(/[;\s]/,"");
+  // Get rid of the begining property name bit.
+  currStyle = currStyle.split(":")[1];
+  currStyle = currStyle.split(/[()]+/);
+  target = target.split(/[()]+/);
+
+  for (var x = 0; x < currStyle.length - 1; x++){
+    // Property name compare
+    assert_equals(currStyle[x], target[x], "At time " + testCurrentTime + ", " +
+        "Target: " + target[x] + " Current state: " + currStyle[x]);
+    x++;
+    // Property values compare
+    var c = currStyle[x].split(",");
+    var t = target[x].split(",");
+    for (var i in c){
+      assert_equals(c[i], t[i], "At time " + testCurrentTime + ", " +
+        "Target: " + t + " Current state: " + c);
+    }
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -709,10 +745,6 @@ window.restart = restart;
 window.toggleFlash = toggleFlash;
 window.animPause = animPause;
 window.setState = setState;
-
-window.startSlide = startSlide;
-window.moveSlide = moveSlide;
-window.stopSlide = stopSlide;
 
 window.skipFrameForward = skipFrameForward;
 window.skipFrameBack = skipFrameBack;
