@@ -234,17 +234,21 @@ Object.defineProperty(Player.prototype, 'startTime', configureDescriptor({
     return this._startTime;
   },
 }));
-
-mixin(Player.prototype, {
-  pause: function() {
-    this._pauseTime = this.currentTime;
-  },
-  unpause: function() {
-    if (isDefined(this._pauseTime)) {
+Object.defineProperty(Player.prototype, 'paused', configureDescriptor({
+  set: function(isPaused) {
+    if (isPaused) {
+      this._pauseTime = this.currentTime;
+    } else if (isDefined(this._pauseTime)) {
       this._timeDrift = this._timeline.currentTime - this._pauseTime;
       this._pauseTime = undefined;
     }
   },
+  get: function() {
+    return isDefined(this._pauseTime);
+  },
+}));
+
+mixin(Player.prototype, {
   cancel: function() {
     this.timedItem = null;
   },

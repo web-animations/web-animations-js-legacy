@@ -61,21 +61,22 @@ var check = function(actual, expected, failureMessage) {
 var player = document.timeline.createPlayer(new Animation(
     document.getElementById("anim"), {left: ["100px", "200px"]}, 1.0));
 
-// Test that repeated calls to pause() do not affect the Player's currentTime.
-player.pause();
+// Test that repeatedly setting Player.paused to true does not affect the
+// Player's currentTime.
+player.paused = true;
 var currentTime = player.currentTime;
 setTimeout(function() {
-  player.pause();
+  player.paused = true;
   check(player.currentTime, currentTime, "Player.currentTime should be " +
-      "unaffected by repeated calls to Player.pause()");
+      "unaffected by repeatedly setting Player.paused to true");
 
-  // Test that repeated calls to unpause() have no effect.
-  player.unpause();
+  // Test that repeatedly setting Player.paused to false has no effect.
+  player.paused = false;
   setTimeout(function() {
     currentTime = player.currentTime;
-    player.unpause();
+    player.paused = false;
     check(player.currentTime, currentTime, "Player.currentTime should be " +
-        "unaffected by repeated calls to Player.unpause()");
+        "unaffected by repeatedly setting Player.paused to false");
   }, 100);
 }, 100);
 
