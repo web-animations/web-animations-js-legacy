@@ -234,17 +234,21 @@ Object.defineProperty(Player.prototype, 'startTime', configureDescriptor({
     return this._startTime;
   },
 }));
-
-mixin(Player.prototype, {
-  pause: function() {
-    this._pauseTime = this.currentTime;
-  },
-  unpause: function() {
-    if (isDefined(this._pauseTime)) {
+Object.defineProperty(Player.prototype, 'paused', configureDescriptor({
+  set: function(isPaused) {
+    if (isPaused) {
+      this._pauseTime = this.currentTime;
+    } else if (isDefined(this._pauseTime)) {
       this._timeDrift = this._timeline.currentTime - this._pauseTime;
       this._pauseTime = undefined;
     }
   },
+  get: function() {
+    return isDefined(this._pauseTime);
+  },
+}));
+
+mixin(Player.prototype, {
   cancel: function() {
     this.timedItem = null;
   },
@@ -257,9 +261,9 @@ mixin(Player.prototype, {
     return this.timedItem === null ||
         this.timedItem._isPastEndOfActiveInterval();
   },
-  _getItemsInEffect: function(animations) {
+  _getLeafItemsInEffect: function(items) {
     if (this.timedItem) {
-      this.timedItem._getItemsInEffect(animations);
+      this.timedItem._getLeafItemsInEffect(items);
     }
   },
 });
@@ -598,17 +602,17 @@ mixin(TimedItem.prototype, {
     throw new Error(
         "Derived classes must override TimedItem.clone()");
   },
-  // Gets the TimedItems currently in effect. Note that this is a superset of
-  // the TimedItems in their active interval, as a TimedItem can have an effect
-  // outside its active interval due to fill.
-  _getItemsInEffect: function(animations) {
+  // Gets the leaf TimedItems currently in effect. Note that this is a superset
+  // of the leaf TimedItems in their active interval, as a TimedItem can have an
+  // effect outside its active interval due to fill.
+  _getLeafItemsInEffect: function(items) {
     if (this._timeFraction !== null) {
-      this._getItemsInEffectImpl(animations);
+      this._getLeafItemsInEffectImpl(items);
     }
   },
-  _getItemsInEffectImpl: function(animations) {
+  _getLeafItemsInEffectImpl: function(items) {
     throw new Error(
-        "Derived classes must override TimedItem._getItemsInEffectImpl()");
+        "Derived classes must override TimedItem._getLeafItemsInEffectImpl()");
   },
   _isPastEndOfActiveInterval: function() {
     return this._player.currentTime > this.endTime;
@@ -692,8 +696,8 @@ mixin(Animation.prototype, {
         this.currentIteration, this.targetElement,
         this.underlyingValue);
   },
-  _getItemsInEffectImpl: function(animations) {
-    animations.push(this);
+  _getLeafItemsInEffectImpl: function(items) {
+    items.push(this);
   },
   clone: function() {
     return new Animation(this.targetElement,
@@ -810,9 +814,9 @@ mixin(AnimationGroup.prototype, {
       throw 'Unsupported type ' + this.type;
     }
   },
-  _getItemsInEffectImpl: function(animations) {
+  _getLeafItemsInEffectImpl: function(items) {
     for (var i = 0; i < this.children.length; i++) {
-      this.children[i]._getItemsInEffect(animations);
+      this.children[i]._getLeafItemsInEffect(items);
     }
   },
   clone: function() {
@@ -2485,7 +2489,7 @@ var ticker = function(rafTime) {
   sortedPlayers.forEach(function(player) {
     player._update();
     requiresFurtherIterations |= !player._isPastEndOfActiveInterval();
-    player._getItemsInEffect(animations);
+    player._getLeafItemsInEffect(animations);
   });
 
   // Apply animations in order

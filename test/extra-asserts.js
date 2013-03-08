@@ -292,7 +292,7 @@ function resetTestIndex() {
 function pause() {
   beingPaused++;
   for (var x in document.timeline.getPlayers()) {
-    document.timeline.getPlayers()[x].pause();
+    document.timeline.getPlayers()[x].paused = true;
   }
 }
 
@@ -300,7 +300,7 @@ function play(){
   // If something gets out of sync don't let beingPaused go negative.
   beingPaused = beingPaused === 0 ? 0 : beingPaused - 1;
   for (var x = 0; x < document.timeline.getPlayers().length; x++) {
-    if (beingPaused === 0) document.timeline.getPlayers()[x].unpause();
+    if (beingPaused === 0) document.timeline.getPlayers()[x].paused = false;
   }
 }
 

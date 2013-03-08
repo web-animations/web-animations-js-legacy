@@ -74,16 +74,16 @@ var player = document.timeline.createPlayer(
     new SeqGroup([pgroup1, pgroup2], {name: "s"}));
 
 setTimeout(function() {
-  player.pause();
+  player.paused = true;
 }, 1000);
 setTimeout(function() {
-  player.unpause();
+  player.paused = false;
 }, 2000);
 setTimeout(function() {
-  player.pause();
+  player.paused = true;
 }, 4000);
 setTimeout(function() {
-  player.unpause();
+  player.paused = false;
 }, 5000);
 
 </script>
