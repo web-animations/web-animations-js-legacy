@@ -677,7 +677,7 @@ function assert_properties(test) {
   // apply the assert
   for (var propName in targetProperties) {
     if (isSVG && propName.indexOf("transform") != -1) {
-      assert_transform(object, targetProperties[propName], message);
+      assert_transform(object, targetProperties[propName]);
     } else {
       if (isSVG) {
         var target = targetStyle[propName].value;
@@ -721,11 +721,11 @@ function assert_transform(object, target){
   target = target.split(/[()]+/);
 
   for (var x = 0; x < currStyle.length - 1; x++){
-    // Property name compare
+    // Compare property name
     assert_equals(currStyle[x], target[x], "At time " + testCurrentTime + ", " +
         "Target: " + target[x] + " Current state: " + currStyle[x]);
     x++;
-    // Property values compare
+    // Compare property values
     var c = currStyle[x].split(",");
     var t = target[x].split(",");
     for (var i in c){

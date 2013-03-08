@@ -1,0 +1,59 @@
+<!--
+Copyright 2012 Google Inc. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<!DOCTYPE html>
+<style>
+  .testBox {
+     height: 400px;
+  }
+  .anim {
+	height: 50px;
+	position: absolute;
+	border-style:solid;
+	border-width:thick;
+	border-color:white;
+  }
+</style>
+<div> There is a issues with reading color as it can be displayed from css as
+      a color name, rgb or rgba. Trying to find a good (doesn't include
+      special cases) solution atm. <br>
+      Also auto mode is picking up a bug manual currently doesn't see which is
+      the begining of the animation is open instead of closed.
+      https://dvcs.w3.org/hg/FXTF/raw-file/tip/web-anim/index.html#interval-timing <br>
+</div>
+<div id="test" class ="testBox">
+  <div id="victim" class="anim">Ring ring ring ring banana phone!</div>
+</div>
+
+<script src="../../../web-animations.js"></script>
+<script src="../testharness/testharness.js"></script>
+<script src='../testharness/testharnessreport.js'></script>
+<script src='../extra-asserts.js'></script>
+<link rel='stylesheet' href='../testharness/testharness.css'>
+<link rel='stylesheet' type="text/css" href="../animation-test-style.css">
+
+<script>
+setupTests();
+var anim = document.getElementById("victim");
+document.timeline.play(new Animation(anim,
+    {'text-shadow': ['100px 100px red, 0px 100px 5px red', '0px 0px']}, {duration:2, startDelay:1}));
+
+// There's a strange css feature which sometimes will show the color name not the rbga.
+// The quick solution is to pass in rgba instead of color name
+check(anim, {'text-shadow': 'rgb(255, 0, 0) 100px 100px 0px, rgb(255, 0, 0) 0px 100px 5px'}, 1, "start check");
+check(anim, {'text-shadow': '0px 0px'}, 3, "end check");
+runTests();
+</script>

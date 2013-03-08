@@ -1,0 +1,200 @@
+<!--
+Copyright 2012 Google Inc. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<script>
+var tests = [
+  'test-calc.html',
+  'test-color.html',
+  'test-color-names.html',
+  'test-composite-transforms.html',
+  'test-compositor.html',
+  'test-fill-values.html',
+  'test-grouped-anim-func.html',
+  'test-groupings.html',
+  'test-iterations-basic.html',
+  'test-iterations-fill.html',
+  'test-path.html',
+  'test-playback-rate.html',
+  'test-repetition.html',
+  'test-run-fast.html',
+  'test-steping.html',
+  'test-svg-animation.html',
+  'test-text-shadow.html',
+  'test-to-animation.html',
+  'test-visibility.html',
+];
+</script>
+<style>
+iframe {
+  width: 800px;
+  height: 600px;
+}
+body{
+  font-family: Comic Sans MS, Monospace;
+}
+</style>
+<button id=prev-button onclick="updateState(-1)">Prev</button>
+<button id=reload-button onclick="updateState()">Reload</button>
+<button id=next-button onclick="updateState(1)">Next</button>
+<button id=Auto-Run onclick="reRunTests()">Auto Run Tests</button><br>
+<div id="test-name"></div>
+<iframe id = "frame"></iframe>
+<div id="results"></div>
+
+<script>
+var resultsOutputted = 0;
+var currentTest = 0;
+// Stops the test result finish message being sent repeatedly
+var hasFinished = false;
+
+var passedResults = 0;
+
+var runID = window.location.href.split("?")[1];
+
+checkForResults();
+updateState();
+
+function postResultsToServer(resultObject){
+  var xhr = new XMLHttpRequest();
+  xhr.open("POST", "http://14.200.8.150/web-animations-test-infrastructure/collectResults.php", true);
+  xhr.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+  xhr.send("data=" + JSON.stringify(resultObject));
+  console.log(JSON.stringify(resultObject));
+}
+
+function updateState(change) {
+  if ((currentTest < tests.length-1 && change > 0) ||
+      (currentTest > 0 && change < 0)){
+    currentTest += change;
+  }
+  var test = tests[currentTest];
+
+  document.querySelector('#test-name').innerText = (currentTest + 1) +
+      ' of ' + tests.length + ': ' + test;
+  document.querySelector('iframe').src = 'testcases/' + test;
+  document.querySelector('#prev-button').disabled = currentTest <= 0;
+  document.querySelector('#next-button').disabled =
+      currentTest >= tests.length - 1;
+}
+
+function reRunTests(){
+  document.getElementById("results").remove();
+  newResults = document.createElement('div');
+  newResults.id = "results";
+  document.body.appendChild(newResults);
+  resultsOutputted = 0;
+  passedResults = 0;
+  currentTest = 0;
+  hasFinished = false;
+  window.frame.testResults = undefined;
+  runID = createNewTestRun(sha1);
+  updateState();
+  checkForResults();
+}
+
+function checkForResults(){
+  if (window.frame.testResults != undefined){
+    logResults(window.frame.testResults);
+    resultsOutputted++;
+    window.frame.testResults = undefined;
+    if (currentTest < tests.length-1) updateState(1);
+  }
+  if (resultsOutputted < tests.length)
+      window.webkitRequestAnimationFrame(checkForResults);
+  else {
+     var finishPacket = {};
+     finishPacket["type"] = "finished";
+     finishPacket["testsPassed"] = passedResults + " out of " + resultsOutputted;
+     finishPacket["testRunId"] = runID;
+     hasFinished = true;
+     postResultsToServer(finishPacket);
+  }
+}
+
+function logResults (results){
+  var testResult = {};
+  testResult["type"] = "result";
+  testResult["testRunID"] = runID;
+  testResult["testName"] = tests[currentTest];
+  var asserts = {};
+
+  newTestDiv = document.createElement('div');
+  newTestDiv.id = tests[currentTest];
+  newTestDiv.innerHTML = tests[currentTest];
+  newTestDiv.onclick = function(){ showDetails(this); };
+  var grade = "pass";
+  for (var x in results){
+    if (results[x].status != 0) grade = "fail";
+  }
+  if (grade == "pass") passedResults++;
+
+  var newResultsDiv = document.createElement('div');
+  if (grade == "pass"){
+    newTestDiv.style.backgroundColor = "YellowGreen";
+    newResultsDiv.style.backgroundColor = "LightGreen";
+  } else {
+    newTestDiv.style.backgroundColor = "OrangeRed";
+    newResultsDiv.style.backgroundColor = "LightPink";
+  }
+  document.getElementById("results").appendChild(newTestDiv);
+
+  var i = 0;
+  var numberOfAsserts = 0;
+  for (var x in results){
+    if(results[x].status != 0){
+      asserts[i] = {};
+      asserts[i]["message"] = results[x].message == null ?
+        "Fail but no message" : results[x].message;
+      i++;
+    }
+
+    newResultsDiv.innerHTML += results[x].name + " ";
+    if (results[x].status == 0) grade = "pass";
+    else grade = "fail";
+    newResultsDiv.innerHTML += grade + " ";
+    if (results[x].message != null){
+      newResultsDiv.innerHTML += results[x].message;
+    }
+    newResultsDiv.innerHTML += "<br>";
+    numberOfAsserts++;
+  }
+  newResultsDiv.style.display = "none";
+  newTestDiv.appendChild(newResultsDiv);
+
+  testResult["asserts"] = asserts;
+  testResult["numberOfAsserts"] = numberOfAsserts;
+  postResultsToServer(testResult);
+}
+
+function showDetails(object){
+  var childs = object.childNodes;
+  var changeIframe = false;
+  for (var x in childs){
+    if (childs[x].nodeName == "DIV"){
+      if (childs[x].style.display == 'block') childs[x].style.display = 'none';
+      else {
+        childs[x].style.display = 'block';
+        changeIframe = true;
+      }
+    }
+  }
+  if (changeIframe){
+    // Show the test in the iframe
+    for (var x = 0; (tests[x] != object.id) && (x < tests.length); x++);
+    currentTest = x;
+    updateState();
+  }
+}
+</script>

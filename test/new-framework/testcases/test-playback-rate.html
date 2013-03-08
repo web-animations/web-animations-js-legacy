@@ -1,0 +1,88 @@
+<!--
+Copyright 2012 Google Inc. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+Written By Sarah Heimlich
+-->
+
+<!DOCTYPE html>
+<style>
+.anim {
+  position: relative;
+  height: 50px;
+  width: 50px;
+  left: 100px;
+}
+
+.bottom {
+  background-color: green;
+}
+
+.top {
+  background-color: green;
+  top: -200px;
+}
+
+.testBox {
+  height: 200px;
+}
+
+</style>
+
+<head>
+  <title>Test Speed</title>
+  <link rel="author" title="Sarah Heimlich", href="mailto:sarahheimlich@google.com">
+  <link rel="help" href="https://dvcs.w3.org/hg/FXTF/raw-file/tip/web-anim/index.html#speed-control">
+  <meta name="flags" content="dom">
+  <meta name="assert" content="Verify the objects move at the same speed.">
+</head>
+
+<div id="test" class ="testBox">
+  <div class="anim bottom"></div>
+  <div class="anim bottom"></div>
+  <div class="anim bottom"></div>
+  <div class="anim bottom"></div>
+  <div class="anim top"></div>
+  <div class="anim top"></div>
+  <div class="anim top"></div>
+  <div class="anim top"></div>
+</div>
+
+<script src="../../../web-animations.js"></script>
+<script src="../testharness/testharness.js"></script>
+<script src='../testharness/testharnessreport.js'></script>
+<script src='../extra-asserts.js'></script>
+<link rel='stylesheet' href='../testharness/testharness.css'>
+<link rel='stylesheet' type="text/css" href="../animation-test-style.css">
+
+<script>
+setupTests({testTimeout: 20000});
+
+var topObjects = document.querySelectorAll(".top");
+var bottomObjects = document.querySelectorAll(".bottom");
+
+for (var i = 0; i < topObjects.length; i++) {
+  document.timeline.play(new Animation(topObjects[i], {left: ["100px", "600px"]}, {duration: 2*(i + 1), playbackRate: i + 1 }));
+  document.timeline.play(new Animation(bottomObjects[i], {left: ["100px", "600px"]}, {duration: 2}));
+}
+
+for (var i = 0; i < topObjects.length; i++) {
+  check(topObjects[i], {"left":bottomObjects[i]}, 1, "Ref Test "+ i, true);
+  check(topObjects[i], {"left":"100px"}, 0, "Start position check "+ i);
+  check(topObjects[i], {"left":"600px"}, 2, "End position check "+ i);
+}
+
+runTests();
+</script>
+
