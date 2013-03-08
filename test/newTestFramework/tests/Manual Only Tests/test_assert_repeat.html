@@ -1,0 +1,155 @@
+<!-- 
+Copyright 2012 Google Inc. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<!DOCTYPE html>
+<title>Test repetition with proper assert function</title>
+<link rel="author" title="Sandy Phan"m href="mailto:sandyphan@google.com")>
+<meta name="flags" content="dom">
+
+<style>
+
+.anim {
+  width: 100px;
+  height: 25px;
+  background-color: #FAA;
+  position: relative;
+  top: 0px;
+  left: 0px;
+}
+
+
+</style>
+
+<p>This is another repetition test with greater repetition times,longer duration and more time intervals</p>
+<p>This test should have 3 blocks of element moving from left to right repetively. The number of iteration is written in the box</p>
+<p>The test should return true for blocks that repeat more than 1 time and flase for blocks that repeat less than 1 time</p>
+<div id="test">
+  <div class="anim" id="a">2</div>
+  <div class="anim" id="b">5</div>
+  <div class="anim" id="b">4</div>
+</div>
+
+<div id="log"></div>
+
+
+<script src="../../web-animations-js/web-animation.js"></script>
+<script src="../testharness/testharness.js"></script>
+<script src='../testharness/testharnessreport.js'></script>
+<script src='../extra-asserts.js'></script>
+<link rel='stylesheet' href='../testharness/testharness.css'>
+
+<script>	
+
+/*
+ * All animation script starts here
+ */
+
+var elems = document.querySelectorAll(".anim");
+var anim = [];
+var props = [];
+
+
+for (var i = 0; i < elems.length; i++) {
+  var element = elems[i];
+  props[i] = getComputedStyle(element, null);
+  anim[i] = new Animation(element, {left: ["0px", "200px"]}, 1, new ParGroup([], {iterationCount: element.textContent}));
+}
+
+/*
+ * All test scripts starts here
+ * 
+ * Logic of the test scripts:
+ *      calculate the percentage of the animation time compare
+ *      to the animation duration for one iteration
+ *      calculate the percentage of movement compare to 
+ *      the total movement required
+ *      then compare both percentage if they are approximately equal
+ *      the animation will then pass the test
+ */
+
+
+var assert_repeat = function(elem, distance, animTime, intervalNum, iterCount, message) {
+  var timepercent = 0;
+  var disPercent = 0;
+  var repeated = false;
+  var myTest = async_test(message);
+  var timeOutDur = (animTime * 1000) * iterCount + 5;
+  var repeatCount = 0;
+  var flag = false;
+  
+  console.log(iterCount);
+  
+  if (timeOutDur > 5000) {
+    setup({timeout: 100000});
+  }
+  
+  console.log(timeOutDur);
+
+  var intervalTime = ((animTime * 1000) / intervalNum) - 2;
+  var checkPercent = setInterval(function() {
+    getPercentRepeat(elem, distance, animTime, iterCount);
+  }, intervalTime);
+  
+  setTimeout(function() {
+    clearInterval(checkPercent);
+    setLog();
+  }, timeOutDur);
+  
+  var getPercentRepeat = function(elem, distance, animTime, iterCount) {
+    var p = getComputedStyle(elem, null);
+    var currTime = document.animationTimeline.animationTime;
+    while (currTime > animTime + 0.05) {
+      currTime = currTime - animTime;
+    }
+  
+    timePercent = Math.round((currTime / animTime) * 1000)/1000;
+    distPercent = Math.round((parseInt(p.left) / distance) * 1000)/1000;
+    assert_approx_equals(timePercent, distPercent, 0.3, "Check that the time percentage is equal to the distance percentage");
+    
+    var totalIntervalNum = intervalNum * iterCount;
+    flag = true;
+    repeatCount++;
+    if (repeatCount === totalIntervalNum) {
+      if (iterCount <= 1) {
+        repeated = false;
+      } else {
+        repeated = true;
+      }
+    }
+  }
+  
+  setTimeout(function() {
+    myTest.step(function() {
+      if (iterCount <= 1) {
+        console.log(repeated);
+        assert_false(repeated, "assert that the element is not repeated");
+      } else {
+        console.log(repeated);
+        assert_true(repeated, "assert that the element is repeated");
+      }
+    });
+    myTest.done();
+  }, timeOutDur);
+}
+
+
+test(function() {
+  assert_repeat(elems[0], 200, anim[0].duration, 10, elems[0].textContent, "Check that block 1 is repeated at a decimal point of time");
+  assert_repeat(elems[1], 200, anim[1].duration, 10, elems[1].textContent, "Check that block 2 is repeated at a decimal point of time");
+  assert_repeat(elems[2], 200, anim[2].duration, 10, elems[2].textContent, "Check that block 3 is repeated at a decimal point of time");
+}, "Test that object is repeated");
+
+</script>

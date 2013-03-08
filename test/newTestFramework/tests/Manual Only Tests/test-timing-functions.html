@@ -1,0 +1,133 @@
+<!-- 
+Copyright 2013 Google Inc. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+Written by Steph McArthur
+
+This will check if the timing functions create the desired acceleration over the time period
+<div class="anim">ease-in</div>
+  <div class="anim">ease-out</div>
+-->
+
+<!DOCTYPE html>
+<style>
+.anim {
+  left: 0px;
+  width: 250px;
+  height: 24px;
+  background-color: lightsteelblue;
+  position: relative;
+  border-bottom: solid white 1px;
+}
+
+body { margin: 0px; }
+</style>
+
+<head>
+  <title>Test Timing Functions</title>
+  <link rel="author" title="Steph McArthur", href="mailto:stephm@google.com">
+  <link rel="help" href="https://dvcs.w3.org/hg/FXTF/raw-file/tip/web-anim/index.html#the-timingfunction-interface">
+  <meta name="flags" content="dom">
+  <meta name="assert" content="Verify the objects move at the correct speed(s)"
+</head>
+
+<body>
+  <p>Function timings: Cubic-bezier testing</p>
+</body>
+
+<div id="test"> 
+  <div class="anim">cubic-bezier(0, 0.2, 0.8, 1)</div>
+  <div class="anim">cubic-bezier(0.5, -1.5, 0.5, 2.5)</div>
+</div>
+<div id="log"></div>
+
+<script src="../../web-animations-js/web-animation.js"></script>
+<script src="../testharness/testharness.js"></script>
+<script src='../testharness/testharnessreport.js'></script>
+<script src='../extra-asserts.js'></script>
+<link rel='stylesheet' href='../testharness/testharness.css'>
+<link rel='stylesheet' type="text/css" href="../animation-test-style.css">
+
+<script>
+var elems = document.querySelectorAll(".anim");
+for (var i = 0; i < elems.length; i++) {
+  var element = elems[i];
+  new Animation(element, {left: "200px"}, {duration: 2, timingFunction: element.textContent});
+}
+
+var endTest = async_test("Testing final locations");
+setTimeout(function (){
+  endTest.step(function(){
+    var eels = document.querySelectorAll(".anim");
+    for(var i = 0; i < eels.length; i++){
+      var params = document.defaultView.getComputedStyle(eels[i], null);
+      assert_equals(params.left, "200px", "Cube " + eels[i].textContent +" didn't finish at the right location");
+    }
+  });
+  endTest.done();
+  setLog();
+}, 2500);
+
+//with out re-implementing the polyfil we probably have to settle manually generating the x coords for
+//every 200ms for each animation :(
+// var anims[][];
+// anims[0][0, ];
+// anims[1][0, ];
+// anims[2][0, ];
+// anims[3][0, ];
+
+var posCheck = async_test("Checking the animation has the right number of steps");
+var checkTime = 200;
+var checkCount = 0;
+setInterval(checkLocations, checkTime);
+
+function checkLocations (){
+ posCheck.step(function(){
+    var eels = document.querySelectorAll(".anim");
+    for(var i = 0; i < eels.length; i++){
+      assert_properties(eels[i], ["top","left"], [100,40], "Not moving at the right rate");
+    }
+  });
+}
+
+setTimeout(function(){
+  posCheck.done();
+}, 2000);
+
+/* Code below from http://13thparallel.com/archive/bezier-curves/ */
+
+coord = function (x,y) {
+  if(!x) var x=0;
+  if(!y) var y=0;
+  return {x: x, y: y};
+}
+
+function B1(t) { return t*t*t }
+function B2(t) { return 3*t*t*(1-t) }
+function B3(t) { return 3*t*(1-t)*(1-t) }
+function B4(t) { return (1-t)*(1-t)*(1-t) }
+
+function getBezier(percent,P1, P2) {
+  var pos = new coord();
+  var C1 = new coord(0,0);
+  var C4 = new coord(1,1);
+  console.log(pos);
+  pos.x = C1.x*B1(percent) + P1.x*B2(percent) + P2.x*B3(percent) + C4.x*B4(percent);
+  console.log(pos.x);
+  pos.y = C1.y*B1(percent) + P1.y*B2(percent) + P2.y*B3(percent) + C4.y*B4(percent);
+  console.log(pos.y);
+  return pos;
+}
+
+</script>

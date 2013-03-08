@@ -164,6 +164,9 @@ mixin(DocumentTimeline.prototype, {
   createPlayer: function(timedItem) {
     return new Player(timedItem, this);
   },
+  getPlayers: function() {
+    return PLAYERS;
+  }
 });
 
 
