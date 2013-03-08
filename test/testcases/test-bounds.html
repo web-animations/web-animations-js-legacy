@@ -65,7 +65,7 @@ var animFunc = {left: ["100px", "200px"]};
 var elem1 = document.getElementById("anim1");
 var player1 =
     document.timeline.createPlayer(new Animation(elem1, animFunc, 1.0));
-player1.pause();
+player1.paused = true;
 player1.currentTime = 0.0;
 setTimeout(function() {
   check(getComputedStyle(elem1).left, "100px",
@@ -81,7 +81,7 @@ setTimeout(function() {
 var elem2 = document.getElementById("anim2");
 var player2 = document.timeline.createPlayer(
     new Animation(elem2, animFunc, {duration: 1.0, startDelay: 1.0}));
-player2.pause();
+player2.paused = true;
 player2.currentTime = 0;
 setTimeout(function() {
   check(getComputedStyle(elem2).left, "0px",

@@ -7,7 +7,6 @@ var tests = [
   'test-color-names.html',
   'test-composite-transforms.html',
   'test-compositing-order.html',
-  'test-compositing-order-iterations.html',
   'test-compositor.html',
   'test-document-timeline.html',
   'test-duration.html',

@@ -79,7 +79,7 @@ var player = document.timeline.createPlayer(new ParGroup([
   ]),
 ]));
 
-player.pause();
+player.paused = true;
 player.currentTime = 3.0;
 setTimeout(function() {
   check(getComputedStyle(target1).getPropertyValue("left"), "100px",
@@ -100,7 +100,7 @@ var player = document.timeline.createPlayer(new ParGroup([
   ], {playbackRate: 4.0}),
 ]));
 
-player.pause();
+player.paused = true;
 player.currentTime = 3.0;
 setTimeout(function() {
   check(getComputedStyle(target2).getPropertyValue("left"), "100px",
@@ -115,9 +115,9 @@ player1.startTime += 1.0;
 var player2 = document.timeline.createPlayer(
   new Animation(target3, {left: ["100px", "1000px"]}, 2.0));
 
-player1.pause();
+player1.paused = true;
 player1.currentTime = 2.0;
-player2.pause();
+player2.paused = true;
 player2.currentTime = 2.0;
 setTimeout(function() {
   check(getComputedStyle(target3).getPropertyValue("left"), "200px",
@@ -141,7 +141,7 @@ var player = document.timeline.createPlayer(new ParGroup([
   ]),
 ]));
 
-player.pause();
+player.paused = true;
 player.currentTime = 2.0;
 setTimeout(function() {
   check(getComputedStyle(target4).getPropertyValue("left"), "200px",
