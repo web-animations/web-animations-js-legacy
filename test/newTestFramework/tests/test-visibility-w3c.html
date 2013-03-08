@@ -1,0 +1,89 @@
+<!--
+Copyright 2012 Google Inc. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<!DOCTYPE html>
+<body>
+<style>
+body {
+  margin: 0px;
+}
+.anim {
+  height: 50px;
+  background: lightsteelblue;
+}
+
+.testBox {
+  height: 700px;
+}
+</style>
+<div id="test" class = "testBox"></div>
+
+<script src="../../web-animations-js/web-animation.js"></script>
+<script src="../testharness/testharness.js"></script>
+<script src='../testharness/testharnessreport.js'></script>
+<script src='../extra-asserts.js'></script>
+<link rel='stylesheet' href='../testharness/testharness.css'>
+<link rel='stylesheet' type="text/css" href="../animation-test-style.css">
+
+<script>
+setupTests();
+
+var timing = {duration: 0.5, timingFunction: 'steps(2, end)'};
+
+var states = {'visible':1, 'hidden':1, 'collapse':1};
+for (var start in states) {
+  for (var end in states) {
+    var frames = [start, end];
+    var testContainer = document.createElement('div');
+    testContainer.textContent = 'visibility: ' + JSON.stringify(frames);
+    document.getElementById("test").appendChild(testContainer);
+
+    var testElement = document.createElement('div');
+    testElement.classList.add('anim');
+    testContainer.appendChild(testElement);
+    document.timeline.createPlayer(new Animation(testElement, {visibility: frames}, timing));
+  }
+}
+
+check(document.querySelectorAll('.anim')[0],{'visibility':'visible'},0);
+check(document.querySelectorAll('.anim')[1],{'visibility':'visible'},0);
+check(document.querySelectorAll('.anim')[2],{'visibility':'visible'},0);
+check(document.querySelectorAll('.anim')[3],{'visibility':'hidden'},0);
+check(document.querySelectorAll('.anim')[4],{'visibility':'hidden'},0);
+check(document.querySelectorAll('.anim')[5],{'visibility':'hidden'},0);
+check(document.querySelectorAll('.anim')[6],{'visibility':'collapse'},0);
+check(document.querySelectorAll('.anim')[7],{'visibility':'collapse'},0);
+check(document.querySelectorAll('.anim')[8],{'visibility':'collapse'},0);
+check(document.querySelectorAll('.anim')[0],{'visibility':'visible'},0.25);
+check(document.querySelectorAll('.anim')[1],{'visibility':'visible'},0.25);
+check(document.querySelectorAll('.anim')[2],{'visibility':'visible'},0.25);
+check(document.querySelectorAll('.anim')[3],{'visibility':'visible'},0.25);
+check(document.querySelectorAll('.anim')[4],{'visibility':'hidden'},0.25);
+check(document.querySelectorAll('.anim')[5],{'visibility':'collapse'},0.25);
+check(document.querySelectorAll('.anim')[6],{'visibility':'visible'},0.25);
+check(document.querySelectorAll('.anim')[7],{'visibility':'hidden'},0.25);
+check(document.querySelectorAll('.anim')[8],{'visibility':'collapse'},0.25);
+check(document.querySelectorAll('.anim')[0],{'visibility':'visible'},0.5);
+check(document.querySelectorAll('.anim')[1],{'visibility':'hidden'},0.5);
+check(document.querySelectorAll('.anim')[2],{'visibility':'collapse'},0.5);
+check(document.querySelectorAll('.anim')[3],{'visibility':'visible'},0.5);
+check(document.querySelectorAll('.anim')[4],{'visibility':'hidden'},0.5);
+check(document.querySelectorAll('.anim')[5],{'visibility':'collapse'},0.5);
+check(document.querySelectorAll('.anim')[6],{'visibility':'visible'},0.5);
+check(document.querySelectorAll('.anim')[7],{'visibility':'hidden'},0.5);
+check(document.querySelectorAll('.anim')[8],{'visibility':'collapse'},0.5);
+runTests();
+</script>

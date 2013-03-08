@@ -1,0 +1,177 @@
+<!--
+Copyright 2012 Google Inc. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<!DOCTYPE html>
+<style>
+.animContainer {
+  position: absolute;
+  left: 0px;
+  height: 100px;
+}
+
+.anim {
+  left: 0px;
+  width: 100px;
+  height: 25px;
+  background-color: #FAA;
+  position: relative;
+}
+
+.expected {
+  border-right: 1px solid black;
+}
+
+#ca {
+  top: 50px;
+}
+
+#cb {
+  top: 200px;
+}
+
+#cc {
+  top: 350px;
+}
+
+#cd {
+  top: 500px;
+}
+
+.testBox {
+  height: 600px;
+}
+
+</style>
+<div id="test" class ="testBox">
+  <div class="animContainer" id="ca">
+    <div class="anim a"></div>
+    <div class="anim b"></div>
+    <div class="anim c"></div>
+    <div class="anim d"></div>
+  </div>
+
+  <div class="animContainer" id="cb">
+    <div class="anim a"></div>
+    <div class="anim b"></div>
+    <div class="anim c"></div>
+    <div class="anim d"></div>
+  </div>
+
+  <div class="animContainer" id="cc">
+    <div class="anim a"></div>
+    <div class="anim b"></div>
+    <div class="anim c"></div>
+    <div class="anim d"></div>
+  </div>
+
+  <div class="animContainer" id="cd">
+    <div class="anim a"></div>
+    <div class="anim b"></div>
+    <div class="anim c"></div>
+    <div class="anim d"></div>
+  </div>
+</div>
+
+<script src="../../web-animations-js/web-animation.js"></script>
+<script src="../testharness/testharness.js"></script>
+<script src='../testharness/testharnessreport.js'></script>
+<script src='../extra-asserts.js'></script>
+<link rel='stylesheet' href='../testharness/testharness.css'>
+<link rel='stylesheet' type="text/css" href="../animation-test-style.css">
+<script>
+setupTests();
+
+var fillModes = ["none", "backwards", "forwards", "both"];
+var categories = [".a", ".b", ".c", ".d"]
+
+var directions = ["normal", "reverse", "alternate", "alternate-reverse"]
+var groups = [];
+
+for (var i = 0; i < directions.length; i++) {
+  var dir = directions[i];
+  var group = new ParGroup([], {startDelay: 1, duration: 8, iterationCount: 3, playbackRate: 2, direction: dir}, undefined, 1);
+  groups.push(group);
+}
+
+function sampleFunc(timeFraction, iteration, target) {
+  target.innerHTML = Math.floor(timeFraction * 1000) / 1000 + " : " + iteration
+}
+
+for (var i = 0; i < fillModes.length; i++) {
+  var divs = document.querySelectorAll(categories[i]);
+  for (var j = 0; j < divs.length; j++) {
+    document.timeline.createPlayer(new Animation(divs[j], {left: ["100px", "200px"]}, {startDelay: 1, duration: 1, iterationCount: 2, fillMode: fillModes[i], playbackRate: 0.8}, groups[j], 1));
+    document.timeline.createPlayer(new Animation(divs[j], {sample: sampleFunc}, {startDelay: 1, duration: 1, iterationCount: 2, fillMode: fillModes[i], playbackRate: 0.8}, groups[j], 1));
+	}
+}
+
+// Checks
+for (var i = 0; i < fillModes.length; i++) {
+  var divs = document.querySelectorAll(categories[i]);
+  for (var j = 0; j < divs.length; j++) {
+    check(divs[j], {left:"0px"}, 1, "Start position " +i+j);
+  }
+}
+
+var ca = [];
+var cb = [];
+var cc = [];
+var cd = [];
+for (var i = 0; i < fillModes.length; i++) {
+  var divs = document.querySelectorAll(categories[i]);
+  ca.push(divs[0]);
+  cb.push(divs[1]);
+  cc.push(divs[2]);
+  cd.push(divs[3]);
+}
+
+locCheck(ca, 2, "First iteration CA ", 0);
+locCheck(cb, 2, "First iteration CB ", 1);
+locCheck(cc, 2, "First iteration CC ", 0);
+locCheck(cd, 2, "First iteration CD ", 1);
+
+locCheck(ca, 5, "Second iteration CA ", 1);
+locCheck(cb, 5, "Second iteration CB ", 0);
+locCheck(cc, 5, "Second iteration CC ", 1);
+locCheck(cd, 5, "Second iteration CD ", 0);
+
+locCheck(ca, 9, "Third iteration CA ", 1);
+locCheck(cb, 9, "Third iteration CB ", 0);
+locCheck(cc, 9, "Third iteration CC ", 0);
+locCheck(cd, 9, "Third iteration CD ", 1);
+
+locCheck(ca, 14, "Final position CA ", 1);
+locCheck(cb, 14, "Final position CB ", 0);
+locCheck(cc, 14, "Final position CC ", 1);
+locCheck(cd, 14, "Final position CD ", 0);
+
+runTests();
+
+function locCheck(divs, time, testMessage, pattern){
+  var checkTime = time + 0.02;
+  if(pattern == 0) {
+    check(divs[0], {left:"0px"}, checkTime, testMessage +0);
+    check(divs[1], {left:"100px"}, checkTime, testMessage +1);
+    check(divs[2], {left:"0px"}, checkTime, testMessage +2);
+    check(divs[3], {left:"100px"}, checkTime, testMessage +3);
+  } else {
+    check(divs[0], {left:"0px"}, checkTime, testMessage +0);
+    check(divs[1], {left:"0px"}, checkTime, testMessage +1);
+    check(divs[2], {left:"200px"}, checkTime, testMessage +2);
+    check(divs[3], {left:"200px"}, checkTime, testMessage +3);
+  }
+}
+</script>

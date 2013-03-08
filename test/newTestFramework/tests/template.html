@@ -1,0 +1,57 @@
+<!-- 
+Copyright 2012 Google Inc. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<!DOCTYPE html>
+<style>
+.testBox {
+  /*Changes the height to the lowest point of all your animations
+    This will make sure the test log will not overlap the animation*/
+  height: 250px;
+}
+
+</style>
+
+<head>
+  <title>*TEST NAME*</title>
+  <link rel="author" title="*YOUR NAME*", href="mailto:*YOUREMAIL@GOOGLE.COM*">
+  <link rel="help" href="*LINK TO THE PART OF THE SPEC THIS TESTS">
+  <meta name="flags" content="dom">
+  <meta name="assert" content="*EXPLAIN THE ASSERT*">
+</head>
+
+<div id="test" class="testBox">
+	<div id="ANY/ALL ANIMATED DIVS" class="anim"></div>
+</diV>
+
+<script src="../../web-animations-js/web-animation.js"></script>
+<script src="../testharness/testharness.js"></script>
+<script src='../testharness/testharnessreport.js'></script>
+<script src='../extra-asserts.js'></script>
+<link rel='stylesheet' href='../testharness/testharness.css'>
+<link rel='stylesheet' type="text/css" href="../animation-test-style.css">
+
+<script>
+setupTests(); //must call at the begining
+//Your animations code goes here
+//e.g. create a new animation
+//new testAnimation(document.querySelector(".anim"), {left: "600px"}, {duration: 2}); 
+
+//Your tests go here
+//e.g. create a new check (test)
+//check(document.querySelector(".anim"), {"left":"300px"}, 1, "300px at 3 secs");
+
+runTests(); //must call at the end
+</script>

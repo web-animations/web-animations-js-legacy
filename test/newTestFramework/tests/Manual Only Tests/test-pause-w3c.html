@@ -1,0 +1,128 @@
+<!-- 
+Copyright 2013 Google Inc. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+Written by Steph McArthur
+-->
+
+<!DOCTYPE html>
+<style>
+.anim {
+	left: 100px;
+	width: 100px;
+	height: 100px;
+	background-color: lightsteelblue;
+	position: relative;
+}
+</style>
+
+<head>
+  <title>Test Pause</title>
+  <link rel="author" title="Steph McArthur", href="mailto:stephm@google.com">
+  <link rel="help" href="https://dvcs.w3.org/hg/FXTF/raw-file/tip/web-anim/index.html#pausing-a-timed-item">
+  <meta name="flags" content="dom">
+  <meta name="assert" content="Verify the boxes pause and play correctly."
+</head>
+
+<body>
+  <p>All three boxes should should pause and play as directed.</p>
+</body>
+
+<div id="test">
+	<div class="anim"></div>
+	<div class="anim"></div>
+	<div class="anim"></div>
+	<div class="anim"></div>
+</div>
+
+<script src="../../web-animations-js/web-animation.js"></script>
+<script src="../testharness/testharness.js"></script>
+<script src='../testharness/testharnessreport.js'></script>
+<script src='../extra-asserts.js'></script>
+<link rel='stylesheet' href='../testharness/testharness.css'>
+<link rel='stylesheet' type="text/css" href="../animation-test-style.css">
+
+<script>
+setup({ timeout: 20000 });
+
+var elems = document.querySelectorAll(".anim");
+var anims = [];
+for (var i = 0; i < elems.length; i++) {
+  var element = elems[i];
+  anims[i] = new Animation(element, {left: "200px"}, 2+(i*0.5));
+}
+var pgroup1 = new ParGroup([anims[0], anims[1]], {name: "p1"});
+var pgroup2 = new ParGroup([anims[2], anims[3]], {name: "p2"});
+var sgroup = new SeqGroup([pgroup1, pgroup2], {name: "s"});
+
+setTimeout(function() {
+	sgroup.pause();
+}, 1000);
+setTimeout(function() {
+	takeSnapshot(0); //has to be taken after the pause
+}, 1020);
+setTimeout(function() {
+	compareSnapshot(0);
+	sgroup.play();
+}, 2000);
+setTimeout(function() {
+	compareSnapshot(2); //check its moving again
+}, 3900);
+
+setTimeout(function() {
+	sgroup.pause();
+}, 4000);
+setTimeout(function() {
+	takeSnapshot(1); //has to be taken after the pause
+}, 4020);
+setTimeout(function() {
+	compareSnapshot(1);
+	sgroup.play();
+	//setLog();
+}, 5000);
+
+var pauseCheck = [async_test("Checking the animation has doesn't change whilst paused 1st time"),
+					async_test("Checking the animation has doesn't change whilst paused 2nd time"),
+					async_test("Checking the animation starts after play")]
+
+var snapPos = [];
+function takeSnapshot(){
+	//for each object record left location
+	var elems = document.querySelectorAll(".test");
+	for (var i = 0; i < elems.length; i++) {
+	  var params = document.defaultView.getComputedStyle(elems[i], null);
+	  snapPos[i] = params.left;
+	  console.log(params.left);
+	}
+}
+
+function compareSnapshot(test){
+  //for each object check the current position is the same as when the snapshot was taken
+  pauseCheck[test].step(function(){
+	var elems = document.querySelectorAll(".test");
+	for (var i = 0; i < elems.length; i++) {
+	  var params = document.defaultView.getComputedStyle(elems[i], null);
+	  console.log(params.left + " " + test);
+	  if(test != 2){
+	  	assert_equals(params.left, snapPos[i], "animation changed during pause");
+	  } else {
+	  	assert_not_equals(params.left, snapPos[i], "animation didn't change after play");
+	  }
+	}
+	});
+  pauseCheck[test].done();
+}
+</script>
+
+<div id="log"></div>

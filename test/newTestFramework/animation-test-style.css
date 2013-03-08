@@ -1,0 +1,33 @@
+#log {
+	position: absolute;
+	width: 1000px;
+}
+
+#padding {
+	position: relative;
+	border-width: 0px;
+}
+
+.testBox {
+	width: 100%;
+	position: absolute;
+	left: 0px;
+	top: 0px;
+}
+
+#timeBar{
+  width:500px;
+  height:10px;
+  border:1px solid black;
+  position:relative;
+}
+
+#slider{
+  width:0%;
+  height:100%;
+  background-color:red;
+  top:0px;
+  left:0px;
+  position:absolute;
+  cursor:pointer;
+}

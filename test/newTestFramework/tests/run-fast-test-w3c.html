@@ -1,0 +1,86 @@
+<!-- 
+Copyright 2013 Google Inc. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+Written by Steph McArthur
+-->
+
+<!DOCTYPE html>
+<style>
+.anim {
+  left: 0px;
+  top: 0px;
+  width: 200px;
+  height: 24px;
+  background-color: lightsteelblue;
+  position: relative;
+  border-bottom: solid white 1px;
+}
+
+.testBox {
+  height: 300px;
+}
+
+</style>
+
+<head>
+  <title>Test quick run</title>
+  <link rel="author" title="Steph McArthur", href="mailto:stephm@google.com">
+  <link rel="help" href="https://dvcs.w3.org/hg/FXTF/raw-file/tip/web-anim/index.html#timing-in-discrete-steps">
+  <meta name="flags" content="dom">
+  <meta name="assert" content="Getting the tests to run much faster">
+</head>
+
+<div id="test" class = "testBox">
+  <div class="anim"></div>
+  <div class="anim"></div>
+  <div class="anim"></div>
+</div>
+
+<script src="../../web-animations-js/web-animation.js"></script>
+<script src="../testharness/testharness.js"></script>
+<script src='../testharness/testharnessreport.js'></script>
+<script src='../extra-asserts.js'></script>
+<link rel='stylesheet' href='../testharness/testharness.css'>
+<link rel='stylesheet' type="text/css" href="../animation-test-style.css">
+
+<script>
+setupTests();
+
+var dt = document.timeline;
+
+dt.createPlayer(new Animation(document.querySelector(".anim"), {left: "600px"}, {duration: 4}));
+dt.createPlayer(new Animation(document.querySelectorAll(".anim")[1], {top: "200px"}, {duration: 2}));
+dt.createPlayer(new Animation(document.querySelectorAll(".anim")[2], {top: "200px", left:"600px"}, {duration: 4}));
+
+check(document.querySelectorAll('.anim')[0],{'top':'0px'},0);
+check(document.querySelectorAll('.anim')[1],{'top':'0px'},0);
+check(document.querySelectorAll('.anim')[2],{'top':'0px'},0);
+check(document.querySelectorAll('.anim')[0],{'top':'0px'},1);
+check(document.querySelectorAll('.anim')[1],{'top':'100px'},1);
+check(document.querySelectorAll('.anim')[2],{'top':'50px'},1);
+check(document.querySelectorAll('.anim')[0],{'top':'0px'},2);
+check(document.querySelectorAll('.anim')[1],{'top':'200px'},2);
+check(document.querySelectorAll('.anim')[2],{'top':'100px'},2);
+check(document.querySelectorAll('.anim')[0],{'top':'0px'},3);
+check(document.querySelectorAll('.anim')[1],{'top':'200px'},3);
+check(document.querySelectorAll('.anim')[2],{'top':'150px'},3);
+check(document.querySelectorAll('.anim')[0],{'top':'0px'},4);
+check(document.querySelectorAll('.anim')[1],{'top':'200px'},4);
+check(document.querySelectorAll('.anim')[2],{'top':'200px'},4);
+runTests();
+</script>
+
+
+
