@@ -221,7 +221,8 @@ Player.prototype = {
     if (isPaused) {
       this._pauseTime = this.currentTime;
     } else if (isDefined(this._pauseTime)) {
-      this._timeDrift = this._timeline.currentTime - this._pauseTime;
+      this._timeDrift =
+          this._timeline.currentTime - this.startTime - this._pauseTime;
       this._pauseTime = undefined;
     }
   },
@@ -1001,7 +1002,7 @@ PathAnimationFunction.prototype = createObject(AnimationFunction.prototype, {
     var value = [{t: 'translate', d: [{px: x}, {px: y}]}];
     if (this.rotate) {
       // Super hacks
-      var lastPoint = this._path.getPointAtLength(timeFraction * 
+      var lastPoint = this._path.getPointAtLength(timeFraction *
           length - 0.01);
       var dx = point.x - lastPoint.x;
       var dy = point.y - lastPoint.y;

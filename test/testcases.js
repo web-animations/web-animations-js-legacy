@@ -45,5 +45,6 @@ var tests = [
   'test-transform-3d.html',
   'test-transform-primitives.html',
   'test-transform-units.html',
+  'test-unpause.html',
   'test-visibility.html',
 ];
