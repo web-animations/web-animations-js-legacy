@@ -165,7 +165,8 @@ var PLAYERS = [];
 var Player = function(source, timeline) {
   this.source = source;
   this._timeline = timeline;
-  this._startTime = this._timeline.currentTime;
+  this._startTime =
+      this._timeline.currentTime === null ? 0 : this._timeline.currentTime;
   this._timeDrift = 0.0;
   this._pauseTime = undefined;
 
