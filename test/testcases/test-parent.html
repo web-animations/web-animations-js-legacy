@@ -41,21 +41,21 @@ limitations under the License.
 var dt = document.timeline;
 
 // Lone animation with default parent.
-dt.createPlayer(new Animation(document.getElementById("a"),
+dt.play(new Animation(document.getElementById("a"),
     {left: ["100px", "200px"]}, 1.0));
 // Lone animation with explicit default parent.
-dt.createPlayer(new Animation(document.getElementById("b"),
+dt.play(new Animation(document.getElementById("b"),
     {left: ["100px", "200px"]}, 1.0, undefined));
 
 // Animation in group with default parent.
 var group1 = new ParGroup([], {iterationCount: 3});
 new Animation(document.getElementById("c"), {left: ["100px", "200px"]}, 1.0,
     group1);
-dt.createPlayer(group1);
+dt.play(group1);
 // Animation in group with explicit default parent.
 var group2 = new ParGroup([], {iterationCount: 3}, undefined);
 new Animation(document.getElementById("d"), {left: ["100px", "200px"]}, 1.0,
               group2);
-dt.createPlayer(group2);
+dt.play(group2);
 
 </script>

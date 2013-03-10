@@ -152,8 +152,8 @@ DocumentTimeline.prototype = {
   get currentTime() {
     return documentTime();
   },
-  createPlayer: function(timedItem) {
-    return new Player(timedItem, this);
+  play: function(source) {
+    return new Player(source, this);
   }
 };
 
@@ -162,14 +162,14 @@ var PLAYERS = [];
 
 // Controls a tree of animations via its root TimedItem.
 /** @constructor */
-var Player = function(timedItem, timeline) {
-  this.timedItem = timedItem;
+var Player = function(source, timeline) {
+  this.source = source;
   this._timeline = timeline;
   this._startTime = this._timeline.currentTime;
   this._timeDrift = 0.0;
   this._pauseTime = undefined;
 
-  this.timedItem.timeDrift = 0.0;
+  this.source.timeDrift = 0.0;
   this._update();
 
   PLAYERS.push(this);
@@ -177,20 +177,20 @@ var Player = function(timedItem, timeline) {
 };
 
 Player.prototype = {
-  set timedItem(timedItem) {
-    if (isDefinedAndNotNull(this.timedItem)) {
+  set source(source) {
+    if (isDefinedAndNotNull(this.source)) {
       // To prevent infinite recursion.
-      var oldTimedItem = this.timedItem;
-      this._timedItem = null;
+      var oldTimedItem = this.source;
+      this._source = null;
       oldTimedItem._attach(null);
     }
-    this._timedItem = timedItem;
-    if (isDefinedAndNotNull(this.timedItem)) {
-      this.timedItem._attach(this);
+    this._source = source;
+    if (isDefinedAndNotNull(this.source)) {
+      this.source._attach(this);
     }
   },
-  get timedItem() {
-    return this._timedItem;
+  get source() {
+    return this._source;
   },
   set currentTime(currentTime) {
     // This seeks by updating _drift. It does not affect the startTime.
@@ -231,20 +231,20 @@ Player.prototype = {
     return isDefined(this._pauseTime);
   },
   cancel: function() {
-    this.timedItem = null;
+    this.source = null;
   },
   _update: function() {
-    if (this.timedItem !== null) {
-      this.timedItem._updateInheritedTime(this.currentTime);
+    if (this.source !== null) {
+      this.source._updateInheritedTime(this.currentTime);
     }
   },
   _isPastEndOfActiveInterval: function() {
-    return this.timedItem === null ||
-        this.timedItem._isPastEndOfActiveInterval();
+    return this.source === null ||
+        this.source._isPastEndOfActiveInterval();
   },
   _getLeafItemsInEffect: function(items) {
-    if (this.timedItem) {
-      this.timedItem._getLeafItemsInEffect(items);
+    if (this.source) {
+      this.source._getLeafItemsInEffect(items);
     }
   }
 };
@@ -349,7 +349,7 @@ TimedItem.prototype = {
       throw new Error('parentGroup can not be set to self!');
     }
     if (this._player !== null) {
-      this._player.timedItem = null;
+      this._player.source = null;
       this._player = null;
     }
     if (this.parentGroup !== null) {
@@ -2481,7 +2481,7 @@ Object.defineProperty(document, 'timeline', configureDescriptor({
 
 window.Element.prototype.animate = function(effect, timing) {
   var anim = new Animation(this, effect, timing);
-  DOCUMENT_TIMELINE.createPlayer(anim);
+  DOCUMENT_TIMELINE.play(anim);
   return anim;
 };
 

@@ -111,6 +111,6 @@ for (var i = 0; i < containers.length; i++) {
   new Animation(container.getElementsByClassName("c")[0],
       {left: ["180px", "300px"]}, {duration: 1, iterationCount: 0.0},
       groups[i]);
-  document.timeline.createPlayer(groups[i]);
+  document.timeline.play(groups[i]);
 }
 </script>

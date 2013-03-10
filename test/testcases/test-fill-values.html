@@ -110,7 +110,7 @@ for (var i = 0; i < containers.length; i++) {
   var divs =
       document.getElementById(containers[i]).getElementsByClassName('anim');
   for (var j = 0; j < fills.length; j++) {
-    document.timeline.createPlayer(
+    document.timeline.play(
         new Animation(divs[2 * j], {left: ["100px", "200px"]}, {
           iterationCount: 4,
           direction: directions[i],
@@ -119,7 +119,7 @@ for (var i = 0; i < containers.length; i++) {
         }));
     divs[2 * j].innerHTML = "dir: " + directions[i] + " fill: " + fills[j] +
         " dur: 1";
-    document.timeline.createPlayer(
+    document.timeline.play(
         new Animation(divs[2 * j + 1], {left: ["100px", "200px"]}, {
           iterationCount: 4,
           direction: directions[i],
