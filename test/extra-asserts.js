@@ -364,8 +364,8 @@ function runTests() {
     testLength = 0;
     for (var x = 0; x < document.timeline.getPlayers().length; x++){
       var currPlayer = document.timeline.getPlayers()[x];
-      testLength = currPlayer._timedItem.animationDuration > testLength ?
-                    currPlayer._timedItem.animationDuration : testLength;
+      testLength = currPlayer._source.animationDuration > testLength ?
+          currPlayer._source.animationDuration : testLength;
     }
   }
 
