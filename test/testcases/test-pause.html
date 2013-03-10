@@ -70,7 +70,7 @@ var a4 = new Animation(document.querySelector("#d"), {left: ["100px", "200px"]},
     2.3);
 var pgroup1 = new ParGroup([a1, a2], {name: "p1"});
 var pgroup2 = new ParGroup([a3, a4], {name: "p2"});
-var player = document.timeline.createPlayer(
+var player = document.timeline.play(
     new SeqGroup([pgroup1, pgroup2], {name: "s"}));
 
 setTimeout(function() {

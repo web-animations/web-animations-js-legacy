@@ -42,17 +42,17 @@ limitations under the License.
 // Run a simple animation. It should animate indefinitely.
 var anim = new Animation(document.getElementById("a"),
     {left: ["100px", "500px"]}, {iterationCount: Infinity, duration: 1.0});
-document.timeline.createPlayer(anim);
+document.timeline.play(anim);
 
 // After 2.5s, move it to a parallel group and run that.
 setTimeout(function() {
-  document.timeline.createPlayer(new ParGroup([anim],
+  document.timeline.play(new ParGroup([anim],
       {direction: "alternate", duration: 2.0, iterationCount: 2.0}));
 }, 2500);
 
 // Move it to a new group and run that.
 setTimeout(function() {
-  document.timeline.createPlayer(new ParGroup([anim], {duration: 1.5}));
+  document.timeline.play(new ParGroup([anim], {duration: 1.5}));
 }, 8000);
 
 </script>

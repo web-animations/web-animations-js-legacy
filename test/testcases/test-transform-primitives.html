@@ -69,7 +69,7 @@ for (var i = 0; i < transformValues.length; i++) {
       div.className = "anim";
       div.style.top = y + 'px';
       div.style.left = x + 'px';
-      document.timeline.createPlayer(new Animation(div, {"-webkit-transform":
+      document.timeline.play(new Animation(div, {"-webkit-transform":
           [transformValues[i][j], transformValues[i][k]]}, 2));
       x += separation_x;
       if (x > max_x) {
