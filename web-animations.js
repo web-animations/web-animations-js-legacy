@@ -152,7 +152,7 @@ DocumentTimeline.prototype = {
   get currentTime() {
     return documentTime();
   },
-  createPlayer: function(timedItem) {
+  play: function(timedItem) {
     return new Player(timedItem, this);
   }
 };
@@ -2481,7 +2481,7 @@ Object.defineProperty(document, 'timeline', configureDescriptor({
 
 window.Element.prototype.animate = function(effect, timing) {
   var anim = new Animation(this, effect, timing);
-  DOCUMENT_TIMELINE.createPlayer(anim);
+  DOCUMENT_TIMELINE.play(anim);
   return anim;
 };
 

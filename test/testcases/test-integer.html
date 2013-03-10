@@ -43,6 +43,6 @@ for (var i = 0; i < totalWidth; i += width) {
   div.style.position = "relative";
   document.body.appendChild(div);
 }
-document.timeline.createPlayer(new Animation(document.querySelector("#test"),
+document.timeline.play(new Animation(document.querySelector("#test"),
     {"z-index": [String(startZ), String(endZ)]}, 3));
 </script>

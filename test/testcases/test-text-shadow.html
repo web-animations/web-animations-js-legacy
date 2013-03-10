@@ -18,6 +18,6 @@ limitations under the License.
 <body>The shadows should slide back under the text.
 <script src="../../web-animations.js"></script>
 <script>
-document.timeline.createPlayer(new Animation(document.body,
+document.timeline.play(new Animation(document.body,
     {'text-shadow': ['100px 100px red, 0px 100px 10px red', '0px 0px']}, 2));
 </script>

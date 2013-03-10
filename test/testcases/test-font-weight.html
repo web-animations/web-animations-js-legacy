@@ -36,6 +36,6 @@ limitations under the License.
 <div class='test' style='font-weight: 100' id='test'>Testing font-weight!</div>
 <script src="../../web-animations.js"></script>
 <script>
-document.timeline.createPlayer(new Animation(document.querySelector('#test'),
+document.timeline.play(new Animation(document.querySelector('#test'),
     {'font-weight': ['100', '900']}, {duration: 1, startDelay: 1}));
 </script>
