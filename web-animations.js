@@ -2384,23 +2384,31 @@ var clockMillis = function() {
 var documentTimeZeroAsRafTime = undefined;
 var documentTimeZeroAsClockTime = undefined;
 if (usePerformanceTiming) {
-  addEventListener('load', function() {
+  var load = function() {
     // RAF time is relative to the navigationStart event.
     documentTimeZeroAsRafTime =
         performance.timing.loadEventStart - performance.timing.navigationStart;
     // performance.now() uses the same origin as RAF time.
     documentTimeZeroAsClockTime = documentTimeZeroAsRafTime;
-  });
+  };
 } else {
   // The best approximation we have for the relevant clock and RAF times is to
   // listen to the load event.
-  addEventListener('load', function() {
+  load = function() {
     raf(function(rafTime) {
       documentTimeZeroAsRafTime = rafTime;
     });
     documentTimeZeroAsClockTime = Date.now();
-  });
+  };
 }
+// start timing when load event fires or if script is processed when document
+// loading is already complete
+if (document.readyState == 'complete') {
+  load();
+} else {
+  addEventListener('load', load);
+}
+
 // A cached document time for use during the current callstack.
 var cachedDocumentTimeMillis = undefined;
 // Calculates one time relative to another, returning null if the zero time is
