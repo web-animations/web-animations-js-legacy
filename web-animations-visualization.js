@@ -16,7 +16,7 @@
 var visRoot = document.querySelector("#webAnimVisualizeHere");
 
 if (!visRoot) {
-	visRoot = document.querySelector("body");
+	visRoot = document.body;
 }
 
 function createSVGElement(tagName) {
