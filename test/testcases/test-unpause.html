@@ -31,11 +31,15 @@ body.fail div#pass {
 body.fail div#fail {
   display: block;
 }
+div.anim {
+  position: relative;
+  left: 0px;
+}
 </style>
 
 <div id="pass">PASS</div>
 <div id="fail">FAIL</div>
-<div id="anim"></div>
+<div id="anim" class="anim"></div>
 
 <script src="../../web-animations.js"></script>
 <script>
@@ -47,12 +51,6 @@ var fail = function(failureMessage) {
   document.body.className = "fail";
 };
 
-var checkNotEqual = function(actual, unexpected, failureMessage) {
-  if (actual === unexpected) {
-    fail(failureMessage + ". Got unexpected '" + unexpected + "'");
-  }
-};
-
 var check = function(actual, expected, failureMessage) {
   if (actual != expected) {
     fail(failureMessage + ". Expected '" + expected + "', got '" + actual +
@@ -60,35 +58,27 @@ var check = function(actual, expected, failureMessage) {
   }
 };
 
-var clockMillis = function() {
-  return typeof performance === "object" &&
-      typeof performance.now === "function" ?
-      performance.now() : Date.now();
+var testPauseUnpause = function(player) {
+  player.currentTime = 5.0;
+  player.paused = true;
+  check(player.currentTime, 5.0, "Player.currentTime should be unaffected by " +
+        "pausing");
+  player.paused = false;
+  check(player.currentTime, 5.0, "Player.currentTime should be unaffected by " +
+        "unpausing");
 };
 
-function sleep() {
-  var startTime = clockMillis();
-  while (startTime === clockMillis()) {}
-}
+// Test that a Player's currentTime is correct after pausing and unpausing.
+testPauseUnpause(document.timeline.play(new Animation(
+    document.getElementById("anim"), {left: ["100px", "200px"]}, 1.0)));
 
-// Test that document.timeline.currentTime is read-only.
-document.timeline.currentTime = 1;
-checkNotEqual(document.timeline.currentTime, 1,
-    "document.timeline.currentTime should be read-only");
-
-// Test that document.timeline.currentTime is null before the document load
-// event.
-check(document.timeline.currentTime, null,
-    "document.timeline.currentTime should be null before document load event");
-
-// Test that document.timeline.currentTime is constant within a JavaScript
-// callstack.
+// Test that a Player's currentTime is correct after pausing and unpausing, with
+// a non-zero startTime.
 setTimeout(function() {
-  var time = document.timeline.currentTime;
-  sleep();
-  check(document.timeline.currentTime, time,
-      "document.timeline.currentTime time should be constant in JavaScript " +
-      "callstack");
+  var player = document.timeline.play(new Animation(
+      document.getElementById("anim"), {left: ["100px", "200px"]}, 1.0));
+  check(player.startTime > 0, true);
+  testPauseUnpause(player);
 }, 0);
 
 </script>

@@ -91,7 +91,7 @@ check(player1.source, animation,
 check(animation.getPlayer(), player1,
     "Set Player.source: TimedItem.getPlayer() incorrect");
 
-// Test that TImedItem.getPlayer() gives null on a detached tree.
+// Test that TimedItem.getPlayer() gives null on a detached tree.
 var animation2 =
     new Animation(document.getElementById("anim"), {left: "100px"});
 var parGroup = new ParGroup([animation2]);
@@ -123,5 +123,13 @@ check(animation2.parentGroup, parGroup,
     "Animation.parentGroup should be updated");
 check(parGroup.children.length, 1, "Animation parent should be updated");
 check(parGroup.children[0], animation2, "Animation parent should be updated");
+
+// Test that currentTime is zero before timeline starts.
+check(document.timeline.play(animation).currentTime, 0,
+    "currentTime should be zero before Timeline starts");
+
+// Test that startTime is zero before timeline starts.
+check(document.timeline.play(animation).startTime, 0,
+    "startTime should be zero before Timeline starts");
 
 </script>

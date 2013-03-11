@@ -165,7 +165,8 @@ var PLAYERS = [];
 var Player = function(source, timeline) {
   this.source = source;
   this._timeline = timeline;
-  this._startTime = this._timeline.currentTime;
+  this._startTime =
+      this._timeline.currentTime === null ? 0 : this._timeline.currentTime;
   this._timeDrift = 0.0;
   this._pauseTime = undefined;
 
@@ -203,9 +204,6 @@ Player.prototype = {
     maybeRestartAnimation();
   },
   get currentTime() {
-    if (this._timeline.currentTime === null) {
-      return null;
-    }
     return !isDefined(this._pauseTime) ?
         this._timeline.currentTime - this._timeDrift - this.startTime :
         this._pauseTime;
@@ -223,7 +221,8 @@ Player.prototype = {
     if (isPaused) {
       this._pauseTime = this.currentTime;
     } else if (isDefined(this._pauseTime)) {
-      this._timeDrift = this._timeline.currentTime - this._pauseTime;
+      this._timeDrift =
+          this._timeline.currentTime - this.startTime - this._pauseTime;
       this._pauseTime = undefined;
     }
   },
@@ -1003,7 +1002,7 @@ PathAnimationFunction.prototype = createObject(AnimationFunction.prototype, {
     var value = [{t: 'translate', d: [{px: x}, {px: y}]}];
     if (this.rotate) {
       // Super hacks
-      var lastPoint = this._path.getPointAtLength(timeFraction * 
+      var lastPoint = this._path.getPointAtLength(timeFraction *
           length - 0.01);
       var dx = point.x - lastPoint.x;
       var dy = point.y - lastPoint.y;

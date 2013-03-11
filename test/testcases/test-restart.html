@@ -65,7 +65,7 @@ document.timeline.play(anim1);
 var anim2 = new Animation(document.getElementById("anim2"), animFunc, 1.0);
 document.timeline.play(anim2);
 
-// Check that once an animation is completed, cteating a new Player restarts it.
+// Check that once an animation is completed, creating a new Player restarts it.
 anim1.currentTime = 1.0;
 setTimeout(function() {
   check(getComputedStyle(anim1.targetElement).left, "100px",
