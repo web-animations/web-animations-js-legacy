@@ -124,4 +124,8 @@ check(animation2.parentGroup, parGroup,
 check(parGroup.children.length, 1, "Animation parent should be updated");
 check(parGroup.children[0], animation2, "Animation parent should be updated");
 
+// Test that currentTime is zero before timeline starts.
+check(document.timeline.play(animation).currentTime, 0,
+    "currentTime should be zero before Timeline starts");
+
 </script>

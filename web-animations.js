@@ -203,9 +203,6 @@ Player.prototype = {
     maybeRestartAnimation();
   },
   get currentTime() {
-    if (this._timeline.currentTime === null) {
-      return null;
-    }
     return !isDefined(this._pauseTime) ?
         this._timeline.currentTime - this._timeDrift - this.startTime :
         this._pauseTime;

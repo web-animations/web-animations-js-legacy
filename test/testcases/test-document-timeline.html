@@ -81,11 +81,6 @@ checkNotEqual(document.timeline.currentTime, 1,
 check(document.timeline.currentTime, null,
     "document.timeline.currentTime should be null before document load event");
 
-// Test that Player.currentTime is null before the document load event.
-var animation = new Animation(document.getElementById("anim"), {left: "100px"});
-check(document.timeline.play(animation).currentTime, null,
-    "Player.currentTime should be null before document load event");
-
 // Test that document.timeline.currentTime is constant within a JavaScript
 // callstack.
 setTimeout(function() {
