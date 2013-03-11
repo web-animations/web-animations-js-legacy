@@ -594,7 +594,7 @@ TimedItem.prototype = {
         "Derived classes must override TimedItem._getLeafItemsInEffectImpl()");
   },
   _isPastEndOfActiveInterval: function() {
-    return this._player.currentTime > this.endTime;
+    return this._inheritedTime > this.endTime;
   },
   getPlayer: function() {
     return this.parentGroup === null ?
