@@ -2395,6 +2395,8 @@ if (usePerformanceTiming) {
   // The best approximation we have for the relevant clock and RAF times is to
   // listen to the load event.
   load = function() {
+    console.warn('Web animations can\'t discover document zero time when ' +
+      'asynchronously loaded in the absence of performance timing.');
     raf(function(rafTime) {
       documentTimeZeroAsRafTime = rafTime;
     });
