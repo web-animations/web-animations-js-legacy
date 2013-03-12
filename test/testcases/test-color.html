@@ -62,11 +62,11 @@ All three boxes should end up the same color as the outline.
 var dt = document.timeline;
 
 dt.play(new Animation(document.querySelector("#a"),
-    {"background-color": ["red", "green"]}, 2));
+    {"backgroundColor": ["red", "green"]}, 2));
 dt.play(new Animation(document.querySelector("#b"),
-    {"background-color": "rgb(0, 128, 0)"}, 2));
+    {"backgroundColor": "rgb(0, 128, 0)"}, 2));
 dt.play(new Animation(document.querySelector("#c"),
-    {"background-color": [
+    {"backgroundColor": [
       {offset: 0.25, value: "rgb(255, 0, 0)"},
       {offset: 0.75, value: "rgb(0, 0, 255)"}
     ], operation: "add"}, 2));
