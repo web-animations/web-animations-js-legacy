@@ -2395,17 +2395,22 @@ if (usePerformanceTiming) {
   // The best approximation we have for the relevant clock and RAF times is to
   // listen to the load event.
   load = function() {
-    console.warn('Web animations can\'t discover document zero time when ' +
-      'asynchronously loaded in the absence of performance timing.');
     raf(function(rafTime) {
       documentTimeZeroAsRafTime = rafTime;
     });
     documentTimeZeroAsClockTime = Date.now();
   };
 }
-// start timing when load event fires or if script is processed when document
-// loading is already complete
+// Start timing when load event fires or if this script is processed when 
+// document loading is already complete.
 if (document.readyState == 'complete') {
+  // When performance timing is unavailable and this script is loaded 
+  // dynamically, document zero time is incorrect.
+  // Warn the user in this case.
+  if (!usePerformanceTiming) {
+    console.warn('Web animations can\'t discover document zero time when ' +
+      'asynchronously loaded in the absence of performance timing.');
+  }
   load();
 } else {
   addEventListener('load', load);
