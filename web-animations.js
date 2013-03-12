@@ -229,9 +229,6 @@ Player.prototype = {
   get paused() {
     return isDefined(this._pauseTime);
   },
-  cancel: function() {
-    this.source = null;
-  },
   _update: function() {
     if (this.source !== null) {
       this.source._updateInheritedTime(this.currentTime);
