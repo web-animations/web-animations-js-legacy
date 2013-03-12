@@ -255,7 +255,6 @@ var TimedItem = function(timing, parentGroup) {
   this.currentIteration = null;
   this.iterationTime = null;
   this.animationTime = null;
-  this._reversing = false;
   this._startTime = 0.0;
 
   // A TimedItem has either a _player, or a _parentGroup, or neither, but
@@ -392,9 +391,8 @@ TimedItem.prototype = {
   },
   _updateAnimationTime: function() {
     if (this.itemTime < this.timing.startDelay) {
-      if (((this.timing.fillMode == 'backwards') && !this._reversing)
-        || this.timing.fillMode == 'both'
-        || ((this.timing.fillMode == 'forwards') && this._reversing)) {
+      if (this.timing.fillMode === 'backwards' ||
+          this.timing.fillMode === 'both') {
         this.animationTime = 0;
       } else {
         this.animationTime = null;
@@ -403,9 +401,8 @@ TimedItem.prototype = {
         this.timing.startDelay + this.animationDuration) {
       this.animationTime = this.itemTime - this.timing.startDelay;
     } else {
-      if (((this.timing.fillMode == 'forwards') && !this._reversing)
-        || this.timing.fillMode == 'both'
-        || ((this.timing.fillMode == 'backwards') && this._reversing)) {
+      if (this.timing.fillMode === 'forwards' ||
+          this.timing.fillMode === 'both') {
         this.animationTime = this.animationDuration;
       } else {
         this.animationTime = null;
@@ -414,8 +411,8 @@ TimedItem.prototype = {
   },
   _updateIterationParamsZeroDuration: function() {
     this.iterationTime = 0;
-    var isAtEndOfIterations = (this.timing.iterationCount != 0) &&
-        ((this.itemTime < this.timing.startDelay) == this._reversing);
+    var isAtEndOfIterations = this.timing.iterationCount != 0 &&
+        this.itemTime >= this.timing.startDelay;
     this.currentIteration = isAtEndOfIterations ?
        this._floorWithOpenClosedRange(this.timing.iterationStart +
            this.timing.iterationCount, 1.0) :
@@ -437,11 +434,9 @@ TimedItem.prototype = {
   _getAdjustedAnimationTime: function(animationTime) {
     var startOffset =
         multiplyZeroGivesZero(this.timing.iterationStart, this.duration);
-    var effectiveSpeed = this._reversing ?
-        -this.timing.playbackRate : this.timing.playbackRate;
-    return (effectiveSpeed < 0 ?
+    return (this.timing.playbackRate < 0 ?
         (animationTime - this.animationDuration) : animationTime) *
-        effectiveSpeed + startOffset;
+        this.timing.playbackRate + startOffset;
   },
   _scaleIterationTime: function(unscaledIterationTime) {
     return this._isCurrentDirectionForwards(
@@ -505,22 +500,6 @@ TimedItem.prototype = {
     var seekAdjustment = (this.itemTime - this.timing.startDelay) *
         (1 - previousRate / playbackRate);
     this.currentTime = this.itemTime - seekAdjustment;
-  },
-  reverse: function() {
-    if (this.currentTime === null) {
-      var seekTime = 0;
-    } else if (this.currentTime < this.timing.startDelay) {
-      var seekTime = this.timing.startDelay + this.animationDuration;
-    } else if (this.currentTime > this.timing.startDelay +
-        this.animationDuration) {
-      var seekTime = this.timing.startDelay;
-    } else {
-      var seekTime = this.timing.startDelay + this.animationDuration -
-          this.currentTime;
-    }
-
-    this.currentTime = seekTime;
-    this._reversing = !(this._reversing);
   },
   // TODO: Should we remove this?
   cancel: function() {
