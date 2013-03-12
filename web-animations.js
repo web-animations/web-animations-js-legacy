@@ -495,9 +495,6 @@ TimedItem.prototype = {
     }
     maybeRestartAnimation();
   },
-  seek: function(itemTime) {
-    // TODO
-  },
   changePlaybackRate: function(playbackRate) {
     var previousRate = this.timing.playbackRate;
     this.timing.playbackRate = playbackRate;
