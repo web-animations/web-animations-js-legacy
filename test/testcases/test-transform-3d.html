@@ -19,7 +19,9 @@ limitations under the License.
 
 .container {
   -webkit-perspective: 200px;
+  -moz-perspective: 200px;
   -webkit-perspective-origin: 400px 200px;
+  -moz-perspective-origin: 400px 200px;
   position: absolute;
   top: 300px;
 }
@@ -31,6 +33,7 @@ limitations under the License.
   background-color: lightsteelblue;
   position: absolute;
   -webkit-transform-style: preserve-3d;
+  -moz-transform-style: preserve-3d;
   font-size: 8px;
 }
 
@@ -41,6 +44,7 @@ limitations under the License.
   background-color: red;
   font-size: 8px;
   -webkit-transform-style: preserve-3d;
+  -moz-transform-style: preserve-3d;
 }
 </style>
 <div class="container"></div>
@@ -61,6 +65,33 @@ var separation_y = 70;
 var max_x = 1000;
 
 var toplevel = document.querySelector("div");
+
+// TODO: refactor into test harness
+function detectFeatures() {
+  var style = document.createElement('style');
+  style.textContent = '' +
+     'dummyRuleForTesting {' +
+     'width: calc(0px);' +
+     'width: -webkit-calc(0px); }';
+  document.head.appendChild(style);
+  var transformCandidates = [
+      'transform',
+      'webkitTransform',
+      'msTransform'
+  ];
+  var transformProperty = transformCandidates.filter(function(property) {
+    return property in style.sheet.cssRules[0].style;
+  })[0];
+  var calcFunction = style.sheet.cssRules[0].style.width.split('(')[0];
+  document.head.removeChild(style);
+  return {
+    transformProperty: transformProperty,
+    calcFunction: calcFunction
+  };
+}
+
+var features = detectFeatures();
+
 var y = 50;
 for (var i = 0; i < transformValues.length; i++) {
   var x = 300;
@@ -74,14 +105,14 @@ for (var i = 0; i < transformValues.length; i++) {
       div.className = "expected";
       div.style.top = y + 'px';
       div.style.left = x + 'px';
-      div.style.webkitTransform = transformValues[i][k];
+      div.style[features.transformProperty] = transformValues[i][k];
       toplevel.appendChild(document.createElement("div"));
       var div = toplevel.lastChild;
       div.className = "anim";
       div.style.top = y + 'px';
       div.style.left = x + 'px';
       div.textContent = "perspective";
-      document.timeline.play(new Animation(div, {"-webkit-transform":
+      document.timeline.play(new Animation(div, {"transform":
           [transformValues[i][j], transformValues[i][k]]}, 2));
       x += separation_x;
       if (x > max_x) {
