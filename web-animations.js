@@ -501,12 +501,6 @@ TimedItem.prototype = {
         (1 - previousRate / playbackRate);
     this.currentTime = this.itemTime - seekAdjustment;
   },
-  // TODO: Should we remove this?
-  cancel: function() {
-    if (this.parentGroup) {
-      this.parentGroup.remove(this.parentGroup.indexOf(this), 1);
-    }
-  },
   _floorWithClosedOpenRange: function(x, range) {
     return Math.floor(x / range);
   },
@@ -776,10 +770,7 @@ AnimationGroup.prototype = createObject(TimedItem.prototype, {
     }
   },
   clear: function() {
-    // TODO: call cancel on children? Update timing?
-    this.children = [];
-    this._lengthChanged();
-    this._childrenStateModified();
+    this.splice(0, this.children.length);
   },
   add: function() {
     var newItems = [];
