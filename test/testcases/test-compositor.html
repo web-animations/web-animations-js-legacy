@@ -46,16 +46,16 @@ dt.play(new Animation(rect, {x: ["0px", "200px"], operation: 'merge'},
     {startDelay: 2, duration: 5}));
 
 dt.play(new Animation(rect2,
-    {"-webkit-transform": ["translate(0px, 0px)", "translate(200px, 200px)"]},
+    {"transform": ["translate(0px, 0px)", "translate(200px, 200px)"]},
     3));
 dt.play(new Animation(rect2,
-    {"-webkit-transform": [
+    {"transform": [
       "rotate(0deg) translate(0px, 0px)",
       "rotate(90deg) translate(100px, 0px)"
     ], operation: 'add'},
     {startDelay: 1, duration: 4}));
 dt.play(new Animation(rect2,
-    {"-webkit-transform": [
+    {"transform": [
       "translate(0px, 0px) rotate(0deg) translate(0px, 0px) scale(1, 1)",
       "translate(0px, 0px) rotate(0deg) translate(0px, 0px) scale(2, 2)"
     ], operation: 'merge'},

@@ -998,7 +998,7 @@ PathAnimationFunction.prototype = createObject(AnimationFunction.prototype, {
       var rotation = Math.atan2(dy, dx);
       value.push({t:'rotate', d: [rotation / 2 / Math.PI * 360]});
     }
-    compositor.setAnimatedValue(target, features.transformProperty,
+    compositor.setAnimatedValue(target, "transform",
         new AnimatedResult(value, this.operation, timeFraction));
   },
   clone: function() {
@@ -1338,6 +1338,11 @@ var fontWeightType = {
   }
 };
 
+// This regular expression is intentionally permissive, so that
+// platform-prefixed versions of calc will still be accepted as
+// input. While we are restrictive with the transform property
+// name, we need to be able to read underlying calc values from
+// computedStyle so can't easily restrict the input here.
 var outerCalcRE = /calc\s*\(\s*([^)]*)\)/;
 var valueRE = /\s*([0-9.]*)([a-zA-Z%]*)/;
 var operatorRE = /\s*([+-])/;
@@ -2102,10 +2107,6 @@ var propertyTypes = {
   'text-shadow': shadowType,
   'top': percentLengthType,
   'transform': transformType,
-  '-webkit-transform': transformType,
-  // TODO: fixme?
-  'webkitTransform': transformType,
-  'msTransform': transformType,
   'vertical-align': percentLengthType,
   'visibility': visibilityType,
   'width': percentLengthType,
@@ -2116,9 +2117,6 @@ var propertyTypes = {
 };
 
 var svgProperties = {
-  // TODO: For browsers that support transform as a style attribute on SVG we
-  // can delete this.
-  'transform': 1,
   'cx': 1,
   'width': 1,
   'x': 1,
@@ -2308,6 +2306,9 @@ var initializeIfSVGAndUninitialized = function(property, target) {
 
 var setValue = function(target, property, value) {
   initializeIfSVGAndUninitialized(property, target);
+  if (property == "transform") {
+    property = features.transformProperty;
+  }
   if (propertyIsSVGAttrib(property, target)) {
     target.actuals[property] = value;
   } else {
@@ -2317,6 +2318,9 @@ var setValue = function(target, property, value) {
 
 var clearValue = function(target, property) {
   initializeIfSVGAndUninitialized(property, target);
+  if (property == "transform") {
+    property = features.transformProperty;
+  }
   if (propertyIsSVGAttrib(property, target)) {
     target.actuals[property] = null;
   } else {
@@ -2326,6 +2330,9 @@ var clearValue = function(target, property) {
 
 var getValue = function(target, property) {
   initializeIfSVGAndUninitialized(property, target);
+  if (property == "transform") {
+    property = features.transformProperty;
+  }
   if (propertyIsSVGAttrib(property, target)) {
     return target.actuals[property];
   } else {
