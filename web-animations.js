@@ -484,8 +484,7 @@ TimedItem.prototype = {
         this._modulusWithOpenClosedRange(this.timing.iterationStart +
             this.timing.iterationCount, 1.0) :
         this._modulusWithClosedOpenRange(this.timing.iterationStart, 1.0);
-    this._timeFraction = this._isCurrentDirectionForwards(
-        this.timing.direction, this.currentIteration) ?
+    this._timeFraction = this._isCurrentDirectionForwards() ?
             unscaledFraction :
             1.0 - unscaledFraction;
     if (this.timing.timingFunction) {
@@ -501,8 +500,7 @@ TimedItem.prototype = {
         this.timing.playbackRate + startOffset;
   },
   _scaleIterationTime: function(unscaledIterationTime) {
-    return this._isCurrentDirectionForwards(
-        this.timing.direction, this.currentIteration) ?
+    return this._isCurrentDirectionForwards() ?
         unscaledIterationTime :
         this.duration - unscaledIterationTime;
   },
@@ -565,15 +563,15 @@ TimedItem.prototype = {
     var ret = this._modulusWithClosedOpenRange(x, range);
     return ret == 0 ? range : ret;
   },
-  _isCurrentDirectionForwards: function(direction, currentIteration) {
-    if (direction == 'normal') {
+  _isCurrentDirectionForwards: function() {
+    if (this.timing.direction == 'normal') {
       return true;
     }
-    if (direction == 'reverse') {
+    if (this.timing.direction == 'reverse') {
       return false;
     }
-    var d = currentIteration;
-    if (direction == 'alternate-reverse') {
+    var d = this.currentIteration;
+    if (this.timing.direction == 'alternate-reverse') {
       d += 1;
     }
     // TODO: 6.13.3 step 3. wtf?
