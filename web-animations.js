@@ -16,6 +16,31 @@
  */
 (function() {
 
+function detectFeatures() {
+  var style = document.createElement('style');
+  style.textContent = '' +
+     'dummyRuleForTesting {' +
+     'width: calc(0px);' +
+     'width: -webkit-calc(0px); }';
+  document.head.appendChild(style);
+  var transformCandidates = [
+      'transform',
+      'webkitTransform',
+      'msTransform'
+  ];
+  var transformProperty = transformCandidates.filter(function(property) {
+    return property in style.sheet.cssRules[0].style;
+  })[0];
+  var calcFunction = style.sheet.cssRules[0].style.width.split('(')[0];
+  document.head.removeChild(style);
+  return {
+    transformProperty: transformProperty,
+    calcFunction: calcFunction
+  };
+}
+
+var features = detectFeatures();
+
 var createObject = function(proto, obj) {
   var newObject = Object.create(proto);
   Object.getOwnPropertyNames(obj).forEach(function(name) {
@@ -973,9 +998,7 @@ PathAnimationFunction.prototype = createObject(AnimationFunction.prototype, {
       var rotation = Math.atan2(dy, dx);
       value.push({t:'rotate', d: [rotation / 2 / Math.PI * 360]});
     }
-    compositor.setAnimatedValue(target, '-webkit-transform',
-        new AnimatedResult(value, this.operation, timeFraction));
-    compositor.setAnimatedValue(target, 'transform',
+    compositor.setAnimatedValue(target, features.transformProperty,
         new AnimatedResult(value, this.operation, timeFraction));
   },
   clone: function() {
@@ -1315,7 +1338,7 @@ var fontWeightType = {
   }
 };
 
-var outerCalcRE = /-webkit-calc\s*\(\s*([^)]*)\)/;
+var outerCalcRE = /calc\s*\(\s*([^)]*)\)/;
 var valueRE = /\s*([0-9.]*)([a-zA-Z%]*)/;
 var operatorRE = /\s*([+-])/;
 var percentLengthType = {
@@ -1353,7 +1376,7 @@ var percentLengthType = {
       if (s === '') {
         s = value[item] + item;
       } else if (single_value) {
-        s = '-webkit-calc(' + s + ' + ' + value[item] + item + ')';
+        s = features.calcFunction + '(' + s + ' + ' + value[item] + item + ')';
         single_value = false;
       } else {
         s = s.substring(0, s.length - 1) + ' + ' + value[item] + item + ')';
@@ -2080,6 +2103,9 @@ var propertyTypes = {
   'top': percentLengthType,
   'transform': transformType,
   '-webkit-transform': transformType,
+  // TODO: fixme?
+  'webkitTransform': transformType,
+  'msTransform': transformType,
   'vertical-align': percentLengthType,
   'visibility': visibilityType,
   'width': percentLengthType,
