@@ -38,7 +38,7 @@ for (var i = 0; i < totalWidth; i += width) {
   div.style.width = width + "px";
   div.style.height = "50px";
   div.style.background = "red";
-  div.style["z-index"] = startZ +
+  div.style.zIndex = startZ +
       Math.round((i / totalWidth) * (endZ - startZ));
   div.style.position = "relative";
   document.body.appendChild(div);
