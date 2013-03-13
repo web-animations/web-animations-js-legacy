@@ -291,16 +291,16 @@ function resetTestIndex() {
 // say to play again.
 function pause() {
   beingPaused++;
-  for (var x in document.timeline.getPlayers()) {
-    document.timeline.getPlayers()[x].paused = true;
+  for (var x in document.timeline._getPlayers()) {
+    document.timeline._getPlayers()[x].paused = true;
   }
 }
 
 function play(){
   // If something gets out of sync don't let beingPaused go negative.
   beingPaused = beingPaused === 0 ? 0 : beingPaused - 1;
-  for (var x = 0; x < document.timeline.getPlayers().length; x++) {
-    if (beingPaused === 0) document.timeline.getPlayers()[x].paused = false;
+  for (var x = 0; x < document.timeline._getPlayers().length; x++) {
+    if (beingPaused === 0) document.timeline._getPlayers()[x].paused = false;
   }
 }
 
@@ -362,8 +362,8 @@ function runTests() {
   // total animation length.
   if(testLength === undefined){
     testLength = 0;
-    for (var x = 0; x < document.timeline.getPlayers().length; x++){
-      var currPlayer = document.timeline.getPlayers()[x];
+    for (var x = 0; x < document.timeline._getPlayers().length; x++){
+      var currPlayer = document.timeline._getPlayers()[x];
       testLength = currPlayer._source.animationDuration > testLength ?
           currPlayer._source.animationDuration : testLength;
     }
@@ -374,7 +374,7 @@ function runTests() {
     checkProcessor(c.object, c.targets, c.time, c.testName, c.isRefTest);
   }
 
-  requestFrame(function(){ animTimeViewer(document.timeline.currentTime()); });
+  requestFrame(function(){ animTimeViewer(document.timeline.currentTime); });
   sortTests();
   if (runInAutoMode) {
     pause();
@@ -388,7 +388,7 @@ function animTimeViewer(oldTime) {
   if (!userInput){
     // When the animation isn't paused increase the time state
     if (beingPaused === 0) {
-      testCurrentTime += Number(document.timeline.currentTime() - oldTime);
+      testCurrentTime += Number(document.timeline.currentTime - oldTime);
     }
     // Stops the shown time going beyond the animation length
     if (testCurrentTime > testLength) testCurrentTime = testLength;
@@ -398,7 +398,7 @@ function animTimeViewer(oldTime) {
     var slider = document.getElementById("slider");
     slider.style.width = (testCurrentTime / testLength) * 100 + "%";
   }
-  var currentTime = document.timeline.currentTime();
+  var currentTime = document.timeline.currentTime;
   requestFrame(function(){ animTimeViewer(currentTime); });
 }
 
@@ -427,8 +427,8 @@ function testPacketComparator(a,b) { return(a.time - b.time) };
 function setTestCurrentTime(time) {
   // Needs to take into account start time offsets
   // For now assumes that everything starts at time zero
-  for (var x in document.timeline.getPlayers()) {
-    document.timeline.getPlayers()[x].currentTime = time;
+  for (var x in document.timeline._getPlayers()) {
+    document.timeline._getPlayers()[x].currentTime = time;
   }
   testCurrentTime = time;
 }
@@ -677,7 +677,7 @@ function assert_properties(test) {
   // apply the assert
   for (var propName in targetProperties) {
     if (isSVG && propName.indexOf("transform") != -1) {
-      assert_transform(object, targetProperties[propName], message);
+      assert_transform(object, targetProperties[propName]);
     } else {
       if (isSVG) {
         var target = targetStyle[propName].value;
@@ -721,11 +721,11 @@ function assert_transform(object, target){
   target = target.split(/[()]+/);
 
   for (var x = 0; x < currStyle.length - 1; x++){
-    // Property name compare
+    // Compare property name
     assert_equals(currStyle[x], target[x], "At time " + testCurrentTime + ", " +
         "Target: " + target[x] + " Current state: " + currStyle[x]);
     x++;
-    // Property values compare
+    // Compare property values
     var c = currStyle[x].split(",");
     var t = target[x].split(",");
     for (var i in c){
@@ -744,7 +744,6 @@ window.runTests = runTests;
 window.restart = restart;
 window.toggleFlash = toggleFlash;
 window.animPause = animPause;
-window.setState = setState;
 
 window.skipFrameForward = skipFrameForward;
 window.skipFrameBack = skipFrameBack;

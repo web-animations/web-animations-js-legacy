@@ -1,0 +1,81 @@
+<!--
+Copyright 2012 Google Inc. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<!DOCTYPE html>
+<title>Test repetition with proper assert function</title>
+<link rel="author" title="Sandy Phan"m href="mailto:sandyphan@google.com")>
+<meta name="flags" content="dom">
+
+<style>
+.anim {
+  width: 100px;
+  height: 25px;
+  background-color: #FAA;
+  position: relative;
+  top: 0px;
+  left: 0px;
+}
+
+.testBox {
+  height: 200px;
+}
+
+</style>
+
+<div id="test" class="testBox">
+  <div class="anim" id="a">1</div>
+  <div class="anim" id="b">2</div>
+  <div class="anim" id="b">3</div>
+</div>
+
+<script src="../../../web-animations.js"></script>
+<script src="../testharness/testharness.js"></script>
+<script src='../testharness/testharnessreport.js'></script>
+<script src='../extra-asserts.js'></script>
+<link rel='stylesheet' href='../testharness/testharness.css'>
+<link rel='stylesheet' type="text/css" href="../animation-test-style.css">
+
+<script>
+setupTests({"testLength":3});
+var elems = document.querySelectorAll(".anim");
+var anim = [];
+var props = [];
+
+for (var i = 0; i < elems.length; i++) {
+  var element = elems[i];
+  var parGroup = new ParGroup([]);
+  var fish = new Animation(element, {left: ["0px", "200px"]}, {iterationCount: element.textContent, duration:1}, parGroup);
+  document.timeline.play(fish);
+}
+
+for (var i = 0; i < elems.length; i++) {
+  check(elems[i], {"left":"0px"}, 0, "Start pos check: Object "+i);
+}
+
+check(elems[0], {"left":"200px"}, 1, "repetition pos check: Object "+0);
+check(elems[1], {"left":"0px"}, 1, "repetition pos check: Object "+1);
+check(elems[2], {"left":"0px"}, 1, "repetition pos check: Object "+2);
+
+check(elems[0], {"left":"200px"}, 2, "repetition 2 pos check: Object "+0);
+check(elems[1], {"left":"200px"}, 2, "repetition 2 pos check: Object "+1);
+check(elems[2], {"left":"0px"}, 2, "repetition 2 pos check: Object "+2);
+
+for (var i = 0; i < elems.length; i++) {
+  check(elems[i], {"left":"200px"}, 3, "End pos check: Object "+i);
+}
+
+runTests();
+</script>

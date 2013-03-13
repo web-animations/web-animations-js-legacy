@@ -179,7 +179,12 @@ DocumentTimeline.prototype = {
   },
   play: function(source) {
     return new Player(source, this);
-  }
+  },
+  // This is exposed for testing purposes.
+  // TODO: Consider adding this to the API.
+  _getPlayers: function() {
+    return PLAYERS;
+  },
 };
 
 // TODO: Remove dead Players from here?
@@ -267,7 +272,7 @@ Player.prototype = {
     if (this.source) {
       this.source._getLeafItemsInEffect(items);
     }
-  }
+  },
 };
 
 
