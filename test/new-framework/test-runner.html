@@ -59,7 +59,7 @@ function updateState(change) {
   }
   var test = tests[currentTest];
 
-  document.querySelector('#test-name').innerText = (currentTest + 1) +
+  document.querySelector('#test-name').innerHTML = (currentTest + 1) +
       ' of ' + tests.length + ': ' + test;
   document.querySelector('iframe').src = 'testcases/' + test;
   document.querySelector('#prev-button').disabled = currentTest <= 0;
@@ -68,7 +68,8 @@ function updateState(change) {
 }
 
 function reRunTests(){
-  document.getElementById("results").remove();
+  var a = document.getElementById("results");
+  a.parentNode.removeChild(a);
   newResults = document.createElement('div');
   newResults.id = "results";
   document.body.appendChild(newResults);
@@ -83,14 +84,14 @@ function reRunTests(){
 }
 
 function checkForResults(){
-  if (window.frame.testResults != undefined){
-    logResults(window.frame.testResults);
+  if (window.frames[0].testResults != undefined){
+    logResults(window.frames[0].testResults);
     resultsOutputted++;
-    window.frame.testResults = undefined;
+    window.frames[0].testResults = undefined;
     if (currentTest < tests.length-1) updateState(1);
   }
   if (resultsOutputted < tests.length)
-      window.webkitRequestAnimationFrame(checkForResults);
+      setTimeout(checkForResults, 100);
   else {
      var finishPacket = {};
      finishPacket["type"] = "finished";

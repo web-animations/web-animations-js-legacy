@@ -129,21 +129,21 @@ dt.play(new Animation(document.querySelector("#c"), {width: "400px"}, 2));
 // 25px -> 0px linear, 12.5% -> 50% (25px -> 400px quadratic)
 dt.play(new Animation(document.querySelector("#d"), {width: "50%"}, 2));
 // 50px -> 100px linear, 0% -> 37.5% (0px -> 300px quadratic)
-dt.play(new Animation(document.querySelector("#e"), {width: "-webkit-calc(37.5% + 100px)"}, 2));
+dt.play(new Animation(document.querySelector("#e"), {width: "calc(37.5% + 100px)"}, 2));
 // 0px -> 100px linear, 25% -> 37.5% (50px -> 300px quadratic)
-dt.play(new Animation(document.querySelector("#f"), {width: "-webkit-calc(37.5% + 100px)"}, 2));
+dt.play(new Animation(document.querySelector("#f"), {width: "calc(37.5% + 100px)"}, 2));
 // 100px -> 100px linear, -25% -> 37.5% (-50px -> 300px quadratic)
-dt.play(new Animation(document.querySelector("#g"), {width: "-webkit-calc(37.5% + 100px)"}, 2));
+dt.play(new Animation(document.querySelector("#g"), {width: "calc(37.5% + 100px)"}, 2));
 
 check(document.querySelector("#a"), {width: "50px"}, 0, "A start");
-check(document.querySelector("#a"), {width: "50%"}, 2, "A end");
+check(document.querySelector("#a"), {width: "400px"}, 2, "A end");
 
-check(document.querySelector("#b"), {width: "50%"}, 2, "B end");
+check(document.querySelector("#b"), {width: "400px"}, 2, "B end");
 check(document.querySelector("#c"), {width: "400px"}, 2, "C end");
-check(document.querySelector("#d"), {width: "50%"}, 2, "D end");
-check(document.querySelector("#e"), {width: "-webkit-calc(37.5% + 100px)"}, 2, "E end");
-check(document.querySelector("#f"), {width: "-webkit-calc(37.5% + 100px)"}, 2, "F end");
-check(document.querySelector("#g"), {width: "-webkit-calc(37.5% + 100px)"}, 2, "G end");
+check(document.querySelector("#d"), {width: "400px"}, 2, "D end");
+check(document.querySelector("#e"), {width: "400px"}, 2, "E end");
+check(document.querySelector("#f"), {width: "400px"}, 2, "F end");
+check(document.querySelector("#g"), {width: "400px"}, 2, "G end");
 
 runTests();
 </script>
