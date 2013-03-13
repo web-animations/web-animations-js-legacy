@@ -254,6 +254,7 @@ Player.prototype = {
       this._timeDrift =
           this._timeline.currentTime - this.startTime - this._pauseTime;
       this._pauseTime = undefined;
+      maybeRestartAnimation();
     }
   },
   get paused() {
@@ -2469,10 +2470,12 @@ var ticker = function(rafTime) {
     return a.startTime - b.startTime;
   });
   var finished = true;
+  var paused = true;
   var animations = [];
   sortedPlayers.forEach(function(player) {
     player._update();
     finished = finished && player._isPastEndOfActiveInterval();
+    paused = paused && player.paused;
     player._getLeafItemsInEffect(animations);
   });
 
@@ -2488,7 +2491,7 @@ var ticker = function(rafTime) {
     webAnimVisUpdateAnims();
   }
 
-  if (finished) {
+  if (finished || paused) {
     rafScheduled = false;
   } else {
     raf(ticker);
