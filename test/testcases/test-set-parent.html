@@ -70,7 +70,7 @@ try {
   new Animation(elem, animFunc, 1.0, anim);
   fail("Creating group with Animation as parent should throw");
 } catch(e) {
-  check(e.message, "parentGroup is not an AnimationGroup",
+  check(e.message, "parentGroup is not a TimingGroup",
       "Expected error exception message");
 }
 

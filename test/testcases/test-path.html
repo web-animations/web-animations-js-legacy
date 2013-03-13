@@ -65,14 +65,14 @@ height: 500px;
 <script src="../../web-animations.js"></script>
 <script>
 
-var animFunc = new PathAnimationFunction(
+var animFunc = new PathAnimationEffect(
     document.querySelector('#path1'));
 animFunc.rotate = true;
 
 document.timeline.play(new Animation(document.querySelector("#anim1"),
     animFunc, {duration: 2, iterationCount: 2}));
 
-var animFunc2 = new PathAnimationFunction(document.querySelector('#path2'));
+var animFunc2 = new PathAnimationEffect(document.querySelector('#path2'));
 animFunc2.rotate = true;
 
 document.timeline.play(new Animation(document.querySelector("#anim2"),
