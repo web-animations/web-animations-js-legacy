@@ -74,11 +74,13 @@ testPauseUnpause(document.timeline.play(new Animation(
 
 // Test that a Player's currentTime is correct after pausing and unpausing, with
 // a non-zero startTime.
-setTimeout(function() {
-  var player = document.timeline.play(new Animation(
-      document.getElementById("anim"), {left: ["100px", "200px"]}, 1.0));
-  check(player.startTime > 0, true);
-  testPauseUnpause(player);
-}, 0);
+onload = function() {
+  setTimeout(function() {
+    var player = document.timeline.play(new Animation(
+        document.getElementById("anim"), {left: ["100px", "200px"]}, 1.0));
+    check(player.startTime > 0, true);
+    testPauseUnpause(player);
+  }, 0);
+};
 
 </script>

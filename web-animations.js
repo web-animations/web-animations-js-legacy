@@ -2348,7 +2348,7 @@ var getValue = function(target, property) {
   }
 }
 
-var rafNo = undefined;
+var rafScheduled = false;
 
 var compositor = new Compositor();
 
@@ -2367,19 +2367,38 @@ var stableSort = function(array, compare) {
   }));
 };
 
-// We don't use performance timing unless RAF is unprefixed because of concerns
-// over the time origin used in this case.
-// TODO: Investigate this.
 var usePerformanceTiming =
     typeof performance === "object" &&
     typeof performance.timing === "object" &&
-    typeof performance.now === "function" &&
-    typeof requestAnimationFrame === "function";
+    typeof performance.now === "function";
 
 // Don't use a local named requestAnimationFrame, to avoid potential problems
 // with hoisting.
-var raf = window.requestAnimationFrame || window.webkitRequestAnimationFrame ||
-    window.mozRequestAnimationFrame || window.msRequestAnimationFrame;
+var raf = window.requestAnimationFrame;
+if (!raf) {
+  var nativeRaf =  window.webkitRequestAnimationFrame ||
+      window.mozRequestAnimationFrame;
+  if (!nativeRaf) {
+    // requestAnimationFrame is not available, simulate it.
+    raf = function(callback) {
+      setTimeout(function() {
+        callback(clockMillis());
+      }, 1000/60);
+    };
+  } else if (usePerformanceTiming) {
+    // platform requestAnimationFrame provides only millisecond accuracy, wrap
+    // it and use performance.now()
+    raf = function(callback) {
+      nativeRaf(function() {
+        callback(performance.now());
+      });
+    };
+  } else {
+    // platform requestAnimationFrame provides only millisecond accuracy, and
+    // we can't do any better
+    raf = nativeRaf;
+  }
+}
 
 var clockMillis = function() {
   return usePerformanceTiming ? performance.now() : Date.now();
@@ -2441,6 +2460,7 @@ var documentTime = function() {
 };
 
 var ticker = function(rafTime) {
+  rafScheduled = false;
   cachedDocumentTimeMillis = relativeTime(rafTime, documentTimeZeroAsRafTime);
 
   // Get animations for this sample. We order first by Player start time, and
@@ -2469,10 +2489,8 @@ var ticker = function(rafTime) {
     webAnimVisUpdateAnims();
   }
 
-  if (requiresFurtherIterations) {
-    rafNo = raf(ticker);
-  } else {
-    rafNo = undefined;
+  if (requiresFurtherIterations && !rafScheduled) {
+    raf(ticker);
   }
 
   cachedDocumentTimeMillis = undefined;
@@ -2485,10 +2503,11 @@ var multiplyZeroGivesZero = function(a, b) {
 };
 
 var maybeRestartAnimation = function() {
-  if (isDefinedAndNotNull(rafNo)) {
+  if (rafScheduled) {
     return;
   }
-  rafNo = raf(ticker);
+  raf(ticker);
+  rafScheduled = true;
 };
 
 var DOCUMENT_TIMELINE = new DocumentTimeline();
