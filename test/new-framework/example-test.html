@@ -46,7 +46,7 @@ limitations under the License.
   <div class="anim"></div>
 </div>
 
-<script src="../web-animations.js"></script>
+<script src="../../web-animations.js"></script>
 <script src="testharness/testharness.js"></script>
 <script src="testharness/testharnessreport.js"></script>
 <script src="extra-asserts.js"></script>
@@ -56,16 +56,25 @@ limitations under the License.
 <script>
 setupTests();
 
-new Animation(document.querySelector(".anim"), {left: "600px"}, {duration: 4});
-new Animation(document.querySelectorAll(".anim")[1], {top: "200px"}, {duration: 2});
-new Animation(document.querySelectorAll(".anim")[2], {top: "200px", left:"600px"}, {duration: 4});
+document.timeline.play(new Animation(document.querySelector(".anim"),
+    {left: "600px"}, {duration: 2}));
+document.timeline.play(new Animation(document.querySelectorAll(".anim")[1],
+    {top: "200px"}, {duration: 2}));
+document.timeline.play(new Animation(document.querySelectorAll(".anim")[2],
+    {top: "200px", left:"600px"}, {duration: 6}));
 
-check(document.querySelector(".anim"), {"left":"300px"}, 1, "300px at 3 secs Anim 0");
-check(document.querySelector(".anim"), {"left":"600px"}, 2, "moved the right rate Anim 0");
-check(document.querySelectorAll(".anim")[1], {"top":"200px"}, 2, "moved the down amount (200px) Anim 1");
-check(document.querySelectorAll(".anim")[1], {"top":"100px"}, 1, "moved the down amount (100px) Anim 1");
-check(document.querySelectorAll(".anim")[2], {"top":"100px"}, 1, "moved the down amount (100px) Anim 2");
-check(document.querySelectorAll(".anim")[2], {"left":"400px"}, 1.33, "moved the right amount (400px) Anim 2");
+check(document.querySelector(".anim"), {"left":"300px"}, 1,
+    "300px at 3 secs Anim 0");
+check(document.querySelector(".anim"), {"left":"600px"}, 2,
+    "moved the right rate Anim 0");
+check(document.querySelectorAll(".anim")[1], {"top":"200px"}, 2,
+    "moved the down amount (200px) Anim 1");
+check(document.querySelectorAll(".anim")[1], {"top":"100px"}, 1,
+    "moved the down amount (100px) Anim 1");
+check(document.querySelectorAll(".anim")[2], {"top":"100px"}, 3,
+    "moved the down amount (100px) Anim 2");
+check(document.querySelectorAll(".anim")[2], {"left":"400px"}, 4,
+    "moved the right amount (400px) Anim 2");
 runTests();
 </script>
 
