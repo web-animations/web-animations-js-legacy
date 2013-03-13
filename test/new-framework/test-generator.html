@@ -76,8 +76,8 @@ function getSettings(){
     var obProp = document.getElementById("obProp").value;
     process(obProp);
     // Get the length of the test
-    for (var x = 0; x < window.frame.document.timeline._getPlayers().length; x++){
-      var currPlayer = window.frame.document.timeline._getPlayers()[x];
+    for (var x = 0; x < window.frames[0].document.timeline._getPlayers().length; x++){
+      var currPlayer = window.frames[0].document.timeline._getPlayers()[x];
       testLength = currPlayer.source.animationDuration > testLength ?
                     currPlayer.source.animationDuration : testLength;
     }
@@ -95,7 +95,7 @@ function process(rawString){
   for (var x in rawString){
     rawString[x] = rawString[x].replace(/\s/g, "");
     rawString[x] = rawString[x].split(",");
-    var object = window.frame.document.querySelectorAll(rawString[x][0]);
+    var object = window.frames[0].document.querySelectorAll(rawString[x][0]);
     var prop = [];
     for (var i = 1; i < rawString[x].length; i++){
       prop.push(rawString[x][i]);
@@ -146,14 +146,14 @@ function printCheck(object, number, properties, time){
 }
 
 function pause(){
-  for(var x in window.frame.document.timeline._getPlayers()){
-    window.frame.document.timeline._getPlayers()[x].paused = true;
+  for(var x in window.frames[0].document.timeline._getPlayers()){
+    window.frames[0].document.timeline._getPlayers()[x].paused = true;
   }
 }
 
 function setTestCurrentTime(time){
-  for (var x in window.frame.document.timeline._getPlayers()){
-    window.frame.document.timeline._getPlayers()[x].currentTime = time;
+  for (var x in window.frames[0].document.timeline._getPlayers()){
+    window.frames[0].document.timeline._getPlayers()[x].currentTime = time;
   }
   testCurrentTime = time;
 }

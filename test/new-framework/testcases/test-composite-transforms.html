@@ -64,18 +64,18 @@ limitations under the License.
 setupTests();
 
 var divs = document.querySelectorAll(".anim");
-document.timeline.play(new Animation(divs[0], {"-webkit-transform": ["translate(0px, 0px)", "translate(200px, 0px)"]}, 2));
-document.timeline.play(new Animation(divs[1], {"-webkit-transform": ["rotate(0deg)", "rotate(90deg)"]}, 2));
-document.timeline.play(new Animation(divs[2], {"-webkit-transform": ["translate(0px, 0px) rotate(0deg)", "translate(200px, 0px) rotate(90deg)"]}, 2));
-document.timeline.play(new Animation(divs[3], {"-webkit-transform": ["rotate(0deg) translate(0px, 0px)", "rotate(90deg) translate(200px, 0px)"]}, 2));
+document.timeline.play(new Animation(divs[0], {"transform": ["translate(0px, 0px)", "translate(200px, 0px)"]}, 2));
+document.timeline.play(new Animation(divs[1], {"transform": ["rotate(0deg)", "rotate(90deg)"]}, 2));
+document.timeline.play(new Animation(divs[2], {"transform": ["translate(0px, 0px) rotate(0deg)", "translate(200px, 0px) rotate(90deg)"]}, 2));
+document.timeline.play(new Animation(divs[3], {"transform": ["rotate(0deg) translate(0px, 0px)", "rotate(90deg) translate(200px, 0px)"]}, 2));
 
-check(divs[0], {"-webkit-transform": "translate(0px, 0px)"}, 0, "Div 0 start");
-check(divs[0], {"-webkit-transform": "translate(200px, 0px)"}, 2, "Div 0 end");
-check(divs[1], {"-webkit-transform": "rotate(45deg)"}, 1, "Div 1 middle");
-check(divs[1], {"-webkit-transform": "rotate(90deg)"}, 2, "Div 1 end");
+check(divs[0], {"transform": "translate(0px, 0px)"}, 0, "Div 0 start");
+check(divs[0], {"transform": "translate(200px, 0px)"}, 2, "Div 0 end");
+check(divs[1], {"transform": "rotate(45deg)"}, 1, "Div 1 middle");
+check(divs[1], {"transform": "rotate(90deg)"}, 2, "Div 1 end");
 
-check(divs[2], {"-webkit-transform": "translate(0px, 0px) rotate(0deg)"}, 0, "Div 2 start");
-check(divs[2], {"-webkit-transform": "translate(200px, 0px) rotate(90deg)"}, 2, "Div 2 end");
+check(divs[2], {"transform": "translate(0px, 0px) rotate(0deg)"}, 0, "Div 2 start");
+check(divs[2], {"transform": "translate(200px, 0px) rotate(90deg)"}, 2, "Div 2 end");
 
 runTests();
 </script>
