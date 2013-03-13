@@ -40,6 +40,7 @@ function detectFeatures() {
 }
 
 var features = detectFeatures();
+var constructorToken = {};
 
 var createObject = function(proto, obj) {
   var newObject = Object.create(proto);
@@ -170,29 +171,34 @@ var isDefinedAndNotNull = function(val) {
 
 
 /** @constructor */
-var DocumentTimeline = function() {
+var Timeline = function(token) {
+  if (token !== constructorToken) {
+    throw new TypeError('Illegal constructor');
+  }
 };
 
-DocumentTimeline.prototype = {
+Timeline.prototype = {
   get currentTime() {
     return documentTime();
   },
   play: function(source) {
-    return new Player(source, this);
+    return new Player(constructorToken, source, this);
   },
   // This is exposed for testing purposes.
   // TODO: Consider adding this to the API.
   _getPlayers: function() {
     return PLAYERS;
-  },
+  }
 };
 
 // TODO: Remove dead Players from here?
 var PLAYERS = [];
 
-// Controls a tree of animations via its root TimedItem.
 /** @constructor */
-var Player = function(source, timeline) {
+var Player = function(token, source, timeline) {
+  if (token !== constructorToken) {
+    throw new TypeError('Illegal constructor');
+  }
   this.source = source;
   this._timeline = timeline;
   this._startTime =
@@ -278,7 +284,10 @@ Player.prototype = {
 
 
 /** @constructor */
-var TimedItem = function(timing, parentGroup) {
+var TimedItem = function(token, timing, parentGroup) {
+  if (token !== constructorToken) {
+    throw new TypeError('Illegal constructor');
+  }
   this.timing = new TimingProxy(interpretTimingParam(timing), function() {
     this._updateInternalState();
   }.bind(this));
@@ -360,16 +369,16 @@ TimedItem.prototype = {
     this._player = player;
   },
   _sanitizeParent: function(parentGroup) {
-    if (parentGroup === null || parentGroup instanceof AnimationGroup) {
+    if (parentGroup === null || parentGroup instanceof TimingGroup) {
       return parentGroup;
     } else if (!isDefined(parentGroup)) {
       return null;
     }
-    throw new TypeError('parentGroup is not an AnimationGroup');
+    throw new TypeError('parentGroup is not a TimingGroup');
   },
   // Takes care of updating the outgoing parent. This is called with a non-null
-  // parent only from AnimationGroup.splice(), which takes care of calling
-  // AnimationGroup._childrenStateModified() for the new parent.
+  // parent only from TimingGroup.splice(), which takes care of calling
+  // TimingGroup._childrenStateModified() for the new parent.
   _reparent: function(parentGroup) {
     if (parentGroup === this) {
       throw new Error('parentGroup can not be set to self!');
@@ -384,7 +393,7 @@ TimedItem.prototype = {
     this._parentGroup = parentGroup;
     this.timeDrift = 0;
     // In the case of a SeqGroup parent, _startTime will be updated by
-    // AnimationGroup.splice().
+    // TimingGroup.splice().
     if (this.parentGroup === null || this.parentGroup.type !== 'seq') {
       this._startTime =
           this._stashedStartTime === undefined ? 0.0 : this._stashedStartTime;
@@ -584,21 +593,21 @@ TimedItem.prototype = {
   }
 };
 
-var isCustomAnimationFunction = function(animationFunction) {
+var isCustomAnimationEffect = function(animationEffect) {
   // TODO: How does WebIDL actually differentiate different callback interfaces?
-  return typeof animationFunction === "object" &&
-      animationFunction.hasOwnProperty("sample") &&
-      typeof animationFunction.sample === "function";
+  return typeof animationEffect === "object" &&
+      animationEffect.hasOwnProperty("sample") &&
+      typeof animationEffect.sample === "function";
 };
 
-var interpretAnimationFunction = function(animationFunction) {
-  if (animationFunction instanceof AnimationFunction) {
-    return animationFunction;
-  } else if (typeof animationFunction === 'object') {
-    if (isCustomAnimationFunction(animationFunction)) {
-      return animationFunction;
+var interpretAnimationEffect = function(animationEffect) {
+  if (animationEffect instanceof AnimationEffect) {
+    return animationEffect;
+  } else if (typeof animationEffect === 'object') {
+    if (isCustomAnimationEffect(animationEffect)) {
+      return animationEffect;
     } else {
-      return AnimationFunction.createFromProperties(animationFunction);
+      return AnimationEffect.createFromProperties(animationEffect);
     }
   } else {
     try {
@@ -607,14 +616,14 @@ var interpretAnimationFunction = function(animationFunction) {
   }
 };
 
-var cloneAnimationFunction = function(animationFunction) {
-  if (animationFunction instanceof AnimationFunction) {
-    return animationFunction.clone();
-  } else if (isCustomAnimationFunction(animationFunction)) {
-    if (typeof animationFunction.clone === "function") {
-      return animationFunction.clone();
+var cloneAnimationEffect = function(animationEffect) {
+  if (animationEffect instanceof AnimationEffect) {
+    return animationEffect.clone();
+  } else if (isCustomAnimationEffect(animationEffect)) {
+    if (typeof animationEffect.clone === "function") {
+      return animationEffect.clone();
     } else {
-      return animationFunction;
+      return animationEffect;
     }
   } else {
     return null;
@@ -639,20 +648,20 @@ var interpretTimingParam = function(timing) {
 };
 
 /** @constructor */
-var Animation = function(target, animationFunction, timing, parentGroup) {
-  this.animationFunction = interpretAnimationFunction(animationFunction);
+var Animation = function(target, animationEffect, timing, parentGroup) {
+  this.animationEffect = interpretAnimationEffect(animationEffect);
   this.timing = interpretTimingParam(timing);
 
-  TimedItem.call(this, timing, parentGroup);
+  TimedItem.call(this, constructorToken, timing, parentGroup);
 
   this.targetElement = target;
-  this.name = this.animationFunction instanceof KeyframesAnimationFunction ?
-      this.animationFunction.property : '<anon>';
+  this.name = this.animationEffect instanceof KeyframeAnimationEffect ?
+      this.animationEffect.property : '<anon>';
 };
 
 Animation.prototype = createObject(TimedItem.prototype, {
   _sample: function() {
-    this.animationFunction.sample(this._timeFraction,
+    this.animationEffect.sample(this._timeFraction,
         this.currentIteration, this.targetElement,
         this.underlyingValue);
   },
@@ -661,11 +670,11 @@ Animation.prototype = createObject(TimedItem.prototype, {
   },
   clone: function() {
     return new Animation(this.targetElement,
-        cloneAnimationFunction(this.animationFunction), this.timing.clone());
+        cloneAnimationEffect(this.animationEffect), this.timing.clone());
   },
   toString: function() {
-    var funcDescr = this.animationFunction instanceof AnimationFunction ?
-        this.animationFunction.toString() : 'Custom scripted function';
+    var funcDescr = this.animationEffect instanceof AnimationEffect ?
+        this.animationEffect.toString() : 'Custom scripted function';
     return 'Animation ' + this.startTime + '-' + this.endTime + ' (' +
         this.timeDrift + ' @' + this.currentTime + ') ' + funcDescr;
   }
@@ -673,7 +682,10 @@ Animation.prototype = createObject(TimedItem.prototype, {
 
 
 /** @constructor */
-var AnimationGroup = function(type, children, timing, parentGroup) {
+var TimingGroup = function(token, type, children, timing, parentGroup) {
+  if (token !== constructorToken) {
+    throw new TypeError('Illegal constructor');
+  }
   // Take a copy of the children array, as it could be modified as a side-effect
   // of creating this object. See
   // https://github.com/web-animations/web-animations-js/issues/65 for details.
@@ -684,7 +696,7 @@ var AnimationGroup = function(type, children, timing, parentGroup) {
   this.type = type || 'par';
   this.children = [];
   this.length = 0;
-  TimedItem.call(this, timing, parentGroup);
+  TimedItem.call(this, constructorToken, timing, parentGroup);
   // We add children after setting the parent. This means that if an ancestor
   // (including the parent) is specified as a child, it will be removed from our
   // ancestors and used as a child,
@@ -695,7 +707,7 @@ var AnimationGroup = function(type, children, timing, parentGroup) {
   // this.name = properties.name || '<anon>';
 };
 
-AnimationGroup.prototype = createObject(TimedItem.prototype, {
+TimingGroup.prototype = createObject(TimedItem.prototype, {
   _childrenStateModified: function() {
     // See _updateChildStartTimes().
     this._isInOnChildrenStateModified = true;
@@ -860,26 +872,29 @@ AnimationGroup.prototype = createObject(TimedItem.prototype, {
 
 /** @constructor */
 var  ParGroup = function(children, timing, parentGroup) {
-  AnimationGroup.call(this, 'par', children, timing, parentGroup);
+  TimingGroup.call(this, constructorToken, 'par', children, timing, parentGroup);
 };
 
-ParGroup.prototype = Object.create(AnimationGroup.prototype);
+ParGroup.prototype = Object.create(TimingGroup.prototype);
 
 /** @constructor */
 var SeqGroup = function(children, timing, parentGroup) {
-  AnimationGroup.call(this, 'seq', children, timing, parentGroup);
+  TimingGroup.call(this, constructorToken, 'seq', children, timing, parentGroup);
 };
 
-SeqGroup.prototype = Object.create(AnimationGroup.prototype);
+SeqGroup.prototype = Object.create(TimingGroup.prototype);
 
 /** @constructor */
-var AnimationFunction = function(operation, accumulateOperation) {
+var AnimationEffect = function(token, operation, accumulateOperation) {
+  if (token !== constructorToken) {
+    throw new TypeError('Illegal constructor');
+  }
   this.operation = operation === undefined ? 'replace' : operation;
   this.accumulateOperation =
       accumulateOperation == undefined ? 'replace' : operation;
 };
 
-AnimationFunction.prototype = {
+AnimationEffect.prototype = {
   sample: function(timeFraction, currentIteration, target) {
     throw 'Unimplemented sample function';
   },
@@ -891,7 +906,7 @@ AnimationFunction.prototype = {
   }
 };
 
-AnimationFunction.createFromProperties = function(properties) {
+AnimationEffect.createFromProperties = function(properties) {
   // Step 1 - determine set of animation properties
   var animProps = [];
   for (var candidate in properties) {
@@ -901,26 +916,26 @@ AnimationFunction.createFromProperties = function(properties) {
     animProps.push(candidate);
   }
 
-  // Step 2 - Create AnimationFunction objects
+  // Step 2 - Create AnimationEffect objects
   if (animProps.length === 0) {
     return null;
   } else if (animProps.length === 1) {
-    return AnimationFunction._createKeyframeFunction(
+    return AnimationEffect._createKeyframeFunction(
         animProps[0], properties[animProps[0]], properties.operation);
   } else {
-    var result = new GroupedAnimationFunction();
+    var result = new GroupedAnimationEffect();
     for (var i = 0; i < animProps.length; i++) {
-      result.add(AnimationFunction._createKeyframeFunction(
+      result.add(AnimationEffect._createKeyframeFunction(
           animProps[i], properties[animProps[i]], properties.operation));
     }
     return result;
   }
 }
 
-// Step 3 - Create a KeyframesAnimationFunction object
-AnimationFunction._createKeyframeFunction =
+// Step 3 - Create a KeyframeAnimationEffect object
+AnimationEffect._createKeyframeFunction =
     function(property, value, operation) {
-  var func = new KeyframesAnimationFunction(property);
+  var func = new KeyframeAnimationEffect(property);
 
   if (typeof value === 'string') {
     func.frames.add(new Keyframe(value, 0));
@@ -951,12 +966,12 @@ AnimationFunction._createKeyframeFunction =
 }
 
 /** @constructor */
-var GroupedAnimationFunction = function() {
-  AnimationFunction.call(this);
+var GroupedAnimationEffect = function() {
+  AnimationEffect.call(this, constructorToken);
   this.children = [];
 };
 
-GroupedAnimationFunction.prototype = createObject(AnimationFunction.prototype, {
+GroupedAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
   item: function(i) {
     return this.children[i];
   },
@@ -972,7 +987,7 @@ GroupedAnimationFunction.prototype = createObject(AnimationFunction.prototype, {
     }
   },
   clone: function() {
-    var result = new GroupedAnimationFunction();
+    var result = new GroupedAnimationEffect();
     for (var i = 0; i < this.children.length; i++) {
       result.add(this.children[i].clone());
     }
@@ -983,14 +998,14 @@ GroupedAnimationFunction.prototype = createObject(AnimationFunction.prototype, {
 });
 
 /** @constructor */
-var PathAnimationFunction = function(path, operation, accumulateOperation) {
-  AnimationFunction.call(this, operation, accumulateOperation);
+var PathAnimationEffect = function(path, operation, accumulateOperation) {
+  AnimationEffect.call(this, constructorToken, operation, accumulateOperation);
   // TODO: path argument is not in the spec -- seems useful since
   // SVGPathSegList doesn't have a constructor.
   this._path = path;
 };
 
-PathAnimationFunction.prototype = createObject(AnimationFunction.prototype, {
+PathAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
   sample: function(timeFraction, currentIteration, target) {
     var length = this._path.getTotalLength();
     var point = this._path.getPointAtLength(timeFraction * length);
@@ -1011,7 +1026,7 @@ PathAnimationFunction.prototype = createObject(AnimationFunction.prototype, {
         new AnimatedResult(value, this.operation, timeFraction));
   },
   clone: function() {
-    return new PathAnimationFunction(this._path.getAttribute('d'));
+    return new PathAnimationEffect(this._path.getAttribute('d'));
   },
   set segments(segments) {
     // TODO: moving the path segments is not entirely correct, but we can't
@@ -1028,15 +1043,15 @@ PathAnimationFunction.prototype = createObject(AnimationFunction.prototype, {
 });
 
 /** @constructor */
-var KeyframesAnimationFunction =
+var KeyframeAnimationEffect =
     function(property, operation, accumulateOperation) {
-  AnimationFunction.call(this, operation, accumulateOperation);
+  AnimationEffect.call(this, constructorToken, operation, accumulateOperation);
   this.property = property;
-  this.frames = new KeyframeList();
+  this.frames = new KeyframeList(constructorToken);
 };
 
-KeyframesAnimationFunction.prototype = createObject(
-    AnimationFunction.prototype, {
+KeyframeAnimationEffect.prototype = createObject(
+    AnimationEffect.prototype, {
   sample: function(timeFraction, currentIteration, target) {
     var frames = this.frames._sorted();
     if (frames.length == 0) {
@@ -1120,7 +1135,7 @@ KeyframesAnimationFunction.prototype = createObject(
     return getValue(target, this.property);
   },
   clone: function() {
-    var result = new KeyframesAnimationFunction(
+    var result = new KeyframeAnimationEffect(
         this.property, this.operation, this.accumulateOperation);
     result.frames = this.frames.clone();
     return result;
@@ -1145,7 +1160,10 @@ var Keyframe = function(value, offset, timingFunction) {
 };
 
 /** @constructor */
-var KeyframeList = function() {
+var KeyframeList = function(token) {
+  if (token !== constructorToken) {
+    throw new TypeError('Illegal constructor');
+  }
   this.frames = [];
   this._isSorted = true;
 };
@@ -1186,7 +1204,7 @@ KeyframeList.prototype = {
     return frame;
   },
   clone: function() {
-    var result = new KeyframeList();
+    var result = new KeyframeList(constructorToken);
     for (var i = 0; i < this.frames.length; i++) {
       result.add(new Keyframe(this.frames[i].value, this.frames[i].offset,
           this.frames[i].timingFunction));
@@ -1207,10 +1225,33 @@ var presetTimings = {
 };
 
 /** @constructor */
-var TimingFunction = function(spec) {
-  if (!Array.isArray(spec)) {
-    return TimingFunction.createFromString(spec);
+var TimingFunction = function() {
+  throw new TypeError('Illegal constructor');
+};
+
+TimingFunction.createFromString = function(spec) {
+  var preset = presetTimings[spec];
+  if (preset) {
+    return new SplineTimingFunction(presetTimings[spec]);
   }
+  var stepMatch = /steps\(\s*(\d+)\s*,\s*(start|end|middle)\s*\)/.exec(spec);
+  if (stepMatch) {
+    return new StepTimingFunction(Number(stepMatch[1]), stepMatch[2]);
+  }
+  var bezierMatch =
+      /cubic-bezier\(([^,]*),([^,]*),([^,]*),([^)]*)\)/.exec(spec);
+  if (bezierMatch) {
+    return new SplineTimingFunction([
+        Number(bezierMatch[1]),
+        Number(bezierMatch[2]),
+        Number(bezierMatch[3]),
+        Number(bezierMatch[4])]);
+  }
+  throw 'not a timing function: ' + spec;
+};
+
+/** @constructor */
+var SplineTimingFunction = function(spec) {
   this.params = spec;
   this.map = []
   for (var ii = 0; ii <= 100; ii += 1) {
@@ -1222,7 +1263,7 @@ var TimingFunction = function(spec) {
   }
 };
 
-TimingFunction.prototype = {
+SplineTimingFunction.prototype = createObject(TimingFunction.prototype, {
   scaleTime: function(fraction) {
     var fst = 0;
     while (fst != 100 && fraction > this.map[fst][0]) {
@@ -1237,30 +1278,9 @@ TimingFunction.prototype = {
     return this.map[fst - 1][1] + p * yDiff;
   },
   clone: function() {
-    return new TimingFunction(this.params);
+    return new SplineTimingFunction(this.params);
   }
-};
-
-TimingFunction.createFromString = function(spec) {
-  var preset = presetTimings[spec];
-  if (preset) {
-    return new TimingFunction(presetTimings[spec]);
-  }
-  var stepMatch = /steps\(\s*(\d+)\s*,\s*(start|end|middle)\s*\)/.exec(spec);
-  if (stepMatch) {
-    return new StepTimingFunction(Number(stepMatch[1]), stepMatch[2]);
-  }
-  var bezierMatch =
-      /cubic-bezier\(([^,]*),([^,]*),([^,]*),([^)]*)\)/.exec(spec);
-  if (bezierMatch) {
-    return new TimingFunction([
-        Number(bezierMatch[1]),
-        Number(bezierMatch[2]),
-        Number(bezierMatch[3]),
-        Number(bezierMatch[4])]);
-  }
-  throw 'not a timing function: ' + spec;
-};
+});
 
 /** @constructor */
 var StepTimingFunction = function(numSteps, position) {
@@ -2514,7 +2534,7 @@ var maybeRestartAnimation = function() {
   rafScheduled = true;
 };
 
-var DOCUMENT_TIMELINE = new DocumentTimeline();
+var DOCUMENT_TIMELINE = new Timeline(constructorToken);
 Object.defineProperty(document, 'timeline', configureDescriptor({
   get: function() {
     return DOCUMENT_TIMELINE;
@@ -2528,19 +2548,21 @@ window.Element.prototype.animate = function(effect, timing) {
 };
 
 window.Animation = Animation;
-window.Timing = Timing;
-// TODO: this is not in the spec
-window.TimingFunction = TimingFunction;
-window.TimedItem = TimedItem;
-// TODO: SplineTimingFunction ?
-window.StepTimingFunction = StepTimingFunction;
-// TODO: SmoothTimingFunction ?
-window.AnimationGroup = AnimationGroup;
-window.ParGroup = ParGroup;
-window.SeqGroup = SeqGroup;
-window.KeyframesAnimationFunction = KeyframesAnimationFunction;
+window.AnimationEffect = AnimationEffect;
+window.GroupedAnimationEffect = GroupedAnimationEffect;
 window.Keyframe = Keyframe;
-window.PathAnimationFunction = PathAnimationFunction;
-window.GroupedAnimationFunction = GroupedAnimationFunction;
+window.KeyframeAnimationEffect = KeyframeAnimationEffect;
+window.KeyframeList = KeyframeList;
+window.ParGroup = ParGroup;
+window.PathAnimationEffect = PathAnimationEffect;
+window.Player = Player;
+window.SeqGroup = SeqGroup;
+window.SplineTimingFunction = SplineTimingFunction;
+window.StepTimingFunction = StepTimingFunction;
+window.TimedItem = TimedItem;
+window.Timeline = Timeline;
+window.TimingEvent = null; // TODO
+window.TimingFunction = TimingFunction;
+window.TimingGroup = TimingGroup;
 
 })();

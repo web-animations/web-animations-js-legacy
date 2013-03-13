@@ -30,7 +30,7 @@ span {
 <script src="../../web-animations.js"></script>
 <script>
 function testTiming(name) {
-  var timingFun = new TimingFunction(name);
+  var timingFun = TimingFunction.createFromString(name);
   var canvas = document.createElement('canvas');
   var s = 100;
   canvas.width = canvas.height = s;
