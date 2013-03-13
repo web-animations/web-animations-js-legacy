@@ -2460,7 +2460,6 @@ var documentTime = function() {
 };
 
 var ticker = function(rafTime) {
-  rafScheduled = false;
   cachedDocumentTimeMillis = relativeTime(rafTime, documentTimeZeroAsRafTime);
 
   // Get animations for this sample. We order first by Player start time, and
@@ -2469,11 +2468,11 @@ var ticker = function(rafTime) {
   stableSort(sortedPlayers, function(a, b) {
     return a.startTime - b.startTime;
   });
-  var requiresFurtherIterations = false;
+  var finished = true;
   var animations = [];
   sortedPlayers.forEach(function(player) {
     player._update();
-    requiresFurtherIterations |= !player._isPastEndOfActiveInterval();
+    finished = finished && player._isPastEndOfActiveInterval();
     player._getLeafItemsInEffect(animations);
   });
 
@@ -2489,7 +2488,9 @@ var ticker = function(rafTime) {
     webAnimVisUpdateAnims();
   }
 
-  if (requiresFurtherIterations && !rafScheduled) {
+  if (finished) {
+    rafScheduled = false;
+  } else {
     raf(ticker);
   }
 
