@@ -65,6 +65,44 @@ var requestFrame = window.requestAnimationFrame ||
                    window.webkitRequestAnimationFrame ||
                    window.mozRequestAnimationFrame;
 
+// Detect the appropriate features to use for testing.
+function detectFeatures() {
+  var style = document.createElement('style');
+  style.textContent = '' +
+     'dummyRuleForTesting {' +
+     'width: calc(0px);' +
+     'width: -webkit-calc(0px); }';
+  document.head.appendChild(style);
+  var transformCandidates = [
+      'transform',
+      'webkitTransform',
+      'msTransform'
+  ];
+  var transformProperty = transformCandidates.filter(function(property) {
+    return property in style.sheet.cssRules[0].style;
+  })[0];
+  var calcFunction = style.sheet.cssRules[0].style.width.split('(')[0];
+  document.head.removeChild(style);
+  return {
+    transformProperty: transformProperty,
+    calcFunction: calcFunction
+  };
+}
+
+var features = detectFeatures();
+
+var svgProperties = {
+  'cx': 1,
+  'width': 1,
+  'x': 1,
+  'y': 1,
+};
+
+var propertyIsSVGAttrib = function(property, target) {
+  return target.namespaceURI == 'http://www.w3.org/2000/svg' &&
+      property in svgProperties;
+};
+
 // To get user pausing working correctly
 var beingPaused = 0;
 var externallyPaused = [];
@@ -635,7 +673,6 @@ function assert_properties(test) {
   var object = test.object;
   var targetProperties = test.targets;
   var time = testCurrentTime;
-  var isSVG = object.nodeName !== "DIV";
 
   // Create an element of the same type as testing so the style can be applied
   // from the test. This is so the css property (not the -webkit-does-something
@@ -647,6 +684,7 @@ function assert_properties(test) {
 
   // Apply the style
   for (var propName in targetProperties) {
+    var isSVG = propertyIsSVGAttrib(propName, object);
     // If the passed in value is an element then grab its current style for
     // that property
     if (targetProperties[propName] instanceof HTMLElement ||
@@ -657,53 +695,54 @@ function assert_properties(test) {
       var propertyValue = targetProperties[propName];
     }
 
+    if (propName == 'transform')
+      var outputPropName = features.transformProperty;
+    else
+      var outputPropName = propName;
+
     if (isSVG) {
-      if (propName.indexOf("transform") == -1) {
-        referenceElement.setAttribute(propName, propertyValue);
-      }
+      referenceElement.setAttribute(propName, propertyValue);
     } else {
-      referenceElement.style[propName] = propertyValue;
+      referenceElement.style[outputPropName] = propertyValue;
     }
-  }
 
-  if (isSVG){
-    var currentStyle = object.attributes;
-    var targetStyle = referenceElement.attributes;
-  } else {
-    var currentStyle = getComputedStyle(object, null);
-    var targetStyle = getComputedStyle(referenceElement, null);
-  }
-  // For each css property strip it down to just numbers then
-  // apply the assert
-  for (var propName in targetProperties) {
-    if (isSVG && propName.indexOf("transform") != -1) {
-      assert_transform(object, targetProperties[propName]);
+    if (isSVG){
+      var currentStyle = object.attributes;
+      var targetStyle = referenceElement.attributes;
     } else {
-      if (isSVG) {
-        var target = targetStyle[propName].value;
-        var curr = currentStyle[propName].value;
-      } else {
-        var target = targetStyle[propName];
-        var curr = currentStyle[propName];
-      }
+      var currentStyle = getComputedStyle(object, null);
+      var targetStyle = getComputedStyle(referenceElement, null);
+    }
 
-      var t = target.replace(/[^0-9.\s]/g, "");
-      var c = curr.replace(/[^0-9.\s]/g, "");
-      if(t.length == 0) {
-        // Assume it's a word property so do an exact assert
+    if (propName == 'transform')
+      var outputPropName = features.transformProperty;
+    else
+      var outputPropName = propName;
+
+    if (isSVG) {
+      var target = targetStyle[propName].value;
+      var curr = currentStyle[propName].value;
+    } else {
+      var target = targetStyle[outputPropName];
+      var curr = currentStyle[outputPropName];
+    }
+
+    var t = target.replace(/[^0-9.\s]/g, "");
+    var c = curr.replace(/[^0-9.\s]/g, "");
+    if(t.length == 0) {
+      // Assume it's a word property so do an exact assert
+      test.test.step(function (){
+        assert_equals(curr, target, "At time " + time + ", " + propName +
+            " is not correct. Target: " + target + " Current state: " + curr);
+      });
+    } else {
+      t = t.split(" ");
+      c = c.split(" ");
+      for (var x in t){
         test.test.step(function (){
-          assert_equals(curr, target, "At time " + time + ", " + propName +
+          assert_equals(Number(c[x]), Number(t[x]), "At time " + time + ", " + propName +
               " is not correct. Target: " + target + " Current state: " + curr);
         });
-      } else {
-        t = t.split(" ");
-        c = c.split(" ");
-        for (var x in t){
-          test.test.step(function (){
-            assert_equals(Number(c[x]), Number(t[x]), "At time " + time + ", " + propName +
-                " is not correct. Target: " + target + " Current state: " + curr);
-          });
-        }
       }
     }
   }
