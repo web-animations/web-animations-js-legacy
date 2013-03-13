@@ -75,12 +75,10 @@ function getSettings(){
   setTimeout(function(){
     var obProp = document.getElementById("obProp").value;
     process(obProp);
-    // Get the length of the test
-    for (var x = 0; x < window.frames[0].document.timeline._getPlayers().length; x++){
-      var currPlayer = window.frames[0].document.timeline._getPlayers()[x];
-      testLength = currPlayer.source.animationDuration > testLength ?
-                    currPlayer.source.animationDuration : testLength;
-    }
+    testLength = 0;
+    window.frames[0].document.timeline.getCurrentPlayers().foreach(function(player) {
+      testLength = Math.max(testLength, player.source.animationDuration);
+    });
     pause();
     setTestCurrentTime(0);
     setTimeout(generate, frameTime);
@@ -146,15 +144,15 @@ function printCheck(object, number, properties, time){
 }
 
 function pause(){
-  for(var x in window.frames[0].document.timeline._getPlayers()){
-    window.frames[0].document.timeline._getPlayers()[x].paused = true;
-  }
+  window.frames[0].document.timeline.getCurrentPlayers().forEach(function(player) {
+    player.paused = true;
+  });
 }
 
 function setTestCurrentTime(time){
-  for (var x in window.frames[0].document.timeline._getPlayers()){
-    window.frames[0].document.timeline._getPlayers()[x].currentTime = time;
-  }
+  window.frames[0].document.timeline.getCurrentPlayers().forEach(function(player) {
+    player.currentTime = time;
+  });
   testCurrentTime = time;
 }
 

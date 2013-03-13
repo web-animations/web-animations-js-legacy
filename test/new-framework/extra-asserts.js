@@ -329,17 +329,20 @@ function resetTestIndex() {
 // say to play again.
 function pause() {
   beingPaused++;
-  for (var x in document.timeline._getPlayers()) {
-    document.timeline._getPlayers()[x].paused = true;
-  }
+  document.timeline.getCurrentPlayers().forEach(function(player) {
+    player.paused = true;
+  });
 }
 
 function play(){
   // If something gets out of sync don't let beingPaused go negative.
   beingPaused = beingPaused === 0 ? 0 : beingPaused - 1;
-  for (var x = 0; x < document.timeline._getPlayers().length; x++) {
-    if (beingPaused === 0) document.timeline._getPlayers()[x].paused = false;
+  if (beingPaused <= 0) {
+    return;
   }
+  document.timeline.getCurrentPlayers().forEach(function(player) {
+    player.paused = false;
+  });
 }
 
 // Adds each test to a list to be processed when runTests is called.
@@ -400,11 +403,9 @@ function runTests() {
   // total animation length.
   if(testLength === undefined){
     testLength = 0;
-    for (var x = 0; x < document.timeline._getPlayers().length; x++){
-      var currPlayer = document.timeline._getPlayers()[x];
-      testLength = currPlayer._source.animationDuration > testLength ?
-          currPlayer._source.animationDuration : testLength;
-    }
+    document.timeline.getCurrentPlayers().forEach(function(player) {
+      testLength = Math.max(testLength, player.source.animationDuration);
+    });
   }
 
   for (var x in checkStack){
@@ -465,9 +466,9 @@ function testPacketComparator(a,b) { return(a.time - b.time) };
 function setTestCurrentTime(time) {
   // Needs to take into account start time offsets
   // For now assumes that everything starts at time zero
-  for (var x in document.timeline._getPlayers()) {
-    document.timeline._getPlayers()[x].currentTime = time;
-  }
+  document.timeline.getCurrentPlayers().forEach(function(player) {
+    player.currentTime = time;
+  });
   testCurrentTime = time;
 }
 

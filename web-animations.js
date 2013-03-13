@@ -184,11 +184,11 @@ Timeline.prototype = {
   play: function(source) {
     return new Player(constructorToken, source, this);
   },
-  // This is exposed for testing purposes.
-  // TODO: Consider adding this to the API.
-  _getPlayers: function() {
-    return PLAYERS;
-  }
+  getCurrentPlayers: function() {
+    return PLAYERS.filter(function(player) {
+      return !player._isPastEndOfActiveInterval();
+    });
+  },
 };
 
 // TODO: Remove dead Players from here?
