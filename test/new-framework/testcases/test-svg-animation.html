@@ -41,15 +41,9 @@ limitations under the License.
 </div>
 
 <script src="../../../web-animations.js"></script>
-<script src="../testharness/testharness.js"></script>
-<script src='../testharness/testharnessreport.js'></script>
-<script src='../extra-asserts.js'></script>
-<link rel='stylesheet' href='../testharness/testharness.css'>
-<link rel='stylesheet' type="text/css" href="../animation-test-style.css">
+<script src="../anim-test-pre.js"></script>
 
 <script>
-setupTests();
-
 var rect = document.querySelector(".anim");
 var fish = document.querySelector(".divvy");
 document.timeline.play(new Animation(rect, {cx: "400px"}, 1));
@@ -65,6 +59,4 @@ check(document.querySelectorAll('.divvy')[0],{left:'300px'},0.75);
 check(document.querySelectorAll('.anim')[0],{cx:'312.5px'},0.75);
 check(document.querySelectorAll('.divvy')[0],{left:'400px'},1);
 check(document.querySelectorAll('.anim')[0],{cx:'400px'},1);
-
-runTests();
 </script>

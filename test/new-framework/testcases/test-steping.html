@@ -61,15 +61,9 @@ Written by Steph McArthur
 </div>
 
 <script src="../../../web-animations.js"></script>
-<script src="../testharness/testharness.js"></script>
-<script src='../testharness/testharnessreport.js'></script>
-<script src='../extra-asserts.js'></script>
-<link rel='stylesheet' href='../testharness/testharness.css'>
-<link rel='stylesheet' type="text/css" href="../animation-test-style.css">
+<script src="../anim-test-pre.js"></script>
 
 <script>
-setupTests();
-
 var elems = document.querySelectorAll(".anim");
 for (var i = 0; i < elems.length; i++) {
   var element = elems[i];
@@ -98,9 +92,4 @@ check(elems[4], {"left":"0px"}, 1.9+buffer, "Div 5: 1.9 sec");
 check(elems[4], {"left":"300px"}, 2+buffer, "Div 5: 2 sec");
 check(elems[4], {"left":"300px"}, 2.9+buffer, "Div 5: 2.9 sec");
 check(elems[4], {"left":"600px"}, 3+buffer, "Div 5: 3.1 sec");
-
-runTests();
 </script>
-
-
-

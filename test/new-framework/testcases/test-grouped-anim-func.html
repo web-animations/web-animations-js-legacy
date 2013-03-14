@@ -38,14 +38,9 @@ limitations under the License.
 </div>
 
 <script src="../../../web-animations.js"></script>
-<script src="../testharness/testharness.js"></script>
-<script src='../testharness/testharnessreport.js'></script>
-<script src='../extra-asserts.js'></script>
-<link rel='stylesheet' href='../testharness/testharness.css'>
-<link rel='stylesheet' type="text/css" href="../animation-test-style.css">
+<script src="../anim-test-pre.js"></script>
 
 <script>
-setupTests();
 var rect = document.querySelector(".anim")
 
 document.timeline.play(new Animation(rect, {x: "400px", y: ["300px", "200px"], width: ["100px", "20px", "50px"]}, 2));
@@ -53,6 +48,4 @@ document.timeline.play(new Animation(rect, {x: "400px", y: ["300px", "200px"], w
 check(rect, {x:"100px", y:"300px", width:"100px"}, 0, "SVG check");
 check(rect, {x:"250px", y:"250px", width:"20px"}, 1, "SVG check 2");
 check(rect, {x:"400px", y:"200px", width:"50px"}, 2, "SVG check 3");
-
-runTests();
 </script>

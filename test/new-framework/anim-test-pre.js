@@ -23,6 +23,21 @@
  */
 
 (function() {
+
+if (!document.timeline) {
+  console.error('Cant find timeline');
+  return;
+}
+
+var PLAYERS = [];
+
+var timelinePlay = document.timeline.play;
+document.timeline.play = function(item) {
+  var player = timelinePlay.call(document.timeline, item);
+  PLAYERS.push(player);
+  return player;
+};
+
 // For the results to be accessed when test is in an iframe.
 var testResults = undefined;
 // Boolean flag for whether the program is running in automatic mode
@@ -154,18 +169,18 @@ function setupTests(timeouts) {
   var pausePlayButton = document.createElement("button");
   pausePlayButton.id = "pausePlayButton";
   pausePlayButton.setAttribute("type", "button");
-  pausePlayButton.setAttribute("onclick", "animPause()");
+  pausePlayButton.onclick = function() { animPause(); };
   pausePlayButton.textContent = "Pause";
 
-  var skipFrameForward = document.createElement("button");
-  skipFrameForward.setAttribute("type", "button");
-  skipFrameForward.setAttribute("onclick", "skipFrameForward()");
-  skipFrameForward.textContent = ">";
+  var skipFrameForwardButton = document.createElement("button");
+  skipFrameForwardButton.setAttribute("type", "button");
+  skipFrameForwardButton.onclick = function() { skipFrameForward(); };
+  skipFrameForwardButton.textContent = ">";
 
-  var skipFrameBack = document.createElement("button");
-  skipFrameBack.setAttribute("type", "button");
-  skipFrameBack.setAttribute("onclick", "skipFrameBack()");
-  skipFrameBack.textContent = "<";
+  var skipFrameBackButton = document.createElement("button");
+  skipFrameBackButton.setAttribute("type", "button");
+  skipFrameBackButton.onclick = function() { skipFrameBack(); };
+  skipFrameBackButton.textContent = "<";
 
   var timeBar = new TimeBar();
 
@@ -174,12 +189,12 @@ function setupTests(timeouts) {
 
   var hideFlash = document.createElement("button");
   hideFlash.setAttribute("type", "button");
-  hideFlash.setAttribute("onclick", "toggleFlash()");
+  hideFlash.onclick = function() { toggleFlash(); };
   hideFlash.textContent = "Toggle Flash";
 
   var restartButton = document.createElement("button");
   restartButton.setAttribute("type", "button");
-  restartButton.setAttribute("onclick", "restart()");
+  restartButton.onclick = function() { restart(); };
   restartButton.textContent = "Restart";
 
   var timeOfAnimation = document.createElement('div');
@@ -189,15 +204,15 @@ function setupTests(timeouts) {
   setTime.id = "setTime";
   setTime.setAttribute("type", "text");
   setTime.value = "0.00";
-  setTime.setAttribute("onfocus", "letUserInput()");
-  setTime.setAttribute("onblur", "setTime()");
+  setTime.onfocus = function() { letUserInput(); };
+  setTime.onblur = function() { setTime(); };
 
   document.body.appendChild(optionBar);
   optionBar.appendChild(timeBar);
   timeBar.appendChild(slider);
   optionBar.appendChild(pausePlayButton);
-  optionBar.appendChild(skipFrameBack);
-  optionBar.appendChild(skipFrameForward);
+  optionBar.appendChild(skipFrameBackButton);
+  optionBar.appendChild(skipFrameForwardButton);
   optionBar.appendChild(select);
   optionBar.appendChild(restartButton);
   optionBar.appendChild(hideFlash);
@@ -223,7 +238,7 @@ function setupTests(timeouts) {
   var testBoxCopy = document.createElement('div');
   testBoxCopy.id = "flashBox";
   testBoxCopy.className = "testBox";
-  testBoxCopy.setAttribute("onclick", "animPause()");
+  testBoxCopy.onclick = function() { animPause(); };
   var svgBox = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svgBox.id = "svgBox";
 
@@ -329,7 +344,7 @@ function resetTestIndex() {
 // say to play again.
 function pause() {
   beingPaused++;
-  document.timeline.getCurrentPlayers().forEach(function(player) {
+  PLAYERS.forEach(function(player) {
     player.paused = true;
   });
 }
@@ -340,7 +355,7 @@ function play(){
   if (beingPaused <= 0) {
     return;
   }
-  document.timeline.getCurrentPlayers().forEach(function(player) {
+  PLAYERS.forEach(function(player) {
     player.paused = false;
   });
 }
@@ -403,7 +418,7 @@ function runTests() {
   // total animation length.
   if(testLength === undefined){
     testLength = 0;
-    document.timeline.getCurrentPlayers().forEach(function(player) {
+    PLAYERS.forEach(function(player) {
       testLength = Math.max(testLength, player.source.animationDuration);
     });
   }
@@ -466,7 +481,7 @@ function testPacketComparator(a,b) { return(a.time - b.time) };
 function setTestCurrentTime(time) {
   // Needs to take into account start time offsets
   // For now assumes that everything starts at time zero
-  document.timeline.getCurrentPlayers().forEach(function(player) {
+  PLAYERS.forEach(function(player) {
     player.currentTime = time;
   });
   testCurrentTime = time;
@@ -662,11 +677,6 @@ function toggleFlash() {
   }
 }
 
-add_completion_callback(function (allRes, status) {
-    testResults = allRes;
-    window.testResults = testResults;
-});
-
 ///////////////////////////////////////////////////////////////////////////////
 //  All asserts below here                                                   //
 ///////////////////////////////////////////////////////////////////////////////
@@ -775,18 +785,42 @@ function assert_transform(object, target){
   }
 }
 
-///////////////////////////////////////////////////////////////////////////////
-//  Exposing functions to be accessed externally                             //
-///////////////////////////////////////////////////////////////////////////////
-window.setupTests = setupTests;
-window.check = check;
-window.runTests = runTests;
-window.restart = restart;
-window.toggleFlash = toggleFlash;
-window.animPause = animPause;
+var loadCss = function(href) {
+  var link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.type = 'text/css';
+  link.href = href;
+  document.head.appendChild(link);
+};
+loadCss('../testharness/testharness.css');
+loadCss('../animation-test-style.css');
 
-window.skipFrameForward = skipFrameForward;
-window.skipFrameBack = skipFrameBack;
-window.setTime = setTime;
-window.letUserInput = letUserInput;
+// dependencies must be loaded in order
+var loadScript = function(src) {
+  document.write('<script type="text/javascript" src="' +
+      src + '"></script>');
+};
+loadScript('../testharness/testharness.js');
+loadScript('../testharness/testharnessreport.js');
+loadScript(location.pathname.replace('.html', '-checks.js'));
+
+window.addEventListener('load', function() {
+  if (window.parent !== window &&
+      window.parent.location.pathname.match('test-generator.html$')) {
+    return;
+  }
+
+  add_completion_callback(function(results, status) {
+    window.animTestRunner.results = results;
+  });
+
+  setupTests();
+  runTests();
+});
+
+window.check = check;
+window.animTestRunner = {
+  players: PLAYERS,
+};
+
 })();

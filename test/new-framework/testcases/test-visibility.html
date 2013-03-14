@@ -32,15 +32,9 @@ body {
 <div id="test" class = "testBox"></div>
 
 <script src="../../../web-animations.js"></script>
-<script src="../testharness/testharness.js"></script>
-<script src='../testharness/testharnessreport.js'></script>
-<script src='../extra-asserts.js'></script>
-<link rel='stylesheet' href='../testharness/testharness.css'>
-<link rel='stylesheet' type="text/css" href="../animation-test-style.css">
+<script src="../anim-test-pre.js"></script>
 
 <script>
-setupTests();
-
 var timing = {duration: 0.5, timingFunction: 'steps(2, end)'};
 
 var states = {'visible':1, 'hidden':1, 'collapse':1};
@@ -85,5 +79,4 @@ check(document.querySelectorAll('.anim')[5],{'visibility':'collapse'},0.5);
 check(document.querySelectorAll('.anim')[6],{'visibility':'visible'},0.5);
 check(document.querySelectorAll('.anim')[7],{'visibility':'hidden'},0.5);
 check(document.querySelectorAll('.anim')[8],{'visibility':'collapse'},0.5);
-runTests();
 </script>

@@ -31,15 +31,9 @@ limitations under the License.
 </div>
 
 <script src="../../../web-animations.js"></script>
-<script src="../testharness/testharness.js"></script>
-<script src='../testharness/testharnessreport.js'></script>
-<script src='../extra-asserts.js'></script>
-<link rel='stylesheet' href='../testharness/testharness.css'>
-<link rel='stylesheet' type="text/css" href="../animation-test-style.css">
+<script src="../anim-test-pre.js"></script>
 
 <script>
-setupTests({testLength:7});
-
 var rect = document.querySelector(".anim")
 var rect2 = document.querySelector(".anim2")
 
@@ -57,6 +51,4 @@ check(rect, {x:"200px"}, 7, "SVG check 2");
 
 check(rect2, {"transform": "translate(160px, 160px) rotate(36deg) translate(40px, 0px) scale(1.04)"}, 3, "SVG rect2");
 check(rect2, {"transform": "translate(0px, 0px) rotate(0deg) translate(0px, 0px) scale(2)"}, 7, "SVG rect2 2");
-
-runTests();
 </script>
