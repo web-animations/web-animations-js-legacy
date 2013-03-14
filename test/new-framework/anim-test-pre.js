@@ -31,9 +31,9 @@ if (!document.timeline) {
 
 var PLAYERS = [];
 
-var play = document.timeline.play;
+var timelinePlay = document.timeline.play;
 document.timeline.play = function(item) {
-  var player = play.call(document.timeline, item);
+  var player = timelinePlay.call(document.timeline, item);
   PLAYERS.push(player);
   return player;
 };
