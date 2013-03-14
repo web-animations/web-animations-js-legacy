@@ -196,7 +196,7 @@ var Player = function(source, timeline) {
   this.source = source;
   this._timeline = timeline;
   this._startTime =
-      this._timeline.currentTime === null ? 0 : this._timeline.currentTime;
+      this.timeline.currentTime === null ? 0 : this.timeline.currentTime;
   this._timeDrift = 0.0;
   this._pauseTime = undefined;
 
@@ -227,7 +227,7 @@ Player.prototype = {
     // This seeks by updating _drift. It does not affect the startTime.
     if (!isDefined(this._pauseTime)) {
       this._timeDrift =
-          this._timeline.currentTime - this.startTime - currentTime;
+          this.timeline.currentTime - this.startTime - currentTime;
     } else {
       this._pauseTime = currentTime;
     }
@@ -235,7 +235,7 @@ Player.prototype = {
   },
   get currentTime() {
     return !isDefined(this._pauseTime) ?
-        this._timeline.currentTime - this._timeDrift - this.startTime :
+        this.timeline.currentTime - this._timeDrift - this.startTime :
         this._pauseTime;
   },
   set startTime(startTime) {
@@ -252,13 +252,16 @@ Player.prototype = {
       this._pauseTime = this.currentTime;
     } else if (isDefined(this._pauseTime)) {
       this._timeDrift =
-          this._timeline.currentTime - this.startTime - this._pauseTime;
+          this.timeline.currentTime - this.startTime - this._pauseTime;
       this._pauseTime = undefined;
       maybeRestartAnimation();
     }
   },
   get paused() {
     return isDefined(this._pauseTime);
+  },
+  get timeline() {
+    return this._timeline;
   },
   _update: function() {
     if (this.source !== null) {
