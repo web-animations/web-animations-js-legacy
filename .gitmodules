@@ -1,3 +1,0 @@
-[submodule "test/new-framework/testharness"]
-	path = test/new-framework/testharness
-	url = https://github.com/jgraham/testharness.js.git
