@@ -172,15 +172,15 @@ function setupTests(timeouts) {
   pausePlayButton.onclick = function() { animPause(); };
   pausePlayButton.textContent = "Pause";
 
-  var skipFrameForward = document.createElement("button");
-  skipFrameForward.setAttribute("type", "button");
-  skipFrameForward.onclick = function() { skipFrameForward(); };
-  skipFrameForward.textContent = ">";
+  var skipFrameForwardButton = document.createElement("button");
+  skipFrameForwardButton.setAttribute("type", "button");
+  skipFrameForwardButton.onclick = function() { skipFrameForward(); };
+  skipFrameForwardButton.textContent = ">";
 
-  var skipFrameBack = document.createElement("button");
-  skipFrameBack.setAttribute("type", "button");
-  skipFrameBack.onclick = function() { skipFrameBack(); };
-  skipFrameBack.textContent = "<";
+  var skipFrameBackButton = document.createElement("button");
+  skipFrameBackButton.setAttribute("type", "button");
+  skipFrameBackButton.onclick = function() { skipFrameBack(); };
+  skipFrameBackButton.textContent = "<";
 
   var timeBar = new TimeBar();
 
@@ -211,8 +211,8 @@ function setupTests(timeouts) {
   optionBar.appendChild(timeBar);
   timeBar.appendChild(slider);
   optionBar.appendChild(pausePlayButton);
-  optionBar.appendChild(skipFrameBack);
-  optionBar.appendChild(skipFrameForward);
+  optionBar.appendChild(skipFrameBackButton);
+  optionBar.appendChild(skipFrameForwardButton);
   optionBar.appendChild(select);
   optionBar.appendChild(restartButton);
   optionBar.appendChild(hideFlash);
