@@ -224,19 +224,27 @@ Player.prototype = {
     return this._source;
   },
   set currentTime(currentTime) {
+    this._currentTime = currentTime;
+  },
+  get currentTime() {
+    return this._currentTime === null ? 0 : this._currentTime;
+  },
+  set _currentTime(currentTime) {
     // This seeks by updating _drift. It does not affect the startTime.
-    if (!isDefined(this._pauseTime)) {
+    if (isDefined(this._pauseTime)) {
+      this._pauseTime = currentTime;
+    } else {
       this._timeDrift =
           this.timeline.currentTime - this.startTime - currentTime;
-    } else {
-      this._pauseTime = currentTime;
     }
     maybeRestartAnimation();
   },
-  get currentTime() {
-    return !isDefined(this._pauseTime) ?
-        this.timeline.currentTime - this._timeDrift - this.startTime :
-        this._pauseTime;
+  get _currentTime() {
+    if (this.timeline.currentTime === null) {
+      return null;
+    }
+    return isDefined(this._pauseTime) ? this._pauseTime :
+        this.timeline.currentTime - this.startTime - this._timeDrift;
   },
   set startTime(startTime) {
     // This seeks by updating _startTime and hence the currentTime. It does not
