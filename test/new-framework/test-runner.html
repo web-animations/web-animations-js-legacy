@@ -84,8 +84,8 @@ function reRunTests(){
 }
 
 function checkForResults(){
-  if (window.frames[0].testResults != undefined){
-    logResults(window.frames[0].testResults);
+  if (window.frames[0].animTestRunner && window.frames[0].animTestRunner.results) {
+    logResults(window.frames[0].animTestRunner.results);
     resultsOutputted++;
     window.frames[0].testResults = undefined;
     if (currentTest < tests.length-1) updateState(1);
