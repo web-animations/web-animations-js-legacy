@@ -65,15 +65,10 @@ height: 500px;
   <div id="anim2">&rarr;</div>
 </div>
 
-<link rel='stylesheet' href='../testharness/testharness.css'>
-<link rel='stylesheet' type="text/css" href="../animation-test-style.css">
 <script src="../../../web-animations.js"></script>
-<script src="../testharness/testharness.js"></script>
-<script src='../testharness/testharnessreport.js'></script>
-<script src='../extra-asserts.js'></script>
-<script>
-setupTests();
+<script src="../anim-test-pre.js"></script>
 
+<script>
 var animFunc = new PathAnimationEffect(
     document.querySelector('#path1'));
 animFunc.rotate = true;
@@ -100,6 +95,4 @@ check(document.querySelectorAll('#anim1')[0],{'transform':'matrix(0.003053420880
 check(document.querySelectorAll('#anim2')[0],{'transform':'matrix(-0.448433406280384, 0.8938162451711046, -0.8938162451711046, -0.448433406280384, 232.22134399414063, 348.0572814941406)'},3);
 check(document.querySelectorAll('#anim1')[0],{'transform':'matrix(-0.0030487663186012075, 0.9999953525011677, -0.9999953525011677, -0.0030487663186012075, 87.50001525878906, 87.50001525878906)'},4);
 check(document.querySelectorAll('#anim2')[0],{'transform':'matrix(-0.4472135954999579, -0.8944271909999159, 0.8944271909999159, -0.4472135954999579, 87.5, 237.5)'},4);
-
-runTests();
 </script>

@@ -71,22 +71,12 @@ Written by Steph McArthur
 </div>
 
 <script src="../../../web-animations.js"></script>
-<script src="../testharness/testharness.js"></script>
-<script src='../testharness/testharnessreport.js'></script>
-<script src='../extra-asserts.js'></script>
-<link rel='stylesheet' href='../testharness/testharness.css'>
-<link rel='stylesheet' type="text/css" href="../animation-test-style.css">
+<script src="../anim-test-pre.js"></script>
 
 <script>
-setupTests();
-
 document.timeline.play(new Animation(document.querySelector("#a"), {"backgroundColor": ["red", "green"]}, 2));
 document.timeline.play(new Animation(document.querySelector("#b"), {"backgroundColor": "rgb(0, 128, 0)"}, 2));
 document.timeline.play(new Animation(document.querySelector("#c"), {"backgroundColor": [{offset: 0.25, value: "rgb(255, 0, 0)"}, {offset: 0.75, value: "rgb(0, 0, 255)"}], operation: "add"}, 2));
-
-check(document.querySelector("#a"), {backgroundColor: "green"}, 2, "Is green");
-check(document.querySelector("#a"), {backgroundColor: "red", top: "50px"}, 0, "Is red");
-check(document.querySelector("#b"), {backgroundColor: "lightsteelblue"}, 0, "Is lightsteelblue");
-
-runTests();
 </script>
+
+

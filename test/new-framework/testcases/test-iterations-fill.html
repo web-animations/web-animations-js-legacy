@@ -86,14 +86,9 @@ limitations under the License.
 </div>
 
 <script src="../../../web-animations.js"></script>
-<script src="../testharness/testharness.js"></script>
-<script src='../testharness/testharnessreport.js'></script>
-<script src='../extra-asserts.js'></script>
-<link rel='stylesheet' href='../testharness/testharness.css'>
-<link rel='stylesheet' type="text/css" href="../animation-test-style.css">
-<script>
-setupTests();
+<script src="../anim-test-pre.js"></script>
 
+<script>
 var fillModes = ["none", "backwards", "forwards", "both"];
 var categories = [".a", ".b", ".c", ".d"]
 
@@ -162,8 +157,6 @@ locCheck(ca, 9, "Third iteration CA ", 0);
 locCheck(cb, 9, "Third iteration CB ", 1);
 locCheck(cc, 9, "Third iteration CC ", 0);
 locCheck(cd, 9, "Third iteration CD ", 1);
-
-runTests();
 
 function locCheck(divs, checkTime, testMessage, pattern){
   if (pattern === 0) {

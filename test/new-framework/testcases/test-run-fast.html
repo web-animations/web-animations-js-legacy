@@ -49,15 +49,9 @@ Written by Steph McArthur
 </div>
 
 <script src="../../../web-animations.js"></script>
-<script src="../testharness/testharness.js"></script>
-<script src='../testharness/testharnessreport.js'></script>
-<script src='../extra-asserts.js'></script>
-<link rel='stylesheet' href='../testharness/testharness.css'>
-<link rel='stylesheet' type="text/css" href="../animation-test-style.css">
+<script src="../anim-test-pre.js"></script>
 
 <script>
-setupTests();
-
 var dt = document.timeline;
 
 dt.play(new Animation(document.querySelector(".anim"), {left: "600px"}, {duration: 4}));
@@ -79,8 +73,4 @@ check(document.querySelectorAll('.anim')[2],{'top':'150px'},3);
 check(document.querySelectorAll('.anim')[0],{'top':'0px'},4);
 check(document.querySelectorAll('.anim')[1],{'top':'200px'},4);
 check(document.querySelectorAll('.anim')[2],{'top':'200px'},4);
-runTests();
 </script>
-
-
-

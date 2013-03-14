@@ -34,11 +34,7 @@ limitations under the License.
 </div>
 
 <script src="../../../web-animations.js"></script>
-<script src="../testharness/testharness.js"></script>
-<script src='../testharness/testharnessreport.js'></script>
-<script src='../extra-asserts.js'></script>
-<link rel='stylesheet' href='../testharness/testharness.css'>
-<link rel='stylesheet' type="text/css" href="../animation-test-style.css">
+<script src="../anim-test-pre.js"></script>
 
 <script>
 var colors = [
@@ -190,7 +186,6 @@ var colors = [
   'yellow',
   'yellowgreen'];
 
-setupTests({frameworkTimeout:200000});
 var anim = document.getElementById("victim");
 var displayTime = 0.3;
 document.timeline.play(new Animation(anim, {'backgroundColor': colors},
@@ -199,6 +194,4 @@ document.timeline.play(new Animation(anim, {'backgroundColor': colors},
 for(var x in colors){
   check(anim, {"backgroundColor":colors[x]}, x*displayTime, colors[x]);
 }
-
-runTests();
 </script>

@@ -42,14 +42,9 @@ limitations under the License.
 </div>
 
 <script src="../../../web-animations.js"></script>
-<script src="../testharness/testharness.js"></script>
-<script src='../testharness/testharnessreport.js'></script>
-<script src='../extra-asserts.js'></script>
-<link rel='stylesheet' href='../testharness/testharness.css'>
-<link rel='stylesheet' type="text/css" href="../animation-test-style.css">
+<script src="../anim-test-pre.js"></script>
 
 <script>
-setupTests({"testLength":3});
 var elems = document.querySelectorAll(".anim");
 var anim = [];
 var props = [];
@@ -76,6 +71,4 @@ check(elems[2], {"left":"0px"}, 2, "repetition 2 pos check: Object "+2);
 for (var i = 0; i < elems.length; i++) {
   check(elems[i], {"left":"200px"}, 3, "End pos check: Object "+i);
 }
-
-runTests();
 </script>
