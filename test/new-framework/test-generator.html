@@ -76,7 +76,7 @@ function getSettings(){
     var obProp = document.getElementById("obProp").value;
     process(obProp);
     testLength = 0;
-    window.frames[0].document.timeline.getCurrentPlayers().foreach(function(player) {
+    window.frames[0].document.timeline.getCurrentPlayers().forEach(function(player) {
       testLength = Math.max(testLength, player.source.animationDuration);
     });
     pause();

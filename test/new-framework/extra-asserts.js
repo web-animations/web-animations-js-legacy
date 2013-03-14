@@ -329,7 +329,7 @@ function resetTestIndex() {
 // say to play again.
 function pause() {
   beingPaused++;
-  document.timeline.getCurrentPlayers().forEach(function(player) {
+  animTestRunner.players.forEach(function(player) {
     player.paused = true;
   });
 }
@@ -340,7 +340,7 @@ function play(){
   if (beingPaused <= 0) {
     return;
   }
-  document.timeline.getCurrentPlayers().forEach(function(player) {
+  animTestRunner.players.forEach(function(player) {
     player.paused = false;
   });
 }
@@ -403,7 +403,7 @@ function runTests() {
   // total animation length.
   if(testLength === undefined){
     testLength = 0;
-    document.timeline.getCurrentPlayers().forEach(function(player) {
+    animTestRunner.players.forEach(function(player) {
       testLength = Math.max(testLength, player.source.animationDuration);
     });
   }
@@ -466,7 +466,7 @@ function testPacketComparator(a,b) { return(a.time - b.time) };
 function setTestCurrentTime(time) {
   // Needs to take into account start time offsets
   // For now assumes that everything starts at time zero
-  document.timeline.getCurrentPlayers().forEach(function(player) {
+  animTestRunner.players.forEach(function(player) {
     player.currentTime = time;
   });
   testCurrentTime = time;
