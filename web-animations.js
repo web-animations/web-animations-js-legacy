@@ -199,6 +199,7 @@ var Player = function(source, timeline) {
       this.timeline.currentTime === null ? 0 : this.timeline.currentTime;
   this._timeDrift = 0.0;
   this._pauseTime = undefined;
+  this._playbackRate = 1.0;
 
   this.source.timeDrift = 0.0;
   this._update();
@@ -234,8 +235,8 @@ Player.prototype = {
     if (isDefined(this._pauseTime)) {
       this._pauseTime = currentTime;
     } else {
-      this._timeDrift =
-          this.timeline.currentTime - this.startTime - currentTime;
+      this._timeDrift = (this.timeline.currentTime - this.startTime) *
+          this.playbackRate - currentTime;
     }
     maybeRestartAnimation();
   },
@@ -244,7 +245,8 @@ Player.prototype = {
       return null;
     }
     return isDefined(this._pauseTime) ? this._pauseTime :
-        this.timeline.currentTime - this.startTime - this._timeDrift;
+        (this.timeline.currentTime - this.startTime) * this.playbackRate -
+        this._timeDrift;
   },
   set startTime(startTime) {
     // This seeks by updating _startTime and hence the currentTime. It does not
@@ -259,8 +261,8 @@ Player.prototype = {
     if (isPaused) {
       this._pauseTime = this.currentTime;
     } else if (isDefined(this._pauseTime)) {
-      this._timeDrift =
-          this.timeline.currentTime - this.startTime - this._pauseTime;
+      this._timeDrift = (this.timeline.currentTime - this.startTime) *
+          this.playbackRate - this._pauseTime;
       this._pauseTime = undefined;
       maybeRestartAnimation();
     }
@@ -270,6 +272,15 @@ Player.prototype = {
   },
   get timeline() {
     return this._timeline;
+  },
+  set playbackRate(playbackRate) {
+    var cachedCurrentTime = this.currentTime;
+    // This will impact currentTime, so perform a compensatory seek.
+    this._playbackRate = playbackRate;
+    this.currentTime = cachedCurrentTime;
+  },
+  get playbackRate(playbackRate) {
+    return this._playbackRate;
   },
   _update: function() {
     if (this.source !== null) {
@@ -531,17 +542,6 @@ TimedItem.prototype = {
       this._updateIterationParams();
     }
     maybeRestartAnimation();
-  },
-  changePlaybackRate: function(playbackRate) {
-    var previousRate = this.timing.playbackRate;
-    this.timing.playbackRate = playbackRate;
-    if (previousRate == 0 || playbackRate == 0) {
-      return;
-    }
-    // TODO: invert the fillMode?
-    var seekAdjustment = (this.itemTime - this.timing.startDelay) *
-        (1 - previousRate / playbackRate);
-    this.currentTime = this.itemTime - seekAdjustment;
   },
   _floorWithClosedOpenRange: function(x, range) {
     return Math.floor(x / range);
