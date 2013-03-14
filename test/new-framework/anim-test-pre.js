@@ -204,7 +204,7 @@ function setupTests(timeouts) {
   setTime.id = "setTime";
   setTime.setAttribute("type", "text");
   setTime.value = "0.00";
-  setTime.onclick = function() { letUserInput(); };
+  setTime.onfocus = function() { letUserInput(); };
   setTime.onblur = function() { setTime(); };
 
   document.body.appendChild(optionBar);
