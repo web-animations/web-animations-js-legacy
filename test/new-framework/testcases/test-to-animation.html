@@ -66,15 +66,9 @@ limitations under the License.
 </div>
 
 <script src="../../../web-animations.js"></script>
-<script src="../testharness/testharness.js"></script>
-<script src='../testharness/testharnessreport.js'></script>
-<script src='../extra-asserts.js'></script>
-<link rel='stylesheet' href='../testharness/testharness.css'>
-<link rel='stylesheet' type="text/css" href="../animation-test-style.css">
+<script src="../anim-test-pre.js"></script>
 
 <script>
-setupTests();
-
 var divs = document.querySelectorAll(".anim");
 var group = new ParGroup([], 2, undefined, 1);
 for (var i = 0; i < divs.length; i++) {
@@ -84,6 +78,4 @@ for (var i = 0; i < divs.length; i++) {
 for (var i = 0; i < divs.length; i++) {
 	check(divs[i], {"left":(100 * (i+1))+ "px"}, 3, "Test object "+i);
 }
-
-runTests();
 </script>

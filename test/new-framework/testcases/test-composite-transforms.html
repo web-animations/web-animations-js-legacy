@@ -54,15 +54,9 @@ limitations under the License.
 </div>
 
 <script src="../../../web-animations.js"></script>
-<script src="../testharness/testharness.js"></script>
-<script src='../testharness/testharnessreport.js'></script>
-<script src='../extra-asserts.js'></script>
-<link rel='stylesheet' href='../testharness/testharness.css'>
-<link rel='stylesheet' type="text/css" href="../animation-test-style.css">
+<script src="../anim-test-pre.js"></script>
 
 <script>
-setupTests();
-
 var divs = document.querySelectorAll(".anim");
 document.timeline.play(new Animation(divs[0], {"transform": ["translate(0px, 0px)", "translate(200px, 0px)"]}, 2));
 document.timeline.play(new Animation(divs[1], {"transform": ["rotate(0deg)", "rotate(90deg)"]}, 2));
@@ -76,6 +70,4 @@ check(divs[1], {"transform": "rotate(90deg)"}, 2, "Div 1 end");
 
 check(divs[2], {"transform": "translate(0px, 0px) rotate(0deg)"}, 0, "Div 2 start");
 check(divs[2], {"transform": "translate(200px, 0px) rotate(90deg)"}, 2, "Div 2 end");
-
-runTests();
 </script>

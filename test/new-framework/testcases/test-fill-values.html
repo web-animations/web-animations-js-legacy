@@ -103,15 +103,9 @@ UPGRADE NEEDED
 </div>
 
 <script src="../../../web-animations.js"></script>
-<script src="../testharness/testharness.js"></script>
-<script src='../testharness/testharnessreport.js'></script>
-<script src='../extra-asserts.js'></script>
-<link rel='stylesheet' href='../testharness/testharness.css'>
-<link rel='stylesheet' type="text/css" href="../animation-test-style.css">
+<script src="../anim-test-pre.js"></script>
 
 <script>
-setupTests();
-
 var containers = ["ca", "cb", "cc", "cd"];
 var directions = ["normal", "reverse", "alternate", "alternate-reverse"];
 var fills = ["none", "backwards", "forwards", "both"];
@@ -139,5 +133,4 @@ for (var i = 0; i < containers.length; i++) {
   }
 
 }
-runTests();
 </script>

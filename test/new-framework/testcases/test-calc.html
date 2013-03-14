@@ -107,15 +107,9 @@ limitations under the License.
 </div>
 
 <script src="../../../web-animations.js"></script>
-<script src="../testharness/testharness.js"></script>
-<script src='../testharness/testharnessreport.js'></script>
-<script src='../extra-asserts.js'></script>
-<link rel='stylesheet' href='../testharness/testharness.css'>
-<link rel='stylesheet' type="text/css" href="../animation-test-style.css">
+<script src="../anim-test-pre.js"></script>
 
 <script>
-setupTests();
-
 var dt = document.timeline;
 
 dt.play(new Animation(document.querySelector(".outer"), {width: "800px"}, 2));
@@ -144,6 +138,4 @@ check(document.querySelector("#d"), {width: "400px"}, 2, "D end");
 check(document.querySelector("#e"), {width: "400px"}, 2, "E end");
 check(document.querySelector("#f"), {width: "400px"}, 2, "F end");
 check(document.querySelector("#g"), {width: "400px"}, 2, "G end");
-
-runTests();
 </script>
