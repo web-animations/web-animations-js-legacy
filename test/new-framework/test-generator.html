@@ -76,7 +76,7 @@ function getSettings(){
     var obProp = document.getElementById("obProp").value;
     process(obProp);
     testLength = 0;
-    window.frames[0].document.timeline.getCurrentPlayers().forEach(function(player) {
+    window.frames[0].animTestRunner.players.forEach(function(player) {
       testLength = Math.max(testLength, player.source.animationDuration);
     });
     pause();
@@ -144,13 +144,13 @@ function printCheck(object, number, properties, time){
 }
 
 function pause(){
-  window.frames[0].document.timeline.getCurrentPlayers().forEach(function(player) {
+  window.frames[0].animTestRunner.players.forEach(function(player) {
     player.paused = true;
   });
 }
 
 function setTestCurrentTime(time){
-  window.frames[0].document.timeline.getCurrentPlayers().forEach(function(player) {
+  window.frames[0].animTestRunner.players.forEach(function(player) {
     player.currentTime = time;
   });
   testCurrentTime = time;
