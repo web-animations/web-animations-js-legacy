@@ -38,6 +38,7 @@ body.fail div#fail {
 <div id="anim"></div>
 
 <script src="../../web-animations.js"></script>
+<script src="../anim-test-pre.js"></script>
 <script>
 
 var fail = function(failureMessage) {
@@ -58,13 +59,13 @@ var elem = document.getElementById("anim");
 var animFunc = {left: "100px"};
 
 // Test inserting a group between a parent and its children.
-var parent = new ParGroup();
-var child1 = new Animation(elem, animFunc, 1.0, parent);
-var child2 = new Animation(elem, animFunc, 1.0, parent);
-var group = new ParGroup(parent.children, 1.0, parent);
-check(parent.parentGroup, null, "Parent's parent should be null");
-check(parent.children.length, 1, "Parent should have 1 child");
-check(parent.children[0], group, "Parent's child should be new group");
+var parentGroup = new ParGroup();
+var child1 = new Animation(elem, animFunc, 1.0, parentGroup);
+var child2 = new Animation(elem, animFunc, 1.0, parentGroup);
+var group = new ParGroup(parentGroup.children, 1.0, parentGroup);
+check(parentGroup.parentGroup, null, "Parent's parent should be null");
+check(parentGroup.children.length, 1, "Parent should have 1 child");
+check(parentGroup.children[0], group, "Parent's child should be new group");
 check(group.parentGroup, parent, "New group's parent incorrect");
 check(group.children.length, 2, "New group should have 2 children");
 check(group.children[0], child1, "Unexpected first child");
