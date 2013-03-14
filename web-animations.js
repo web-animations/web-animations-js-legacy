@@ -202,9 +202,10 @@ var Player = function(token, source, timeline) {
   this.source = source;
   this._timeline = timeline;
   this._startTime =
-      this._timeline.currentTime === null ? 0 : this._timeline.currentTime;
+      this.timeline.currentTime === null ? 0 : this.timeline.currentTime;
   this._timeDrift = 0.0;
   this._pauseTime = undefined;
+  this._playbackRate = 1.0;
 
   this.source.timeDrift = 0.0;
   this._update();
@@ -230,19 +231,28 @@ Player.prototype = {
     return this._source;
   },
   set currentTime(currentTime) {
+    this._currentTime = currentTime;
+  },
+  get currentTime() {
+    return this._currentTime === null ? 0 : this._currentTime;
+  },
+  set _currentTime(currentTime) {
     // This seeks by updating _drift. It does not affect the startTime.
-    if (!isDefined(this._pauseTime)) {
-      this._timeDrift =
-          this._timeline.currentTime - this.startTime - currentTime;
-    } else {
+    if (isDefined(this._pauseTime)) {
       this._pauseTime = currentTime;
+    } else {
+      this._timeDrift = (this.timeline.currentTime - this.startTime) *
+          this.playbackRate - currentTime;
     }
     maybeRestartAnimation();
   },
-  get currentTime() {
-    return !isDefined(this._pauseTime) ?
-        this._timeline.currentTime - this._timeDrift - this.startTime :
-        this._pauseTime;
+  get _currentTime() {
+    if (this.timeline.currentTime === null) {
+      return null;
+    }
+    return isDefined(this._pauseTime) ? this._pauseTime :
+        (this.timeline.currentTime - this.startTime) * this.playbackRate -
+        this._timeDrift;
   },
   set startTime(startTime) {
     // This seeks by updating _startTime and hence the currentTime. It does not
@@ -257,14 +267,26 @@ Player.prototype = {
     if (isPaused) {
       this._pauseTime = this.currentTime;
     } else if (isDefined(this._pauseTime)) {
-      this._timeDrift =
-          this._timeline.currentTime - this.startTime - this._pauseTime;
+      this._timeDrift = (this.timeline.currentTime - this.startTime) *
+          this.playbackRate - this._pauseTime;
       this._pauseTime = undefined;
       maybeRestartAnimation();
     }
   },
   get paused() {
     return isDefined(this._pauseTime);
+  },
+  get timeline() {
+    return this._timeline;
+  },
+  set playbackRate(playbackRate) {
+    var cachedCurrentTime = this.currentTime;
+    // This will impact currentTime, so perform a compensatory seek.
+    this._playbackRate = playbackRate;
+    this.currentTime = cachedCurrentTime;
+  },
+  get playbackRate(playbackRate) {
+    return this._playbackRate;
   },
   _update: function() {
     if (this.source !== null) {
@@ -529,17 +551,6 @@ TimedItem.prototype = {
       this._updateIterationParams();
     }
     maybeRestartAnimation();
-  },
-  changePlaybackRate: function(playbackRate) {
-    var previousRate = this.timing.playbackRate;
-    this.timing.playbackRate = playbackRate;
-    if (previousRate == 0 || playbackRate == 0) {
-      return;
-    }
-    // TODO: invert the fillMode?
-    var seekAdjustment = (this.itemTime - this.timing.startDelay) *
-        (1 - previousRate / playbackRate);
-    this.currentTime = this.itemTime - seekAdjustment;
   },
   _floorWithClosedOpenRange: function(x, range) {
     return Math.floor(x / range);

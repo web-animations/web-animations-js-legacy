@@ -65,8 +65,11 @@ var checkNotEqual = function(actual, unexpected, failureMessage) {
 var animation = new Animation(document.getElementById("anim"), {left: "100px"});
 var dt = document.timeline;
 
-// Test that TimedItem.getPlayer() and Player.source are consistent.
+// Test Player.timeline.
 var player1 = dt.play(animation);
+check(player1.timeline, document.timeline, "Player.timeline incorrect");
+
+// Test that TimedItem.getPlayer() and Player.source are consistent.
 checkNotEqual(player1, null, "Player should not be null");
 check(player1.source, animation, "Player.source incorrect");
 check(animation.getPlayer(), player1, "TimedItem.getPlayer() incorrect");
@@ -131,5 +134,29 @@ check(document.timeline.play(animation).currentTime, 0,
 // Test that startTime is zero before timeline starts.
 check(document.timeline.play(animation).startTime, 0,
     "startTime should be zero before Timeline starts");
+
+// Test that setting currentTime has no effect until the timeline starts.
+var player5 = dt.play(animation);
+player5.currentTime = 42;
+check(player5.currentTime, 0,
+    "currentTime should always be zero before Timeline starts");
+addEventListener('load', function() {
+  setTimeout(function() {
+    check(player5.currentTime > 42, true,
+        "updates to currentTime should take effect after Timeline starts");
+  }, 0);
+});
+
+// Test that setting currentTime has no effect until the timeline starts.
+var player6 = dt.play(animation);
+player6.startTime = 42;
+check(player6.currentTime, 0,
+    "currentTime should always be zero before Timeline starts");
+addEventListener('load', function() {
+  setTimeout(function() {
+    check(player6.currentTime < -41, true,
+        "updates to startTime should take effect after Timeline starts");
+  }, 0);
+});
 
 </script>

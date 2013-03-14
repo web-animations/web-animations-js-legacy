@@ -38,15 +38,16 @@ limitations under the License.
 var a1 = new Animation(document.querySelector("#a"),
     {left: ["0px", "500px"]},
     {duration: 10, direction: 'alternating', iterationCount: Infinity});
-document.timeline.play(a1);
+var player1 = document.timeline.play(a1);
 
 var a2 = new Animation(undefined,
     {sample: function(timeFraction, iteration, target) {
-      a1.changePlaybackRate(0.01 + 10 * timeFraction);
-      a2.changePlaybackRate(0.01 + 10 * timeFraction);
-      document.querySelector("#a").textContent = a1.timing.playbackRate;
+      var playbackRate = 0.01 + 10 * timeFraction;
+      player1.playbackRate  = playbackRate
+      player2.playbackRate = playbackRate;
+      document.querySelector("#a").textContent = playbackRate;
     }},
     a1.timing.clone());
-document.timeline.play(a2);
+var player2 = document.timeline.play(a2);
 
 </script>
