@@ -484,8 +484,7 @@ TimedItem.prototype = {
         this._modulusWithOpenClosedRange(this.timing.iterationStart +
             this.timing.iterationCount, 1.0) :
         this._modulusWithClosedOpenRange(this.timing.iterationStart, 1.0);
-    this._timeFraction = this._isCurrentDirectionForwards(
-        this.timing.direction, this.currentIteration) ?
+    this._timeFraction = this._isCurrentDirectionForwards() ?
             unscaledFraction :
             1.0 - unscaledFraction;
     if (this.timing.timingFunction) {
@@ -501,8 +500,7 @@ TimedItem.prototype = {
         this.timing.playbackRate + startOffset;
   },
   _scaleIterationTime: function(unscaledIterationTime) {
-    return this._isCurrentDirectionForwards(
-        this.timing.direction, this.currentIteration) ?
+    return this._isCurrentDirectionForwards() ?
         unscaledIterationTime :
         this.duration - unscaledIterationTime;
   },
@@ -565,15 +563,15 @@ TimedItem.prototype = {
     var ret = this._modulusWithClosedOpenRange(x, range);
     return ret == 0 ? range : ret;
   },
-  _isCurrentDirectionForwards: function(direction, currentIteration) {
-    if (direction == 'normal') {
+  _isCurrentDirectionForwards: function() {
+    if (this.timing.direction == 'normal') {
       return true;
     }
-    if (direction == 'reverse') {
+    if (this.timing.direction == 'reverse') {
       return false;
     }
-    var d = currentIteration;
-    if (direction == 'alternate-reverse') {
+    var d = this.currentIteration;
+    if (this.timing.direction == 'alternate-reverse') {
       d += 1;
     }
     // TODO: 6.13.3 step 3. wtf?
@@ -596,12 +594,18 @@ TimedItem.prototype = {
         "Derived classes must override TimedItem._getLeafItemsInEffectImpl()");
   },
   _isPastEndOfActiveInterval: function() {
-    return this._player.currentTime > this.endTime;
+    return this._inheritedTime > this.endTime;
   },
   getPlayer: function() {
     return this.parentGroup === null ?
         this._player : this.parentGroup.getPlayer();
-  }
+  },
+  _netEffectivePlaybackRate: function() {
+    var effectivePlaybackRate = this._isCurrentDirectionForwards() ?
+        this.timing.playbackRate : -this.timing.playbackRate;
+    return this.parentGroup === null ? effectivePlaybackRate :
+        effectivePlaybackRate * this.parentGroup._netEffectivePlaybackRate();
+  },
 };
 
 var isCustomAnimationEffect = function(animationEffect) {
@@ -894,6 +898,133 @@ var SeqGroup = function(children, timing, parentGroup) {
 };
 
 SeqGroup.prototype = Object.create(TimingGroup.prototype);
+
+
+/** @constructor */
+var MediaReference = function(mediaElement, timing, parentGroup) {
+  TimedItem.call(this, constructorToken, timing, parentGroup);
+  this._media = mediaElement;
+
+  // We can never be sure when _updtaeInheritedTime() is going to be called
+  // next, due to skipped frames or the player being seeked. Plus the media
+  // element's currentTime may drift from our iterationTime. So if a media
+  // element has loop set, we can't be sure that we'll stop it before it wraps.
+  // For this reason, we simply disable looping.
+  // TODO: Maybe we should let it loop if our duration exceeds it's length?
+  this._media.loop = false;
+
+};
+
+MediaReference.prototype = createObject(TimedItem.prototype, {
+  _intrinsicDuration: function() {
+    // TODO: This should probably default to zero. But doing so means that as
+    // soon as our inheritedTime is zero, the polyfill deems the animation to be
+    // done and stops ticking, so we don't get any further calls to
+    // _updateInheritedTime(). One way around this would be to modify
+    // TimedItem._isPastEndOfActiveInterval() to recurse down the tree, then we
+    // could override it here.
+    return isNaN(this._media.duration) ?
+        Infinity : this._media.duration / this._media.defaultPlaybackRate;
+  },
+  _unscaledMediaCurrentTime: function() {
+    return this._media.currentTime / this._media.defaultPlaybackRate;
+  },
+  _getLeafItemsInEffectImpl: function(items) {
+    items.push(this);
+  },
+  _ensurePlaying: function() {
+    // The media element is paused when created.
+    if (this._media.paused) {
+      this._media.play();
+    }
+  },
+  _ensurePaused: function() {
+    if (!this._media.paused) {
+      this._media.pause();
+    }
+  },
+  _ensureIsAtUnscaledTime: function(time) {
+    if (this._unscaledMediaCurrentTime() !== time) {
+      this._media.currentTime = time * this._media.defaultPlaybackRate;
+    }
+  },
+  // This is called by the polyfill on each tick when our Player's tree is
+  // active.
+  _updateInheritedTime: function(inheritedTime) {
+    this._inheritedTime = inheritedTime;
+    this._updateTimeMarkers();
+
+    // The polyfill uses a sampling model whereby time values are propagated
+    // down the tree at each sample. However, for the media item, we need to use
+    // play() and pause().
+
+    // TODO: Handle a limited seek range.
+
+    if (this._intrinsicDuration() === 0) {
+      // TODO: Handle media elements with zero duration.
+      throw new Error("MediaReference does not handle zero duration");
+    }
+
+    // Handle the case of being outside our effect interval.
+    if (this.iterationTime === null) {
+      this._ensureIsAtUnscaledTime(0);
+      this._ensurePaused();
+      return;
+    }
+
+    // We need to handle the fact that the video may not play at exactly the
+    // right speed. There's also a variable delay when the video is first
+    // played.
+    // TODO: What's the right value for this delta?
+    var delta = 0.2 * Math.abs(this._media.playbackRate);
+
+    if (this.iterationTime > this._intrinsicDuration() + delta) {
+      // Our iteration time exceeds the media element's duration, so just make
+      // sure the media element is at the end. It will stop automatically, but
+      // that could take some time if the seek below is significant, so force
+      // it.
+      this._ensureIsAtUnscaledTime(this._intrinsicDuration());
+      this._ensurePaused();
+      return;
+    }
+
+    var finalIteration = this._floorWithOpenClosedRange(
+        this.timing.iterationStart + this.timing.iterationCount, 1.0);
+    var endTimeFraction = this._modulusWithOpenClosedRange(
+        this.timing.iterationStart + this.timing.iterationCount, 1.0);
+    if (this.currentIteration === finalIteration &&
+        this._timeFraction === endTimeFraction &&
+        this._intrinsicDuration() > this.duration) {
+      // We have reached the end of our final iteration, but the media element
+      // is not done.
+      this._ensureIsAtUnscaledTime(this.duration * endTimeFraction);
+      this._ensurePaused();
+      return;
+    }
+
+    // Set the appropriate playback rate.
+    var playbackRate =
+        this._media.defaultPlaybackRate * this._netEffectivePlaybackRate();
+    if (this._media.playbackRate !== playbackRate) {
+      this._media.playbackRate = playbackRate;
+    }
+
+    // Set the appropriate play/pause state.
+    if (this.getPlayer().paused) {
+      this._ensurePaused();
+    } else {
+      this._ensurePlaying();
+    }
+
+    // Seek if required. This could be due to our Player being seeked, or video
+    // slippage.
+    if (Math.abs(this.iterationTime - this._unscaledMediaCurrentTime()) >
+        delta) {
+      this._ensureIsAtUnscaledTime(this.iterationTime);
+    }
+  },
+});
+
 
 /** @constructor */
 var AnimationEffect = function(token, operation, accumulateOperation) {
@@ -2512,7 +2643,9 @@ var ticker = function(rafTime) {
 
   // Apply animations in order
   for (var i = 0; i < animations.length; i++) {
-    animations[i]._sample();
+    if (animations[i] instanceof Animation) {
+      animations[i]._sample();
+    }
   }
 
   // Composite animated values into element styles
@@ -2564,6 +2697,7 @@ window.GroupedAnimationEffect = GroupedAnimationEffect;
 window.Keyframe = Keyframe;
 window.KeyframeAnimationEffect = KeyframeAnimationEffect;
 window.KeyframeList = KeyframeList;
+window.MediaReference = MediaReference;
 window.ParGroup = ParGroup;
 window.PathAnimationEffect = PathAnimationEffect;
 window.Player = Player;
