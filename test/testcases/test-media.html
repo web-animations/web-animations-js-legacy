@@ -321,8 +321,14 @@ var continuation17 = function() {
     check(video.currentTime, 1.0,
         "Detaching controller should allow video to be seeked");
     player.source = null;
-    finished();
+    continuation18();
   });
+};
+
+var continuation18 = function() {
+  // Test limited seek ranges.
+  // TODO: Need to find a video with limited seek ranges.
+  finished();
 };
 
 var finished = function() {

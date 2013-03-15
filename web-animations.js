@@ -948,6 +948,23 @@ MediaReference.prototype = createObject(TimedItem.prototype, {
       this._media.pause();
     }
   },
+  _isSeekableUnscaledTime: function(time) {
+    var seekTime = time * this._media.defaultPlaybackRate;
+    var ranges = this._media.seekable;
+    for (var i = 0; i < ranges.length; i++) {
+      if (seekTime >= ranges.start(i) && seekTime <= ranges.end(i)) {
+        return true;
+      }
+    }
+    return false;
+  },
+  // Note that a media element's timeline may not start at zero, although it's
+  // duration is always the timeline time at the end point. This means that an
+  // element's duration isn't always it's length and not all values of the
+  // timline are seekable. Furthermore, some types of media further limit the
+  // range of seekable timeline times. For this reason, we always map an
+  // iteration to the range [0, duration] and simply seek to the nearest
+  // seekable time.
   _ensureIsAtUnscaledTime: function(time) {
     if (this._unscaledMediaCurrentTime() !== time) {
       this._media.currentTime = time * this._media.defaultPlaybackRate;
@@ -962,8 +979,6 @@ MediaReference.prototype = createObject(TimedItem.prototype, {
     // The polyfill uses a sampling model whereby time values are propagated
     // down the tree at each sample. However, for the media item, we need to use
     // play() and pause().
-
-    // TODO: Handle a limited seek range.
 
     // Handle the case of being outside our effect interval.
     if (this.iterationTime === null) {
@@ -1003,8 +1018,13 @@ MediaReference.prototype = createObject(TimedItem.prototype, {
       this._media.playbackRate = playbackRate;
     }
 
-    // Set the appropriate play/pause state.
-    if (this.getPlayer().paused) {
+    // Set the appropriate play/pause state. Note that we may not be able to
+    // seek to the desired time. In this case, the media element's seek
+    // algorithm repositions the seek to the nearest seekable time. This is OK,
+    // but in this case, we don't want to play the media element, as it prevents
+    // us from synchronising properly.
+    if (this.getPlayer().paused ||
+        !this._isSeekableUnscaledTime(this.iterationTime)) {
       this._ensurePaused();
     } else {
       this._ensurePlaying();
@@ -2586,10 +2606,10 @@ if (usePerformanceTiming) {
     documentTimeZeroAsClockTime = Date.now();
   };
 }
-// Start timing when load event fires or if this script is processed when 
+// Start timing when load event fires or if this script is processed when
 // document loading is already complete.
 if (document.readyState == 'complete') {
-  // When performance timing is unavailable and this script is loaded 
+  // When performance timing is unavailable and this script is loaded
   // dynamically, document zero time is incorrect.
   // Warn the user in this case.
   if (!usePerformanceTiming) {
