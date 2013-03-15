@@ -67,6 +67,7 @@ function addSourceToVideo(sourceString) {
 }
 
 var continuation1 = function() {
+  // Test intrinsic duration.
   check(mediaReference.duration, video.duration,
       "Intrinsic duration should be video duration");
 
@@ -279,12 +280,36 @@ var continuation14 = function() {
       assert_equals(video.playbackRate, 1.5);
     }, "Video should respect reversing and playbackRate");
     player.source = null;
-    finished();
+    continuation15();
   });
+};
+
+var continuation15 = function() {
+  // Test zero duration.
+  var player = dt.play(
+      new MediaReference(video, {duration: 0.0, iterationStart: 0.5}));
+  player.paused = true;
+  raf(function() {
+    check(video.currentTime, 0.0,
+        "Video should start at time zero when duration is zero");
+    player.currentTime = 1.0;
+    raf(function() {
+      check(video.currentTime, 0.0,
+          "Video should remain at time zero when duration is zero");
+      player.source = null;
+      continuation16();
+    });
+  });
+};
+
+var continuation16 = function() {
+  // Test zero intrinsic duration.
+  // TODO: Need to find a zero length video.
+  finished();
 };
 
 var finished = function() {
   animTestRunner.done();
-}
+};
 
 </script>

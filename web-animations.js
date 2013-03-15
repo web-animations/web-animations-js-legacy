@@ -960,11 +960,6 @@ MediaReference.prototype = createObject(TimedItem.prototype, {
 
     // TODO: Handle a limited seek range.
 
-    if (this._intrinsicDuration() === 0) {
-      // TODO: Handle media elements with zero duration.
-      throw new Error("MediaReference does not handle zero duration");
-    }
-
     // Handle the case of being outside our effect interval.
     if (this.iterationTime === null) {
       this._ensureIsAtUnscaledTime(0);
@@ -972,13 +967,7 @@ MediaReference.prototype = createObject(TimedItem.prototype, {
       return;
     }
 
-    // We need to handle the fact that the video may not play at exactly the
-    // right speed. There's also a variable delay when the video is first
-    // played.
-    // TODO: What's the right value for this delta?
-    var delta = 0.2 * Math.abs(this._media.playbackRate);
-
-    if (this.iterationTime > this._intrinsicDuration() + delta) {
+    if (this.iterationTime >= this._intrinsicDuration()) {
       // Our iteration time exceeds the media element's duration, so just make
       // sure the media element is at the end. It will stop automatically, but
       // that could take some time if the seek below is significant, so force
@@ -994,7 +983,7 @@ MediaReference.prototype = createObject(TimedItem.prototype, {
         this.timing.iterationStart + this.timing.iterationCount, 1.0);
     if (this.currentIteration === finalIteration &&
         this._timeFraction === endTimeFraction &&
-        this._intrinsicDuration() > this.duration) {
+        this._intrinsicDuration() >= this.duration) {
       // We have reached the end of our final iteration, but the media element
       // is not done.
       this._ensureIsAtUnscaledTime(this.duration * endTimeFraction);
@@ -1017,7 +1006,11 @@ MediaReference.prototype = createObject(TimedItem.prototype, {
     }
 
     // Seek if required. This could be due to our Player being seeked, or video
-    // slippage.
+    // slippage. We need to handle the fact that the video may not play at
+    // exactly the right speed. There's also a variable delay when the video is
+    // first played.
+    // TODO: What's the right value for this delta?
+    var delta = 0.2 * Math.abs(this._media.playbackRate);
     if (Math.abs(this.iterationTime - this._unscaledMediaCurrentTime()) >
         delta) {
       this._ensureIsAtUnscaledTime(this.iterationTime);
