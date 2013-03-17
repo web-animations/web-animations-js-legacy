@@ -806,13 +806,16 @@ loadScript('../testharness/testharnessreport.js');
 loadScript(location.pathname.replace('.html', '-checks.js'));
 
 window.addEventListener('load', function() {
-  if (window.parent !== window &&
-      window.parent.location.pathname.match('test-generator.html$')) {
+  if (window.parent.location.pathname.match('test-generator.html$')) {
+    return;
+  }
+
+  if (window.parent.location.pathname.match('test-harness.html$')) {
     return;
   }
 
   add_completion_callback(function(results, status) {
-    window.animTestRunner.results = results;
+    window.testResults = results;
   });
 
   setupTests();
