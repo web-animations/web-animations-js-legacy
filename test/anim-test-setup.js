@@ -13,12 +13,4 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#log {
-	position: absolute;
-	width: 1000px;
-}
-
-#padding {
-	height: 30px;
-}
+animTestRunner.setup();

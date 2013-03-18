@@ -38,6 +38,7 @@ body.fail div#fail {
 <div id="anim"></div>
 
 <script src="../../web-animations.js"></script>
+<script src="../anim-test-pre.js"></script>
 <script>
 
 var fail = function(failureMessage) {
@@ -62,8 +63,8 @@ var anim = new Animation(elem, animFunc);
 check(anim.parentGroup, null, "Child should have no parent");
 
 // Test that group is constructed with zero children.
-var parent = new ParGroup();
-check(parent.children.length, 0, "Parent should have zero children");
+var parentGroup = new ParGroup();
+check(parentGroup.children.length, 0, "Parent should have zero children");
 
 // Test that parent must be an AnimationGroup when constructing.
 try {
@@ -75,17 +76,17 @@ try {
 }
 
 // Test that updates are made to child when constructing parent.
-var parent = new ParGroup([anim]);
-check(anim.parentGroup, parent, "Child's parentGroup should be set to parent");
-check(parent.children.length, 1, "Parent should have 1 child");
-check(parent.children[0], anim, "Parent should have correct child");
+var parentGroup = new ParGroup([anim]);
+check(anim.parentGroup, parentGroup, "Child's parentGroup should be set to parent");
+check(parentGroup.children.length, 1, "Parent should have 1 child");
+check(parentGroup.children[0], anim, "Parent should have correct child");
 
 // Test that updates are made to parent when constructing child.
-var parent = new ParGroup();
-var child = new Animation(elem, animFunc, 1.0, parent);
-check(child.parentGroup, parent, "Child's parentGroup should be set");
-check(parent.children.length, 1, "Parent should now have 1 child");
-check(parent.children[0], child, "Parent should have correct child");
+var parentGroup = new ParGroup();
+var child = new Animation(elem, animFunc, 1.0, parentGroup);
+check(child.parentGroup, parentGroup, "Child's parentGroup should be set");
+check(parentGroup.children.length, 1, "Parent should now have 1 child");
+check(parentGroup.children[0], child, "Parent should have correct child");
 
 // Test that updates are made to previous and new parents when constructing new
 // parent.

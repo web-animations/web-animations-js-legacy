@@ -102,19 +102,24 @@ function process(rawString){
   }
 }
 
+var propertyIsSVGAttrib = function(property, target) {
+  return target.namespaceURI == 'http://www.w3.org/2000/svg' &&
+      property in svgProperties;
+};
+
 function generate(){
   // Produce checks at this time
   var time = testCurrentTime;
   for (var x in checks){
     for(var i = 0; i < checks[x].object.length; i++){
-      var isSVG = (checks[x].object[i].nodeName != "DIV");
-
-      if(isSVG) var props = checks[x].object[i].attributes;
-      else var props = checks[x].object[i].currentStyle ||
-          getComputedStyle(checks[x].object[i], null);
-
       var propsPrint = "{";
       for(var j in checks[x].properties){
+        var isSVG = propertyIsSVGAttrib(j, checks[x].object[i]);
+
+        if(isSVG) var props = checks[x].object[i].attributes;
+        else var props = checks[x].object[i].currentStyle ||
+            getComputedStyle(checks[x].object[i], null);
+
         var p = checks[x].properties[j];
         var value = isSVG ? props[p].value : props[p];
         propsPrint += "'"+ p + "':'" + value + "'";
