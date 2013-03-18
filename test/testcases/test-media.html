@@ -15,36 +15,13 @@ limitations under the License.
 -->
 
 <!DOCTYPE html>
-<style>
-body {
-  background-color: green;
-}
-body div#fail {
-  display: none;
-}
-body.fail {
-  background-color: red;
-}
-body.fail div#pass {
-  display: none;
-}
-body.fail div#fail {
-  display: block;
-}
-</style>
-
-<div id="pass">Running ...</div>
-<div id="fail">FAIL</div>
-
-<video id="video">
-  <!-- Length is around 32s. -->
-  <source src="http://video.webmfiles.org/big-buck-bunny_trailer.webm">
-  <!-- Length is around 10s. -->
-  <source src="http://www.w3schools.com/html/mov_bbb.mp4">
-</video>
+<video id="video"></video>
 
 <script src="../../web-animations.js"></script>
+<script src="../anim-test-pre.js"></script>
 <script>
+
+animTestRunner.waitUntilDone();
 
 var fail = function(failureMessage) {
   var div = document.createElement("div");
@@ -53,11 +30,9 @@ var fail = function(failureMessage) {
   document.body.className = "fail";
 };
 
-var check = function(actual, expected, failureMessage) {
-  if (actual != expected) {
-    fail(failureMessage + ". Expected '" + expected + "', got '" + actual +
-        "'.");
-  }
+var check = function(actual, expected, description) {
+  console.log('check', actual, expected);
+  test(function() { assert_equals(actual, expected); }, description);
 };
 
 var video = document.getElementById("video");
@@ -80,6 +55,16 @@ check(mediaReference.duration, Infinity,
     "Intrinsic duration should be Infinity before video loads");
 
 video.addEventListener("loadeddata", function() { continuation1(); });
+// Length is around 32s.
+addSourceToVideo("http://video.webmfiles.org/big-buck-bunny_trailer.webm");
+// Length is around 10s.
+addSourceToVideo("http://www.w3schools.com/html/mov_bbb.mp4");
+
+function addSourceToVideo(sourceString) {
+  var source = document.createElement("source");
+  source.setAttribute("src", sourceString);
+  video.appendChild(source);
+}
 
 var continuation1 = function() {
   check(mediaReference.duration, video.duration,
@@ -88,10 +73,12 @@ var continuation1 = function() {
   // Test basic use.
   var player = dt.play(mediaReference);
   raf(function() {
-    check(video.playbackRate, 1.0, "Video should have playback rate of 1.0");
-    check(video.paused, false, "Video should be playing");
-    player.source = null;
-    continuation2();
+    raf(function() {
+      check(video.playbackRate, 1.0, "Video should have playback rate of 1.0");
+      check(video.paused, false, "Video should be playing");
+      player.source = null;
+      continuation2();
+    });
   });
 };
 
@@ -102,8 +89,10 @@ var continuation2 = function() {
   player.paused = true;
   player.currentTime = 3.0;
   raf(function() {
-    check(video.currentTime, 3.0, "Video should be frozen at duration");
-    check(video.paused, true, "Video should be frozen at duration");
+    test(function() {
+      assert_equals(video.currentTime, 3.0);
+      assert_equals(video.paused, true);
+    }, "Video should be frozen at duration");
     player.source = null;
     continuation3();
   });
@@ -117,12 +106,16 @@ var continuation3 = function() {
   player.paused = true;
   player.currentTime = video.duration + 1;
   raf(function() {
-    check(video.currentTime, video.duration, "Video should be frozen at end");
-    check(video.paused, true, "Video should be frozen at end");
+    test(function() {
+      assert_equals(video.currentTime, video.duration);
+      assert_equals(video.paused, true);
+    }, "Video should be frozen at end");
     player.currentTime = video.duration + 2;
     raf(function() {
-      check(video.currentTime, video.duration, "Video should be frozen at end");
-      check(video.paused, true, "Video should be frozen at end");
+      test(function() {
+        assert_equals(video.currentTime, video.duration);
+        assert_equals(video.paused, true);
+      }, "Video should be frozen after end");
       player.source = null;
       continuation4();
     });
@@ -200,8 +193,10 @@ var continuation9 = function() {
   player.paused = true;
   player.currentTime = 1.0;
   raf(function() {
-    check(video.currentTime, 2.0, "Video should respect playbackRate");
-    check(video.playbackRate, 2.0, "Video should respect playbackRate");
+    test(function() {
+      assert_equals(video.currentTime, 2.0);
+      assert_equals(video.playbackRate, 2.0);
+    }, "Video should respect playbackRate");
     player.source = null;
     continuation10();
   });
@@ -215,9 +210,10 @@ var continuation10 = function() {
   player.paused = true;
   player.currentTime = 1.0;
   raf(function() {
-    check(video.currentTime, 6.0, "Video should respect playbackRate heirachy");
-    check(video.playbackRate, 6.0,
-        "Video should respect playbackRate heirachy");
+    test(function() {
+      assert_equals(video.currentTime, 6.0);
+      assert_equals(video.playbackRate, 6.0);
+    }, "Video should respect playbackRate heirachy");
     player.source = null;
     continuation11();
   });
@@ -230,8 +226,10 @@ var continuation11 = function() {
   player.paused = true;
   player.currentTime = 1.0;
   raf(function() {
-    check(video.currentTime, 6.0, "Video should respect playbackRate");
-    check(video.playbackRate, 6.0, "Video should respect playbackRate");
+    test(function() {
+      assert_equals(video.currentTime, 6.0);
+      assert_equals(video.playbackRate, 6.0);
+    }, "Video should respect playbackRate after setting defaultPlaybackRate");
     video.defaultPlaybackRate = 1.0;
     player.source = null;
     continuation12();
@@ -244,9 +242,10 @@ var continuation12 = function() {
   player.paused = true;
   player.currentTime = 1.0;
   raf(function() {
-    check(video.currentTime, video.duration - 1.0,
-        "Video should respect reversing");
-    check(video.playbackRate, -1.0, "Video should respect reversing");
+    test(function() {
+      assert_equals(video.currentTime, video.duration - 1.0);
+      assert_equals(video.playbackRate, -1.0);
+    }, "Video should respect reversing");
     player.source = null;
     continuation13();
   });
@@ -258,10 +257,10 @@ var continuation13 = function() {
   player.paused = true;
   player.currentTime = 1.0;
   raf(function() {
-    check(video.currentTime, video.duration - 0.5,
-        "Video should respect negative playbackRate");
-    check(video.playbackRate, -0.5,
-        "Video should respect negative playbackRate");
+    test(function() {
+      assert_equals(video.currentTime, video.duration - 0.5);
+      assert_equals(video.playbackRate, -0.5);
+    }, "Video should respect negative playbackRate");
     player.source = null;
     continuation14();
   });
@@ -275,17 +274,17 @@ var continuation14 = function() {
   player.paused = true;
   player.currentTime = 1.0;
   raf(function() {
-    check(video.currentTime, 1.5,
-        "Video should respect reversing and playbackRate");
-    check(video.playbackRate, 1.5,
-        "Video should respect reversing and playbackRate");
+    test(function() {
+      assert_equals(video.currentTime, 1.5);
+      assert_equals(video.playbackRate, 1.5);
+    }, "Video should respect reversing and playbackRate");
     player.source = null;
-    done();
+    finished();
   });
 };
 
-var done = function() {
-  document.getElementById("pass").innerText = "PASS";
+var finished = function() {
+  animTestRunner.done();
 }
 
 </script>
