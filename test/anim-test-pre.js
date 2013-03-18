@@ -805,6 +805,7 @@ var loadScript = function(src) {
 };
 loadScript('../testharness/testharness.js');
 loadScript('../testharness/testharnessreport.js');
+loadScript('../anim-test-setup.js');
 loadScript(location.pathname.replace('.html', '-checks.js'));
 
 window.addEventListener('load', function() {
@@ -830,12 +831,12 @@ function runAnimTests() {
     window.animTestRunner.results = results;
   });
 
-  setupTests();
   runTests();
 }
 
 window.check = check;
 window.animTestRunner = {
+  setup: setupTests,
   players: PLAYERS,
   waiting: false,
   finished: false,
@@ -843,7 +844,7 @@ window.animTestRunner = {
     this.waiting = true;
   },
   done: function() {
-    waiting = false;
+    this.waiting = false;
     runAnimTests();
   }
 };
