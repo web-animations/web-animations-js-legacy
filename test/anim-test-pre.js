@@ -38,8 +38,6 @@ document.timeline.play = function(item) {
   return player;
 };
 
-// For the results to be accessed when test is in an iframe.
-var testResults = undefined;
 // Boolean flag for whether the program is running in automatic mode
 var runInAutoMode;
 // Holds which test packet we are up to.
@@ -433,8 +431,12 @@ function runTests() {
   requestFrame(function(){ animTimeViewer(document.timeline.currentTime); });
   sortTests();
   if (runInAutoMode) {
-    pause();
-    autoTestRunner();
+    if (checkStack.length) {
+      pause();
+      autoTestRunner();
+    } else {
+      done();
+    }
   } else {
     testRunner();
   }
@@ -814,17 +816,36 @@ window.addEventListener('load', function() {
     return;
   }
 
+  runAnimTests();
+});
+
+function runAnimTests() {
+  if (animTestRunner.waiting || animTestRunner.finished) {
+    return;
+  }
+
+  animTestRunner.finished = true;
+
   add_completion_callback(function(results, status) {
-    window.testResults = results;
+    window.animTestRunner.results = results;
   });
 
   setupTests();
   runTests();
-});
+}
 
 window.check = check;
 window.animTestRunner = {
   players: PLAYERS,
+  waiting: false,
+  finished: false,
+  waitUntilDone: function() {
+    this.waiting = true;
+  },
+  done: function() {
+    waiting = false;
+    runAnimTests();
+  }
 };
 
 })();
