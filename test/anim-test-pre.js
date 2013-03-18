@@ -38,8 +38,6 @@ document.timeline.play = function(item) {
   return player;
 };
 
-// For the results to be accessed when test is in an iframe.
-var testResults = undefined;
 // Boolean flag for whether the program is running in automatic mode
 var runInAutoMode;
 // Holds which test packet we are up to.
@@ -419,7 +417,9 @@ function runTests() {
   if(testLength === undefined){
     testLength = 0;
     PLAYERS.forEach(function(player) {
-      testLength = Math.max(testLength, player.source.animationDuration);
+      if (player.source) {
+        testLength = Math.max(testLength, player.source.animationDuration);
+      }
     });
   }
 
@@ -431,8 +431,12 @@ function runTests() {
   requestFrame(function(){ animTimeViewer(document.timeline.currentTime); });
   sortTests();
   if (runInAutoMode) {
-    pause();
-    autoTestRunner();
+    if (checkStack.length) {
+      pause();
+      autoTestRunner();
+    } else {
+      done();
+    }
   } else {
     testRunner();
   }
@@ -793,7 +797,6 @@ var loadCss = function(href) {
   document.head.appendChild(link);
 };
 loadCss('../testharness/testharness.css');
-loadCss('../animation-test-style.css');
 
 // dependencies must be loaded in order
 var loadScript = function(src) {
@@ -802,25 +805,48 @@ var loadScript = function(src) {
 };
 loadScript('../testharness/testharness.js');
 loadScript('../testharness/testharnessreport.js');
+loadScript('../anim-test-setup.js');
 loadScript(location.pathname.replace('.html', '-checks.js'));
 
 window.addEventListener('load', function() {
-  if (window.parent !== window &&
-      window.parent.location.pathname.match('test-generator.html$')) {
+  if (window.parent.location.pathname.match('test-generator.html$')) {
     return;
   }
+
+  if (window.parent.location.pathname.match('test-harness.html$')) {
+    return;
+  }
+
+  runAnimTests();
+});
+
+function runAnimTests() {
+  if (animTestRunner.waiting || animTestRunner.finished) {
+    return;
+  }
+
+  animTestRunner.finished = true;
 
   add_completion_callback(function(results, status) {
     window.animTestRunner.results = results;
   });
 
-  setupTests();
   runTests();
-});
+}
 
 window.check = check;
 window.animTestRunner = {
+  setup: setupTests,
   players: PLAYERS,
+  waiting: false,
+  finished: false,
+  waitUntilDone: function() {
+    this.waiting = true;
+  },
+  done: function() {
+    this.waiting = false;
+    runAnimTests();
+  }
 };
 
 })();
