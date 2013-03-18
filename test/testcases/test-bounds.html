@@ -16,29 +16,12 @@ limitations under the License.
 
 <!DOCTYPE html>
 <style>
-body {
-  background-color: green;
-}
-body div#fail {
-  display: none;
-}
-body.fail {
-  background-color: red;
-}
-body.fail div#pass {
-  display: none;
-}
-body.fail div#fail {
-  display: block;
-}
 div.anim {
   position: relative;
   left: 0px;
 }
 </style>
 
-<div id="pass">PASS</div>
-<div id="fail">FAIL</div>
 <div id="anim1" class="anim"></div>
 <div id="anim2" class="anim"></div>
 
@@ -46,20 +29,7 @@ div.anim {
 <script src="../anim-test-pre.js"></script>
 <script>
 
-var fail = function(failureMessage) {
-  var div = document.createElement("div");
-  div.innerText = failureMessage;
-  document.body.appendChild(div);
-  document.body.className = "fail";
-};
-
-var check = function(actual, expected, failureMessage) {
-  if (actual != expected) {
-    fail(failureMessage + ". Expected '" + expected + "', got '" + actual +
-        "'.");
-  }
-};
-
+animTestRunner.waitUntilDone();
 var animFunc = {left: ["100px", "200px"]};
 
 // Test that the animation interval uses inclusive start and end bounds.
@@ -69,12 +39,12 @@ var player1 =
 player1.paused = true;
 player1.currentTime = 0.0;
 setTimeout(function() {
-  check(getComputedStyle(elem1).left, "100px",
-      "Start bound should be inclusive");
+  test(function() { assert_equals(getComputedStyle(elem1).left, "100px",
+      "Start bound should be inclusive"); });
   player1.currentTime = 1.0;
   setTimeout(function() {
-    check(getComputedStyle(elem1).left, "200px",
-        "End bound should be inclusive");
+    test(function() { assert_equals(getComputedStyle(elem1).left, "200px",
+        "End bound should be inclusive"); });
   }, 100);
 }, 100);
 
@@ -85,16 +55,17 @@ var player2 = document.timeline.play(
 player2.paused = true;
 player2.currentTime = 0;
 setTimeout(function() {
-  check(getComputedStyle(elem2).left, "0px",
-      "Start bound should include startDelay");
+  test(function() { assert_equals(getComputedStyle(elem2).left, "0px",
+      "Start bound should include startDelay"); });
   player2.currentTime = 1.0;
   setTimeout(function() {
-    check(getComputedStyle(elem2).left, "100px",
-        "Start bound should be inclusive");
+    test(function() { assert_equals(getComputedStyle(elem2).left, "100px",
+        "Start bound should be inclusive"); });
     player2.currentTime = 2.0;
     setTimeout(function() {
-      check(getComputedStyle(elem2).left, "200px",
-          "End bound should be inclusive");
+      test(function() { assert_equals(getComputedStyle(elem2).left, "200px",
+          "End bound should be inclusive"); });
+      animTestRunner.done();
     }, 100);
   }, 100);
 }, 100);
