@@ -913,6 +913,11 @@ var MediaReference = function(mediaElement, timing, parentGroup) {
   // TODO: Maybe we should let it loop if our duration exceeds it's length?
   this._media.loop = false;
 
+  // If the media element has a media controller, we detach it. This mirrors the
+  // behaviour when re-parenting a TimedItem, or attaching one to a Player.
+  // TODO: It would be neater to assign to controller, but this currently fails
+  // in Chrome. See https://bugs.webkit.org/show_bug.cgi?id=112641
+  this._media.mediaGroup = '';
 };
 
 MediaReference.prototype = createObject(TimedItem.prototype, {
