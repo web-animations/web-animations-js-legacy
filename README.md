@@ -3,7 +3,20 @@ web-animations-js
 
 An emulator of the Web Animations specification
 
+Installation instructions
+========================
 
+* git clone http://github.com/web-animations/web-animations-js
+* cd web-animations-js
+* git submodule init
+* git submodule update
+
+Running tests
+============
+
+* make sure that the testharness submodule is up-to-date (see installation instructions)
+* python -m SimpleHTTPServer (from within web-animations-js directory)
+* http://localhost:8000/test/test-runner.html (to auto-run tests) or http://localhost:8000/test/test-harness.html (to manually explore tests)
 
 A note on prefix handling and experimental features
 ===================================================
