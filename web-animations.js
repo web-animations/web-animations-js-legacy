@@ -712,7 +712,7 @@ var TimingGroup = function(token, type, children, timing, parentGroup) {
 TimingGroup.prototype = createObject(TimedItem.prototype, {
   _childrenStateModified: function() {
     // See _updateChildStartTimes().
-    this._isInOnChildrenStateModified = true;
+    this._isInChildrenStateModified = true;
 
     // We need to walk up and down the tree to re-layout. endTime and the
     // various durations (which are all calculated lazily) are the only
@@ -727,7 +727,7 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
     // Update child start times before walking down.
     this._updateChildStartTimes();
 
-    this._isInOnChildrenStateModified = false;
+    this._isInChildrenStateModified = false;
   },
   _updateInheritedTime: function(inheritedTime) {
     this._inheritedTime = inheritedTime;
@@ -751,7 +751,7 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
         child._startTime = cumulativeStartTime;
         // Avoid updating the child's inherited time and time markers if this is
         // about to be done in the down phase of _childrenStateModified().
-        if (!child._isInOnChildrenStateModified) {
+        if (!child._isInChildrenStateModified) {
           // This calls _updateTimeMarkers() on the child.
           child._updateInheritedTime(this.iterationTime);
         }
