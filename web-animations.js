@@ -439,7 +439,7 @@ TimedItem.prototype = {
     this._updateTimeMarkers();
   },
   // We push time down to children. We could instead have children pull from
-  // above, but this is tricky because a TImedItem may use either a parent
+  // above, but this is tricky because a TimedItem may use either a parent
   // TimedItem or an Player. This requires either logic in
   // TimedItem, or for TimedItem and Player to implement Timeline
   // (or an equivalent), both of which are ugly.
@@ -447,24 +447,17 @@ TimedItem.prototype = {
     this._inheritedTime = inheritedTime;
     this._updateTimeMarkers();
   },
-  _updateItemTime: function() {
-    if (this._inheritedTime !== null) {
-      this.itemTime = this._inheritedTime - this._startTime - this.timeDrift;
-    } else {
-      this.itemTime = null;
-    }
-  },
   _updateAnimationTime: function() {
-    if (this.itemTime < this.timing.startDelay) {
+    if (this.currentTime < this.timing.startDelay) {
       if (this.timing.fillMode === 'backwards' ||
           this.timing.fillMode === 'both') {
         this.animationTime = 0;
       } else {
         this.animationTime = null;
       }
-    } else if (this.itemTime <=
+    } else if (this.currentTime <=
         this.timing.startDelay + this.animationDuration) {
-      this.animationTime = this.itemTime - this.timing.startDelay;
+      this.animationTime = this.currentTime - this.timing.startDelay;
     } else {
       if (this.timing.fillMode === 'forwards' ||
           this.timing.fillMode === 'both') {
@@ -477,7 +470,7 @@ TimedItem.prototype = {
   _updateIterationParamsZeroDuration: function() {
     this.iterationTime = 0;
     var isAtEndOfIterations = this.timing.iterationCount != 0 &&
-        this.itemTime >= this.timing.startDelay;
+        this.currentTime >= this.timing.startDelay;
     this.currentIteration = isAtEndOfIterations ?
        this._floorWithOpenClosedRange(this.timing.iterationStart +
            this.timing.iterationCount, 1.0) :
@@ -533,8 +526,7 @@ TimedItem.prototype = {
     }
   },
   _updateTimeMarkers: function() {
-    this._updateItemTime();
-    if (this.itemTime === null) {
+    if (this.currentTime === null) {
       this.animationTime = null;
       this.iterationTime = null;
       this.currentIteration = null;
