@@ -206,4 +206,15 @@ addEventListener('load', function() {
       "Updates to Player.startTime should take immediate effect");
 });
 
+// Test that updates to source take immediate effect.
+addEventListener('load', function() {
+  var player = document.timeline.play(
+      new Animation(document.getElementById("anim"), {left: "100px"}));
+  var animation7 = new Animation(document.getElementById("anim"),
+      {left: "100px"});
+  player.source = animation7;
+  check(animation7.localTime, 0,
+      "Updates to Player.source should take immediate effect");
+});
+
 </script>

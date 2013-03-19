@@ -199,7 +199,6 @@ var Player = function(token, source, timeline) {
   if (token !== constructorToken) {
     throw new TypeError('Illegal constructor');
   }
-  this.source = source;
   this._timeline = timeline;
   this._startTime =
       this.timeline.currentTime === null ? 0 : this.timeline.currentTime;
@@ -207,7 +206,7 @@ var Player = function(token, source, timeline) {
   this._pauseTime = undefined;
   this._playbackRate = 1.0;
 
-  this._update();
+  this.source = source;
 
   PLAYERS.push(this);
   maybeRestartAnimation();
@@ -224,6 +223,8 @@ Player.prototype = {
     this._source = source;
     if (isDefinedAndNotNull(this.source)) {
       this.source._attach(this);
+      this._update();
+      maybeRestartAnimation();
     }
   },
   get source() {
