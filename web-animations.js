@@ -900,6 +900,11 @@ var MediaReference = function(mediaElement, timing, parentGroup) {
   // TODO: Maybe we should let it loop if our duration exceeds it's length?
   this._media.loop = false;
 
+  // If the media element has a media controller, we detach it. This mirrors the
+  // behaviour when re-parenting a TimedItem, or attaching one to a Player.
+  // TODO: It would be neater to assign to controller, but this currently fails
+  // in Chrome. See https://bugs.webkit.org/show_bug.cgi?id=112641
+  this._media.mediaGroup = '';
 };
 
 MediaReference.prototype = createObject(TimedItem.prototype, {
@@ -930,6 +935,23 @@ MediaReference.prototype = createObject(TimedItem.prototype, {
       this._media.pause();
     }
   },
+  _isSeekableUnscaledTime: function(time) {
+    var seekTime = time * this._media.defaultPlaybackRate;
+    var ranges = this._media.seekable;
+    for (var i = 0; i < ranges.length; i++) {
+      if (seekTime >= ranges.start(i) && seekTime <= ranges.end(i)) {
+        return true;
+      }
+    }
+    return false;
+  },
+  // Note that a media element's timeline may not start at zero, although it's
+  // duration is always the timeline time at the end point. This means that an
+  // element's duration isn't always it's length and not all values of the
+  // timline are seekable. Furthermore, some types of media further limit the
+  // range of seekable timeline times. For this reason, we always map an
+  // iteration to the range [0, duration] and simply seek to the nearest
+  // seekable time.
   _ensureIsAtUnscaledTime: function(time) {
     if (this._unscaledMediaCurrentTime() !== time) {
       this._media.currentTime = time * this._media.defaultPlaybackRate;
@@ -945,13 +967,6 @@ MediaReference.prototype = createObject(TimedItem.prototype, {
     // down the tree at each sample. However, for the media item, we need to use
     // play() and pause().
 
-    // TODO: Handle a limited seek range.
-
-    if (this._intrinsicDuration() === 0) {
-      // TODO: Handle media elements with zero duration.
-      throw new Error("MediaReference does not handle zero duration");
-    }
-
     // Handle the case of being outside our effect interval.
     if (this.iterationTime === null) {
       this._ensureIsAtUnscaledTime(0);
@@ -959,13 +974,7 @@ MediaReference.prototype = createObject(TimedItem.prototype, {
       return;
     }
 
-    // We need to handle the fact that the video may not play at exactly the
-    // right speed. There's also a variable delay when the video is first
-    // played.
-    // TODO: What's the right value for this delta?
-    var delta = 0.2 * Math.abs(this._media.playbackRate);
-
-    if (this.iterationTime > this._intrinsicDuration() + delta) {
+    if (this.iterationTime >= this._intrinsicDuration()) {
       // Our iteration time exceeds the media element's duration, so just make
       // sure the media element is at the end. It will stop automatically, but
       // that could take some time if the seek below is significant, so force
@@ -981,7 +990,7 @@ MediaReference.prototype = createObject(TimedItem.prototype, {
         this.timing.iterationStart + this.timing.iterationCount, 1.0);
     if (this.currentIteration === finalIteration &&
         this._timeFraction === endTimeFraction &&
-        this._intrinsicDuration() > this.duration) {
+        this._intrinsicDuration() >= this.duration) {
       // We have reached the end of our final iteration, but the media element
       // is not done.
       this._ensureIsAtUnscaledTime(this.duration * endTimeFraction);
@@ -996,15 +1005,24 @@ MediaReference.prototype = createObject(TimedItem.prototype, {
       this._media.playbackRate = playbackRate;
     }
 
-    // Set the appropriate play/pause state.
-    if (this.getPlayer().paused) {
+    // Set the appropriate play/pause state. Note that we may not be able to
+    // seek to the desired time. In this case, the media element's seek
+    // algorithm repositions the seek to the nearest seekable time. This is OK,
+    // but in this case, we don't want to play the media element, as it prevents
+    // us from synchronising properly.
+    if (this.getPlayer().paused ||
+        !this._isSeekableUnscaledTime(this.iterationTime)) {
       this._ensurePaused();
     } else {
       this._ensurePlaying();
     }
 
     // Seek if required. This could be due to our Player being seeked, or video
-    // slippage.
+    // slippage. We need to handle the fact that the video may not play at
+    // exactly the right speed. There's also a variable delay when the video is
+    // first played.
+    // TODO: What's the right value for this delta?
+    var delta = 0.2 * Math.abs(this._media.playbackRate);
     if (Math.abs(this.iterationTime - this._unscaledMediaCurrentTime()) >
         delta) {
       this._ensureIsAtUnscaledTime(this.iterationTime);
@@ -2575,10 +2593,10 @@ if (usePerformanceTiming) {
     documentTimeZeroAsClockTime = Date.now();
   };
 }
-// Start timing when load event fires or if this script is processed when 
+// Start timing when load event fires or if this script is processed when
 // document loading is already complete.
 if (document.readyState == 'complete') {
-  // When performance timing is unavailable and this script is loaded 
+  // When performance timing is unavailable and this script is loaded
   // dynamically, document zero time is incorrect.
   // Warn the user in this case.
   if (!usePerformanceTiming) {

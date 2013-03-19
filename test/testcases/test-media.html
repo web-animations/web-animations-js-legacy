@@ -67,6 +67,7 @@ function addSourceToVideo(sourceString) {
 }
 
 var continuation1 = function() {
+  // Test intrinsic duration.
   check(mediaReference.duration, video.duration,
       "Intrinsic duration should be video duration");
 
@@ -279,12 +280,59 @@ var continuation14 = function() {
       assert_equals(video.playbackRate, 1.5);
     }, "Video should respect reversing and playbackRate");
     player.source = null;
-    finished();
+    continuation15();
   });
+};
+
+var continuation15 = function() {
+  // Test zero duration.
+  var player = dt.play(
+      new MediaReference(video, {duration: 0.0, iterationStart: 0.5}));
+  player.paused = true;
+  raf(function() {
+    check(video.currentTime, 0.0,
+        "Video should start at time zero when duration is zero");
+    player.currentTime = 1.0;
+    raf(function() {
+      check(video.currentTime, 0.0,
+          "Video should remain at time zero when duration is zero");
+      player.source = null;
+      continuation16();
+    });
+  });
+};
+
+var continuation16 = function() {
+  // Test zero intrinsic duration.
+  // TODO: Need to find a zero length video.
+  continuation17();
+};
+
+var continuation17 = function() {
+  // Test that media elements are removed from their MediaController.
+  video.controller = new MediaController();
+  var player = dt.play(new MediaReference(video));
+  check(video.controller, null,
+     "Video should be detached from controller when used in MediaReference");
+  // Seeking the video will throw if the controller has not been detached.
+  player.paused = true;
+  player.currentTime = 1.0;
+  raf(function() {
+    check(video.currentTime, 1.0,
+        "Detaching controller should allow video to be seeked");
+    player.source = null;
+    continuation18();
+  });
+};
+
+var continuation18 = function() {
+  // Test limited seek ranges.
+  // TODO: Need to find a video with limited seek ranges.
+  finished();
 };
 
 var finished = function() {
   animTestRunner.done();
-}
+};
 
 </script>
