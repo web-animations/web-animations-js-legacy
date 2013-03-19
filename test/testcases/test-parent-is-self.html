@@ -66,7 +66,7 @@ var group = new ParGroup(parentGroup.children, 1.0, parentGroup);
 check(parentGroup.parentGroup, null, "Parent's parent should be null");
 check(parentGroup.children.length, 1, "Parent should have 1 child");
 check(parentGroup.children[0], group, "Parent's child should be new group");
-check(group.parentGroup, parent, "New group's parent incorrect");
+check(group.parentGroup, parentGroup, "New group's parent incorrect");
 check(group.children.length, 2, "New group should have 2 children");
 check(group.children[0], child1, "Unexpected first child");
 check(group.children[1], child2, "Unexpected second child");
