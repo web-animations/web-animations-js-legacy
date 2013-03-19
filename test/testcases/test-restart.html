@@ -60,6 +60,11 @@ var check = function(actual, expected, failureMessage) {
   }
 };
 
+// Don't use a local named requestAnimationFrame, to avoid potential problems
+// with hoisting.
+var raf = window.requestAnimationFrame || window.webkitRequestAnimationFrame ||
+    window.mozRequestAnimationFrame || window.msRequestAnimationFrame;
+
 var animFunc = {left: "100px"};
 var anim1 = new Animation(document.getElementById("anim1"), animFunc, 1.0);
 document.timeline.play(anim1);
@@ -68,31 +73,31 @@ document.timeline.play(anim2);
 
 // Check that once an animation is completed, creating a new Player restarts it.
 anim1.currentTime = 1.0;
-setTimeout(function() {
+raf(function() {
   check(getComputedStyle(anim1.targetElement).left, "100px",
       "Animation 1 should be in end state");
   document.timeline.play(anim1);
-  setTimeout(function() {
+  raf(function() {
     check(parseInt(getComputedStyle(anim1.targetElement).left) > 0, true,
         "Animation 1 should not be in start state");
     check(parseInt(getComputedStyle(anim1.targetElement).left) < 100, true,
         "Animation 1 should not be in end state");
-  }, 100);
-}, 100);
+  });
+});
 
 // Check that once an animation is completed, setting currentTime = 0 restarts
 // it.
 anim2.currentTime = 1.0;
-setTimeout(function() {
+raf(function() {
   check(getComputedStyle(anim2.targetElement).left, "100px",
       "Animation 2 should be in end state");
   anim2.currentTime = 0.0;
-  setTimeout(function() {
+  raf(function() {
     check(parseInt(getComputedStyle(anim2.targetElement).left) > 0, true,
         "Animation 2 should not be in start state");
     check(parseInt(getComputedStyle(anim2.targetElement).left) < 100, true,
         "Animation 2 should not be in end state");
-  }, 100);
-}, 100);
+  });
+});
 
 </script>
