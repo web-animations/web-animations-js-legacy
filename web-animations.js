@@ -2604,7 +2604,16 @@ if (document.readyState == 'complete') {
   }
   load();
 } else {
-  addEventListener('load', load);
+  addEventListener('load', function() {
+    load();
+    if (usePerformanceTiming) {
+      // We use setTimeout() to clear cachedDocumentTimeMillis at the end of a
+      // frame, but this will not run until after other load handlers. We need
+      // those handlers to pick up the new value of clockMillis(), so we must
+      // clear the cached value.
+      cachedDocumentTimeMillis = undefined;
+    }
+  });
 }
 
 // A cached document time for use during the current callstack.

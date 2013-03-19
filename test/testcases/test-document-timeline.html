@@ -61,10 +61,13 @@ var check = function(actual, expected, failureMessage) {
   }
 };
 
+var usePerformanceTiming =
+    typeof performance === "object" &&
+    typeof performance.timing === "object" &&
+    typeof performance.now === "function";
+
 var clockMillis = function() {
-  return typeof performance === "object" &&
-      typeof performance.now === "function" ?
-      performance.now() : Date.now();
+  return usePerformanceTiming ? performance.now() : Date.now();
 };
 
 function sleep() {
@@ -91,5 +94,15 @@ setTimeout(function() {
       "document.timeline.currentTime time should be constant in JavaScript " +
       "callstack");
 }, 0);
+
+// Test that document.timeline.currentTime is non-null in an onload handler
+// when using performance timing. Note that this assumes that web-animations.js
+// is loaded before document load time.
+if (usePerformanceTiming) {
+  addEventListener("load", function() {
+    checkNotEqual(document.timeline.currentTime, null,
+        "document.timeline.currentTime should be non-null in an onload handler");
+  });
+}
 
 </script>
