@@ -15,7 +15,19 @@ limitations under the License.
 -->
 
 <!DOCTYPE html>
-<body>
+<style>
+td.anim {
+  height: 200px;
+  width: 200px;
+}
+</style>
+<table>
+<tr><td id="a" class="anim"></td><td id="b" class="anim"></td><td id="c" class="anim"></td></tr>
+<tr><td id="d" class="anim"></td><td id="e" class="anim"></td><td id="f" class="anim"></td></tr>
+<tr><td id="g" class="anim"></td><td id="h" class="anim"></td><td id="i" class="anim"></td></tr>
+</table>
+
+
 <script src="../../web-animations.js"></script>
 <script src="../anim-test-pre.js"></script>
 <script>
@@ -169,6 +181,13 @@ var colors = [
   'yellow',
   'yellowgreen'];
 
-document.timeline.play(new Animation(document.body,
-    {'backgroundColor': colors}, colors.length * 2 / 60));
+var divs = document.querySelectorAll('td.anim');
+var sliceSize = colors.length / 9;
+for (var i = 0; i < divs.length; i++) {
+  document.timeline.play(new Animation(divs[i],
+    {'backgroundColor': colors.slice(i * sliceSize, (i + 1) * sliceSize)}, 4));
+}
+
+//document.timeline.play(new Animation(document.body,
+//    {'backgroundColor': colors}, colors.length * 2 / 60));
 </script>
