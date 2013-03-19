@@ -245,6 +245,7 @@ Player.prototype = {
       this._timeDrift = (this.timeline.currentTime - this.startTime) *
           this.playbackRate - currentTime;
     }
+    this._update();
     maybeRestartAnimation();
   },
   get _currentTime() {
