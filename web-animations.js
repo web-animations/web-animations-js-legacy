@@ -332,8 +332,6 @@ var TimedItem = function(token, timing, parentGroup) {
   }
   this._parentGroup = this._sanitizeParent(parentGroup);
 
-  this.timeDrift = 0;
-
   if (this.parentGroup) {
     // This will set our inheritedTime via _childrenStateModified().
     this.parentGroup._addInternal(this);
@@ -351,11 +349,7 @@ TimedItem.prototype = {
   },
   get currentTime() {
     return this._inheritedTime === null ?
-        null : this._inheritedTime - this._startTime - this.timeDrift;
-  },
-  set currentTime(seekTime) {
-    this.timeDrift = this._inheritedTime - this._startTime - seekTime;
-    this._updateTimeMarkers();
+        null : this._inheritedTime - this._startTime;
   },
   get startTime() {
     return this._startTime;
@@ -381,8 +375,7 @@ TimedItem.prototype = {
     return repeatedDuration / Math.abs(this.timing.playbackRate);
   },
   get endTime() {
-    return this._startTime + this.animationDuration + this.timing.startDelay +
-        this.timeDrift;
+    return this._startTime + this.animationDuration + this.timing.startDelay;
   },
   get parentGroup() {
     return this._parentGroup;
@@ -416,7 +409,6 @@ TimedItem.prototype = {
       this.parentGroup.remove(this.parentGroup.indexOf(this), 1);
     }
     this._parentGroup = parentGroup;
-    this.timeDrift = 0;
     // In the case of a SeqGroup parent, _startTime will be updated by
     // TimingGroup.splice().
     if (this.parentGroup === null || this.parentGroup.type !== 'seq') {
@@ -686,7 +678,7 @@ Animation.prototype = createObject(TimedItem.prototype, {
     var funcDescr = this.animationEffect instanceof AnimationEffect ?
         this.animationEffect.toString() : 'Custom scripted function';
     return 'Animation ' + this.startTime + '-' + this.endTime + ' (' +
-        this.timeDrift + ' @' + this.currentTime + ') ' + funcDescr;
+        this.currentTime + ') ' + funcDescr;
   }
 });
 
@@ -875,7 +867,7 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
   },
   toString: function() {
     return this.type + ' ' + this.startTime + '-' + this.endTime + ' (' +
-        this.timeDrift + ' @' + this.currentTime + ') ' + ' [' +
+        this.currentTime + ') ' + ' [' +
         this.children.map(function(a) { return a.toString(); }) + ']'
   },
 });

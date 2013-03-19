@@ -67,12 +67,12 @@ var raf = window.requestAnimationFrame || window.webkitRequestAnimationFrame ||
 
 var animFunc = {left: "100px"};
 var anim1 = new Animation(document.getElementById("anim1"), animFunc, 1.0);
-document.timeline.play(anim1);
+var player1 = document.timeline.play(anim1);
 var anim2 = new Animation(document.getElementById("anim2"), animFunc, 1.0);
-document.timeline.play(anim2);
+var player2 = document.timeline.play(anim2);
 
 // Check that once an animation is completed, creating a new Player restarts it.
-anim1.currentTime = 1.0;
+player1.currentTime = 1.0;
 raf(function() {
   check(getComputedStyle(anim1.targetElement).left, "100px",
       "Animation 1 should be in end state");
@@ -85,13 +85,13 @@ raf(function() {
   });
 });
 
-// Check that once an animation is completed, setting currentTime = 0 restarts
-// it.
-anim2.currentTime = 1.0;
+// Check that once an animation is completed, setting Player.currentTime = 0
+// restarts it.
+player2.currentTime = 1.0;
 raf(function() {
   check(getComputedStyle(anim2.targetElement).left, "100px",
       "Animation 2 should be in end state");
-  anim2.currentTime = 0.0;
+  player2.currentTime = 0.0;
   raf(function() {
     check(parseInt(getComputedStyle(anim2.targetElement).left) > 0, true,
         "Animation 2 should not be in start state");
@@ -99,5 +99,11 @@ raf(function() {
         "Animation 2 should not be in end state");
   });
 });
+
+// Check that TimedItem.currentTime is read-only.
+var anim3 = new Animation(document.getElementById("anim2"), animFunc, 1.0);
+document.timeline.play(anim3);
+anim3.currentTime = 0;
+check(anim3.currentTime, null, "TimedItem.currentTime should be read-only");
 
 </script>
