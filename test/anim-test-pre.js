@@ -155,12 +155,6 @@ function setupTests(timeouts) {
     else if (x == "testLength") testLength = timeouts[x];
   }
 
-  // Set up padding for option bar
-  var padding = document.createElement('div');
-  padding.id = "padding";
-  padding.className = "testBox";
-  document.body.appendChild(padding);
-
   // Generate options bar
   var optionBar = document.createElement('div');
 
@@ -366,6 +360,10 @@ function play(){
 // @time: The time the test will occur OR the interval between tests if refTest
 // @testName: The name of the test
 function check(object, targets, time, testName, isRefTest) {
+  if (testName === undefined) {
+    testName = (object.id || "An anonymous " + object.tagName) + " has " + 
+      JSON.stringify(targets) + " at " + time; 
+  }
   checkStack.push(new CheckStore(object, targets, time, testName, isRefTest));
 }
 
