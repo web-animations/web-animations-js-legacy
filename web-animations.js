@@ -207,7 +207,6 @@ var Player = function(token, source, timeline) {
   this._pauseTime = undefined;
   this._playbackRate = 1.0;
 
-  this.source.timeDrift = 0.0;
   this._update();
 
   PLAYERS.push(this);
