@@ -178,4 +178,14 @@ addEventListener('load', function() {
   });
 });
 
+// Test that TimedItem is updated immediately on calling Timeline.play() after
+// the timeline starts.
+addEventListener('load', function() {
+  var animation4 = new Animation(document.getElementById("anim"),
+      {left: "100px"});
+  check(animation4.localTime, null, "localTime should be null before playing");
+  document.timeline.play(animation4);
+  check(animation4.localTime, 0, "localTime should be set by playing");
+});
+
 </script>
