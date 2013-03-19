@@ -63,6 +63,11 @@ var checkNotEqual = function(actual, unexpected, failureMessage) {
   }
 };
 
+// Don't use a local named requestAnimationFrame, to avoid potential problems
+// with hoisting.
+var raf = window.requestAnimationFrame || window.webkitRequestAnimationFrame ||
+    window.mozRequestAnimationFrame || window.msRequestAnimationFrame;
+
 var animation = new Animation(document.getElementById("anim"), {left: "100px"});
 var dt = document.timeline;
 
@@ -148,7 +153,7 @@ addEventListener('load', function() {
   }, 0);
 });
 
-// Test that setting currentTime has no effect until the timeline starts.
+// Test that setting startTime has no effect until the timeline starts.
 var player6 = dt.play(animation);
 player6.startTime = 42;
 check(player6.currentTime, 0,
@@ -158,6 +163,19 @@ addEventListener('load', function() {
     check(player6.currentTime < -41, true,
         "updates to startTime should take effect after Timeline starts");
   }, 0);
+});
+
+// Test that a Player's TimedItem gets a null inherited time until the
+// timeline starts.
+var animation1 = new Animation(document.getElementById("anim"), {left: "100px"});
+dt.play(animation1);
+check(animation1.currentTime, null, "TimedItem's inherited time, and thus " +
+    "currentTime should be null before Timeline starts");
+addEventListener('load', function() {
+  raf(function() {
+    checkNotEqual(animation1.currentTime, null, "TimedItem's inherited time " +
+        "and thus currentTime should not be null after Timeline starts");
+  });
 });
 
 </script>

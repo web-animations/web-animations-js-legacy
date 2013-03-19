@@ -230,12 +230,14 @@ Player.prototype = {
   get source() {
     return this._source;
   },
+  // This is the effective current time.
   set currentTime(currentTime) {
     this._currentTime = currentTime;
   },
   get currentTime() {
     return this._currentTime === null ? 0 : this._currentTime;
   },
+  // This is the current time.
   set _currentTime(currentTime) {
     // This seeks by updating _drift. It does not affect the startTime.
     if (isDefined(this._pauseTime)) {
@@ -290,7 +292,7 @@ Player.prototype = {
   },
   _update: function() {
     if (this.source !== null) {
-      this.source._updateInheritedTime(this.currentTime);
+      this.source._updateInheritedTime(this._currentTime);
     }
   },
   _isPastEndOfActiveInterval: function() {
@@ -348,7 +350,8 @@ TimedItem.prototype = {
         this.parentGroup.iterationTime : 0;
   },
   get currentTime() {
-    return this._inheritedTime - this._startTime - this.timeDrift;
+    return this._inheritedTime === null ?
+        null : this._inheritedTime - this._startTime - this.timeDrift;
   },
   set currentTime(seekTime) {
     this.timeDrift = this._inheritedTime - this._startTime - seekTime;
