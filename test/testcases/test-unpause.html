@@ -69,19 +69,26 @@ var testPauseUnpause = function(player) {
         "unpausing");
 };
 
-// Test that a Player's currentTime is correct after pausing and unpausing.
-testPauseUnpause(document.timeline.play(new Animation(
-    document.getElementById("anim"), {left: ["100px", "200px"]}, 1.0)));
+// Test that a Player's currentTime is correct after pausing and unpausing,
+// with a zero startTime.
+addEventListener("load", function() {
+  testPauseUnpause(document.timeline.play(new Animation(
+      document.getElementById("anim"), {left: ["100px", "200px"]}, 1.0)));
+});
 
 // Test that a Player's currentTime is correct after pausing and unpausing, with
 // a non-zero startTime.
-onload = function() {
+addEventListener("load", function() {
   setTimeout(function() {
     var player = document.timeline.play(new Animation(
         document.getElementById("anim"), {left: ["100px", "200px"]}, 1.0));
     check(player.startTime > 0, true);
     testPauseUnpause(player);
   }, 0);
-};
+});
+
+// TODO: Test pausing and unpausing with a forced currentTime while the
+// Timeline is not started. See
+// https://github.com/web-animations/web-animations-js/issues/167
 
 </script>
