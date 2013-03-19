@@ -260,6 +260,7 @@ Player.prototype = {
     // This seeks by updating _startTime and hence the currentTime. It does not
     // affect _drift.
     this._startTime = startTime;
+    this._update();
     maybeRestartAnimation();
   },
   get startTime() {

@@ -197,4 +197,13 @@ addEventListener('load', function() {
       "Updates to Player.currentTime should take immediate effect");
 });
 
+// Test that updates to startTime take immediate effect.
+addEventListener('load', function() {
+  var animation6 = new Animation(document.getElementById("anim"),
+      {left: "100px"});
+  document.timeline.play(animation6).startTime = 42;
+  check(animation6.localTime < -41, true,
+      "Updates to Player.startTime should take immediate effect");
+});
+
 </script>
