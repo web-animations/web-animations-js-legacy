@@ -347,7 +347,7 @@ TimedItem.prototype = {
         this.parentGroup !== null && this.parentGroup.iterationTime !== null ?
         this.parentGroup.iterationTime : 0;
   },
-  get currentTime() {
+  get localTime() {
     return this._inheritedTime === null ?
         null : this._inheritedTime - this._startTime;
   },
@@ -440,16 +440,16 @@ TimedItem.prototype = {
     this._updateTimeMarkers();
   },
   _updateAnimationTime: function() {
-    if (this.currentTime < this.timing.startDelay) {
+    if (this.localTime < this.timing.startDelay) {
       if (this.timing.fillMode === 'backwards' ||
           this.timing.fillMode === 'both') {
         this.animationTime = 0;
       } else {
         this.animationTime = null;
       }
-    } else if (this.currentTime <=
+    } else if (this.localTime <=
         this.timing.startDelay + this.animationDuration) {
-      this.animationTime = this.currentTime - this.timing.startDelay;
+      this.animationTime = this.localTime - this.timing.startDelay;
     } else {
       if (this.timing.fillMode === 'forwards' ||
           this.timing.fillMode === 'both') {
@@ -462,7 +462,7 @@ TimedItem.prototype = {
   _updateIterationParamsZeroDuration: function() {
     this.iterationTime = 0;
     var isAtEndOfIterations = this.timing.iterationCount != 0 &&
-        this.currentTime >= this.timing.startDelay;
+        this.localTime >= this.timing.startDelay;
     this.currentIteration = isAtEndOfIterations ?
        this._floorWithOpenClosedRange(this.timing.iterationStart +
            this.timing.iterationCount, 1.0) :
@@ -518,7 +518,7 @@ TimedItem.prototype = {
     }
   },
   _updateTimeMarkers: function() {
-    if (this.currentTime === null) {
+    if (this.localTime === null) {
       this.animationTime = null;
       this.iterationTime = null;
       this.currentIteration = null;
@@ -678,7 +678,7 @@ Animation.prototype = createObject(TimedItem.prototype, {
     var funcDescr = this.animationEffect instanceof AnimationEffect ?
         this.animationEffect.toString() : 'Custom scripted function';
     return 'Animation ' + this.startTime + '-' + this.endTime + ' (' +
-        this.currentTime + ') ' + funcDescr;
+        this.localTime + ') ' + funcDescr;
   }
 });
 
@@ -867,7 +867,7 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
   },
   toString: function() {
     return this.type + ' ' + this.startTime + '-' + this.endTime + ' (' +
-        this.currentTime + ') ' + ' [' +
+        this.localTime + ') ' + ' [' +
         this.children.map(function(a) { return a.toString(); }) + ']'
   },
 });

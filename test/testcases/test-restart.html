@@ -100,10 +100,10 @@ raf(function() {
   });
 });
 
-// Check that TimedItem.currentTime is read-only.
+// Check that TimedItem.localTime is read-only.
 var anim3 = new Animation(document.getElementById("anim2"), animFunc, 1.0);
 document.timeline.play(anim3);
-anim3.currentTime = 0;
-check(anim3.currentTime, null, "TimedItem.currentTime should be read-only");
+anim3.localTime = 0;
+check(anim3.localTime, null, "TimedItem.localTime should be read-only");
 
 </script>

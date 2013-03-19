@@ -169,12 +169,12 @@ addEventListener('load', function() {
 // timeline starts.
 var animation1 = new Animation(document.getElementById("anim"), {left: "100px"});
 dt.play(animation1);
-check(animation1.currentTime, null, "TimedItem's inherited time, and thus " +
-    "currentTime should be null before Timeline starts");
+check(animation1.localTime, null, "TimedItem's inherited time, and thus " +
+    "localTime should be null before Timeline starts");
 addEventListener('load', function() {
   raf(function() {
-    checkNotEqual(animation1.currentTime, null, "TimedItem's inherited time " +
-        "and thus currentTime should not be null after Timeline starts");
+    checkNotEqual(animation1.localTime, null, "TimedItem's inherited time " +
+        "and thus localTime should not be null after Timeline starts");
   });
 });
 
