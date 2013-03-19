@@ -1,0 +1,12 @@
+check(document.querySelectorAll('.anim')[0],{'x':'0px'},0);
+check(document.querySelectorAll('.anim2')[0],{'ctm':'{1, 0, 0, 1, 0, 0}'},0);
+check(document.querySelectorAll('.anim')[0],{'x':'133.33333333333331px'},1);
+check(document.querySelectorAll('.anim2')[0],{'ctm':'{1, 0, 0, 1, 60, 60}'},1);
+check(document.querySelectorAll('.anim')[0],{'x':'316.66666666666663px'},2);
+check(document.querySelectorAll('.anim2')[0],{'ctm':'{0.9238795325112867, 0.3826834323650898, -0.3826834323650898, 0.9238795325112867, 140.78728948150396, 128.61037722821453}'},2);
+check(document.querySelectorAll('.anim')[0],{'x':'408px'},3);
+check(document.querySelectorAll('.anim2')[0],{'ctm':'{0.8413776741499454, 0.6112966623841721, -0.6112966623841721, 0.8413776741499454, 173.12461179749812, 165.16026908252903}'},3);
+check(document.querySelectorAll('.anim')[0],{'x':'362px'},4);
+check(document.querySelectorAll('.anim2')[0],{'ctm':'{0.8820709200960359, 0.753359736063013, -0.753359736063013, 0.8820709200960359, 138.79644160680127, 134.30264595737245}'},4);
+check(document.querySelectorAll('.anim')[0],{'x':'312px'},5);
+check(document.querySelectorAll('.anim2')[0],{'ctm':'{1.1002631123499285, 0.7993879431177634, -0.7993879431177634, 1.1002631123499285, 101.1246117974981, 93.16026908252903}'},5);
