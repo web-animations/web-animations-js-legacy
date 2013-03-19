@@ -147,16 +147,22 @@ function generate(){
     for(var i = 0; i < checks[x].object.length; i++){
       var propsPrint = "{";
       for(var j in checks[x].properties){
-        var isSVG = propertyIsSVGAttrib(j, checks[x].object[i]);
+        var p = checks[x].properties[j];
+        var isSVG = propertyIsSVGAttrib(p, checks[x].object[i]);
 
         if(isSVG) var props = checks[x].object[i].attributes;
         else var props = checks[x].object[i].currentStyle ||
             getComputedStyle(checks[x].object[i], null);
 
-        var p = checks[x].properties[j];
-        var pp = p;
-        if (p == 'transform') pp = features.transformProperty;
-        var value = isSVG ? props[pp].value : props[pp];
+        if (p == 'ctm') {
+          var ctm = checks[x].object[i].getCTM();
+          var value = '{' + ctm.a + ', ' + ctm.b + ', ' + ctm.c + ', ' + ctm.d + ', ' + ctm.e + ', ' + ctm.f + '}'
+        } else if (p == 'transform') {
+          var value = props[features.transformProperty];
+        } else {
+          var value = isSVG ? props[p].value : props[p];
+        }
+
         propsPrint += "'"+ p + "':'" + value + "'";
         if (j < checks[x].properties.length -1) propsPrint += ",";
       }
