@@ -230,12 +230,14 @@ Player.prototype = {
   get source() {
     return this._source;
   },
+  // This is the effective current time.
   set currentTime(currentTime) {
     this._currentTime = currentTime;
   },
   get currentTime() {
     return this._currentTime === null ? 0 : this._currentTime;
   },
+  // This is the current time.
   set _currentTime(currentTime) {
     // This seeks by updating _drift. It does not affect the startTime.
     if (isDefined(this._pauseTime)) {
@@ -290,7 +292,7 @@ Player.prototype = {
   },
   _update: function() {
     if (this.source !== null) {
-      this.source._updateInheritedTime(this.currentTime);
+      this.source._updateInheritedTime(this._currentTime);
     }
   },
   _isPastEndOfActiveInterval: function() {
@@ -330,8 +332,6 @@ var TimedItem = function(token, timing, parentGroup) {
   }
   this._parentGroup = this._sanitizeParent(parentGroup);
 
-  this.timeDrift = 0;
-
   if (this.parentGroup) {
     // This will set our inheritedTime via _childrenStateModified().
     this.parentGroup._addInternal(this);
@@ -347,12 +347,9 @@ TimedItem.prototype = {
         this.parentGroup !== null && this.parentGroup.iterationTime !== null ?
         this.parentGroup.iterationTime : 0;
   },
-  get currentTime() {
-    return this._inheritedTime - this._startTime - this.timeDrift;
-  },
-  set currentTime(seekTime) {
-    this.timeDrift = this._inheritedTime - this._startTime - seekTime;
-    this._updateTimeMarkers();
+  get localTime() {
+    return this._inheritedTime === null ?
+        null : this._inheritedTime - this._startTime;
   },
   get startTime() {
     return this._startTime;
@@ -378,8 +375,7 @@ TimedItem.prototype = {
     return repeatedDuration / Math.abs(this.timing.playbackRate);
   },
   get endTime() {
-    return this._startTime + this.animationDuration + this.timing.startDelay +
-        this.timeDrift;
+    return this._startTime + this.animationDuration + this.timing.startDelay;
   },
   get parentGroup() {
     return this._parentGroup;
@@ -413,7 +409,6 @@ TimedItem.prototype = {
       this.parentGroup.remove(this.parentGroup.indexOf(this), 1);
     }
     this._parentGroup = parentGroup;
-    this.timeDrift = 0;
     // In the case of a SeqGroup parent, _startTime will be updated by
     // TimingGroup.splice().
     if (this.parentGroup === null || this.parentGroup.type !== 'seq') {
@@ -436,7 +431,7 @@ TimedItem.prototype = {
     this._updateTimeMarkers();
   },
   // We push time down to children. We could instead have children pull from
-  // above, but this is tricky because a TImedItem may use either a parent
+  // above, but this is tricky because a TimedItem may use either a parent
   // TimedItem or an Player. This requires either logic in
   // TimedItem, or for TimedItem and Player to implement Timeline
   // (or an equivalent), both of which are ugly.
@@ -444,24 +439,17 @@ TimedItem.prototype = {
     this._inheritedTime = inheritedTime;
     this._updateTimeMarkers();
   },
-  _updateItemTime: function() {
-    if (this._inheritedTime !== null) {
-      this.itemTime = this._inheritedTime - this._startTime - this.timeDrift;
-    } else {
-      this.itemTime = null;
-    }
-  },
   _updateAnimationTime: function() {
-    if (this.itemTime < this.timing.startDelay) {
+    if (this.localTime < this.timing.startDelay) {
       if (this.timing.fillMode === 'backwards' ||
           this.timing.fillMode === 'both') {
         this.animationTime = 0;
       } else {
         this.animationTime = null;
       }
-    } else if (this.itemTime <=
+    } else if (this.localTime <=
         this.timing.startDelay + this.animationDuration) {
-      this.animationTime = this.itemTime - this.timing.startDelay;
+      this.animationTime = this.localTime - this.timing.startDelay;
     } else {
       if (this.timing.fillMode === 'forwards' ||
           this.timing.fillMode === 'both') {
@@ -474,7 +462,7 @@ TimedItem.prototype = {
   _updateIterationParamsZeroDuration: function() {
     this.iterationTime = 0;
     var isAtEndOfIterations = this.timing.iterationCount != 0 &&
-        this.itemTime >= this.timing.startDelay;
+        this.localTime >= this.timing.startDelay;
     this.currentIteration = isAtEndOfIterations ?
        this._floorWithOpenClosedRange(this.timing.iterationStart +
            this.timing.iterationCount, 1.0) :
@@ -530,8 +518,7 @@ TimedItem.prototype = {
     }
   },
   _updateTimeMarkers: function() {
-    this._updateItemTime();
-    if (this.itemTime === null) {
+    if (this.localTime === null) {
       this.animationTime = null;
       this.iterationTime = null;
       this.currentIteration = null;
@@ -691,7 +678,7 @@ Animation.prototype = createObject(TimedItem.prototype, {
     var funcDescr = this.animationEffect instanceof AnimationEffect ?
         this.animationEffect.toString() : 'Custom scripted function';
     return 'Animation ' + this.startTime + '-' + this.endTime + ' (' +
-        this.timeDrift + ' @' + this.currentTime + ') ' + funcDescr;
+        this.localTime + ') ' + funcDescr;
   }
 });
 
@@ -880,7 +867,7 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
   },
   toString: function() {
     return this.type + ' ' + this.startTime + '-' + this.endTime + ' (' +
-        this.timeDrift + ' @' + this.currentTime + ') ' + ' [' +
+        this.localTime + ') ' + ' [' +
         this.children.map(function(a) { return a.toString(); }) + ']'
   },
 });

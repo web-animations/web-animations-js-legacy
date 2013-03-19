@@ -93,7 +93,7 @@ check(parentGroup.children[0], child, "Parent should have correct child");
 var newParent = new ParGroup([child]);
 check(child.parentGroup, newParent,
     "Child's parentGroup should be updated to new parent");
-check(parent.children.length, 0,
+check(parentGroup.children.length, 0,
     "Previous parent should no longer have children");
 check(newParent.children.length, 1, "New parent should now have 1 child");
 check(newParent.children[0], child, "New parent should now have correct child");
