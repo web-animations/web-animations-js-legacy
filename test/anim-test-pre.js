@@ -732,7 +732,11 @@ function assert_properties(test) {
     else
       var outputPropName = propName;
 
-    if (isSVG) {
+    if (propName == 'ctm') {
+      var ctm = object.getCTM();
+      var curr = '{' + ctm.a + ', ' + ctm.b + ', ' + ctm.c + ', ' + ctm.d + ', ' + ctm.e + ', ' + ctm.f + '}';
+      var target = propertyValue;
+    } else if (isSVG) {
       var target = targetStyle[propName].value;
       var curr = currentStyle[propName].value;
     } else {
