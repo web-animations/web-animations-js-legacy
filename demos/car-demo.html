@@ -139,7 +139,7 @@
   new Animation(document.querySelector("#redLight"), {"background-color": lightOff}, {duration: 0.5}, go);
   new Animation(document.querySelector("#greenLight"), {"background-color": "green"}, {duration: 0.5}, go);
 
-  new Animation(document.querySelector(".car"), {left: "2000px"}, {duration: 5, timingFunction: new TimingFunction("ease-in")}, sgroup);
+  new Animation(document.querySelector(".car"), {left: "2000px"}, {duration: 5, timingFunction: "ease-in"}, sgroup);
 
   var maybe = new ParGroup([], {startDelay: 0.25}, sgroup);
   new Animation(document.querySelector("#greenLight"), {"background-color": lightOff}, {duration: 0.5}, maybe);
@@ -149,7 +149,7 @@
   new Animation(document.querySelector("#orangeLight"), {"background-color": lightOff}, {duration: 0.5}, stop);
   new Animation(document.querySelector("#redLight"), {"background-color": "red"}, {duration: 0.5}, stop);
 
-  new Animation(document.querySelector(".car"), {left: ["-500px", "10px"]}, {duration: 2, timingFunction: new TimingFunction("ease-out")}, sgroup);
+  new Animation(document.querySelector(".car"), {left: ["-500px", "10px"]}, {duration: 2, timingFunction: "ease-out"}, sgroup);
 
   document.querySelector("#buttonA").addEventListener('mousedown', function() {
     document.timeline.play(sgroup);
