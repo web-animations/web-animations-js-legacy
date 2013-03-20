@@ -130,12 +130,12 @@ function second() {
 // STEP 2
 
 function third() {
-  a.timing.timingFunc = new TimingFunction('ease-in');
+  a.timing.timingFunc = TimingFunction.createFromString('ease-in');
   a.play();
 }
 
 function fourth() {
-  a.timing.timingFunc = new TimingFunction([0, 0.2,0.8, 1]);
+  a.timing.timingFunc = TimingFunction.createFromString('[0, 0.2,0.8, 1]');
   a.play();
 }
 
