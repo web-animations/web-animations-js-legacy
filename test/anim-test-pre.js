@@ -197,7 +197,7 @@ function setupTests(timeouts) {
   setTime.setAttribute("type", "text");
   setTime.value = "0.00";
   setTime.onfocus = function() { letUserInput(); };
-  setTime.onblur = function() { setTime(); };
+  setTime.onblur = function() { setCurrentTime(); };
 
   document.body.appendChild(optionBar);
   optionBar.appendChild(timeBar);
@@ -255,7 +255,7 @@ function letUserInput() {
 
 // Applies the inputted time to the animation and updates the testIndex so it
 // points to the next set of tests to run.
-function setTime() {
+function setCurrentTime() {
   setTestCurrentTime(Number(document.getElementById("setTime").value));
   resetTestIndex();
   userInput = false;
