@@ -103,7 +103,7 @@ function getSettings(){
     process(obProp);
     testLength = 0;
     window.frames[0].animTestRunner.players.forEach(function(player) {
-      testLength = Math.max(testLength, player.source.animationDuration);
+      testLength = Math.max(testLength, player.source.animationDuration + player.source.timing.startDelay);
     });
     pause();
     setTestCurrentTime(0);
@@ -174,7 +174,10 @@ function generate(){
   setTestCurrentTime(testCurrentTime + interval);
 
   // Schedule this function to be called on the next frame refresh
-  if(testCurrentTime < testLength){
+  // We actually want to run one extra test if the last one aligns
+  // exactly with testLength, as fillMode: none can change an
+  // animation value immediately after the animation finishes.
+  if(testCurrentTime <= testLength){
     setTimeout(generate, frameTime);
   } else if(!lastRun){
     lastRun = true;
