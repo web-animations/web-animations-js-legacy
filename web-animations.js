@@ -199,7 +199,6 @@ var Player = function(token, source, timeline) {
   if (token !== constructorToken) {
     throw new TypeError('Illegal constructor');
   }
-  this.source = source;
   this._timeline = timeline;
   this._startTime =
       this.timeline.currentTime === null ? 0 : this.timeline.currentTime;
@@ -207,8 +206,7 @@ var Player = function(token, source, timeline) {
   this._pauseTime = undefined;
   this._playbackRate = 1.0;
 
-  this.source.timeDrift = 0.0;
-  this._update();
+  this.source = source;
 
   PLAYERS.push(this);
   maybeRestartAnimation();
@@ -225,6 +223,8 @@ Player.prototype = {
     this._source = source;
     if (isDefinedAndNotNull(this.source)) {
       this.source._attach(this);
+      this._update();
+      maybeRestartAnimation();
     }
   },
   get source() {
@@ -246,6 +246,7 @@ Player.prototype = {
       this._timeDrift = (this.timeline.currentTime - this.startTime) *
           this.playbackRate - currentTime;
     }
+    this._update();
     maybeRestartAnimation();
   },
   get _currentTime() {
@@ -260,6 +261,7 @@ Player.prototype = {
     // This seeks by updating _startTime and hence the currentTime. It does not
     // affect _drift.
     this._startTime = startTime;
+    this._update();
     maybeRestartAnimation();
   },
   get startTime() {
@@ -712,7 +714,7 @@ var TimingGroup = function(token, type, children, timing, parentGroup) {
 TimingGroup.prototype = createObject(TimedItem.prototype, {
   _childrenStateModified: function() {
     // See _updateChildStartTimes().
-    this._isInOnChildrenStateModified = true;
+    this._isInChildrenStateModified = true;
 
     // We need to walk up and down the tree to re-layout. endTime and the
     // various durations (which are all calculated lazily) are the only
@@ -727,7 +729,7 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
     // Update child start times before walking down.
     this._updateChildStartTimes();
 
-    this._isInOnChildrenStateModified = false;
+    this._isInChildrenStateModified = false;
   },
   _updateInheritedTime: function(inheritedTime) {
     this._inheritedTime = inheritedTime;
@@ -751,7 +753,7 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
         child._startTime = cumulativeStartTime;
         // Avoid updating the child's inherited time and time markers if this is
         // about to be done in the down phase of _childrenStateModified().
-        if (!child._isInOnChildrenStateModified) {
+        if (!child._isInChildrenStateModified) {
           // This calls _updateTimeMarkers() on the child.
           child._updateInheritedTime(this.iterationTime);
         }
@@ -2605,7 +2607,16 @@ if (document.readyState == 'complete') {
   }
   load();
 } else {
-  addEventListener('load', load);
+  addEventListener('load', function() {
+    load();
+    if (usePerformanceTiming) {
+      // We use setTimeout() to clear cachedDocumentTimeMillis at the end of a
+      // frame, but this will not run until after other load handlers. We need
+      // those handlers to pick up the new value of clockMillis(), so we must
+      // clear the cached value.
+      cachedDocumentTimeMillis = undefined;
+    }
+  });
 }
 
 // A cached document time for use during the current callstack.
