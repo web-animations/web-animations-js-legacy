@@ -178,4 +178,43 @@ addEventListener('load', function() {
   });
 });
 
+// Test that TimedItem is updated immediately on calling Timeline.play() after
+// the timeline starts.
+addEventListener('load', function() {
+  var animation4 = new Animation(document.getElementById("anim"),
+      {left: "100px"});
+  check(animation4.localTime, null, "localTime should be null before playing");
+  document.timeline.play(animation4);
+  check(animation4.localTime, 0, "localTime should be set by playing");
+});
+
+// Test that updates to currentTime take immediate effect.
+addEventListener('load', function() {
+  var animation5 = new Animation(document.getElementById("anim"),
+      {left: "100px"});
+  document.timeline.play(animation5).currentTime = 42;
+  check(animation5.localTime, 42,
+      "Updates to Player.currentTime should take immediate effect");
+});
+
+// Test that updates to startTime take immediate effect.
+addEventListener('load', function() {
+  var animation6 = new Animation(document.getElementById("anim"),
+      {left: "100px"});
+  document.timeline.play(animation6).startTime = 42;
+  check(animation6.localTime < -41, true,
+      "Updates to Player.startTime should take immediate effect");
+});
+
+// Test that updates to source take immediate effect.
+addEventListener('load', function() {
+  var player = document.timeline.play(
+      new Animation(document.getElementById("anim"), {left: "100px"}));
+  var animation7 = new Animation(document.getElementById("anim"),
+      {left: "100px"});
+  player.source = animation7;
+  check(animation7.localTime, 0,
+      "Updates to Player.source should take immediate effect");
+});
+
 </script>
