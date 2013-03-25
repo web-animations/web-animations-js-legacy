@@ -24,19 +24,33 @@
 
 (function() {
 
-if (!document.timeline) {
-  console.error('Cant find timeline');
-  return;
-}
-
 var PLAYERS = [];
 
-var timelinePlay = document.timeline.play;
-document.timeline.play = function(item) {
-  var player = timelinePlay.call(document.timeline, item);
-  PLAYERS.push(player);
-  return player;
-};
+(function() {
+  var timeline = document.timeline;
+  var originalPlay = timeline ? timeline.play : null;
+
+  function play(item) { 
+    var player = originalPlay.call(document.timeline, item);
+    PLAYERS.push(player);
+    return player;
+  }
+
+  if (timeline) {
+    timeline.play = play;
+  } else {
+    Object.defineProperty(document, 'timeline', {
+      get: function() {
+        return timeline;
+      },
+      set: function(value) {
+        timeline = value;
+        originalPlay = timeline.play;
+        timeline.play = play;
+      }
+    });
+  }
+})();
 
 // Boolean flag for whether the program is running in automatic mode
 var runInAutoMode;
