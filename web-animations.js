@@ -2695,11 +2695,7 @@ var maybeRestartAnimation = function() {
 };
 
 var DOCUMENT_TIMELINE = new Timeline(constructorToken);
-Object.defineProperty(document, 'timeline', configureDescriptor({
-  get: function() {
-    return DOCUMENT_TIMELINE;
-  },
-}));
+document.timeline = DOCUMENT_TIMELINE;
 
 window.Element.prototype.animate = function(effect, timing) {
   var anim = new Animation(this, effect, timing);
