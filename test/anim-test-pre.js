@@ -822,7 +822,13 @@ var loadScript = function(src) {
 loadScript('../testharness/testharness.js');
 loadScript('../testharness/testharnessreport.js');
 loadScript('../anim-test-setup.js');
-loadScript(location.pathname.replace('.html', '-checks.js'));
+
+// Don't try to load the -checks.js file if the script tag for anim-test-pre
+// has a nochecks attribute.
+var thisScript = document.querySelector("script[src$='anim-test-pre.js']");
+if (thisScript && thisScript.getAttribute('nochecks') === null) {
+  loadScript(location.pathname.replace('.html', '-checks.js'));
+}
 
 window.addEventListener('load', function() {
   if (window.parent.location.pathname.match('test-generator.html$')) {
