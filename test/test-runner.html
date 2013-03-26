@@ -32,12 +32,13 @@ body{
 <div id="results"></div>
 
 <script>
-var resultsOutputted = 0;
-var currentTest = 0;
 // Stops the test result finish message being sent repeatedly
 var hasFinished = false;
 
-var passedResults = 0;
+var currentTest = 0;
+
+var testCasesRun = 0;
+var testCasesPassed = 0;
 
 var runID = window.location.href.split("?")[1];
 
@@ -69,8 +70,8 @@ function reRunTests(){
   newResults = document.createElement('div');
   newResults.id = "results";
   document.body.appendChild(newResults);
-  resultsOutputted = 0;
-  passedResults = 0;
+  testCasesRun = 0;
+  testCasesPassed = 0;
   currentTest = 0;
   hasFinished = false;
   window.frame.testResults = undefined;
@@ -82,23 +83,23 @@ function reRunTests(){
 function checkForResults(){
   if (window.frames[0].animTestRunner && window.frames[0].animTestRunner.results) {
     logResults(window.frames[0].animTestRunner.results);
-    resultsOutputted++;
+    testCasesRun++;
     window.frames[0].testResults = undefined;
     if (currentTest < tests.length-1) updateState(1);
   }
-  if (resultsOutputted < tests.length)
+  if (testCasesRun < tests.length)
       setTimeout(checkForResults, 100);
   else {
      var finishPacket = {};
      finishPacket["type"] = "finished";
-     finishPacket["testsPassed"] = passedResults + " out of " + resultsOutputted;
+     finishPacket["testsPassed"] = testCasesPassed + " out of " + testCasesRun;
      finishPacket["testRunId"] = runID;
      hasFinished = true;
      postResultsToServer(finishPacket);
   }
 }
 
-function logResults (results){
+function logResults(results){
   var testResult = {};
   testResult["type"] = "result";
   testResult["testRunID"] = runID;
@@ -109,14 +110,12 @@ function logResults (results){
   newTestDiv.id = tests[currentTest];
   newTestDiv.innerHTML = tests[currentTest];
   newTestDiv.onclick = function(){ showDetails(this); };
-  var grade = "pass";
-  for (var x in results){
-    if (results[x].status != 0) grade = "fail";
-  }
-  if (grade == "pass") passedResults++;
+  var passed = results.filter(function(result) { return result.status == 0 }).length;
+  var failed = results.length - passed;
+  if (failed == 0 && passed > 0) testCasesPassed++;
 
   var newResultsDiv = document.createElement('div');
-  if (grade == "pass"){
+  if (failed == 0 && passed > 0){
     newTestDiv.style.backgroundColor = "YellowGreen";
     newResultsDiv.style.backgroundColor = "LightGreen";
   } else {
@@ -136,10 +135,12 @@ function logResults (results){
     }
 
     newResultsDiv.innerHTML += results[x].name + " ";
-    if (results[x].status == 0) grade = "pass";
-    else grade = "fail";
+    var grade = 'fail';
+    if (results[x].status == 0) {
+      grade = "pass";
+    }
     newResultsDiv.innerHTML += grade + " ";
-    if (results[x].message != null){
+    if (results[x].message != null) {
       newResultsDiv.innerHTML += results[x].message;
     }
     newResultsDiv.innerHTML += "<br>";
