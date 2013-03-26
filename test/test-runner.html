@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<script src="testcases.js"></script>
+<!DOCTYPE html>
 <style>
 iframe {
   width: 800px;
@@ -23,11 +23,11 @@ iframe {
 <button id=prev-button onclick="updateState(-1)">Prev</button>
 <button id=reload-button onclick="updateState()">Reload</button>
 <button id=next-button onclick="updateState(1)">Next</button>
-<button id=Auto-Run onclick="reRunTests()">Auto Run Tests</button><br>
-<div id="test-name"></div>
+<div><span id="test-status"></span>: <a id="test-link"></a></div>
 <iframe id = "frame"></iframe>
 <div id="results"></div>
 
+<script src="testcases.js"></script>
 <script>
 // Stops the test result finish message being sent repeatedly
 var hasFinished = false;
@@ -52,29 +52,16 @@ function updateState(change) {
     currentTest += change;
   }
   var test = tests[currentTest];
+  var src = 'testcases/' + test;
 
-  document.querySelector('#test-name').innerHTML = (currentTest + 1) +
-      ' of ' + tests.length + ': ' + test;
-  document.querySelector('iframe').src = 'testcases/' + test;
+  document.querySelector('#test-status').innerHTML = (currentTest + 1) +
+      ' of ' + tests.length;
+  document.querySelector('#test-link').textContent = test;
+  document.querySelector('#test-link').href = src;
+  document.querySelector('iframe').src = src;
   document.querySelector('#prev-button').disabled = currentTest <= 0;
   document.querySelector('#next-button').disabled =
       currentTest >= tests.length - 1;
-}
-
-function reRunTests(){
-  var a = document.getElementById("results");
-  a.parentNode.removeChild(a);
-  newResults = document.createElement('div');
-  newResults.id = "results";
-  document.body.appendChild(newResults);
-  testCasesRun = 0;
-  testCasesPassed = 0;
-  currentTest = 0;
-  hasFinished = false;
-  window.frame.testResults = undefined;
-  runID = createNewTestRun(sha1);
-  updateState();
-  checkForResults();
 }
 
 function checkForResults(){
