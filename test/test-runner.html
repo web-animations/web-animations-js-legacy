@@ -19,31 +19,52 @@ iframe {
   width: 800px;
   height: 600px;
 }
+.fail-text {
+  color: red;
+}
+.fail-result {
+  background: #FFCCCC;
+}
 </style>
-<button id=prev-button onclick="updateState(-1)">Prev</button>
-<button id=reload-button onclick="updateState()">Reload</button>
-<button id=next-button onclick="updateState(1)">Next</button>
+<button id=prev-button onclick="updateStateManual(-1)">Prev</button>
+<button id=reload-button onclick="updateStateManual()">Reload</button>
+<button id=next-button onclick="updateStateManual(1)">Next</button>
 <div><span id="test-status"></span>: <a id="test-link"></a></div>
-<iframe id = "frame"></iframe>
+<iframe id="test-frame"></iframe>
 <div id="results"></div>
 
 <script src="testcases.js"></script>
 <script>
-// Stops the test result finish message being sent repeatedly
-var hasFinished = false;
+(function() {
+
+var autoAdvance = true;
 
 var currentTest = 0;
+var currentTestStart;
 
 var testCasesRun = 0;
 var testCasesPassed = 0;
 
 var runID = window.location.href.split("?")[1];
+var checkForResultsTimeout;
 
-checkForResults();
+document.querySelector('#test-frame').addEventListener('load', function() {
+  checkForResults();
+});
 updateState();
+
+function now() {
+  if (window.performance && window.performance.now) return window.performance.now();
+  return Date.now();
+}
 
 function postResultsToServer(resultObject) {
   // TODO: post the results somewhere
+}
+
+function updateStateManual(change) {
+  autoAdvance = false;
+  updateState(change);
 }
 
 function updateState(change) {
@@ -54,62 +75,81 @@ function updateState(change) {
   var test = tests[currentTest];
   var src = 'testcases/' + test;
 
+  clearTimeout(checkForResultsTimeout);
+  currentTestStart = now();
   document.querySelector('#test-status').innerHTML = (currentTest + 1) +
       ' of ' + tests.length;
   document.querySelector('#test-link').textContent = test;
   document.querySelector('#test-link').href = src;
-  document.querySelector('iframe').src = src;
+  document.querySelector('#test-frame').src = src;
   document.querySelector('#prev-button').disabled = currentTest <= 0;
   document.querySelector('#next-button').disabled =
       currentTest >= tests.length - 1;
 }
 
-function checkForResults(){
-  if (window.frames[0].animTestRunner && window.frames[0].animTestRunner.results) {
-    logResults(window.frames[0].animTestRunner.results);
-    testCasesRun++;
-    window.frames[0].testResults = undefined;
-    if (currentTest < tests.length-1) updateState(1);
+function checkForResults() {
+  if (!autoAdvance) {
+    return;
   }
-  if (testCasesRun < tests.length)
-      setTimeout(checkForResults, 100);
-  else {
-     var finishPacket = {};
-     finishPacket["type"] = "finished";
-     finishPacket["testsPassed"] = testCasesPassed + " out of " + testCasesRun;
-     finishPacket["testRunId"] = runID;
-     hasFinished = true;
-     postResultsToServer(finishPacket);
+  var testWindow = document.querySelector('#test-frame').contentWindow;
+  if (testWindow.animTestRunner && testWindow.animTestRunner.results) {
+    logResults(testWindow.animTestRunner.results);
+    testWindow.animTestRunner.results = null;
+    testCasesRun++;
+    if (currentTest < tests.length - 1) {
+      updateState(1);
+      return;
+    }
+  }
+
+  if (testCasesRun < tests.length) {
+    checkForResultsTimeout = setTimeout(checkForResults, 25);
+  } else {
+    var finishPacket = {};
+    finishPacket["type"] = "finished";
+    finishPacket["testsPassed"] = testCasesPassed + " out of " + testCasesRun;
+    finishPacket["testRunId"] = runID;
+    postResultsToServer(finishPacket);
   }
 }
 
 function logResults(results){
+  var duration = now() - currentTestStart;
   var testResult = {};
   testResult["type"] = "result";
   testResult["testRunID"] = runID;
   testResult["testName"] = tests[currentTest];
-  var asserts = {};
 
-  newTestDiv = document.createElement('div');
-  newTestDiv.id = tests[currentTest];
-  newTestDiv.innerHTML = tests[currentTest];
-  newTestDiv.onclick = function(){ showDetails(this); };
   var passed = results.filter(function(result) { return result.status == 0 }).length;
   var failed = results.length - passed;
   if (failed == 0 && passed > 0) testCasesPassed++;
 
-  var newResultsDiv = document.createElement('div');
-  if (failed == 0 && passed > 0){
-    newTestDiv.style.backgroundColor = "YellowGreen";
-    newResultsDiv.style.backgroundColor = "LightGreen";
-  } else {
-    newTestDiv.style.backgroundColor = "OrangeRed";
-    newResultsDiv.style.backgroundColor = "LightPink";
+  var newTestDiv = document.createElement('div');
+  newTestDiv.appendChild(document.createTextNode(tests[currentTest] + ': '));
+  if (results.length == 0) {
+    var failSpan = document.createElement('span');
+    failSpan.classList.add('fail-text');
+    failSpan.innerText = 'No tests! ';
+    newTestDiv.appendChild(failSpan);
+  }
+  if (failed > 0) {
+    var failSpan = document.createElement('span');
+    failSpan.classList.add('fail-text');
+    failSpan.innerText = passed + '/' + results.length + ' ';
+    newTestDiv.appendChild(failSpan);
+  }
+  newTestDiv.appendChild(document.createTextNode(Math.round(duration) + 'ms'));
+  newTestDiv.id = tests[currentTest];
+  newTestDiv.onclick = function(){ showDetails(this); };
+  if (failed > 0 || results.length == 0) {
+    newTestDiv.classList.add('fail-result');
   }
   document.getElementById("results").appendChild(newTestDiv);
 
+  var newResultsDiv = document.createElement('div');
   var i = 0;
   var numberOfAsserts = 0;
+  var asserts = {};
   for (var x in results){
     if(results[x].status != 0){
       asserts[i] = {};
@@ -154,7 +194,9 @@ function showDetails(object){
     // Show the test in the iframe
     for (var x = 0; (tests[x] != object.id) && (x < tests.length); x++);
     currentTest = x;
-    updateState();
+    updateStateManual();
   }
 }
+
+})();
 </script>
