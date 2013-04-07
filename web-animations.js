@@ -2092,52 +2092,380 @@ var transformREs = [
   buildMatcher('scaleY', 1, false, false, 1),
   buildMatcher('scaleZ', 1, false, false, 1),
   buildMatcher('scale3d', 3, false, false),
-  buildMatcher('perspective', 1, false, true)
+  buildMatcher('perspective', 1, false, true),
+  buildMatcher('matrix', 6, false, false)
 ];
+
+function decomposeMatrix(matrix) {
+  // this is only ever used on the perspective matrix, which has 0, 0, 0, 1 as
+  // last column
+  function determinant(m) {
+    return m[0][0] * m[1][1] * m[2][2] + 
+           m[1][0] * m[2][1] * m[0][2] +
+           m[2][0] * m[0][1] * m[1][2] -
+           m[0][2] * m[1][1] * m[2][0] -
+           m[1][2] * m[2][1] * m[0][0] -
+           m[2][2] * m[0][1] * m[1][0];
+  }
+
+  // this is only ever used on the perspective matrix, which has 0, 0, 0, 1 as
+  // last column
+  //
+  // from Wikipedia:
+  //
+  // [A B]^-1 = [A^-1 + A^-1B(D - CA^-1B)^-1CA^-1     -A^-1B(D - CA^-1B)^-1]
+  // [C D]      [-(D - CA^-1B)^-1CA^-1                (D - CA^-1B)^-1      ]
+  //
+  // Therefore
+  //
+  // [A [0]]^-1 = [A^-1       [0]]
+  // [C  1 ]      [ -CA^-1     1 ]
+  function inverse(m) {
+    var iDet = 1 / determinant(m);
+    var a = m[0][0], b = m[0][1], c = m[0][2];
+    var d = m[1][0], e = m[1][1], f = m[1][2];
+    var g = m[2][0], h = m[2][1], k = m[2][2];
+    var Ainv = [[(e*k - f*h) * iDet, (c*h - b*k) * iDet, (b*f - c*e) * iDet, 0],
+                [(f*g - d*k) * iDet, (a*k - c*g) * iDet, (c*d - a*f) * iDet, 0],
+                [(d*h - e*g) * iDet, (g*b - a*h) * iDet, (a*e - b*d) * iDet, 0]
+               ];
+    var lastRow = []
+    for (var i = 0; i < 3; i++) {
+      var val = 0;
+      for (var j = 0; j < 3; j++) {
+        val += m[3][j] * Ainv[j][i];
+      }
+      lastRow.push(val);
+    }
+    lastRow.push(1);
+    Ainv.push(lastRow);
+    return Ainv;
+  }
+
+  function transposeMatrix4(m) {
+    return [[m[0][0], m[1][0], m[2][0], m[3][0]],
+            [m[0][1], m[1][1], m[2][1], m[3][1]],
+            [m[0][2], m[1][2], m[2][2], m[3][2]],
+            [m[0][3], m[1][3], m[2][3], m[3][3]]];
+  }
+
+  function multVecMatrix(v, m) {
+    var result = [];
+    for (var i = 0; i < 4; i++) {
+      var val = 0;
+      for (var j = 0; j < 4; j++) {
+        val += v[j] * m[j][i];
+      }
+      result.push(val);
+    }
+    return result;
+  }
+
+  function normalize(v) {
+    var len = length(v);
+    return [v[0] / len, v[1] / len, v[2] / len];
+  }
+
+  function length(v) {
+    return Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+  }
+
+  function combine(v1, v2, v1s, v2s) {
+    return [v1s * v1[0] + v2s * v2[0], v1s * v1[1] + v2s * v2[1], 
+            v1s * v1[2] + v2s * v2[2]];
+  }
+
+  function cross(v1, v2) {
+    return [v1[1] * v2[2] - v1[2] * v2[1],
+            v1[2] * v2[0] - v1[0] * v2[2],
+            v1[0] * v2[1] - v1[1] * v2[0]];
+  }
+
+  var m3d = [[matrix[0], matrix[1], 0, 0],
+             [matrix[2], matrix[3], 0, 0],
+             [0,         0,         1, 0],
+             [matrix[4], matrix[5], 0, 1]];
+
+  // skip normalization step as m3d[3][3] should always be 1
+  if (m3d[3][3] != 1) {
+    throw 'attempt to decompose non-normalized matrix';
+  }
+
+  var perspectiveMatrix = m3d.concat(); // copy m3d
+  for (var i = 0; i < 3; i++)
+    perspectiveMatrix[i][3] = 0;
+
+  if (determinant(perspectiveMatrix) == 0)
+    return false;
+
+  var rhs = [];
+
+  if (m3d[0][3] != 0 || m3d[1][3] != 0 || m3d[2][3] != 0) {
+    rhs.push(m3d[0][3]);
+    rhs.push(m3d[1][3]);
+    rhs.push(m3d[2][3]);
+    rhs.push(m3d[3][3]);
+
+    var inversePerspectiveMatrix = inverse(perspectiveMatrix);
+    var transposedInversePerspectiveMatrix 
+        = transposeMatrix4(inversePerspectiveMatrix);
+    var perspective = multVecMatrix(rhs, transposedInversePerspectiveMatrix);
+  } else {
+    var perspective = [0, 0, 0, 1];
+  }
+
+  var translate = m3d[3].slice(0, 3);
+
+  var row = [];
+  row.push(m3d[0].slice(0, 3));
+  var scale = [];
+  scale.push(length(row[0]));
+  row[0] = normalize(row[0]);
+
+  var skew = [];
+  row.push(m3d[1].slice(0, 3));
+  skew.push(dot(row[0], row[1]));
+  row[1] = combine(row[1], row[0], 1.0, -skew[0]);
+
+  scale.push(length(row[1]));
+  row[1] = normalize(row[1]);
+  skew[0] /= scale[1];
+
+  row.push(m3d[2].slice(0, 3));
+  skew.push(dot(row[0], row[2]));
+  row[2] = combine(row[2], row[0], 1.0, -skew[1]);
+  skew.push(dot(row[1], row[2]));
+  row[2] = combine(row[2], row[1], 1.0, -skew[2]);
+
+  scale.push(length(row[2]));
+  row[2] = normalize(row[2]);
+  skew[1] /= scale[2];
+  skew[2] /= scale[2];
+
+  var pdum3 = cross(row[1], row[2]);
+  if (dot(row[0], pdum3) < 0) {
+    for (i = 0; i < 3; i++) {
+      scale[0] *= -1;
+      row[i][0] *= -1;
+      row[i][1] *= -1;
+      row[i][2] *= -1;
+    }
+  } 
+  
+  var quaternion = [
+    0.5 * Math.sqrt(Math.max(1 + row[0][0] - row[1][1] - row[2][2], 0)),
+    0.5 * Math.sqrt(Math.max(1 - row[0][0] + row[1][1] - row[2][2], 0)),
+    0.5 * Math.sqrt(Math.max(1 - row[0][0] - row[1][1] + row[2][2], 0)),
+    0.5 * Math.sqrt(Math.max(1 + row[0][0] + row[1][1] + row[2][2], 0))
+  ];
+
+  if (row[2][1] > row[1][2])
+    quaternion[0] = -quaternion[0];
+  if (row[0][2] > row[2][0])
+    quaternion[1] = -quaternion[1];
+  if (row[1][0] > row[0][1])
+    quaternion[2] = -quaternion[2];
+
+  return {translate: translate, scale: scale, skew: skew, 
+          quaternion: quaternion, perspective: perspective};
+}
+
+function dot(v1, v2) {
+  var result = 0;
+  for (var i = 0; i < v1.length; i++) {
+    result += v1[i] * v2[i];
+  }
+  return result;
+}
+
+function multiplyMatrices(a, b) {
+  return [a[0] * b[0] + a[2] * b[1], a[1] * b[0] + a[3] * b[1],
+          a[0] * b[2] + a[2] * b[3], a[1] * b[2] + a[3] * b[3],
+          a[0] * b[4] + a[2] * b[5] + a[4], a[1] * b[4] + a[3] * b[5] + a[5]];
+}
+
+function convertItemToMatrix(item) {
+  switch(item.t) {
+    case 'rotate':
+      var amount = item.d * Math.PI / 180;
+      return [Math.cos(amount), Math.sin(amount), 
+              -Math.sin(amount), Math.cos(amount), 0, 0];
+    case 'scale':
+      return [item.d[0], 0, 0, item.d[1], 0, 0];
+    // TODO: Work out what to do with non-px values.
+    case 'translate':
+      return [1, 0, 0, 1, item.d[0].px, item.d[1].px];
+    case 'matrix':
+      return item.d;
+  }
+}
+
+function convertToMatrix(transformList) {
+  return transformList.map(convertItemToMatrix).reduce(multiplyMatrices);
+}
+
+
+function composeMatrix(translate, scale, skew, quat, perspective) {
+  function multiply(a, b) {
+    var result = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]];
+    for (var i = 0; i < 4; i++) {
+      for (var j = 0; j < 4; j++) {
+        for (var k = 0; k < 4; k++) {
+          result[i][j] += b[i][k] * a[k][j];
+        }
+      }
+    }
+    return result;
+  }
+
+  var matrix = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]];
+
+  for (var i = 0; i < 4; i++) {
+    matrix[i][3] = perspective[i];
+  }
+
+  for (var i = 0; i < 3; i++) {
+    for (var j = 0; j < 3; j++) {
+      matrix[3][i] += translate[j] * matrix[j][i];
+    }
+  }
+
+  var x = quat[0], y = quat[1], z = quat[2], w = quat[3];
+  
+  var rotMatrix = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]];
+
+  rotMatrix[0][0] = 1 - 2 * (y * y + z * z);
+  rotMatrix[0][1] = 2 * (x * y - z * w);
+  rotMatrix[0][2] = 2 * (x * z + y * w);
+  rotMatrix[1][0] = 2 * (x * y + z * w);
+  rotMatrix[1][1] = 1 - 2 * (x * x + z * z);
+  rotMatrix[1][2] = 2 * (y * z - x * w);
+  rotMatrix[2][0] = 2 * (x * z - y * w);
+  rotMatrix[2][1] = 2 * (y * z + x * w);
+  rotMatrix[2][2] = 1 - 2 * (x * x + y * y);
+
+  matrix = multiply(matrix, rotMatrix);
+
+  var temp = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]];
+  if (skew[2]) {
+    temp[2][1] = skew[2];
+    matrix = multiply(matrix, temp);
+  }
+
+  if (skew[1]) {
+    temp[2][1] = 0;
+    temp[2][0] = skew[0];
+    matrix = multiply(matrix, temp);
+  }
+
+  for (i = 0; i < 3; i++) {
+    for (j = 0; j < 3; j++) {
+      matrix[i][j] *= scale[i];
+    }
+  }
+
+  return {t: 'matrix', d: [matrix[0][0], matrix[0][1],
+                           matrix[1][0], matrix[1][1],
+                           matrix[3][0], matrix[3][1]]};
+}
+
+function doItWithMatrices(from, to, f) {
+  var fromM = decomposeMatrix(convertToMatrix(from));
+  var toM = decomposeMatrix(convertToMatrix(to));
+
+  var product = dot(fromM.quaternion, toM.quaternion);
+  product = Math.max(Math.min(product, 1.0), -1.0);
+  if (product == 1.0) {
+    var quat = fromM.quaternion;
+  } else {
+    var theta = Math.acos(product);
+    var w = Math.sin(f * theta) * 1 / Math.sqrt(1 - product * product);
+
+    var quat = [];
+    for (var i = 0; i < 4; i++) {
+      quat.push(fromM.quaternion[i] * (Math.cos(f * theta) - product * w) +
+                toM.quaternion[i] * w);
+    }
+  }
+
+  var translate = interp(fromM.translate, toM.translate, f);
+  var scale = interp(fromM.scale, toM.scale, f);
+  var skew = interp(fromM.skew, toM.skew, f);
+  var perspective = interp(fromM.perspective, toM.perspective, f);
+
+  var result = composeMatrix(translate, scale, skew, quat, perspective);
+
+  return result;
+}
+
+function interpTransformValue(from, to, f) {
+  var type = from.t ? from.t : to.t;
+  switch(type) {
+    case 'rotate':
+    case 'rotateX':
+    case 'rotateY':
+    case 'rotateZ':
+    case 'scale':
+    case 'scaleX':
+    case 'scaleY':
+    case 'scaleZ':
+    case 'scale3d':
+    case 'skew':
+    case 'skewX':
+    case 'skewY':
+      return {t: type, d:interp(from.d, to.d, f, type)};
+      break;
+    default:
+      var result = [];
+      if (from.d && to.d) {
+        var maxVal = Math.max(from.d.length, to.d.length);
+      } else if (from.d) {
+        var maxVal = from.d.length;
+      }  else {
+        var maxVal = to.d.length;
+      }
+      for (var j = 0; j < maxVal; j++) {
+        fromVal = from.d ? from.d[j] : {};
+        toVal = to.d ? to.d[j] : {};
+        result.push(lengthType.interpolate(fromVal, toVal, f));
+      }
+      return {t: type, d: result};
+      break;
+  }
+}
+
+// The CSSWG decided to disallow scientific notation in CSS property strings 
+// (see http://lists.w3.org/Archives/Public/www-style/2010Feb/0050.html).
+// We need this function to hakonitize all numbers before adding them to
+// property strings.
+// TODO: Apply this function to all property strings 
+function n(num) {
+  return Number(num).toFixed(4);
+}
 
 var transformType = {
   zero: function(t) { throw 'UNIMPLEMENTED'; },
   add: function(base, delta) { return base.concat(delta); },
   interpolate: function(from, to, f) {
-    while (from.length < to.length) {
-      from.push({t: null, d: null});
-    }
-    while (to.length < from.length) {
-      to.push({t: null, d: null});
-    }
     var out = []
-    for (var i = 0; i < from.length; i++) {
-      console.assert(from[i].t === to[i].t || from[i].t === null ||
-        to[i].t === null,
-        'Transform types should match or one should be the underlying value');
-      var type = from[i].t ? from[i].t : to[i].t;
-      switch(type) {
-        case 'rotate':
-        case 'rotateX':
-        case 'rotateY':
-        case 'rotateZ':
-        case 'scale':
-        case 'scaleX':
-        case 'scaleY':
-        case 'scaleZ':
-        case 'scale3d':
-        case 'skew':
-        case 'skewX':
-        case 'skewY':
-          out.push({t: type, d:interp(from[i].d, to[i].d, f, type)});
-          break;
-        default:
-          var result = [];
-          var maxVal = Math.max(from[i].d.length, to[i].d.length);
-          for (var j = 0; j < maxVal; j++) {
-            fromVal = from[i].d[j] || {};
-            toVal = to[i].d[j] || {};
-            result.push(lengthType.interpolate(fromVal, toVal, f));
-          }
-          out.push({t: type, d: result});
-          break;
+    for (var i = 0; i < Math.min(from.length, to.length); i++) {
+      if (from[i].t != to[i].t) {
+        break;
       }
+      out.push(interpTransformValue(from[i], to[i], f));
     }
+
+    if (i < Math.min(from.length, to.length)) {
+      out.push(doItWithMatrices(from.slice(i), to.slice(i), f));
+      return out;
+    }
+
+    for (; i < from.length; i++)
+      out.push(interpTransformValue(from[i], {t: null, d: null}, f));
+
+    for (; i < to.length; i++)
+      out.push(interpTransformValue({t: null, d: null}, to[i], f));
+http://jsfiddle.net/pKdDe/
     return out;
   },
   toCssValue: function(value, svgMode) {
@@ -2210,6 +2538,11 @@ var transformType = {
         case 'scale3d':
           out += value[i].t + '(' + value[i].d[0] + ', ' +
               value[i].d[1] + ', ' + value[i].d[2] + ') ';
+          break;
+        case 'matrix':
+          out += value[i].t + '(' + n(value[i].d[0]) + ', ' + n(value[i].d[1])
+              + ', ' + n(value[i].d[2]) + ', ' + n(value[i].d[3]) + ', ' + 
+              n(value[i].d[4]) + ', ' + n(value[i].d[5]) + ') ';
           break;
       }
     }
