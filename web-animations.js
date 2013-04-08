@@ -2096,7 +2096,7 @@ var transformREs = [
   buildMatcher('matrix', 6, false, false)
 ];
 
-function decomposeMatrix(matrix) {
+var decomposeMatrix = function() {
   // this is only ever used on the perspective matrix, which has 0, 0, 0, 1 as
   // last column
   function determinant(m) {
@@ -2181,94 +2181,97 @@ function decomposeMatrix(matrix) {
             v1[0] * v2[1] - v1[1] * v2[0]];
   }
 
-  var m3d = [[matrix[0], matrix[1], 0, 0],
-             [matrix[2], matrix[3], 0, 0],
-             [0,         0,         1, 0],
-             [matrix[4], matrix[5], 0, 1]];
+  function decomposeMatrix(matrix) {
+    var m3d = [[matrix[0], matrix[1], 0, 0],
+               [matrix[2], matrix[3], 0, 0],
+               [0,         0,         1, 0],
+               [matrix[4], matrix[5], 0, 1]];
 
-  // skip normalization step as m3d[3][3] should always be 1
-  if (m3d[3][3] != 1) {
-    throw 'attempt to decompose non-normalized matrix';
-  }
-
-  var perspectiveMatrix = m3d.concat(); // copy m3d
-  for (var i = 0; i < 3; i++)
-    perspectiveMatrix[i][3] = 0;
-
-  if (determinant(perspectiveMatrix) == 0)
-    return false;
-
-  var rhs = [];
-
-  if (m3d[0][3] != 0 || m3d[1][3] != 0 || m3d[2][3] != 0) {
-    rhs.push(m3d[0][3]);
-    rhs.push(m3d[1][3]);
-    rhs.push(m3d[2][3]);
-    rhs.push(m3d[3][3]);
-
-    var inversePerspectiveMatrix = inverse(perspectiveMatrix);
-    var transposedInversePerspectiveMatrix 
-        = transposeMatrix4(inversePerspectiveMatrix);
-    var perspective = multVecMatrix(rhs, transposedInversePerspectiveMatrix);
-  } else {
-    var perspective = [0, 0, 0, 1];
-  }
-
-  var translate = m3d[3].slice(0, 3);
-
-  var row = [];
-  row.push(m3d[0].slice(0, 3));
-  var scale = [];
-  scale.push(length(row[0]));
-  row[0] = normalize(row[0]);
-
-  var skew = [];
-  row.push(m3d[1].slice(0, 3));
-  skew.push(dot(row[0], row[1]));
-  row[1] = combine(row[1], row[0], 1.0, -skew[0]);
-
-  scale.push(length(row[1]));
-  row[1] = normalize(row[1]);
-  skew[0] /= scale[1];
-
-  row.push(m3d[2].slice(0, 3));
-  skew.push(dot(row[0], row[2]));
-  row[2] = combine(row[2], row[0], 1.0, -skew[1]);
-  skew.push(dot(row[1], row[2]));
-  row[2] = combine(row[2], row[1], 1.0, -skew[2]);
-
-  scale.push(length(row[2]));
-  row[2] = normalize(row[2]);
-  skew[1] /= scale[2];
-  skew[2] /= scale[2];
-
-  var pdum3 = cross(row[1], row[2]);
-  if (dot(row[0], pdum3) < 0) {
-    for (i = 0; i < 3; i++) {
-      scale[0] *= -1;
-      row[i][0] *= -1;
-      row[i][1] *= -1;
-      row[i][2] *= -1;
+    // skip normalization step as m3d[3][3] should always be 1
+    if (m3d[3][3] != 1) {
+      throw 'attempt to decompose non-normalized matrix';
     }
-  } 
-  
-  var quaternion = [
-    0.5 * Math.sqrt(Math.max(1 + row[0][0] - row[1][1] - row[2][2], 0)),
-    0.5 * Math.sqrt(Math.max(1 - row[0][0] + row[1][1] - row[2][2], 0)),
-    0.5 * Math.sqrt(Math.max(1 - row[0][0] - row[1][1] + row[2][2], 0)),
-    0.5 * Math.sqrt(Math.max(1 + row[0][0] + row[1][1] + row[2][2], 0))
-  ];
 
-  if (row[2][1] > row[1][2])
-    quaternion[0] = -quaternion[0];
-  if (row[0][2] > row[2][0])
-    quaternion[1] = -quaternion[1];
-  if (row[1][0] > row[0][1])
-    quaternion[2] = -quaternion[2];
+    var perspectiveMatrix = m3d.concat(); // copy m3d
+    for (var i = 0; i < 3; i++)
+      perspectiveMatrix[i][3] = 0;
 
-  return {translate: translate, scale: scale, skew: skew, 
-          quaternion: quaternion, perspective: perspective};
-}
+    if (determinant(perspectiveMatrix) == 0)
+      return false;
+
+    var rhs = [];
+
+    if (m3d[0][3] != 0 || m3d[1][3] != 0 || m3d[2][3] != 0) {
+      rhs.push(m3d[0][3]);
+      rhs.push(m3d[1][3]);
+      rhs.push(m3d[2][3]);
+      rhs.push(m3d[3][3]);
+
+      var inversePerspectiveMatrix = inverse(perspectiveMatrix);
+      var transposedInversePerspectiveMatrix =
+          transposeMatrix4(inversePerspectiveMatrix);
+      var perspective = multVecMatrix(rhs, transposedInversePerspectiveMatrix);
+    } else {
+      var perspective = [0, 0, 0, 1];
+    }
+
+    var translate = m3d[3].slice(0, 3);
+
+    var row = [];
+    row.push(m3d[0].slice(0, 3));
+    var scale = [];
+    scale.push(length(row[0]));
+    row[0] = normalize(row[0]);
+
+    var skew = [];
+    row.push(m3d[1].slice(0, 3));
+    skew.push(dot(row[0], row[1]));
+    row[1] = combine(row[1], row[0], 1.0, -skew[0]);
+
+    scale.push(length(row[1]));
+    row[1] = normalize(row[1]);
+    skew[0] /= scale[1];
+
+    row.push(m3d[2].slice(0, 3));
+    skew.push(dot(row[0], row[2]));
+    row[2] = combine(row[2], row[0], 1.0, -skew[1]);
+    skew.push(dot(row[1], row[2]));
+    row[2] = combine(row[2], row[1], 1.0, -skew[2]);
+
+    scale.push(length(row[2]));
+    row[2] = normalize(row[2]);
+    skew[1] /= scale[2];
+    skew[2] /= scale[2];
+
+    var pdum3 = cross(row[1], row[2]);
+    if (dot(row[0], pdum3) < 0) {
+      for (var i = 0; i < 3; i++) {
+        scale[0] *= -1;
+        row[i][0] *= -1;
+        row[i][1] *= -1;
+        row[i][2] *= -1;
+      }
+    } 
+    
+    var quaternion = [
+      0.5 * Math.sqrt(Math.max(1 + row[0][0] - row[1][1] - row[2][2], 0)),
+      0.5 * Math.sqrt(Math.max(1 - row[0][0] + row[1][1] - row[2][2], 0)),
+      0.5 * Math.sqrt(Math.max(1 - row[0][0] - row[1][1] + row[2][2], 0)),
+      0.5 * Math.sqrt(Math.max(1 + row[0][0] + row[1][1] + row[2][2], 0))
+    ];
+
+    if (row[2][1] > row[1][2])
+      quaternion[0] = -quaternion[0];
+    if (row[0][2] > row[2][0])
+      quaternion[1] = -quaternion[1];
+    if (row[1][0] > row[0][1])
+      quaternion[2] = -quaternion[2];
+
+    return {translate: translate, scale: scale, skew: skew, 
+            quaternion: quaternion, perspective: perspective};
+  }
+  return decomposeMatrix;
+}();
 
 function dot(v1, v2) {
   var result = 0;
@@ -2304,8 +2307,7 @@ function convertToMatrix(transformList) {
   return transformList.map(convertItemToMatrix).reduce(multiplyMatrices);
 }
 
-
-function composeMatrix(translate, scale, skew, quat, perspective) {
+var composeMatrix = function() {
   function multiply(a, b) {
     var result = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]];
     for (var i = 0; i < 4; i++) {
@@ -2318,58 +2320,61 @@ function composeMatrix(translate, scale, skew, quat, perspective) {
     return result;
   }
 
-  var matrix = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]];
+  function composeMatrix(translate, scale, skew, quat, perspective) {
+    var matrix = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]];
 
-  for (var i = 0; i < 4; i++) {
-    matrix[i][3] = perspective[i];
-  }
-
-  for (var i = 0; i < 3; i++) {
-    for (var j = 0; j < 3; j++) {
-      matrix[3][i] += translate[j] * matrix[j][i];
+    for (var i = 0; i < 4; i++) {
+      matrix[i][3] = perspective[i];
     }
-  }
 
-  var x = quat[0], y = quat[1], z = quat[2], w = quat[3];
-  
-  var rotMatrix = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]];
-
-  rotMatrix[0][0] = 1 - 2 * (y * y + z * z);
-  rotMatrix[0][1] = 2 * (x * y - z * w);
-  rotMatrix[0][2] = 2 * (x * z + y * w);
-  rotMatrix[1][0] = 2 * (x * y + z * w);
-  rotMatrix[1][1] = 1 - 2 * (x * x + z * z);
-  rotMatrix[1][2] = 2 * (y * z - x * w);
-  rotMatrix[2][0] = 2 * (x * z - y * w);
-  rotMatrix[2][1] = 2 * (y * z + x * w);
-  rotMatrix[2][2] = 1 - 2 * (x * x + y * y);
-
-  matrix = multiply(matrix, rotMatrix);
-
-  var temp = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]];
-  if (skew[2]) {
-    temp[2][1] = skew[2];
-    matrix = multiply(matrix, temp);
-  }
-
-  if (skew[1]) {
-    temp[2][1] = 0;
-    temp[2][0] = skew[0];
-    matrix = multiply(matrix, temp);
-  }
-
-  for (i = 0; i < 3; i++) {
-    for (j = 0; j < 3; j++) {
-      matrix[i][j] *= scale[i];
+    for (var i = 0; i < 3; i++) {
+      for (var j = 0; j < 3; j++) {
+        matrix[3][i] += translate[j] * matrix[j][i];
+      }
     }
+
+    var x = quat[0], y = quat[1], z = quat[2], w = quat[3];
+    
+    var rotMatrix = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]];
+
+    rotMatrix[0][0] = 1 - 2 * (y * y + z * z);
+    rotMatrix[0][1] = 2 * (x * y - z * w);
+    rotMatrix[0][2] = 2 * (x * z + y * w);
+    rotMatrix[1][0] = 2 * (x * y + z * w);
+    rotMatrix[1][1] = 1 - 2 * (x * x + z * z);
+    rotMatrix[1][2] = 2 * (y * z - x * w);
+    rotMatrix[2][0] = 2 * (x * z - y * w);
+    rotMatrix[2][1] = 2 * (y * z + x * w);
+    rotMatrix[2][2] = 1 - 2 * (x * x + y * y);
+
+    matrix = multiply(matrix, rotMatrix);
+
+    var temp = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]];
+    if (skew[2]) {
+      temp[2][1] = skew[2];
+      matrix = multiply(matrix, temp);
+    }
+
+    if (skew[1]) {
+      temp[2][1] = 0;
+      temp[2][0] = skew[0];
+      matrix = multiply(matrix, temp);
+    }
+
+    for (i = 0; i < 3; i++) {
+      for (j = 0; j < 3; j++) {
+        matrix[i][j] *= scale[i];
+      }
+    }
+
+    return {t: 'matrix', d: [matrix[0][0], matrix[0][1],
+                             matrix[1][0], matrix[1][1],
+                             matrix[3][0], matrix[3][1]]};
   }
+  return composeMatrix;
+}();
 
-  return {t: 'matrix', d: [matrix[0][0], matrix[0][1],
-                           matrix[1][0], matrix[1][1],
-                           matrix[3][0], matrix[3][1]]};
-}
-
-function doItWithMatrices(from, to, f) {
+function interpolateTransformsWithMatrices(from, to, f) {
   var fromM = decomposeMatrix(convertToMatrix(from));
   var toM = decomposeMatrix(convertToMatrix(to));
 
@@ -2393,9 +2398,7 @@ function doItWithMatrices(from, to, f) {
   var skew = interp(fromM.skew, toM.skew, f);
   var perspective = interp(fromM.perspective, toM.perspective, f);
 
-  var result = composeMatrix(translate, scale, skew, quat, perspective);
-
-  return result;
+  return composeMatrix(translate, scale, skew, quat, perspective);
 }
 
 function interpTransformValue(from, to, f) {
@@ -2456,7 +2459,8 @@ var transformType = {
     }
 
     if (i < Math.min(from.length, to.length)) {
-      out.push(doItWithMatrices(from.slice(i), to.slice(i), f));
+      out.push(interpolateTransformsWithMatrices(from.slice(i), to.slice(i), 
+          f));
       return out;
     }
 
@@ -2465,7 +2469,6 @@ var transformType = {
 
     for (; i < to.length; i++)
       out.push(interpTransformValue({t: null, d: null}, to[i], f));
-http://jsfiddle.net/pKdDe/
     return out;
   },
   toCssValue: function(value, svgMode) {
