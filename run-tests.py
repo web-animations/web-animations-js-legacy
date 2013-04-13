@@ -176,9 +176,11 @@ else:
 if not args.subunit:
     # Human readable test output
     import testtools, unittest
+    #output = testtools.StreamToExtendedDecorator(
+    #    unittest.TextTestResult(
+    #        unittest.runner._WritelnDecorator(sys.stdout), True, 2))
     output = testtools.StreamToExtendedDecorator(
-        unittest.TextTestResult(
-            unittest.runner._WritelnDecorator(sys.stdout), True, 2))
+        testtools.TextTestResult(sys.stdout))
 else:
     from subunit.v2 import StreamResultToBytes
     output = StreamResultToBytes(sys.stdout)
