@@ -1,5 +1,10 @@
 #! /bin/sh
 
+# Make sure /dev/shm has correct permissions.
+ls -l /dev/shm
+sudo chmod 1777 /dev/shm
+ls -l /dev/shm
+
 case $BROWSER in
 Chrome*)
 	export VERSION=$(echo $BROWSER | sed -e's/[^-]*-//')
