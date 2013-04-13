@@ -27,14 +27,17 @@ iframe {
 }
 </style>
 <button id=prev-button onclick="updateStateManual(-1)">Prev</button>
-<button id=reload-button onclick="updateStateManual()">Reload</button>
+<button id=reload-button onclick="updateStateManual(0)">Reload</button>
 <button id=next-button onclick="updateStateManual(1)">Next</button>
 <div><span id="test-status"></span>: <a id="test-link"></a></div>
 <iframe id="test-frame"></iframe>
 <div id="results"></div>
+<iframe id="result-post-frame" src="test-results-post.html"></iframe>
 
 <script src="testcases.js"></script>
 <script>
+var finished = false;
+
 (function() {
 
 var autoAdvance = true;
@@ -51,7 +54,7 @@ var checkForResultsTimeout;
 document.querySelector('#test-frame').addEventListener('load', function() {
   checkForResults();
 });
-updateState();
+updateState(0);
 
 function now() {
   if (window.performance && window.performance.now) return window.performance.now();
@@ -59,7 +62,13 @@ function now() {
 }
 
 function postResultsToServer(resultObject) {
-  // TODO: post the results somewhere
+  var post_iframe = document.getElementById('result-post-frame');
+  post_iframe.onload = function(){
+      updateState(1);
+  };
+
+  post_iframe.contentDocument.getElementById('data').innerHTML = JSON.stringify(resultObject);
+  post_iframe.contentDocument.getElementById('form').submit();
 }
 
 function updateStateManual(change) {
@@ -68,11 +77,22 @@ function updateStateManual(change) {
 }
 
 function updateState(change) {
-  if ((currentTest < tests.length-1 && change > 0) ||
-      (currentTest > 0 && change < 0)){
+  if (isNaN(Number(change))) {
+     change = 0;
+  }
+
+  if ((currentTest + change) < 0) {
+    currentTest = 0;
+    return;
+  } else if ((currentTest + change) >= tests.length) {
+    currentTest = tests.length - 1;
+    return;
+  } else {
     currentTest += change;
   }
+
   var test = tests[currentTest];
+  console.log(currentTest, test);
   var src = 'testcases/' + test;
 
   clearTimeout(checkForResultsTimeout);
@@ -83,8 +103,7 @@ function updateState(change) {
   document.querySelector('#test-link').href = src;
   document.querySelector('#test-frame').src = src;
   document.querySelector('#prev-button').disabled = currentTest <= 0;
-  document.querySelector('#next-button').disabled =
-      currentTest >= tests.length - 1;
+  document.querySelector('#next-button').disabled = currentTest >= tests.length - 1;
 }
 
 function checkForResults() {
@@ -96,15 +115,13 @@ function checkForResults() {
     logResults(testWindow.animTestRunner.results);
     testWindow.animTestRunner.results = null;
     testCasesRun++;
-    if (currentTest < tests.length - 1) {
-      updateState(1);
-      return;
-    }
   }
 
   if (testCasesRun < tests.length) {
     checkForResultsTimeout = setTimeout(checkForResults, 25);
   } else {
+    finished = true;
+
     var finishPacket = {};
     finishPacket["type"] = "finished";
     finishPacket["testsPassed"] = testCasesPassed + " out of " + testCasesRun;
@@ -119,6 +136,8 @@ function logResults(results){
   testResult["type"] = "result";
   testResult["testRunID"] = runID;
   testResult["testName"] = tests[currentTest];
+  testResult["results"] = results;
+  postResultsToServer(testResult);
 
   var passed = results.filter(function(result) { return result.status == 0 }).length;
   var failed = results.length - passed;
@@ -172,10 +191,6 @@ function logResults(results){
   }
   newResultsDiv.style.display = "none";
   newTestDiv.appendChild(newResultsDiv);
-
-  testResult["asserts"] = asserts;
-  testResult["numberOfAsserts"] = numberOfAsserts;
-  postResultsToServer(testResult);
 }
 
 function showDetails(object){
