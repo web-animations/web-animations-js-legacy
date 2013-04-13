@@ -114,8 +114,10 @@ var userInput = false;
 
 // Wraps the different requestAnimation frame functions
 var requestFrame = window.requestAnimationFrame ||
+                   window.oRequestAnimationFrame ||
                    window.webkitRequestAnimationFrame ||
-                   window.mozRequestAnimationFrame;
+                   window.mozRequestAnimationFrame ||
+                   function(callback) { return window.setTimeout(callback, 1000 / 60); };
 
 // Detect the appropriate features to use for testing.
 function detectFeatures() {
