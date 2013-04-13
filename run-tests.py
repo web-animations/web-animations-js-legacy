@@ -56,8 +56,10 @@ def autoinstall(name, package=None):
 
     try:
         exec("import %s" % name)
-    except ImportError:
+    except ImportError, e:
         if args.auto_install:
+            print "Unable to import %s (%s), autoinstalling" % (name, e)
+
             if not subprocess.check_call(["pip", "install", "--user", package]):
                 raise SystemExit("Unable to install %s" % package)
 
