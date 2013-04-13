@@ -57,17 +57,23 @@ def autoinstall(name, package=None):
     try:
         exec("import %s" % name)
     except ImportError:
-	if not subprocess.check_call(["pip", "install", "--user", package]):
-	    raise SystemExit("Unable to install %s" % package)
+        if args.auto_install:
+            if not subprocess.check_call(["pip", "install", "--user", package]):
+                raise SystemExit("Unable to install %s" % package)
 
-	import sys, os
-	python = sys.executable
-	os.execl(python, python, *sys.argv)
+            # Restart python is a nasty way, only method to get imports to refresh.
+            import sys, os
+            python = sys.executable
+            os.execl(python, python, *sys.argv)
+        else:
+            print "Please install the Python %s module." % name
+            print "  sudo pip install %s" % package
+            sys.exit(-1)
+            
 
-if args.auto_install:
-    autoinstall("subunit", "python-subunit")
-    autoinstall("pyvirtualdisplay")
-    autoinstall("selenium")
+autoinstall("subunit", "python-subunit")
+autoinstall("pyvirtualdisplay")
+autoinstall("selenium")
 
 # Get any selenium drivers we might need
 if args.browser == "Chrome":
@@ -155,12 +161,7 @@ elif args.browser == "PhantomJS":
 
 # -----------------------------------------------------------------------------
 
-try:
-    import subunit
-except ImportError:
-    print "Please install the Python subunit module."
-    print "  sudo pip install python-subunit"
-    sys.exit(-1)
+import subunit
 
 if args.list:
     for test in simplejson.loads(
@@ -240,12 +241,7 @@ port = httpd.socket.getsockname()[-1]
 # -----------------------------------------------------------------------------
 
 if args.virtual:
-    try:
-        from pyvirtualdisplay.smartdisplay import SmartDisplay
-    except ImportError:
-        print "Please install the Python pyvirtualdisplay module."
-        print "  sudo pip install pyvirtualdisplay"
-        sys.exit(-1)
+    from pyvirtualdisplay.smartdisplay import SmartDisplay
 
     disp = None
     try:
@@ -259,12 +255,7 @@ if args.virtual:
 # Start up the web browser and run the tests.
 # ----------------------------------------------------------------------------
 
-try:
-    from selenium import webdriver
-except ImportError:
-    print "Please install the Python selenium module."
-    print "  sudo pip install selenium"
-    sys.exit(-1)
+from selenium import webdriver
 
 driver_arguments = {}
 if args.browser == "Chrome":

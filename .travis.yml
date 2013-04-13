@@ -6,9 +6,7 @@ env:
   - BROWSER=Firefox
 
 install:
-  - pip install python-subunit
-  - pip install pyvirtualdisplay
-  - pip install selenium
+  - pip install -r .requirements --use-mirrors
 
 script:
   - python run-tests.py -a -x -b $BROWSER
