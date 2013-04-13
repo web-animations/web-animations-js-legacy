@@ -10,7 +10,6 @@ install:
   - wget https://dl.google.com/linux/direct/google-chrome-stable_current_i386.deb
   - if [ x$BROWSER == xChrome ]; then sudo dpkg --install google-chrome-stable_current_i386.deb || sudo apt-get -f install; fi
   # Install PIL
-  - sudo apt-get install python-imaging-tk
   - pip install -r .requirements --use-mirrors
 
 script:

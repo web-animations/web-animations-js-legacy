@@ -4,4 +4,4 @@ selenium
 # Requirements for using -x
 pyvirtualdisplay
 pyscreenshot
-# PIL
+PIL
