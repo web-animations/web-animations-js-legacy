@@ -370,6 +370,7 @@ if args.browser == "Chrome":
     webdriver.ChromeOptions.__repr__ = lambda self: str(self.__dict__)  # Make printable
     driver_arguments['chrome_options'].add_argument('--user-data-dir=%s' % user_data_dir)
     driver_arguments['chrome_options'].add_argument('--enable-logging')
+    driver_arguments['chrome_options'].add_argument('--single-process')
     driver_arguments['chrome_options'].binary_location = '/usr/bin/google-chrome'
     driver_arguments['executable_path'] = chromedriver
 
