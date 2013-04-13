@@ -222,8 +222,8 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 test_id="%s.%s" % (data['testName'][:-5], result['name']),
                 test_status=self.STATUS[result['status']],
                 test_tags=[args.browser],
-                file_name='test-info',
-                file_bytes=simplejson.dumps(info),
+                file_name='message',
+                file_bytes=result['message'],
                 mime_type='text/plain; charset=UTF-8',
                 eof=True)
 
