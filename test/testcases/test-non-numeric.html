@@ -16,7 +16,7 @@ limitations under the License.
 
 <!DOCTYPE html>
 <style>
-div {
+#parent, #test {
   height: 600px;
 }
 body {
@@ -24,7 +24,7 @@ body {
 }
 </style>
 <body>
-<div style='background:lightsteelblue'>
+<div id="parent" style='background:lightsteelblue'>
   <div style='background:red' id='test'></div>
 </div>
 <script src="../../web-animations.js"></script>
