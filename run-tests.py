@@ -287,6 +287,7 @@ if args.browser == "Chrome":
     driver_arguments['chrome_options'] = webdriver.ChromeOptions()
     webdriver.ChromeOptions.__repr__ = lambda self: str(self.__dict__)  # Make printable
     driver_arguments['chrome_options'].add_argument('--user-data-dir=%s' % user_data_dir)
+    driver_arguments['chrome_options'].add_argument('--enable-logging')
     driver_arguments['chrome_options'].binary_location = '/usr/bin/google-chrome'
     driver_arguments['executable_path'] = chromedriver
 
@@ -297,41 +298,46 @@ elif args.browser == "PhantomJS":
     driver_arguments['executable_path'] = phantomjs
     driver_arguments['service_args'] = ['--remote-debugger-port=9000']
 
-browser = None
 try:
-    if not args.subunit:
-        print driver_arguments
-    browser = getattr(webdriver, args.browser)(**driver_arguments)
-    atexit.register(browser.close)
-except:
-    if browser:
-        browser.close()
-    raise
-
-url = 'http://localhost:%i/test/test-runner.html' % port
-browser.get(url)
-
-def close_other_windows(browser, url):
-    for win in browser.window_handles:
-        browser.switch_to_window(win)
-        if browser.current_url != url:
+    browser = None
+    try:
+        if not args.subunit:
+            print driver_arguments
+        browser = getattr(webdriver, args.browser)(**driver_arguments)
+        atexit.register(browser.close)
+    except:
+        if browser:
             browser.close()
-    browser.switch_to_window(browser.window_handles[0])
+        raise
 
-import time
-while True:
-    # Sometimes other windows are accidently opened (such as an extension
-    # popup), close them.
-    if len(browser.window_handles) > 1:
-        close_other_windows(browser, url)
+    url = 'http://localhost:%i/test/test-runner.html' % port
+    browser.get(url)
 
-    if not browser.execute_script('return window.finished'):
-        time.sleep(1)
-        continue
-    else:
-        break
+    def close_other_windows(browser, url):
+        for win in browser.window_handles:
+            browser.switch_to_window(win)
+            if browser.current_url != url:
+                browser.close()
+        browser.switch_to_window(browser.window_handles[0])
 
-output.stopTestRun()
+    import time
+    while True:
+        # Sometimes other windows are accidently opened (such as an extension
+        # popup), close them.
+        if len(browser.window_handles) > 1:
+            close_other_windows(browser, url)
+
+        if not browser.execute_script('return window.finished'):
+            time.sleep(1)
+            continue
+        else:
+            break
+
+finally:
+    output.stopTestRun()
+
+    if args.browser == "Chrome":
+        shutil.copy(os.path.join(user_data_dir, "chrome_debug.log"), ".")
 
 while args.dontexit:
     time.sleep(30)
