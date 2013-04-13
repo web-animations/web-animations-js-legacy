@@ -194,7 +194,7 @@ import SimpleHTTPServer
 import SocketServer
 import threading
 import cgi
-import simplejson
+import json as simplejson
 
 class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     STATUS = {0:'success', 1:'fail', 2:'fail', 3:'skip'}
@@ -221,7 +221,7 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 test_status=self.STATUS[result['status']],
                 test_tags=[args.browser],
                 file_name='test-info',
-                file_bytes=json.dumps(info),
+                file_bytes=simplejson.dumps(info),
                 mime_type='text/plain; charset=UTF-8',
                 eof=True)
 
