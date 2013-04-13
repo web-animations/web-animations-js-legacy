@@ -1,8 +1,11 @@
 #! /bin/sh
 
 case $BROWSER in
-Chrome)
-	export CHROME=google-chrome-stable_current_amd64.deb
+Chrome*)
+	export VERSION=$(echo $BROWSER | sed -e's/[^-]*-//')
+	export BROWSER=$(echo $BROWSER | sed -e's/-.*//')
+	echo "Getting $VERSION of $BROWSER"
+	export CHROME=google-chrome-${VERSION}_current_amd64.deb
 	wget https://dl.google.com/linux/direct/$CHROME
 	sudo dpkg --install $CHROME || sudo apt-get -f install
 	ls -l /usr/bin/google-chrome
