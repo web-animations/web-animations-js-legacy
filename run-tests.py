@@ -370,9 +370,17 @@ if args.browser == "Chrome":
     webdriver.ChromeOptions.__repr__ = lambda self: str(self.__dict__)  # Make printable
     driver_arguments['chrome_options'].add_argument('--user-data-dir=%s' % user_data_dir)
     driver_arguments['chrome_options'].add_argument('--enable-logging')
-    driver_arguments['chrome_options'].add_argument('--single-process')
+
+
     driver_arguments['chrome_options'].binary_location = '/usr/bin/google-chrome'
     driver_arguments['executable_path'] = chromedriver
+
+    # Travis-CI uses OpenVZ containers which are incompatible with the sandbox
+    # technology.
+    # See https://code.google.com/p/chromium/issues/detail?id=31077 for more
+    # information.
+    if 'TRAVIS' in os.environ:
+        driver_arguments['chrome_options'].add_argument('--no-sandbox')
 
 elif args.browser == "Firefox":
     driver_arguments['firefox_profile'] = webdriver.FirefoxProfile()
