@@ -60,7 +60,7 @@ def autoinstall(name, package=None):
         if args.auto_install:
             print "Unable to import %s (%s), autoinstalling" % (name, e)
 
-            if not subprocess.check_call(["pip", "install", "--user", package]):
+            if subprocess.check_call(["pip", "install", "--user", package]) != 0:
                 raise SystemExit("Unable to install %s" % package)
 
             # Restart python is a nasty way, only method to get imports to refresh.
@@ -71,12 +71,17 @@ def autoinstall(name, package=None):
             print "Please install the Python %s module." % name
             print "  sudo pip install %s" % package
             sys.exit(-1)
-            
 
-autoinstall("subunit", "python-subunit")
-autoinstall("pyscreenshot")
-autoinstall("pyvirtualdisplay")
-autoinstall("selenium")
+for line in file(".requirements").readlines():
+    if line.startswith('#') or not line.strip():
+        continue
+
+    if line.find('#') >= 0:
+        package, name = line.split('#')
+
+        autoinstall(name.strip(), package.strip())
+    else:
+        autoinstall(line.strip())
 
 # Get any selenium drivers we might need
 if args.browser == "Chrome":
