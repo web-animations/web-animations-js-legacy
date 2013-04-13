@@ -6,7 +6,7 @@ env:
   - BROWSER=Firefox
 
 install:
-  - apt-get install python-imaging
+  - sudo apt-get install python-imaging
   - pip install -r .requirements --use-mirrors
 
 script:
