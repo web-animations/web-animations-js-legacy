@@ -12,4 +12,6 @@ install:
 
 script:
   - python run-tests.py -a -x -b $BROWSER
-  - for file in *.log; do echo $file; echo "======================"; cat $file; done
+
+after_failure:
+  - for file in *.log; do echo $file; echo "======================"; cat $file; done || true
