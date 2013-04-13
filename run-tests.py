@@ -267,29 +267,29 @@ from selenium import webdriver
 
 driver_arguments = {}
 if args.browser == "Chrome":
-   import tempfile, shutil
+    import tempfile, shutil
 
-   # We reference shutil to make sure it isn't garbaged collected before we use
-   # it.
-   def directory_cleanup(directory, shutil=shutil):
-       try:
-           shutil.rmtree(directory)
-       except OSError, e:
-           pass
+    # We reference shutil to make sure it isn't garbaged collected before we use
+    # it.
+    def directory_cleanup(directory, shutil=shutil):
+        try:
+            shutil.rmtree(directory)
+        except OSError, e:
+            pass
 
-   try:
-       user_data_dir = tempfile.mkdtemp()
-       atexit.register(directory_cleanup, user_data_dir)
-   except:
-       directory_cleanup(user_data_dir)
-       raise
+    try:
+        user_data_dir = tempfile.mkdtemp()
+        atexit.register(directory_cleanup, user_data_dir)
+    except:
+        directory_cleanup(user_data_dir)
+        raise
 
-   driver_arguments['chrome_options'] = webdriver.ChromeOptions()
-   driver_arguments['chrome_options'].add_argument('--user-data-dir=%s' % user_data_dir)
-   driver_arguments['executable_path'] = chromedriver
+    driver_arguments['chrome_options'] = webdriver.ChromeOptions()
+    driver_arguments['chrome_options'].add_argument('--user-data-dir=%s' % user_data_dir)
+    driver_arguments['executable_path'] = chromedriver
 
 elif args.browser == "Firefox":
-   driver_arguments['firefox_profile'] = webdriver.FirefoxProfile()
+    driver_arguments['firefox_profile'] = webdriver.FirefoxProfile()
 
 elif args.browser == "PhantomJS":
     driver_arguments['executable_path'] = phantomjs
