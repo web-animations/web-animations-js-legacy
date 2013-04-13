@@ -4,5 +4,5 @@
 .*.swp
 .*.swo
 *.pyc*
-*.log
+*.log*
 tools/*

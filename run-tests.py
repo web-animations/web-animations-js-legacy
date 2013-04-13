@@ -4,10 +4,12 @@
 # vim: set ts=4 sw=4 et sts=4 ai:
 
 import atexit
-import sys
 import os
 import platform
 import pprint
+import socket
+import sys
+import time
 
 import argparse
 parser = argparse.ArgumentParser()
@@ -15,6 +17,7 @@ parser.add_argument(
     "-b", "--browser", type=str, required=True,
     choices=['Firefox', 'Chrome', 'Ie', 'PhantomJS', 'Remote'],
     help="Which WebDriver to use.")
+
 parser.add_argument(
     "-x", "--virtual", action='store_true', default=False,
     help="Use a virtual screen system such as Xvfb, Xephyr or Xvnc.")
@@ -25,6 +28,21 @@ parser.add_argument(
 parser.add_argument(
     "-a", "--auto-install", action='store_true', default=True,
     help="Auto install any dependencies.")
+
+# Only used by the Remote browser option.
+parser.add_argument(
+    "--remote-executor", type=str,
+    help="Location of the Remote executor.")
+parser.add_argument(
+    "--remote-caps", action='append',
+    help="Location of capabilities to request on Remote executor.",
+    default=[])
+
+parser.add_argument(
+    "-s", "--sauce", action='store_true', default=False,
+    help="Use the SauceLab's Selenium farm rather then locally starting"
+         " selenium. SAUCE_USERNAME and SAUCE_ACCESS_KEY must be set in"
+         " environment.")
 
 # Subunit / testrepository support
 parser.add_argument(
@@ -83,90 +101,154 @@ for line in file(".requirements").readlines():
     else:
         autoinstall(line.strip())
 
-# Get any selenium drivers we might need
-if args.browser == "Chrome":
-    # Get ChromeDriver if it's not in the path...
-    # https://code.google.com/p/chromedriver/downloads/list
-    chromedriver_bin = None
-    if platform.system() == "Linux":
-        chromedriver_bin = "chromedriver"
-        if platform.processor() == "x86_64":
-            # 64 bit binary needed
-            chromedriver_url = "https://chromedriver.googlecode.com/files/chromedriver2_linux64_0.6.zip"
-        else:
-            # 32 bit binary needed
-            chromedriver_url = "https://chromedriver.googlecode.com/files/chromedriver_linux32_26.0.1383.0.zip"
+if not args.sauce:
+    # Get any selenium drivers we might need
+    if args.browser == "Chrome":
+        # Get ChromeDriver if it's not in the path...
+        # https://code.google.com/p/chromedriver/downloads/list
+        chromedriver_bin = None
+        if platform.system() == "Linux":
+            chromedriver_bin = "chromedriver"
+            if platform.processor() == "x86_64":
+                # 64 bit binary needed
+                chromedriver_url = "https://chromedriver.googlecode.com/files/chromedriver2_linux64_0.6.zip"
+            else:
+                # 32 bit binary needed
+                chromedriver_url = "https://chromedriver.googlecode.com/files/chromedriver_linux32_26.0.1383.0.zip"
 
-    elif platform.system() == "mac":
-        chromedriver_url = "https://chromedriver.googlecode.com/files/chromedriver2_mac32_0.7.zip"
-        chromedriver_bin = "chromedriver"
-    elif platform.system() == "win32":
-        chromedriver_bin = "https://chromedriver.googlecode.com/files/chromedriver2_win32_0.7.zip"
-        chromedriver_url = "chromedriver.exe"
-
-    try:
-        if subprocess.call(chromedriver_bin) != 0:
-            raise OSError("Return code?")
-    except OSError:
-        chromedriver_local = os.path.join("tools", chromedriver_bin)
-
-        if not os.path.exists(chromedriver_local):
-            import urllib2, zipfile
-            import cStringIO as StringIO
-            datafile = StringIO.StringIO(urllib2.urlopen(chromedriver_url).read())
-            contents = zipfile.ZipFile(datafile, 'r')
-            contents.extract(chromedriver_bin, "tools")
-
-        chromedriver = os.path.realpath(chromedriver_local)
-        os.chmod(chromedriver, 0755)
-    else:
-        chromedriver = "chromedriver"
-
-elif args.browser == "Firefox":
-    pass
-
-elif args.browser == "PhantomJS":
-    phantomjs_bin = None
-    if platform.system() == "Linux":
-        phantomjs_bin = "phantomjs"
-        if platform.processor() == "x86_64":
-            # 64 bit binary needed
-            phantomjs_url = "https://phantomjs.googlecode.com/files/phantomjs-1.9.0-linux-x86_64.tar.bz2"
-        else:
-            # 32 bit binary needed
-            phantomjs_url = "https://phantomjs.googlecode.com/files/phantomjs-1.9.0-linux-i686.tar.bz2"
-
-        phantomjs_local = os.path.join("tools", phantomjs_bin)
-        if not os.path.exists(phantomjs_local):
-            import urllib2, tarfile
-            import cStringIO as StringIO
-            datafile = StringIO.StringIO(urllib2.urlopen(phantomjs_url).read())
-            contents = tarfile.TarFile.open(fileobj=datafile, mode='r:bz2')
-            file("tools/"+phantomjs_bin, "w").write(
-                contents.extractfile("phantomjs-1.9.0-linux-x86_64/bin/"+phantomjs_bin).read())
-
-        phantomjs = os.path.realpath(phantomjs_local)
-        os.chmod(phantomjs, 0755)
-    else:
-        if platform.system() == "mac":
-            phantomjs_url = "https://phantomjs.googlecode.com/files/phantomjs-1.9.0-macosx.zip"
-            phantomjs_bin = "phantomjs"
-
+        elif platform.system() == "mac":
+            chromedriver_url = "https://chromedriver.googlecode.com/files/chromedriver2_mac32_0.7.zip"
+            chromedriver_bin = "chromedriver"
         elif platform.system() == "win32":
-            chromedriver_bin = "https://phantomjs.googlecode.com/files/phantomjs-1.9.0-windows.zip"
-            phantomjs_url = "phantomjs.exe"
+            chromedriver_bin = "https://chromedriver.googlecode.com/files/chromedriver2_win32_0.7.zip"
+            chromedriver_url = "chromedriver.exe"
 
-        phantomjs_local = os.path.join("tools", phantomjs_bin)
-        if not os.path.exists(phantomjs_local):
-            import urllib2, zipfile
-            import cStringIO as StringIO
-            datafile = StringIO.StringIO(urllib2.urlopen(phantomjs_url).read())
-            contents = zipfile.ZipFile(datafile, 'r')
-            contents.extract(phantomjs_bin, "tools")
+        try:
+            if subprocess.call(chromedriver_bin) != 0:
+                raise OSError("Return code?")
+        except OSError:
+            chromedriver_local = os.path.join("tools", chromedriver_bin)
 
-        phantomjs = os.path.realpath(phantomjs_local)
-        os.chmod(phantomjs, 0755)
+            if not os.path.exists(chromedriver_local):
+                import urllib2, zipfile
+                import cStringIO as StringIO
+                datafile = StringIO.StringIO(urllib2.urlopen(chromedriver_url).read())
+                contents = zipfile.ZipFile(datafile, 'r')
+                contents.extract(chromedriver_bin, "tools")
 
+            chromedriver = os.path.realpath(chromedriver_local)
+            os.chmod(chromedriver, 0755)
+        else:
+            chromedriver = "chromedriver"
+
+    elif args.browser == "Firefox":
+        pass
+
+    elif args.browser == "PhantomJS":
+        phantomjs_bin = None
+        if platform.system() == "Linux":
+            phantomjs_bin = "phantomjs"
+            if platform.processor() == "x86_64":
+                # 64 bit binary needed
+                phantomjs_url = "https://phantomjs.googlecode.com/files/phantomjs-1.9.0-linux-x86_64.tar.bz2"
+            else:
+                # 32 bit binary needed
+                phantomjs_url = "https://phantomjs.googlecode.com/files/phantomjs-1.9.0-linux-i686.tar.bz2"
+
+            phantomjs_local = os.path.join("tools", phantomjs_bin)
+            if not os.path.exists(phantomjs_local):
+                import urllib2, tarfile
+                import cStringIO as StringIO
+                datafile = StringIO.StringIO(urllib2.urlopen(phantomjs_url).read())
+                contents = tarfile.TarFile.open(fileobj=datafile, mode='r:bz2')
+                file("tools/"+phantomjs_bin, "w").write(
+                    contents.extractfile("phantomjs-1.9.0-linux-x86_64/bin/"+phantomjs_bin).read())
+
+            phantomjs = os.path.realpath(phantomjs_local)
+            os.chmod(phantomjs, 0755)
+        else:
+            if platform.system() == "mac":
+                phantomjs_url = "https://phantomjs.googlecode.com/files/phantomjs-1.9.0-macosx.zip"
+                phantomjs_bin = "phantomjs"
+
+            elif platform.system() == "win32":
+                chromedriver_bin = "https://phantomjs.googlecode.com/files/phantomjs-1.9.0-windows.zip"
+                phantomjs_url = "phantomjs.exe"
+
+            phantomjs_local = os.path.join("tools", phantomjs_bin)
+            if not os.path.exists(phantomjs_local):
+                import urllib2, zipfile
+                import cStringIO as StringIO
+                datafile = StringIO.StringIO(urllib2.urlopen(phantomjs_url).read())
+                contents = zipfile.ZipFile(datafile, 'r')
+                contents.extract(phantomjs_bin, "tools")
+
+            phantomjs = os.path.realpath(phantomjs_local)
+            os.chmod(phantomjs, 0755)
+else:
+    assert os.environ['SAUCE_USERNAME']
+    assert os.environ['SAUCE_ACCESS_KEY']
+    username = os.environ['SAUCE_USERNAME']
+    key = os.environ['SAUCE_ACCESS_KEY']
+
+    # Download the Sauce Connect script
+    sauce_connect_url = "http://saucelabs.com/downloads/Sauce-Connect-latest.zip"
+    sauce_connect_bin = "Sauce-Connect.jar"
+    sauce_connect_local = os.path.join("tools", sauce_connect_bin)
+    if not os.path.exists(sauce_connect_local):
+        import urllib2, zipfile
+        import cStringIO as StringIO
+        datafile = StringIO.StringIO(urllib2.urlopen(sauce_connect_url).read())
+        contents = zipfile.ZipFile(datafile, 'r')
+        contents.extract(sauce_connect_bin, "tools")
+
+    if 'TRAVIS_JOB_NUMBER' in os.environ:
+        tunnel_id = os.environ['TRAVIS_JOB_NUMBER']
+    else:
+        tunnel_id = "%s:%s" % (socket.gethostname(), os.getpid())
+    args.remote_caps.append('tunnel-identifier=%s' % tunnel_id)
+
+    # Kill the tunnel when we die
+    def kill_tunnel(sauce_tunnel):
+        if sauce_tunnel.returncode is None:
+            sauce_tunnel.terminate()
+
+            timeout = time.time()
+            while sauce_tunnel.poll() is None:
+                if time.time() - timeout < 30:
+                    time.sleep(1)
+                else:
+                    sauce_tunnel.kill()
+
+    readyfile = "."+tunnel_id
+    sauce_tunnel = None
+    try:
+        sauce_log = file("sauce_tunnel.log", "w")
+        sauce_tunnel = subprocess.Popen([
+            "java", "-jar", sauce_connect_local,
+            "--readyfile", readyfile,
+            "--tunnel-identifier", tunnel_id,
+            username, key,
+            ], 
+            stdout=sauce_log, stderr=sauce_log,
+            )
+
+        atexit.register(kill_tunnel, sauce_tunnel)
+
+        # Wait for the tunnel to come up
+        while not os.path.exists(readyfile):
+            time.sleep(0.5)
+
+    except:
+        if sauce_tunnel:
+            kill_tunnel(sauce_tunnel)
+
+    args.remote_executor = "http://%s:%s@localhost:4445/wd/hub" % (username, key)
+
+    # Send travis information upstream
+    if 'TRAVIS_BUILD_NUMBER' in os.environ:
+        args.remote_caps.append('build=%s' % os.environ['TRAVIS_BUILD_NUMBER'])
+        
 # -----------------------------------------------------------------------------
 
 import subunit
@@ -298,6 +380,21 @@ elif args.browser == "PhantomJS":
     driver_arguments['executable_path'] = phantomjs
     driver_arguments['service_args'] = ['--remote-debugger-port=9000']
 
+elif args.browser == "Remote":
+    driver_arguments['command_executor'] = args.remote_executor
+    caps = {}
+
+    for arg in args.remote_caps:
+        if not arg.strip():
+            continue
+
+        if arg.find('=') < 0:
+            caps.update(getattr(webdriver.DesiredCapabilities, arg.strip().upper()))
+        else:
+            key, value = arg.split('=', 1)
+            caps[key] = value
+    driver_arguments['desired_capabilities'] = caps
+
 try:
     browser = None
     try:
@@ -320,7 +417,6 @@ try:
                 browser.close()
         browser.switch_to_window(browser.window_handles[0])
 
-    import time
     while True:
         # Sometimes other windows are accidently opened (such as an extension
         # popup), close them.
