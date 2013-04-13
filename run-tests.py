@@ -285,7 +285,9 @@ if args.browser == "Chrome":
         raise
 
     driver_arguments['chrome_options'] = webdriver.ChromeOptions()
+    webdriver.ChromeOptions.__repr__ = lambda self: str(self.__dict__)  # Make printable
     driver_arguments['chrome_options'].add_argument('--user-data-dir=%s' % user_data_dir)
+    driver_arguments['chrome_options'].binary_location = '/usr/bin/google-chrome'
     driver_arguments['executable_path'] = chromedriver
 
 elif args.browser == "Firefox":
@@ -297,6 +299,8 @@ elif args.browser == "PhantomJS":
 
 browser = None
 try:
+    if not args.subunit:
+        print driver_arguments
     browser = getattr(webdriver, args.browser)(**driver_arguments)
     atexit.register(browser.close)
 except:
