@@ -214,13 +214,15 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         data = simplejson.loads(form.getvalue('data'))
 
         for result in data['results']:
+            info = dict(result)
+            info.pop('_structured_clone', None)
             output.status(
                 test_id="%s.%s" % (data['testName'][:-5], result['name']),
                 test_status=self.STATUS[result['status']],
                 test_tags=[args.browser],
-#                file_name=,
-#                file_bytes='',
-
+                file_name='test-info',
+                file_bytes=json.dumps(info),
+                mime_type='text/plain; charset=UTF-8',
                 eof=True)
 
         SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
