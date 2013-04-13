@@ -1,0 +1,8 @@
+*.pyc
+*~
+.nfs*
+.*.swp
+.*.swo
+*.pyc*
+*.log
+tools/*
