@@ -1,0 +1,15 @@
+language: python
+
+env:
+  - BROWSER=Chrome
+  - BROWSER=PhantomJS
+  - BROWSER=Firefox
+
+install:
+  - pip install python-subunit
+  - pip install pyvirtualdisplay
+  - pip install selenium
+
+script:
+  - python run-tests.py -a -x -b $BROWSER
+  - for file in *.log; do echo $file; echo "======================"; cat $file; done
