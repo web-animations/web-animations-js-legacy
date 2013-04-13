@@ -20,7 +20,7 @@ var tests = [
   'test-iteration-start.html',
   'test-keyframe-creation.html',
   'test-length-units.html',
-  'test-media.html',
+//  'test-media.html',
   'test-modify-timing-params.html',
   'test-non-numeric.html',
   'test-parent.html',

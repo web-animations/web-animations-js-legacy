@@ -785,8 +785,16 @@ function assert_properties(test) {
       var curr = currentStyle[outputPropName];
     }
 
-    var t = target.replace(/[^0-9.\s]/g, "");
-    var c = curr.replace(/[^0-9.\s]/g, "");
+    if (target)
+      var t = target.replace(/[^0-9.\s]/g, "");
+    else
+      var t = "";
+
+    if (curr)
+      var c = curr.replace(/[^0-9.\s]/g, "");
+    else
+      var c = "";
+
     if(t.length == 0) {
       // Assume it's a word property so do an exact assert
       test.test.step(function (){
