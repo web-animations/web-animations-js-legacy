@@ -294,8 +294,6 @@ elif args.browser == "PhantomJS":
 
 browser = None
 try:
-    print driver_arguments
-
     browser = getattr(webdriver, args.browser)(**driver_arguments)
     atexit.register(browser.close)
 except:
