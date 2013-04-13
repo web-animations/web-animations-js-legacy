@@ -72,6 +72,7 @@ def autoinstall(name, package=None):
             
 
 autoinstall("subunit", "python-subunit")
+autoinstall("pyscreenshot")
 autoinstall("pyvirtualdisplay")
 autoinstall("selenium")
 
