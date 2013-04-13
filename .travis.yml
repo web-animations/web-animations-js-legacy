@@ -6,10 +6,7 @@ env:
   - BROWSER=Firefox
 
 install:
-  # Install Chrome
-  - export CHROME=google-chrome-stable_current_amd64.deb; wget https://dl.google.com/linux/direct/$CHROME; if [ x$BROWSER == xChrome ]; then sudo dpkg --install $CHROME || sudo apt-get -f install; ls -l /usr/bin/google-chrome; fi
-  # Install PIL
-  - pip install -r .requirements --use-mirrors
+  - ./.travis-setup.sh
 
 script:
   - python run-tests.py -a -x -b $BROWSER
