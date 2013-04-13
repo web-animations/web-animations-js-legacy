@@ -330,7 +330,8 @@ port = httpd.socket.getsockname()[-1]
 # Start up a virtual display, useful for testing on headless servers.
 # -----------------------------------------------------------------------------
 
-if args.virtual:
+# PhantomJS doesn't need a display
+if args.virtual and args.browser != "PhantomJS":
     from pyvirtualdisplay.smartdisplay import SmartDisplay
 
     disp = None
