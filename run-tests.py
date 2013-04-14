@@ -251,8 +251,7 @@ else:
         
 # -----------------------------------------------------------------------------
 
-import subunit
-
+import subunit, testtools, unittest
 if args.list:
     for test in simplejson.loads(
             file("test/testcases.js").read()[len("var tests = "):]):
@@ -264,17 +263,25 @@ if args.load_list:
 else:
     tests = []
 
+# Collect summary of all the individual test runs
+summary = testtools.StreamSummary()
+
+# Output information to stdout
 if not args.subunit:
     # Human readable test output
-    import testtools, unittest
-    output = testtools.StreamToExtendedDecorator(
-        unittest.TextTestResult(
-            unittest.runner._WritelnDecorator(sys.stdout), False, 3))
-    #output = testtools.StreamToExtendedDecorator(
-    #    testtools.TextTestResult(sys.stdout))
+    pertest = testtools.StreamToExtendedDecorator(
+        testtools.MultiTestResult(
+            # Individual test progress
+            unittest.TextTestResult(
+                unittest.runner._WritelnDecorator(sys.stdout), False, 2),
+            # End of run, summary of failures.
+            testtools.TextTestResult(sys.stdout),
+            ))
 else:
     from subunit.v2 import StreamResultToBytes
-    output = StreamResultToBytes(sys.stdout)
+    pertest = StreamResultToBytes(sys.stdout)
+
+output = subunit.CopyStreamResult([summary, pertest])
 
 output.startTestRun()
 
@@ -372,7 +379,6 @@ if args.browser == "Chrome":
     driver_arguments['chrome_options'].add_argument('--user-data-dir=%s' % user_data_dir)
     driver_arguments['chrome_options'].add_argument('--enable-logging')
 
-
     driver_arguments['chrome_options'].binary_location = '/usr/bin/google-chrome'
     driver_arguments['executable_path'] = chromedriver
 
@@ -447,3 +453,8 @@ finally:
 
 while args.dontexit:
     time.sleep(30)
+
+if summary.wasSuccessful:
+    sys.exit(0)
+else:
+    sys.exit(1)
