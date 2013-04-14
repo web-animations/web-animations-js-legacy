@@ -29,6 +29,10 @@ parser.add_argument(
     "-a", "--auto-install", action='store_true', default=True,
     help="Auto install any dependencies.")
 
+parser.add_argument(
+    "-v", "--verbose", action='store_true', default=False,
+    help="Output more information.")
+
 # Only used by the Remote browser option.
 parser.add_argument(
     "--remote-executor", type=str,
@@ -56,6 +60,9 @@ parser.add_argument(
     help="List of tests to run.")
 
 args = parser.parse_args()
+
+if args.verbose and args.subunit:
+    raise SystemExit("--verbose and --subunit are not compatible.")
 
 # Make sure the repository is setup and the dependencies exist
 # -----------------------------------------------------------------------------
@@ -298,8 +305,9 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     STATUS = {0:'success', 1:'fail', 2:'fail', 3:'skip'}
 
     # Make the HTTP requests be quiet
-    def log_message(self, format, *args):
-        pass
+    def log_message(self, format, *a):
+        if args.verbose:
+            SimpleHTTPServer.SimpleHTTPRequestHandler.log_message(self, format, *a)
 
     def do_POST(self):
         form = cgi.FieldStorage(
@@ -414,7 +422,7 @@ elif args.browser == "Remote":
 try:
     browser = None
     try:
-        if not args.subunit:
+        if args.verbose:
             print driver_arguments
         browser = getattr(webdriver, args.browser)(**driver_arguments)
         atexit.register(browser.close)
