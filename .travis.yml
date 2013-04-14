@@ -4,13 +4,8 @@ env:
   - BROWSER=Chrome-stable
   - BROWSER=Chrome-beta
   - BROWSER=Chrome-unstable
-  - BROWSER=PhantomJS
-  - BROWSER=Firefox
-
-matrix:
-  allow_failures:
-    - BROWSER=Firefox
-    - BROWSER=PhantomJS
+#  - BROWSER=PhantomJS
+#  - BROWSER=Firefox
 
 install:
   - ./.travis-setup.sh
