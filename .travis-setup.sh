@@ -30,7 +30,4 @@ Firefox)
 	;;
 esac
 
-# FIXME: For speed we should install pip via apt-get install python-imaging
-#        then copy into the virtualenv.
-
 pip install -r .requirements --use-mirrors
