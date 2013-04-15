@@ -13,6 +13,7 @@ import time
 
 import argparse
 parser = argparse.ArgumentParser()
+
 parser.add_argument(
     "-b", "--browser", type=str, required=True,
     choices=['Firefox', 'Chrome', 'Ie', 'PhantomJS', 'Remote'],
@@ -21,6 +22,7 @@ parser.add_argument(
 parser.add_argument(
     "-x", "--virtual", action='store_true', default=False,
     help="Use a virtual screen system such as Xvfb, Xephyr or Xvnc.")
+
 parser.add_argument(
     "-d", "--dontexit", action='store_true', default=False,
     help="At end of testing, don't exit.")
@@ -35,12 +37,14 @@ parser.add_argument(
 
 parser.add_argument(
     "-u", "--upload", action='store_true', default=False,
-    help="Upload images to picture sharing site, only really useful for testbots.")
+    help="Upload images to picture sharing site (http://postimage.org/),"
+         " only really useful for testbots.")
 
 # Only used by the Remote browser option.
 parser.add_argument(
     "--remote-executor", type=str,
     help="Location of the Remote executor.")
+
 parser.add_argument(
     "--remote-caps", action='append',
     help="Location of capabilities to request on Remote executor.",
@@ -56,9 +60,11 @@ parser.add_argument(
 parser.add_argument(
     "--subunit", action='store_true', default=False,
     help="Output raw subunit binary data.")
+
 parser.add_argument(
     "--list", action='store_true', default=False,
     help="List tests which are avalible.")
+
 parser.add_argument(
     "--load-list", type=argparse.FileType('r'),
     help="List of tests to run.")
