@@ -7,7 +7,7 @@ check(document.querySelectorAll('.anim2')[0],{'ctm':'{0.9238795325112867, 0.3826
 check(document.querySelectorAll('.anim')[0],{'x':'408px'},3);
 check(document.querySelectorAll('.anim2')[0],{'ctm':'{0.8413776741499454, 0.6112966623841721, -0.6112966623841721, 0.8413776741499454, 192.3606797749979, 183.51141009169893}'},3);
 check(document.querySelectorAll('.anim')[0],{'x':'362px'},4);
-check(document.querySelectorAll('.anim2')[0],{'ctm':'{0.8820709200960359, 0.753359736063013, -0.753359736063013, 0.8820709200960359, 154.21826845200138, 149.22516217485827}'},4);
+check(document.querySelectorAll('.anim2')[0],{'ctm':'{0.8820709200960358, 0.753359736063013, -0.753359736063013, 0.8820709200960358, 154.21826845200138, 149.22516217485827}'},4);
 check(document.querySelectorAll('.anim')[0],{'x':'312px'},5);
 check(document.querySelectorAll('.anim2')[0],{'ctm':'{1.1002631123499285, 0.7993879431177634, -0.7993879431177634, 1.1002631123499285, 112.36067977499789, 103.51141009169893}'},5);
 check(document.querySelectorAll('.anim')[0],{'x':'247.99999999999997px'},6);
