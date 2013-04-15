@@ -555,8 +555,8 @@ finally:
     if args.browser == "Chrome":
         shutil.copy(os.path.join(user_data_dir, "chrome_debug.log"), ".")
 
-while args.dontexit:
-    time.sleep(30)
+while args.dontexit and browser.window_handles:
+    time.sleep(1)
 
 if summary.wasSuccessful():
     sys.exit(0)
