@@ -462,7 +462,7 @@ finally:
 while args.dontexit:
     time.sleep(30)
 
-if summary.wasSuccessful:
+if summary.wasSuccessful():
     sys.exit(0)
 else:
     sys.exit(1)
