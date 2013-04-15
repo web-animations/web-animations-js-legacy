@@ -51,8 +51,11 @@ Each cell in the table will start at the first value for the column (e.g. 5em,
 <script src="../../web-animations.js"></script>
 <script>
 
-var from = ["1em", "1ex", "10px", "1rem", "5mm", "1cm", "1in", "10pt", "1pc"];
-var to = ["5em", "5ex", "50px", "5rem", "25mm", "2cm", "2in", "50pt", "5pc"];
+
+// ex is font specific and there is no common webfont found on *all* browsers
+// (including mobile).
+var from = ["1em", "10px", "1rem", "5mm", "1cm", "1in", "10pt", "1pc"];
+var to = ["5em", "50px", "5rem", "25mm", "2cm", "2in", "50pt", "5pc"];
 
 var table = "<tr><td>from -&gt;<br>to v</td>"
 for (var i = 0; i < from.length; i++) {
