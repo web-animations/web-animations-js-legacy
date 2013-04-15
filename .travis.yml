@@ -1,0 +1,17 @@
+language: python
+
+env:
+  - BROWSER=Chrome-stable
+  - BROWSER=Chrome-beta
+  - BROWSER=Chrome-unstable
+#  - BROWSER=PhantomJS
+#  - BROWSER=Firefox
+
+install:
+  - ./.travis-setup.sh
+
+script:
+  - python run-tests.py -a -u -x -b $(echo $BROWSER | sed -e's/-.*//')
+
+after_failure:
+  - for file in *.log; do echo $file; echo "======================"; cat $file; done || true

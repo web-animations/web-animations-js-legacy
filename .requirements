@@ -1,0 +1,7 @@
+python-subunit # subunit
+selenium
+
+# Requirements for using -x
+pyvirtualdisplay
+pyscreenshot
+PIL

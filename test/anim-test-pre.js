@@ -22,6 +22,31 @@
  *  - Manual run type
  */
 
+
+if (!Function.prototype.bind) {
+  Function.prototype.bind = function (oThis) {
+    if (typeof this !== "function") {
+      // closest thing possible to the ECMAScript 5 internal IsCallable function
+      throw new TypeError("Function.prototype.bind - what is trying to be bound is not callable");
+    }
+
+    var aArgs = Array.prototype.slice.call(arguments, 1),
+        fToBind = this,
+        fNOP = function () {},
+        fBound = function () {
+          return fToBind.apply(this instanceof fNOP && oThis
+                                 ? this
+                                 : oThis,
+                               aArgs.concat(Array.prototype.slice.call(arguments)));
+        };
+
+    fNOP.prototype = this.prototype;
+    fBound.prototype = new fNOP();
+
+    return fBound;
+  };
+}
+
 (function() {
 
 var PLAYERS = [];
@@ -89,8 +114,10 @@ var userInput = false;
 
 // Wraps the different requestAnimation frame functions
 var requestFrame = window.requestAnimationFrame ||
+                   window.oRequestAnimationFrame ||
                    window.webkitRequestAnimationFrame ||
-                   window.mozRequestAnimationFrame;
+                   window.mozRequestAnimationFrame ||
+                   function(callback) { return window.setTimeout(callback, 1000 / 60); };
 
 // Detect the appropriate features to use for testing.
 function detectFeatures() {
@@ -758,8 +785,16 @@ function assert_properties(test) {
       var curr = currentStyle[outputPropName];
     }
 
-    var t = target.replace(/[^0-9.\s]/g, "");
-    var c = curr.replace(/[^0-9.\s]/g, "");
+    if (target)
+      var t = target.replace(/[^0-9.\s]/g, "");
+    else
+      var t = "";
+
+    if (curr)
+      var c = curr.replace(/[^0-9.\s]/g, "");
+    else
+      var c = "";
+
     if(t.length == 0) {
       // Assume it's a word property so do an exact assert
       test.test.step(function (){

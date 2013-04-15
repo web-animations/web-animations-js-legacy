@@ -289,7 +289,7 @@ Player.prototype = {
     this._playbackRate = playbackRate;
     this.currentTime = cachedCurrentTime;
   },
-  get playbackRate(playbackRate) {
+  get playbackRate() {
     return this._playbackRate;
   },
   _update: function() {
