@@ -32,8 +32,8 @@ limitations under the License.
 }
 </style>
 <div></div>
+<div style="height: 400px"></div>
 <script src="../../web-animations.js"></script>
-<script src="../anim-test-pre.js"></script>
 <script>
 // TODO: refactor into test harness
 function detectFeatures() {
@@ -75,6 +75,7 @@ var max_x = 1000;
 
 var toplevel = document.querySelector("div");
 var y = 50;
+var animations = [];
 for (var i = 0; i < transformValues.length; i++) {
   var x = 10;
   for (var j = 0; j < transformValues[i].length; j++) {
@@ -93,7 +94,8 @@ for (var i = 0; i < transformValues.length; i++) {
       div.className = "anim";
       div.style.top = y + 'px';
       div.style.left = x + 'px';
-      document.timeline.play(new Animation(div, {"transform":
+      div.id = "i" + i + "_" + j + "_" + k
+      animations.push(new Animation(div, {"transform":
           [transformValues[i][j], transformValues[i][k]]}, 2));
       x += separation_x;
       if (x > max_x) {
@@ -104,5 +106,8 @@ for (var i = 0; i < transformValues.length; i++) {
   }
   y += separation_y;
 }
-
+</script>
+<script src="../anim-test-pre.js"></script>
+<script>
+animations.forEach(function(anim) { document.timeline.play(anim); });
 </script>
