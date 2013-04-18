@@ -64,9 +64,11 @@ function now() {
 function postResultsToServer(resultObject) {
   var post_iframe = document.getElementById('result-post-frame');
   post_iframe.onload = function(){
-    updateState(1);
+    post_iframe.src = "test-results-post.html";
+    post_iframe.onload = function() {
+      updateState(1);
+    }
   };
-
   post_iframe.contentDocument.getElementById(
    'data').innerHTML = JSON.stringify(resultObject);
   post_iframe.contentDocument.getElementById('form').submit();

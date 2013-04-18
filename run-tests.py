@@ -7,6 +7,7 @@ import atexit
 import os
 import platform
 import pprint
+import re
 import socket
 import sys
 import time
@@ -89,23 +90,46 @@ def autoinstall(name, package=None):
     if not package:
         package = name
 
-    try:
-        exec("import %s" % name)
-    except ImportError, e:
-        if args.auto_install:
-            print "Unable to import %s (%s), autoinstalling" % (name, e)
+    if args.auto_install:
+        try:
+            import pip
+        except ImportError:
+            raise SystemExit("""\
+Can not autoinstall as PIP is not avaliable.
 
-            if subprocess.check_call(["pip", "install", "--user", package]) != 0:
-                raise SystemExit("Unable to install %s" % package)
+To install 'pip' please ask your administrator to install the package
+'python-pip' or run:
+# sudo apt-get install python-pip
+""")
 
-            # Restart python is a nasty way, only method to get imports to refresh.
-            import sys, os
-            python = sys.executable
-            os.execl(python, python, *sys.argv)
-        else:
-            print "Please install the Python %s module." % name
-            print "  sudo pip install %s" % package
-            sys.exit(-1)
+        from pip.req import InstallRequirement
+        install = InstallRequirement(package, None)
+        install.check_if_exists()
+
+        if install.satisfied_by is None:
+            print "Unable to find %s, autoinstalling" % (name,)
+
+            if install.conflicts_with:
+                raise SystemExit("""
+Can't install %s because it conflicts with already installed %s.
+
+Please try installing %s manually with:
+# sudo pip install --upgrade %s
+""" % (name, install.conflicts_with, name, package.replace(">", "\>")))
+
+            ret = subprocess.call(["pip", "install", "--user", package])
+            if ret == 0: # UNKNOWN_ERROR
+                # Restart python is a nasty way, only method to get imports to refresh.
+                import sys, os
+                python = sys.executable
+                os.execl(python, python, *sys.argv)
+            else:
+                raise SystemExit("""
+Unknown error occurred. 
+
+Please install the Python %s module.
+# sudo pip install %s
+""" % (name, package.replace(">", "\n")))
 
 for line in file(".requirements").readlines():
     if line.startswith('#') or not line.strip():
