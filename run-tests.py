@@ -93,6 +93,17 @@ def autoinstall(name, package=None):
         exec("import %s" % name)
     except ImportError, e:
         if args.auto_install:
+            try:
+                import pip
+            except ImportError:
+                raise SystemExit("""\
+Can not autoinstall as PIP is not avaliable.
+
+To install 'pip' please ask your administrator to install the package
+'python-pip' or run:
+# sudo apt-get install python-pip
+""")
+
             print "Unable to import %s (%s), autoinstalling" % (name, e)
 
             if subprocess.check_call(["pip", "install", "--user", package]) != 0:
