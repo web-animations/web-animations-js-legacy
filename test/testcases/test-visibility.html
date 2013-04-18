@@ -33,10 +33,10 @@ body {
 }
 </style>
 <script src="../../web-animations.js"></script>
-<script src="../anim-test-pre.js"></script>
 <script>
 var timing = {duration: 0.5, timingFunction: 'steps(2, end)'};
 
+var animations = [];
 var states = {'visible':1, 'hidden':1, 'collapse':1};
 for (var start in states) {
   for (var end in states) {
@@ -51,12 +51,17 @@ for (var start in states) {
     }
     var testElement = document.createElement('div');
     testElement.classList.add('test');
+    testElement.id = start + "_" + end
     if (end == 'hidden' || end == 'collapse') {
       testElement.classList.add('red');
     }
     testContainer.appendChild(testElement);
-    document.timeline.play(
+    animations.push(
         new Animation(testElement, {visibility: frames}, timing));
   }
 }
+</script>
+<script src="../anim-test-pre.js"></script>
+<script>
+animations.forEach(function(anim) { document.timeline.play(anim); });
 </script>
