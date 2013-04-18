@@ -48,8 +48,8 @@ limitations under the License.
 }
 </style>
 <div class="container"></div>
+<div style="height: 700px"></div>
 <script src="../../web-animations.js"></script>
-<script src="../anim-test-pre.js"></script>
 <script>
 
 var transformValues = [
@@ -92,6 +92,7 @@ function detectFeatures() {
 }
 
 var features = detectFeatures();
+var animations = [];
 
 var y = 50;
 for (var i = 0; i < transformValues.length; i++) {
@@ -113,8 +114,10 @@ for (var i = 0; i < transformValues.length; i++) {
       div.style.top = y + 'px';
       div.style.left = x + 'px';
       div.textContent = "perspective";
-      document.timeline.play(new Animation(div, {"transform":
+      div.id = "i_" + i + "_" + j + "_" + k;
+      animations.push(new Animation(div, {"transform":
           [transformValues[i][j], transformValues[i][k]]}, 2));
+
       x += separation_x;
       if (x > max_x) {
         x = 20;
@@ -125,4 +128,8 @@ for (var i = 0; i < transformValues.length; i++) {
   y += separation_y;
 }
 
+</script>
+<script src="../anim-test-pre.js"></script>
+<script>
+animations.forEach(function(anim) { document.timeline.play(anim); });
 </script>
