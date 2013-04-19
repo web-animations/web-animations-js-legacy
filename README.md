@@ -25,11 +25,16 @@ to address the deficiencies inherent in these four specifications. Web Animation
 Here's a simple example of an animation that scales and changes the opacity of
 a `<div>` over 0.5 seconds. The animation alternates producing a pulsing effect.
 
-{% highlight html %}
-  {% include_external samples/webanimations/basic.html %}
-{% endhighlight %}
-
-{% include_external samples/webanimations/basic.html %}
+    <div class="pulse" style="width:150px;">Hello world!</div>
+    <script>
+      var elem = document.querySelector('.pulse');
+      var player = document.timeline.play(new Animation(elem, {
+        opacity: ["0.5", "1.0"], 
+        transform: ["scale(0.5)", "scale(1)"]
+      }, {
+        direction: "alternate", duration: 0.5, iterationCount: Infinity
+      }));
+    </script>
 
 ### The animation model
 
@@ -213,4 +218,3 @@ then the polyfill will provide a console warning in browsers where these feature
 
 For running tests or building minified files, consult the
 [tooling information](http://toolkitchen.github.com/tooling-strategy.html).
-
