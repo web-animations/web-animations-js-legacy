@@ -87,11 +87,8 @@ function postResultsToServer(resultObject) {
   var xhr = new XMLHttpRequest();
   var i = pendingXhr.push(xhr);
   xhr.onload = function () {
-    for (var i = 0; i < pendingXhr.length; i++) {
-      if (xhr === pendingXhr[i]) {
-        pendingXhr.shift(i);
-      }
-    }
+    var i = pendingXhr.indexOf(xhr);
+    pendingXhr.splice(i, 1);
   };
   xhr.open("POST", "test-results-post.html", true);
   xhr.send(data);
@@ -100,6 +97,14 @@ function postResultsToServer(resultObject) {
 /**
  * Creates HTML elements in a table for a test.
  *
+ * +-----------+------+-------+
+ * | Test Name | Link | Count |
+ * +-----------+------+-------+
+ * | Log of test run.         |
+ * +--------------------------+
+ * | iFrame containing test   |
+ * +--------------------------+
+ *
  * @param {String} testName Name of the test suite being run.
  * @param {String} testURL The url of the test suite.
  * @return {Element} tbody containing newly created table rows.
@@ -107,60 +112,60 @@ function postResultsToServer(resultObject) {
 function createTestRows(testName, testURL) {
   var tablegroup = document.createElement("tbody");
 
-  var tr1 = document.createElement("tr");
-  tablegroup.appendChild(tr1);
-  var tr2 = document.createElement("tr");
-  tablegroup.appendChild(tr2);
-  var tr3 = document.createElement("tr");
-  tablegroup.appendChild(tr3);
+  var basicInfoRow = document.createElement("tr");
+  tablegroup.appendChild(basicInfoRow);
+  var logRow = document.createElement("tr");
+  tablegroup.appendChild(logRow);
+  var iframeRow = document.createElement("tr");
+  tablegroup.appendChild(iframeRow);
 
   // Name
   var header = document.createElement("h1");
-  header.appendChild(document.createTextNode(testName));
+  header.textContent = testName;
 
-  var td1 = document.createElement("td");
-  td1.appendChild(header);
-  tr1.appendChild(td1);
+  var headerCell = document.createElement("td");
+  headerCell.appendChild(header);
+  basicInfoRow.appendChild(headerCell);
 
   // Link
   var link = document.createElement("a");
   link.textContent = testName;
   link.href = testURL;
 
-  var td2 = document.createElement("td");
-  td2.appendChild(link);
-  tr1.appendChild(td2);
+  var linkCell = document.createElement("td");
+  linkCell.appendChild(link);
+  basicInfoRow.appendChild(linkCell);
 
   // Test count;
-  var td3 = document.createElement("td");
-  td3.className = "count";
-  tr1.appendChild(td3);
+  var countCell = document.createElement("td");
+  countCell.className = "count";
+  basicInfoRow.appendChild(countCell);
 
   // table row containing the complete test log
-  var td4 = document.createElement("td");
-  td4.className = "log";
-  td4.colSpan = "3";
-  tr2.appendChild(td4);
+  var logCell = document.createElement("td");
+  logCell.className = "log";
+  logCell.colSpan = "3";
+  logRow.appendChild(logCell);
 
   // iframe containing a preview of object
   var iframe = document.createElement("iframe");
   iframe.src = testURL;
 
-  var td5 = document.createElement("td");
-  td5.colSpan = "3";
-  td5.appendChild(iframe);
-  tr3.appendChild(td5);
+  var iframeCell = document.createElement("td");
+  iframeCell.colSpan = "3";
+  iframeCell.appendChild(iframe);
+  iframeRow.appendChild(iframeCell);
 
-  tr1.onclick = function() {
-    if (tr2.style.display == "none") {
-      tr2.style.display = "table-row";
-      tr3.style.display = "table-row";
+  basicInfoRow.onclick = function() {
+    if (logRow.style.display == "none") {
+      logRow.style.display = "table-row";
+      iframeRow.style.display = "table-row";
     } else {
-      tr2.style.display = "none";
-      tr3.style.display = "none";
+      logRow.style.display = "none";
+      iframeRow.style.display = "none";
     }
   };
-  tr1.onclick();  // Hide this detail by default
+  basicInfoRow.onclick();  // Hide this detail by default
 
   return tablegroup;
 }
