@@ -1,6 +1,8 @@
 <!--
 Copyright 2012 Google Inc. All Rights Reserved.
 
+vim: set ts=2 sw=2 et sts=2 ai:
+
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -19,205 +21,251 @@ iframe {
   width: 800px;
   height: 600px;
 }
-.fail-text {
+
+tbody {
+  color: gray;
+}
+
+tbody h1 {
+  display: inline;
+}
+
+/* Pass styles */
+tbody.pass {
+  color: green;
+}
+
+li.pass {
+  color: green;
+}
+
+
+/* Pass styles */
+tbody.no-tests {
+  color: yellow;
+}
+
+/* Fail styles */
+tbody.fail {
   color: red;
 }
-.fail-result {
-  background: #FFCCCC;
-}
-</style>
-<button id=prev-button onclick="updateStateManual(-1)">Prev</button>
-<button id=reload-button onclick="updateStateManual(0)">Reload</button>
-<button id=next-button onclick="updateStateManual(1)">Next</button>
-<div><span id="test-status"></span>: <a id="test-link"></a></div>
-<iframe id="test-frame"></iframe>
-<div id="results"></div>
-<iframe id="result-post-frame" src="test-results-post.html"></iframe>
 
+li.fail {
+  color: red;
+}
+
+</style>
 <script src="testcases.js"></script>
+<table id="results"></table>
+
 <script>
-var finished = false;
 
 (function() {
+window.finished = false;
 
-var autoAdvance = true;
-
-var currentTest = 0;
-var currentTestStart;
-
-var testCasesRun = 0;
-var testCasesPassed = 0;
-
-var runID = window.location.href.split("?")[1];
-var checkForResultsTimeout;
-
-document.querySelector('#test-frame').addEventListener('load', function() {
-  checkForResults();
-});
-updateState(0);
-
+/**
+ * Get the most accurate version of time possible.
+ *
+ * @return {number} Time as this very moment.
+ */
 function now() {
   if (window.performance && window.performance.now) return window.performance.now();
   return Date.now();
 }
 
+var pendingXhr = [];  /* List of pending XmlHttpRequest. */
+
+/**
+ * Posts the resultObject to the serving HTTP server.
+ *
+ * @param {Array.<Object>} resultObject List of test-harness 
+ */
 function postResultsToServer(resultObject) {
-  var post_iframe = document.getElementById('result-post-frame');
-  post_iframe.onload = function(){
-    post_iframe.src = "test-results-post.html";
-    post_iframe.onload = function() {
-      updateState(1);
+  var data = new FormData();
+  data.append("data", JSON.stringify(resultObject));
+
+  var xhr = new XMLHttpRequest();
+  var i = pendingXhr.push(xhr);
+  xhr.onload = function () {
+    for (var i = 0; i < pendingXhr.length; i++) {
+      if (xhr === pendingXhr[i]) {
+        pendingXhr.shift(i);
+      }
     }
   };
-  post_iframe.contentDocument.getElementById(
-   'data').innerHTML = JSON.stringify(resultObject);
-  post_iframe.contentDocument.getElementById('form').submit();
+  xhr.open("POST", "test-results-post.html", true);
+  xhr.send(data);
 }
 
-function updateStateManual(change) {
-  autoAdvance = false;
-  updateState(change);
-}
+/**
+ * Creates HTML elements in a table for a test.
+ *
+ * @param {String} testName Name of the test suite being run.
+ * @param {String} testURL The url of the test suite.
+ * @return {Element} tbody containing newly created table rows.
+ */
+function createTestRows(testName, testURL) {
+  var tablegroup = document.createElement("tbody");
 
-function updateState(change) {
-  if (isNaN(Number(change))) {
-     change = 0;
-  }
+  var tr1 = document.createElement("tr");
+  tablegroup.appendChild(tr1);
+  var tr2 = document.createElement("tr");
+  tablegroup.appendChild(tr2);
+  var tr3 = document.createElement("tr");
+  tablegroup.appendChild(tr3);
 
-  if ((currentTest + change) < 0) {
-    currentTest = 0;
-    return;
-  } else if ((currentTest + change) >= tests.length) {
-    currentTest = tests.length - 1;
-    return;
-  } else {
-    currentTest += change;
-  }
+  // Name
+  var header = document.createElement("h1");
+  header.appendChild(document.createTextNode(testName));
 
-  var test = tests[currentTest];
-  console.log(currentTest, test);
-  var src = 'testcases/' + test;
+  var td1 = document.createElement("td");
+  td1.appendChild(header);
+  tr1.appendChild(td1);
 
-  clearTimeout(checkForResultsTimeout);
-  currentTestStart = now();
-  document.querySelector('#test-status').innerHTML = (currentTest + 1) +
-      ' of ' + tests.length;
-  document.querySelector('#test-link').textContent = test;
-  document.querySelector('#test-link').href = src;
-  document.querySelector('#test-frame').src = src;
-  document.querySelector('#prev-button').disabled = currentTest <= 0;
-  document.querySelector('#next-button').disabled = (
-      currentTest >= tests.length - 1);
-}
+  // Link
+  var link = document.createElement("a");
+  link.textContent = testName;
+  link.href = testURL;
 
-function checkForResults() {
-  if (!autoAdvance) {
-    return;
-  }
-  var testWindow = document.querySelector('#test-frame').contentWindow;
-  if (testWindow.animTestRunner && testWindow.animTestRunner.results) {
-    logResults(testWindow.animTestRunner.results);
-    testWindow.animTestRunner.results = null;
-    testCasesRun++;
-  }
+  var td2 = document.createElement("td");
+  td2.appendChild(link);
+  tr1.appendChild(td2);
 
-  if (testCasesRun < tests.length) {
-    checkForResultsTimeout = setTimeout(checkForResults, 25);
-  } else {
-    finished = true;
+  // Test count;
+  var td3 = document.createElement("td");
+  td3.className = "count";
+  tr1.appendChild(td3);
 
-    var finishPacket = {};
-    finishPacket["type"] = "finished";
-    finishPacket["testsPassed"] = testCasesPassed + " out of " + testCasesRun;
-    finishPacket["testRunId"] = runID;
-    postResultsToServer(finishPacket);
-  }
-}
+  // table row containing the complete test log
+  var td4 = document.createElement("td");
+  td4.className = "log";
+  td4.colSpan = "3";
+  tr2.appendChild(td4);
 
-function logResults(results){
-  var duration = now() - currentTestStart;
-  var testResult = {};
-  testResult["type"] = "result";
-  testResult["testRunID"] = runID;
-  testResult["testName"] = tests[currentTest];
-  testResult["results"] = results;
-  postResultsToServer(testResult);
+  // iframe containing a preview of object
+  var iframe = document.createElement("iframe");
+  iframe.src = testURL;
 
-  var passed = results.filter(function(result) { return result.status == 0 }).length;
-  var failed = results.length - passed;
-  if (failed == 0 && passed > 0) testCasesPassed++;
+  var td5 = document.createElement("td");
+  td5.colSpan = "3";
+  td5.appendChild(iframe);
+  tr3.appendChild(td5);
 
-  var newTestDiv = document.createElement('div');
-  newTestDiv.appendChild(document.createTextNode(tests[currentTest] + ': '));
-  if (results.length == 0) {
-    var failSpan = document.createElement('span');
-    failSpan.classList.add('fail-text');
-    failSpan.innerText = 'No tests! ';
-    newTestDiv.appendChild(failSpan);
-  }
-  if (failed > 0) {
-    var failSpan = document.createElement('span');
-    failSpan.classList.add('fail-text');
-    failSpan.innerText = passed + '/' + results.length + ' ';
-    newTestDiv.appendChild(failSpan);
-  }
-  newTestDiv.appendChild(document.createTextNode(Math.round(duration) + 'ms'));
-  newTestDiv.id = tests[currentTest];
-  newTestDiv.onclick = function(){ showDetails(this); };
-  if (failed > 0 || results.length == 0) {
-    newTestDiv.classList.add('fail-result');
-  }
-  document.getElementById("results").appendChild(newTestDiv);
-
-  var newResultsDiv = document.createElement('div');
-  var i = 0;
-  var numberOfAsserts = 0;
-  var asserts = {};
-  for (var x in results){
-    if(results[x].status != 0){
-      asserts[i] = {};
-      asserts[i]["message"] = results[x].message == null ?
-        "Fail but no message" : results[x].message;
-      i++;
+  tr1.onclick = function() {
+    if (tr2.style.display == "none") {
+      tr2.style.display = "table-row";
+      tr3.style.display = "table-row";
+    } else {
+      tr2.style.display = "none";
+      tr3.style.display = "none";
     }
+  };
+  tr1.onclick();  // Hide this detail by default
 
-    newResultsDiv.innerHTML += results[x].name + " ";
+  return tablegroup;
+}
+
+/**
+ * Make a pretty version of a test suites results.
+ *
+ * @param {Array.<Object>} results
+ * @return {Element} Unorder list created human readable version of the results
+ *    information.
+ */
+function prettyResults(results) {
+  var newResultsDiv = document.createElement('ul');
+  for (var x in results){
+    var output = document.createElement('li');
+    output.innerHTML += results[x].name + " ";
+
     var grade = 'fail';
     if (results[x].status == 0) {
       grade = "pass";
     }
-    newResultsDiv.innerHTML += grade + " ";
+    output.className = grade;
+
+    output.innerHTML += grade + " ";
     if (results[x].message != null) {
-      newResultsDiv.innerHTML += results[x].message;
+      output.innerHTML += results[x].message;
     }
-    newResultsDiv.innerHTML += "<br>";
-    numberOfAsserts++;
+    output.innerHTML += "<br>";
+
+    newResultsDiv.appendChild(output);
   }
-  newResultsDiv.style.display = "none";
-  newTestDiv.appendChild(newResultsDiv);
+  return newResultsDiv;
 }
 
-function showDetails(object){
-  var childs = object.childNodes;
-  var changeIframe = false;
-  for (var x in childs){
-    if (childs[x].nodeName == "DIV"){
-      if (childs[x].style.display == 'block') childs[x].style.display = 'none';
-      else {
-        childs[x].style.display = 'block';
-        changeIframe = true;
+
+var testRunners = [];  /* List of test runners */
+var finishedRunners = []; /* List of test runners which have completed */
+
+/**
+ * Create the test runners for each test suite listed in tests.
+ */
+window.onload = function createTestRunners() {
+  for (var i = 0; i < tests.length; i++) {
+    var testName = tests[i];
+    var testURL = "testcases/" + testName;
+    testRunners.push(createTestRows(testName, testURL));
+    document.querySelector("#results").appendChild(testRunners[i]);
+  }
+};
+
+/**
+ * Check to see if any of the test suites have completed and if the complete
+ * test run has completed.
+ */
+function checkForResults() {
+  for (var i = 0; i < testRunners.length; i++) {
+    var runner = testRunners[i];
+
+    var testWindow = runner.querySelector("iframe").contentWindow;
+    if (testWindow.animTestRunner && testWindow.animTestRunner.results) {
+      finishedRunners.push(tests[i]);
+      console.log("Finished", tests[i]);
+
+      var results = testWindow.animTestRunner.results;
+      if (results.length > 0) {
+        var testResult = {};
+        testResult["type"] = "result";
+        testResult["testName"] = tests[i];
+        testResult["results"] = results;
+        postResultsToServer(testResult);
+
+        var passed = results.filter(function(result) {
+            return result.status == 0;
+          }).length;
+        var failed = results.length - passed;
+
+        if (!failed) {
+          runner.className = "pass";
+        } else {
+          runner.className = "fail";
+        }
+
+        var count = runner.querySelector(".count");
+        count.innerHTML = passed + " of " + results.length + " passed";
+
+        var log = runner.querySelector(".log");
+        log.appendChild(prettyResults(results));
+      } else {
+        runner.className = "no-tests";
       }
+
+      testWindow.animTestRunner.results = null;
     }
   }
-  if (changeIframe){
-    // Show the test in the iframe
-    for (var x = 0; (tests[x] != object.id) && (x < tests.length); x++);
-    currentTest = x;
-    updateStateManual();
+
+  console.log(testRunners.length, finishedRunners.length, pendingXhr.length);
+  if (testRunners.length == finishedRunners.length && pendingXhr.length == 0) {
+    console.log("Everything finished!");
+    window.finished = true;
+    window.clearInterval(intervalId);
   }
 }
 
-window.updateStateManual = updateStateManual;
+var intervalId = window.setInterval(checkForResults, 100);
+
 
 })();
 </script>
