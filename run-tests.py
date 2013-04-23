@@ -370,7 +370,13 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 mime_type='text/plain; charset=UTF-8',
                 eof=True)
 
-        SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
+        response = "OK"
+        self.send_response(200)
+        self.send_header("Content-type", "text/plain")
+        self.send_header("Content-length", len(response))
+        self.end_headers()
+        self.wfile.write(response)
+        self.wfile.close()
 
 httpd = SocketServer.TCPServer(
     ("127.0.0.1", 0),  # Bind to any port on localhost

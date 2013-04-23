@@ -21,6 +21,14 @@ h1 {
   display: inline;
 }
 
+table {
+  border-collapse:collapse;
+}
+
+td {
+  border: 1px solid black;
+}
+
 iframe {
   width: 800px;
   height: 600px;
@@ -42,7 +50,7 @@ li.pass {
 
 /* Pass styles */
 tbody.no-tests {
-  color: yellow;
+  color: #e7d900;
 }
 
 /* Fail styles */
@@ -58,7 +66,11 @@ li.fail {
 <script src="testcases.js"></script>
 
 <h1 id=status>Pending</h1>
-Yet to start: <span id=unstarted></span>, Running: <span id=running></span>, Finished: <span id=finished></span> (Pending XHR requests: <span id=xhr></span>)
+Loading: <span id=loading></span>
+Unstarted: <span id=unstarted></span>
+Running: <span id=running></span>
+Posting: <span id=posting></span>
+Finished: <span id=finished></span>
 
 <table id="results"></table>
 
@@ -75,27 +87,6 @@ window.finished = false;
 function now() {
   if (window.performance && window.performance.now) return window.performance.now();
   return Date.now();
-}
-
-var pendingXhr = [];  /* List of pending XmlHttpRequest. */
-
-/**
- * Posts the resultObject to the serving HTTP server.
- *
- * @param {Array.<Object>} resultObject List of test-harness 
- */
-function postResultsToServer(resultObject) {
-  var data = new FormData();
-  data.append("data", JSON.stringify(resultObject));
-
-  var xhr = new XMLHttpRequest();
-  var i = pendingXhr.push(xhr);
-  xhr.onload = function () {
-    var i = pendingXhr.indexOf(xhr);
-    pendingXhr.splice(i, 1);
-  };
-  xhr.open("POST", "test-results-post.html", true);
-  xhr.send(data);
 }
 
 /**
@@ -141,15 +132,20 @@ function createTestRows(testName, testURL) {
   linkCell.appendChild(link);
   basicInfoRow.appendChild(linkCell);
 
-  // Test count;
+  // Test count
   var countCell = document.createElement("td");
   countCell.className = "count";
   basicInfoRow.appendChild(countCell);
 
+  // Timing info
+  var timingCell = document.createElement("td");
+  timingCell.className = "timing";
+  basicInfoRow.appendChild(timingCell);
+
   // table row containing the complete test log
   var logCell = document.createElement("td");
   logCell.className = "log";
-  logCell.colSpan = "3";
+  logCell.colSpan = "4";
   logRow.appendChild(logCell);
 
   // iframe containing a preview of object
@@ -157,7 +153,7 @@ function createTestRows(testName, testURL) {
   iframe.src = testURL;
 
   var iframeCell = document.createElement("td");
-  iframeCell.colSpan = "3";
+  iframeCell.colSpan = "4";
   iframeCell.appendChild(iframe);
   iframeRow.appendChild(iframeCell);
 
@@ -172,6 +168,228 @@ function createTestRows(testName, testURL) {
   };
   basicInfoRow.click();
   return tablegroup;
+}
+
+function testStarted(test) {
+  test.start = now();
+}
+function testFinished(test) {
+  test.finished = now();
+  test.querySelector(".timing").innerText = (test.finished - test.start).toFixed(2) + "ms";
+}
+
+
+/**
+ * Tests start off in the loading state, the move downwards until ending up in
+ * the finished state.
+ */
+var loadingTests = [];    /* Tests which are being loaded. */
+var unstartedTests = [];  /* Tests which have yet to start. */
+var runningTests = [];    /* Tests that are currently running. */
+var postingTests = [];    /* Tests that are currently posting results to server. */
+var finishedTests = [];   /* Test which have completed. */
+
+var LOADING = 1;
+var UNSTARTED = 2;
+var RUNNING = 3;
+var POSTING = 4;
+var FINISHED = 5;
+
+function changeTestState(test, newState) {
+  var i = null;
+
+  // Remove the test object form all the queues.
+  i = loadingTests.indexOf(test);
+  if (i >= 0) {
+    loadingTests.splice(i, 1);
+  }
+  i = unstartedTests.indexOf(test);
+  if (i >= 0) {
+    unstartedTests.splice(i, 1);
+  }
+  i = runningTests.indexOf(test);
+  if (i >= 0) {
+    runningTests.splice(i, 1);
+    testFinished(test);
+  }
+  i = postingTests.indexOf(test);
+  if (i >= 0) {
+    postingTests.splice(i, 1);
+  }
+
+  switch(newState) {
+  case LOADING:
+    loadingTests.unshift(test);
+    haveAllTestsLoaded();
+    break;
+  case UNSTARTED:
+    unstartedTests.unshift(test);
+    break;
+  case RUNNING:
+    testStarted(test);
+    runningTests.unshift(test);
+    break;
+  case POSTING:
+    postingTests.unshift(test);
+    break;
+  case FINISHED:
+    finishedTests.unshift(test);
+    haveAllTestsFinished();
+    break;
+  }
+}
+
+var statusIntervalId = null;
+
+/**
+ * Element for reporting the overall status.
+ */
+var statusElement = document.querySelector("#status");
+
+var loadingElement = document.querySelector("#loading");
+var unstartedElement = document.querySelector("#unstarted");
+var runningElement = document.querySelector("#running");
+var postingElement = document.querySelector("#posting");
+var finishedElement = document.querySelector("#finished");
+
+function updateStatus() {
+  loadingElement.innerText = loadingTests.length;
+  unstartedElement.innerText = unstartedTests.length;
+  runningElement.innerText = runningTests.length;
+  postingElement.innerText = postingTests.length;
+  finishedElement.innerText = finishedTests.length;
+
+  if (loadingElement.length > 0) {
+    statusElement.innerText = "Loading";
+  } else if (runningTests.length > 0) {
+    statusElement.innerText = "Running";
+  } else if (postingTests.length > 0) {
+    statusElement.innerText = "Posting results";
+  } else if (finishedTests.length == tests.length) {
+    statusElement.innerText = "Finished";
+    window.clearInterval(statusIntervalId);
+  }
+}
+
+
+/**
+ * Create the iframes for each test.
+ */
+window.onload = function createTestRunners() {
+  statusIntervalId = window.setInterval(updateStatus, 10);
+
+  for (var i = 0; i < tests.length; i++) {
+    var testName = tests[i];
+    var testURL = "testcases/" + testName;
+
+    var test = createTestRows(testName, testURL);
+    changeTestState(test, LOADING);
+
+    document.querySelector("#results").appendChild(test);
+    test.querySelector("iframe").contentWindow.onload = function() {
+      changeTestState(this, UNSTARTED);
+      haveAllTestsLoaded();
+    }.bind(test);
+
+  }
+}
+
+var intervalId = null;
+function haveAllTestsLoaded() {
+  if (loadingTests.length != 0)
+    return;
+
+  intervalId = window.setInterval(runTests, 10);
+}
+function haveAllTestsFinished() {
+  if (finishedTests.length != tests.length)
+    return;
+
+  window.clearInterval(intervalId);
+  window.finished = true;
+}
+
+var maxParallel = 1;
+
+function runTests() {
+
+  // Start as many unstarted tests as possible
+  while (unstartedTests.length > 0 && runningTests.length < maxParallel) {
+    // Move from unstarted to running state
+    var test = unstartedTests[0];
+
+    var testWindow = test.querySelector("iframe").contentWindow;
+    testWindow.setTimeout(testWindow.animTestRunner.start, 1);
+
+    changeTestState(test, RUNNING);
+  }
+
+  // Get the results from finished tests and post them.
+  for (var i = 0; i < runningTests.length; i++) {
+    var test = runningTests[i];
+
+    var testWindow = test.querySelector("iframe").contentWindow;
+    if (!testWindow.animTestRunner || !testWindow.animTestRunner.results)
+      continue;
+
+    var result = processResults(test, testWindow.animTestRunner.results);
+    if (result) {
+      // Move from running to posting state
+      changeTestState(test, POSTING);
+      i--;
+
+      var data = new FormData();
+      data.append("data", JSON.stringify(result));
+
+      var xhr = new XMLHttpRequest();
+      xhr.onload = function () {
+        // Move from running to finished state
+        changeTestState(this, FINISHED);
+      }.bind(test);
+      xhr.open("POST", "test-results-post.html", true);
+      xhr.send(data);
+    } else {
+      // Move directly to finished state
+      changeTestState(test, FINISHED);
+      i--;
+    }
+
+  }
+}
+
+/**
+ * Check to see if any of the test suites have completed and if the complete
+ * test run has completed.
+ */
+function processResults(test, results) {
+  var logElement = test.querySelector(".log");
+  logElement.appendChild(prettyResults(results));
+
+  if (results.length > 0) {
+    var testResult = {};
+    testResult["type"] = "result";
+    testResult["testName"] = test.id;
+    testResult["results"] = results;
+
+    var passed = results.filter(function(result) {
+        return result.status == 0;
+      }).length;
+    var failed = results.length - passed;
+
+    if (!failed) {
+      test.className = "pass";
+    } else {
+      test.className = "fail";
+    }
+
+    var count = test.querySelector(".count");
+    count.innerText = passed + " of " + results.length + " passed";
+
+    var log = test.querySelector(".log");
+    return testResult;
+  } else {
+    test.className = "no-tests";
+  }
 }
 
 /**
@@ -201,113 +419,6 @@ function prettyResults(results) {
   }
   return newResultsDiv;
 }
-
-
-var runningTests = [];  /* List of test runners */
-var finishedRunners = []; /* List of test runners which have completed */
-
-var intervalId = null;
-var maxParallel = 1000;
-
-var statusElement = document.querySelector("#status")
-var runningElement = document.querySelector("#running")
-var finishedElement = document.querySelector("#finished")
-var unstartedElement = document.querySelector("#unstarted")
-var xhrElement = document.querySelector("#xhr")
-
-/**
- * Create the test runners for each test suite listed in tests.
- */
-window.onload = function createTestRunners() {
-  if (runningTests.length > 0) {
-    checkForResults();
-  }
-
-  for (var i = finishedRunners.length + runningTests.length;
-       i < tests.length && i < (finishedRunners.length + maxParallel);
-       i++) {
-    var testName = tests[i];
-    var testURL = "testcases/" + testName;
-
-    console.log("Loading", testName);
-    var runner = createTestRows(testName, testURL);
-    runner.querySelector("iframe").onload = createTestRunners;
-    runningTests.push(runner);
-
-    document.querySelector("#results").appendChild(runner);
-  }
-
-  runningElement.innerText = runningTests.length;
-  finishedElement.innerText = finishedRunners.length;
-  unstartedElement.innerText = tests.length - (finishedRunners.length + runningTests.length);
-  xhrElement.innerText = pendingXhr.length;
-
-  if (runningTests.length > 0 && !intervalId) {
-    statusElement.innerText = "Started";
-
-    intervalId = window.setInterval(createTestRunners, 100);
-  } else if (tests.length == finishedRunners.length && pendingXhr.length == 0) {
-    statusElement.innerText = "Finished!";
-
-    window.clearInterval(intervalId);
-    window.finished = true;
-  } else {
-    statusElement.innerText = "Running";
-  }
-};
-
-/**
- * Check to see if any of the test suites have completed and if the complete
- * test run has completed.
- */
-function checkForResults() {
-  for (var i = 0; i < runningTests.length; i++) {
-    var runner = runningTests[i];
-
-    var testWindow = runner.querySelector("iframe").contentWindow;
-    if (testWindow.animTestRunner && testWindow.animTestRunner.results) {
-      // Remove the running test
-      var i = runningTests.indexOf(runner);
-      runningTests.splice(i, 1);
-      i--;
-
-      finishedRunners.push(runner);
-      console.log("Finished", runner.id);
-
-      var results = testWindow.animTestRunner.results;
-      if (results.length > 0) {
-        var testResult = {};
-        testResult["type"] = "result";
-        testResult["testName"] = runner.id;
-        testResult["results"] = results;
-        postResultsToServer(testResult);
-
-        var passed = results.filter(function(result) {
-            return result.status == 0;
-          }).length;
-        var failed = results.length - passed;
-
-        if (!failed) {
-          runner.className = "pass";
-        } else {
-          runner.className = "fail";
-        }
-
-        var count = runner.querySelector(".count");
-        count.innerHTML = passed + " of " + results.length + " passed";
-
-        var log = runner.querySelector(".log");
-        log.appendChild(prettyResults(results));
-      } else {
-        runner.className = "no-tests";
-      }
-
-      testWindow.animTestRunner.results = null;
-    }
-  }
-
-}
-
 
 })();
 </script>
