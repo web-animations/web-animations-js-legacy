@@ -204,6 +204,8 @@ function prettyResults(results) {
 var testRunners = [];  /* List of test runners */
 var finishedRunners = []; /* List of test runners which have completed */
 
+var intervalId = null;
+
 /**
  * Create the test runners for each test suite listed in tests.
  */
@@ -213,7 +215,9 @@ window.onload = function createTestRunners() {
     var testURL = "testcases/" + testName;
     testRunners.push(createTestRows(testName, testURL));
     document.querySelector("#results").appendChild(testRunners[i]);
+
   }
+  intervalId = window.setInterval(checkForResults, 25);
 };
 
 /**
@@ -268,8 +272,6 @@ function checkForResults() {
     window.clearInterval(intervalId);
   }
 }
-
-var intervalId = window.setInterval(checkForResults, 100);
 
 
 })();
