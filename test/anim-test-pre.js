@@ -874,7 +874,6 @@ window.addEventListener('load', function() {
     return;
   }
 
-  runAnimTests();
 });
 
 function runAnimTests() {
@@ -897,6 +896,7 @@ window.animTestRunner = {
   players: PLAYERS,
   waiting: false,
   finished: false,
+  start: runAnimTests,
   waitUntilDone: function() {
     this.waiting = true;
   },

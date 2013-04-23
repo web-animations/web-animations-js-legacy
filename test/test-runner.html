@@ -17,6 +17,10 @@ limitations under the License.
 -->
 <!DOCTYPE html>
 <style>
+h1 {
+  display: inline;
+}
+
 iframe {
   width: 800px;
   height: 600px;
@@ -24,10 +28,6 @@ iframe {
 
 tbody {
   color: gray;
-}
-
-tbody h1 {
-  display: inline;
 }
 
 /* Pass styles */
@@ -56,6 +56,10 @@ li.fail {
 
 </style>
 <script src="testcases.js"></script>
+
+<h1 id=status>Pending</h1>
+Yet to start: <span id=unstarted></span>, Running: <span id=running></span>, Finished: <span id=finished></span> (Pending XHR requests: <span id=xhr></span>)
+
 <table id="results"></table>
 
 <script>
@@ -111,6 +115,7 @@ function postResultsToServer(resultObject) {
  */
 function createTestRows(testName, testURL) {
   var tablegroup = document.createElement("tbody");
+  tablegroup.id = testName;
 
   var basicInfoRow = document.createElement("tr");
   tablegroup.appendChild(basicInfoRow);
@@ -165,8 +170,7 @@ function createTestRows(testName, testURL) {
       iframeRow.style.display = "none";
     }
   };
-  basicInfoRow.onclick();  // Hide this detail by default
-
+  basicInfoRow.click();
   return tablegroup;
 }
 
@@ -193,31 +197,63 @@ function prettyResults(results) {
     if (results[x].message != null) {
       output.innerHTML += results[x].message;
     }
-    output.innerHTML += "<br>";
-
     newResultsDiv.appendChild(output);
   }
   return newResultsDiv;
 }
 
 
-var testRunners = [];  /* List of test runners */
+var runningTests = [];  /* List of test runners */
 var finishedRunners = []; /* List of test runners which have completed */
 
 var intervalId = null;
+var maxParallel = 1000;
+
+var statusElement = document.querySelector("#status")
+var runningElement = document.querySelector("#running")
+var finishedElement = document.querySelector("#finished")
+var unstartedElement = document.querySelector("#unstarted")
+var xhrElement = document.querySelector("#xhr")
 
 /**
  * Create the test runners for each test suite listed in tests.
  */
 window.onload = function createTestRunners() {
-  for (var i = 0; i < tests.length; i++) {
+  if (runningTests.length > 0) {
+    checkForResults();
+  }
+
+  for (var i = finishedRunners.length + runningTests.length;
+       i < tests.length && i < (finishedRunners.length + maxParallel);
+       i++) {
     var testName = tests[i];
     var testURL = "testcases/" + testName;
-    testRunners.push(createTestRows(testName, testURL));
-    document.querySelector("#results").appendChild(testRunners[i]);
 
+    console.log("Loading", testName);
+    var runner = createTestRows(testName, testURL);
+    runner.querySelector("iframe").onload = createTestRunners;
+    runningTests.push(runner);
+
+    document.querySelector("#results").appendChild(runner);
   }
-  intervalId = window.setInterval(checkForResults, 25);
+
+  runningElement.innerText = runningTests.length;
+  finishedElement.innerText = finishedRunners.length;
+  unstartedElement.innerText = tests.length - (finishedRunners.length + runningTests.length);
+  xhrElement.innerText = pendingXhr.length;
+
+  if (runningTests.length > 0 && !intervalId) {
+    statusElement.innerText = "Started";
+
+    intervalId = window.setInterval(createTestRunners, 100);
+  } else if (tests.length == finishedRunners.length && pendingXhr.length == 0) {
+    statusElement.innerText = "Finished!";
+
+    window.clearInterval(intervalId);
+    window.finished = true;
+  } else {
+    statusElement.innerText = "Running";
+  }
 };
 
 /**
@@ -225,19 +261,24 @@ window.onload = function createTestRunners() {
  * test run has completed.
  */
 function checkForResults() {
-  for (var i = 0; i < testRunners.length; i++) {
-    var runner = testRunners[i];
+  for (var i = 0; i < runningTests.length; i++) {
+    var runner = runningTests[i];
 
     var testWindow = runner.querySelector("iframe").contentWindow;
     if (testWindow.animTestRunner && testWindow.animTestRunner.results) {
-      finishedRunners.push(tests[i]);
-      console.log("Finished", tests[i]);
+      // Remove the running test
+      var i = runningTests.indexOf(runner);
+      runningTests.splice(i, 1);
+      i--;
+
+      finishedRunners.push(runner);
+      console.log("Finished", runner.id);
 
       var results = testWindow.animTestRunner.results;
       if (results.length > 0) {
         var testResult = {};
         testResult["type"] = "result";
-        testResult["testName"] = tests[i];
+        testResult["testName"] = runner.id;
         testResult["results"] = results;
         postResultsToServer(testResult);
 
@@ -265,12 +306,6 @@ function checkForResults() {
     }
   }
 
-  console.log(testRunners.length, finishedRunners.length, pendingXhr.length);
-  if (testRunners.length == finishedRunners.length && pendingXhr.length == 0) {
-    console.log("Everything finished!");
-    window.finished = true;
-    window.clearInterval(intervalId);
-  }
 }
 
 
