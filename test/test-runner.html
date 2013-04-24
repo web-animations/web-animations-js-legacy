@@ -1,5 +1,5 @@
 <!--
-Copyright 2012 Google Inc. All Rights Reserved.
+@license Copyright 2012 Google Inc. All Rights Reserved.
 
 vim: set ts=2 sw=2 et sts=2 ai:
 
@@ -170,31 +170,85 @@ function createTestRows(testName, testURL) {
   return tablegroup;
 }
 
+/**
+ * Called when a test is started.
+ * @param {Element} test dom object representing the test. id will contain the
+ *    test name.
+ */
 function testStarted(test) {
   test.start = now();
 }
+
+/**
+ * Called when a test is finished.
+ * @param {object} test dom object representing the test. id will contain the
+ *    test name.
+ */
 function testFinished(test) {
   test.finished = now();
   test.querySelector(".timing").innerText = (test.finished - test.start).toFixed(2) + "ms";
 }
 
+/* @type {?number} */ var intervalId = null;
 
 /**
+ * Checks all the tests are in the unstarted state and then kicks of running
+ * the tests.
+ */
+function haveAllTestsLoaded() {
+  if (loadingTests.length != 0)
+    return;
+
+  intervalId = window.setInterval(runTests, 10);
+}
+
+/**
+ * Checks all the tests are in the finished state and then marks the whole test
+ * as finished and stops the periodic javascript functions.
+ */
+function haveAllTestsFinished() {
+  if (finishedTests.length != tests.length)
+    return;
+
+  window.clearInterval(intervalId);
+  window.finished = true;
+}
+
+
+/**
+ * These lists show track which state a test is in. An individual test should
+ * only ever be in one of the lists. You use the changeTestState() function to
+ * move from one state to another.
+ *
  * Tests start off in the loading state, the move downwards until ending up in
  * the finished state.
  */
-var loadingTests = [];    /* Tests which are being loaded. */
-var unstartedTests = [];  /* Tests which have yet to start. */
-var runningTests = [];    /* Tests that are currently running. */
-var postingTests = [];    /* Tests that are currently posting results to server. */
-var finishedTests = [];   /* Test which have completed. */
+/* @type {Array.<Element>} */ var loadingTests = [];
+/* @type {Array.<Element>} */ var unstartedTests = [];
+/* @type {Array.<Element>} */ var runningTests = [];
+/* @type {Array.<Element>} */ var postingTests = [];
+/* @type {Array.<Element>} */ var finishedTests = [];
 
-var LOADING = 1;
-var UNSTARTED = 2;
-var RUNNING = 3;
-var POSTING = 4;
-var FINISHED = 5;
+/**
+ * Enum for state values.
+ * @enum {number}
+ */
+var States = {
+  LOADING: 1,    /* Test which is being loaded. */
+  UNSTARTED: 2,  /* Test which have yet to start. */
+  RUNNING: 3,    /* Test that is currently running. */
+  POSTING: 4,    /* Test that is currently posting results to server. */
+  FINISHED: 5,   /* Test which has completed. */
+};
 
+/**
+ * Changes the state of the given test to the given state.
+ * This function doesn't check that the state transition actually make sense.
+ *
+ * @param {Element} test DOM object representing the test. The id will contain
+ *     the test name.
+ * @param {States} The new state to transition too.
+ */
 function changeTestState(test, newState) {
   var i = null;
 
@@ -218,40 +272,43 @@ function changeTestState(test, newState) {
   }
 
   switch(newState) {
-  case LOADING:
+  case States.LOADING:
     loadingTests.unshift(test);
     haveAllTestsLoaded();
     break;
-  case UNSTARTED:
+  case States.UNSTARTED:
     unstartedTests.unshift(test);
     break;
-  case RUNNING:
+  case States.RUNNING:
     testStarted(test);
     runningTests.unshift(test);
     break;
-  case POSTING:
+  case States.POSTING:
     postingTests.unshift(test);
     break;
-  case FINISHED:
+  case States.FINISHED:
     finishedTests.unshift(test);
     haveAllTestsFinished();
     break;
   }
 }
 
-var statusIntervalId = null;
 
 /**
- * Element for reporting the overall status.
+ * Elements for reporting the overall status.
  */
-var statusElement = document.querySelector("#status");
+/* @type {Element} */ var statusElement = document.querySelector("#status");
+/* @type {Element} */ var loadingElement = document.querySelector("#loading");
+/* @type {Element} */ var unstartedElement = document.querySelector("#unstarted");
+/* @type {Element} */ var runningElement = document.querySelector("#running");
+/* @type {Element} */ var postingElement = document.querySelector("#posting");
+/* @type {Element} */ var finishedElement = document.querySelector("#finished");
 
-var loadingElement = document.querySelector("#loading");
-var unstartedElement = document.querySelector("#unstarted");
-var runningElement = document.querySelector("#running");
-var postingElement = document.querySelector("#posting");
-var finishedElement = document.querySelector("#finished");
+/* @type {?number} */ var statusIntervalId = null;
 
+/**
+ * Update the status dialog with information about the current status.
+ */
 function updateStatus() {
   loadingElement.innerText = loadingTests.length;
   unstartedElement.innerText = unstartedTests.length;
@@ -283,34 +340,23 @@ window.onload = function createTestRunners() {
     var testURL = "testcases/" + testName;
 
     var test = createTestRows(testName, testURL);
-    changeTestState(test, LOADING);
+    changeTestState(test, States.LOADING);
 
     document.querySelector("#results").appendChild(test);
     test.querySelector("iframe").contentWindow.onload = function() {
-      changeTestState(this, UNSTARTED);
+      changeTestState(this, States.UNSTARTED);
       haveAllTestsLoaded();
     }.bind(test);
 
   }
 }
 
-var intervalId = null;
-function haveAllTestsLoaded() {
-  if (loadingTests.length != 0)
-    return;
-
-  intervalId = window.setInterval(runTests, 10);
-}
-function haveAllTestsFinished() {
-  if (finishedTests.length != tests.length)
-    return;
-
-  window.clearInterval(intervalId);
-  window.finished = true;
-}
-
 var maxParallel = 1;
 
+/**
+ * Start as many unstarted tests as possible, wait for results and then post
+ * them.
+ */
 function runTests() {
 
   // Start as many unstarted tests as possible
@@ -321,7 +367,7 @@ function runTests() {
     var testWindow = test.querySelector("iframe").contentWindow;
     testWindow.setTimeout(testWindow.animTestRunner.start, 1);
 
-    changeTestState(test, RUNNING);
+    changeTestState(test, States.RUNNING);
   }
 
   // Get the results from finished tests and post them.
@@ -335,7 +381,7 @@ function runTests() {
     var result = processResults(test, testWindow.animTestRunner.results);
     if (result) {
       // Move from running to posting state
-      changeTestState(test, POSTING);
+      changeTestState(test, States.POSTING);
       i--;
 
       var data = new FormData();
@@ -344,13 +390,13 @@ function runTests() {
       var xhr = new XMLHttpRequest();
       xhr.onload = function () {
         // Move from running to finished state
-        changeTestState(this, FINISHED);
+        changeTestState(this, States.FINISHED);
       }.bind(test);
       xhr.open("POST", "test-results-post.html", true);
       xhr.send(data);
     } else {
       // Move directly to finished state
-      changeTestState(test, FINISHED);
+      changeTestState(test, States.FINISHED);
       i--;
     }
 
@@ -358,12 +404,31 @@ function runTests() {
 }
 
 /**
- * Check to see if any of the test suites have completed and if the complete
- * test run has completed.
+ * Processes the test's results and put the information into the test object.
+ *
+ * @param {Element} test DOM object representing the test.
  */
 function processResults(test, results) {
   var logElement = test.querySelector(".log");
-  logElement.appendChild(prettyResults(results));
+
+  var newResultsDiv = document.createElement('ul');
+  for (var x in results){
+    var output = document.createElement('li');
+    output.innerHTML += results[x].name + " ";
+
+    var grade = 'fail';
+    if (results[x].status == 0) {
+      grade = "pass";
+    }
+    output.className = grade;
+
+    output.innerHTML += grade + " ";
+    if (results[x].message != null) {
+      output.innerHTML += results[x].message;
+    }
+    newResultsDiv.appendChild(output);
+  }
+  logElement.appendChild(newResultsDiv);
 
   if (results.length > 0) {
     var testResult = {};
@@ -390,34 +455,6 @@ function processResults(test, results) {
   } else {
     test.className = "no-tests";
   }
-}
-
-/**
- * Make a pretty version of a test suites results.
- *
- * @param {Array.<Object>} results
- * @return {Element} Unorder list created human readable version of the results
- *    information.
- */
-function prettyResults(results) {
-  var newResultsDiv = document.createElement('ul');
-  for (var x in results){
-    var output = document.createElement('li');
-    output.innerHTML += results[x].name + " ";
-
-    var grade = 'fail';
-    if (results[x].status == 0) {
-      grade = "pass";
-    }
-    output.className = grade;
-
-    output.innerHTML += grade + " ";
-    if (results[x].message != null) {
-      output.innerHTML += results[x].message;
-    }
-    newResultsDiv.appendChild(output);
-  }
-  return newResultsDiv;
 }
 
 })();
