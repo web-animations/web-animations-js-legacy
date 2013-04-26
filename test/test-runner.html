@@ -109,6 +109,7 @@ function createTestRows(testName, testURL) {
   tablegroup.id = testName;
 
   var basicInfoRow = document.createElement("tr");
+  basicInfoRow.className = "info-row";
   tablegroup.appendChild(basicInfoRow);
   var logRow = document.createElement("tr");
   tablegroup.appendChild(logRow);
@@ -142,12 +143,6 @@ function createTestRows(testName, testURL) {
   timingCell.className = "timing";
   basicInfoRow.appendChild(timingCell);
 
-  // table row containing the complete test log
-  var logCell = document.createElement("td");
-  logCell.className = "log";
-  logCell.colSpan = "4";
-  logRow.appendChild(logCell);
-
   // iframe containing a preview of object
   var iframe = document.createElement("iframe");
   iframe.src = testURL;
@@ -156,6 +151,12 @@ function createTestRows(testName, testURL) {
   iframeCell.colSpan = "4";
   iframeCell.appendChild(iframe);
   iframeRow.appendChild(iframeCell);
+
+  // table row containing the complete test log
+  var logCell = document.createElement("td");
+  logCell.className = "log";
+  logCell.colSpan = "4";
+  logRow.appendChild(logCell);
 
   basicInfoRow.onclick = function() {
     if (logRow.style.display == "none") {
@@ -455,6 +456,22 @@ function processResults(test, results) {
       test.className = "pass";
     } else {
       test.className = "fail";
+
+      // Open up the window of the failed result
+      test.querySelector('.info-row').click();
+
+      function trueOffsetTop(element) {
+        var t = 0;
+        if (element.offsetParent) {
+          do {
+            t += element.offsetTop;
+          } while (element = element.offsetParent);
+        return [t];
+        }
+      }
+
+      // Scroll to it.
+      window.scroll(0,trueOffsetTop(test));
     }
 
     var count = test.querySelector(".count");
