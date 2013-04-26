@@ -291,6 +291,16 @@ function changeTestState(test, newState) {
     haveAllTestsFinished();
     break;
   }
+
+  function testSort(a, b) {
+    return a.id.localeCompare(b.id);
+  }
+
+  // Sort the lists just to be nice.
+  loadingTests.sort(testSort);
+  unstartedTests.sort(testSort);
+  runningTests.sort(testSort);
+  postingTests.sort(testSort);
 }
 
 
