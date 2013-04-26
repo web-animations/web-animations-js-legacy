@@ -17,28 +17,11 @@ limitations under the License.
 <!DOCTYPE html>
 
 <style>
-body {
-  background-color: green;
-}
-body div#fail {
-  display: none;
-}
-body.fail {
-  background-color: red;
-}
-body.fail div#pass {
-  display: none;
-}
-body.fail div#fail {
-  display: block;
-}
 div.anim {
   position: relative;
 }
 </style>
 
-<div id="pass">PASS</div>
-<div id="fail">FAIL</div>
 <div id="target1" class="anim"></div>
 <div id="target2" class="anim"></div>
 <div id="target3" class="anim"></div>
@@ -48,19 +31,18 @@ div.anim {
 <script src="../anim-test-pre.js"></script>
 <script>
 
-var check = function(actual, expected, failureMessage) {
-  if (actual != expected) {
-    var div = document.createElement("div");
-    div.innerText =
-        failureMessage + ". Expected '" + expected + "', got '" + actual + "'.";
-    document.body.appendChild(div);
-    document.body.className = "fail";
-  }
+animTestRunner.waitUntilDone();
+
+var check = function(actual, expected, description) {
+  console.log('check', actual, expected);
+  test(function() { assert_equals(actual, expected); }, description);
 }
 
 var leftToRight = {left: ["100px", "200px"]};
 var rightToLeft = {left: ["200px", "100px"]};
 var noop = {color: "red"};
+
+var dt = document.timeline;
 
 // Test that an animation uses the correct compositing order when it has a
 // grandparent that remains active longer than its parent.
@@ -70,7 +52,7 @@ var noop = {color: "red"};
 // because the second animation has a later start time, it should be composited
 // second, so the div should end up on the left.
 var target1 = document.getElementById("target1");
-var player = document.timeline.play(new ParGroup([
+var player = dt.play(new ParGroup([
   new ParGroup([
     new Animation(target1, leftToRight, 1.0),
   ]),
@@ -80,7 +62,6 @@ var player = document.timeline.play(new ParGroup([
   ]),
 ]));
 
-player.paused = true;
 player.currentTime = 3.0;
 setTimeout(function() {
   check(getComputedStyle(target1).getPropertyValue("left"), "100px",
@@ -93,7 +74,7 @@ setTimeout(function() {
 // rate of 4.0, so the effective start time of its child animation is 2.0. So
 // the the div should end up on the left at time 3.0.
 var target2 = document.getElementById("target2");
-var player = document.timeline.play(new ParGroup([
+var player = dt.play(new ParGroup([
   new Animation(target2, leftToRight, 1.0),
   new SeqGroup([
     new Animation(target1, noop, 8.0),
@@ -110,10 +91,10 @@ setTimeout(function() {
 
 // Test compositing order follows Player start time order.
 var target3 = document.getElementById("target3");
-var player1 = document.timeline.play(
+var player1 = dt.play(
   new Animation(target3, {left: ["100px", "200px"]}, 1.0));
 player1.startTime += 1.0;
-var player2 = document.timeline.play(
+var player2 = dt.play(
   new Animation(target3, {left: ["100px", "1000px"]}, 2.0));
 
 player1.paused = true;
@@ -127,7 +108,7 @@ setTimeout(function() {
 
 // Test compositing order follows tree order.
 var target4 = document.getElementById("target4");
-var player = document.timeline.play(new ParGroup([
+var player = dt.play(new ParGroup([
   new Animation(target4, {left: ["100px", "1000px"]}, 1.0),
   new SeqGroup([
     new Animation(target4, {left: ["100px", "1000px"]}, 1.0),
@@ -148,5 +129,7 @@ setTimeout(function() {
   check(getComputedStyle(target4).getPropertyValue("left"), "200px",
       "Last animation should have latest compositing order");
 }, 100.0);
+
+setTimeout(function() { animTestRunner.done(); }, 200.0);
 
 </script>
