@@ -17,6 +17,16 @@ limitations under the License.
 -->
 <!DOCTYPE html>
 <style>
+
+#status-box {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  background: white;
+  border: 1px solid black;
+  padding-right: 5px;
+}
+
 h1 {
   display: inline;
 }
@@ -65,12 +75,14 @@ li.fail {
 </style>
 <script src="testcases.js"></script>
 
+<div id=status-box>
 <h1 id=status>Pending</h1>
 Loading: <span id=loading></span>
 Unstarted: <span id=unstarted></span>
 Running: <span id=running></span>
 Posting: <span id=posting></span>
 Finished: <span id=finished></span>
+</div>
 
 <table id="results"></table>
 
@@ -111,10 +123,10 @@ function createTestRows(testName, testURL) {
   var basicInfoRow = document.createElement("tr");
   basicInfoRow.className = "info-row";
   tablegroup.appendChild(basicInfoRow);
-  var logRow = document.createElement("tr");
-  tablegroup.appendChild(logRow);
   var iframeRow = document.createElement("tr");
   tablegroup.appendChild(iframeRow);
+  var logRow = document.createElement("tr");
+  tablegroup.appendChild(logRow);
 
   // Name
   var header = document.createElement("h1");
