@@ -17,28 +17,11 @@ limitations under the License.
 <!DOCTYPE html>
 
 <style>
-body {
-  background-color: green;
-}
-body div#fail {
-  display: none;
-}
-body.fail {
-  background-color: red;
-}
-body.fail div#pass {
-  display: none;
-}
-body.fail div#fail {
-  display: block;
-}
 div.anim {
   position: relative;
 }
 </style>
 
-<div id="pass">PASS</div>
-<div id="fail">FAIL</div>
 <div id="target1" class="anim"></div>
 <div id="target2" class="anim"></div>
 <div id="target3" class="anim"></div>
@@ -48,14 +31,11 @@ div.anim {
 <script src="../anim-test-pre.js"></script>
 <script>
 
-var check = function(actual, expected, failureMessage) {
-  if (actual != expected) {
-    var div = document.createElement("div");
-    div.innerText =
-        failureMessage + ". Expected '" + expected + "', got '" + actual + "'.";
-    document.body.appendChild(div);
-    document.body.className = "fail";
-  }
+animTestRunner.waitUntilDone();
+
+var check = function(actual, expected, description) {
+  console.log('check', actual, expected);
+  test(function() { assert_equals(actual, expected); }, description);
 }
 
 var leftToRight = {left: ["100px", "200px"]};
@@ -80,7 +60,6 @@ var player = document.timeline.play(new ParGroup([
   ]),
 ]));
 
-player.paused = true;
 player.currentTime = 3.0;
 setTimeout(function() {
   check(getComputedStyle(target1).getPropertyValue("left"), "100px",
@@ -148,5 +127,7 @@ setTimeout(function() {
   check(getComputedStyle(target4).getPropertyValue("left"), "200px",
       "Last animation should have latest compositing order");
 }, 100.0);
+
+setTimeout(function() { animTestRunner.done(); }, 200.0);
 
 </script>
