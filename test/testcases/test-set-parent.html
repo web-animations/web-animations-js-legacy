@@ -15,44 +15,15 @@ limitations under the License.
 -->
 
 <!DOCTYPE html>
-<style>
-body {
-  background-color: green;
-}
-body div#fail {
-  display: none;
-}
-body.fail {
-  background-color: red;
-}
-body.fail div#pass {
-  display: none;
-}
-body.fail div#fail {
-  display: block;
-}
-</style>
-
-<div id="pass">PASS</div>
-<div id="fail">FAIL</div>
 <div id="anim"></div>
 
 <script src="../../web-animations.js"></script>
 <script src="../anim-test-pre.js"></script>
 <script>
 
-var fail = function(failureMessage) {
-  var div = document.createElement("div");
-  div.innerText = failureMessage;
-  document.body.appendChild(div);
-  document.body.className = "fail";
-};
-
-var check = function(actual, expected, failureMessage) {
-  if (actual !== expected) {
-    fail(failureMessage + ". Expected '" + expected + "', got '" + actual +
-        "'.");
-  }
+var check = function(actual, expected, description) {
+  console.log('check', actual, expected);
+  test(function() { assert_equals(actual, expected); }, description);
 };
 
 var elem = document.getElementById("anim");
@@ -77,24 +48,24 @@ try {
 
 // Test that updates are made to child when constructing parent.
 var parentGroup = new ParGroup([anim]);
-check(anim.parentGroup, parentGroup, "Child's parentGroup should be set to parent");
-check(parentGroup.children.length, 1, "Parent should have 1 child");
-check(parentGroup.children[0], anim, "Parent should have correct child");
+check(anim.parentGroup, parentGroup, "Parent's constructor, Child's parentGroup should be set to parent");
+check(parentGroup.children.length, 1, "Parent's constructor, Parent should have 1 child");
+check(parentGroup.children[0], anim, "Parent's constructor, Parent should have correct child");
 
 // Test that updates are made to parent when constructing child.
 var parentGroup = new ParGroup();
 var child = new Animation(elem, animFunc, 1.0, parentGroup);
-check(child.parentGroup, parentGroup, "Child's parentGroup should be set");
-check(parentGroup.children.length, 1, "Parent should now have 1 child");
-check(parentGroup.children[0], child, "Parent should have correct child");
+check(child.parentGroup, parentGroup, "Child's constructor, Child's parentGroup should be set");
+check(parentGroup.children.length, 1, "Child's constructor, Parent should now have 1 child");
+check(parentGroup.children[0], child, "Child's constructor, Parent should have correct child");
 
 // Test that updates are made to previous and new parents when constructing new
 // parent.
 var newParent = new ParGroup([child]);
 check(child.parentGroup, newParent,
-    "Child's parentGroup should be updated to new parent");
+    "New Parent, Child's parentGroup should be updated to new parent");
 check(parentGroup.children.length, 0,
-    "Previous parent should no longer have children");
+    "New Parent, Previous parent should no longer have children");
 check(newParent.children.length, 1, "New parent should now have 1 child");
 check(newParent.children[0], child, "New parent should now have correct child");
 
@@ -102,28 +73,32 @@ check(newParent.children[0], child, "New parent should now have correct child");
 var newerParent = new ParGroup();
 newerParent.add(child);
 check(child.parentGroup, newerParent,
-    "Child's parentGroup should be updated to new parent");
+    "With .add, child's parentGroup should be updated to new parent");
 check(newParent.children.length, 0,
-    "Previous parent should no longer have children");
-check(newerParent.children.length, 1, "New parent should now have 1 child");
+    "With .add, Previous parent should no longer have children");
+check(newerParent.children.length, 1,
+    "With .add, New parent should now have 1 child");
 check(newerParent.children[0], child,
-    "New parent should now have correct child");
+    "With .add, New parent should now have correct child");
 
 // Test that calling add() with an existing child causes that child to be moved
 // to the end of the list of children.
 var sibling = new Animation(elem, animFunc, 1.0);
 var seqGroup = new SeqGroup([child, sibling]);
-check(seqGroup.children.length, 2, "seqGroup.children.length");
-check(seqGroup.children[0], child, "First child should be 'child'");
-check(seqGroup.children[1], sibling, "Second child should be 'sibling'");
-check(child.startTime, 0.0, "Start time of 'child'");
-check(sibling.startTime, 1.0, "Start time of 'sibling'");
+check(seqGroup.children.length, 2,
+    "Moved child, new seqGroup.children.length");
+check(seqGroup.children[0], child,
+    "Moved child, new seqGroup's first child should be 'child'");
+check(seqGroup.children[1], sibling,
+    "Moved child, Second child should be 'sibling'");
+check(child.startTime, 0.0, "Moved child, start time of 'child' == 0.0");
+check(sibling.startTime, 1.0, "Moved child, start time of 'sibling' == 1.0");
 seqGroup.add(seqGroup.children[0]);
-check(seqGroup.children.length, 2, "seqGroup.children.length");
-check(seqGroup.children[0], sibling, "First child should be 'sibling'");
-check(seqGroup.children[1], child, "Second child should be 'child'");
-check(sibling.startTime, 0.0, "Start time of 'sibling'");
-check(child.startTime, 1.0, "Start time of 'child'");
+check(seqGroup.children.length, 2, "After .add, seqGroup.children.length");
+check(seqGroup.children[0], sibling, "After .add, First child should be 'sibling'");
+check(seqGroup.children[1], child, "After .add, Second child should be 'child'");
+check(sibling.startTime, 0.0, "After .add, Start time of 'sibling'");
+check(child.startTime, 1.0, "After.add, Start time of 'child'");
 
 // Test that setting TimedItem.parentGroup is ignored.
 child.parentGroup = null;
