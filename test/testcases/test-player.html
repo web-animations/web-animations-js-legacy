@@ -17,50 +17,20 @@ Written by Steph McArthur
 -->
 
 <!DOCTYPE html>
-<style>
-body {
-  background-color: green;
-}
-body div#fail {
-  display: none;
-}
-body.fail {
-  background-color: red;
-}
-body.fail div#pass {
-  display: none;
-}
-body.fail div#fail {
-  display: block;
-}
-</style>
-
-<div id="pass">PASS</div>
-<div id="fail">FAIL</div>
 <div id="anim"></div>
 
 <script src="../../web-animations.js"></script>
 <script src="../anim-test-pre.js"></script>
 <script>
 
-var fail = function(failureMessage) {
-  var div = document.createElement("div");
-  div.innerText = failureMessage;
-  document.body.appendChild(div);
-  document.body.className = "fail";
+var check = function(actual, expected, description) {
+  console.log('check', actual, expected);
+  test(function() { assert_equals(actual, expected); }, description);
 };
 
-var check = function(actual, expected, failureMessage) {
-  if (actual !== expected) {
-    fail(failureMessage + ". Expected '" + expected + "', got '" + actual +
-        "'.");
-  }
-};
-
-var checkNotEqual = function(actual, unexpected, failureMessage) {
-  if (actual === unexpected) {
-    fail(failureMessage + ". Got unexpected '" + unexpected + "'");
-  }
+var checkNotEqual = function(actual, unexpected, description) {
+  console.log('check', actual, unexpected);
+  test(function() { assert_not_equals(actual, unexpected); }, description);
 };
 
 // Don't use a local named requestAnimationFrame, to avoid potential problems
@@ -117,7 +87,8 @@ check(animation2.getPlayer(), player3, "TimedItem.getPlayer() should remote");
 // reparenting.
 var player4 = dt.play(animation2);
 check(animation2.parentGroup, null, "Animation should be reparented");
-check(parGroup.children.length, 0, "Animation parent should be updated");
+check(parGroup.children.length, 0,
+    "Animation parent should be updated, leaving parGroup.children.length = 0");
 check(player4.source, animation2, "Player should use reparented animation");
 
 // Test that setting a parent on a TimedItem with a Player causes the player to
@@ -130,7 +101,8 @@ check(animation2.getPlayer(), player3,
 check(player4.source, null, "Player.source should be updated");
 check(animation2.parentGroup, parGroup,
     "Animation.parentGroup should be updated");
-check(parGroup.children.length, 1, "Animation parent should be updated");
+check(parGroup.children.length, 1, 
+    "Animation parent should be updated, leaving parGroup.children.length = 1");
 check(parGroup.children[0], animation2, "Animation parent should be updated");
 
 // Test that currentTime is zero before timeline starts.
@@ -145,7 +117,7 @@ check(document.timeline.play(animation).startTime, 0,
 var player5 = dt.play(animation);
 player5.currentTime = 42;
 check(player5.currentTime, 0,
-    "currentTime should always be zero before Timeline starts");
+    "player5 currentTime should always be zero before Timeline starts");
 addEventListener('load', function() {
   setTimeout(function() {
     check(player5.currentTime > 42, true,
