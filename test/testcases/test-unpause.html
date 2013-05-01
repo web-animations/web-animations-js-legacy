@@ -47,21 +47,22 @@ var testPauseUnpause = function(name, player) {
 
 // Test that a Player's currentTime is correct after pausing and unpausing,
 // with a zero startTime.
-setTimeout(function() {
+addEventListener("load", function() {
   testPauseUnpause("zero starttime,", document.timeline.play(new Animation(
       document.getElementById("anim"), {left: ["100px", "200px"]}, 1.0)));
-}, 0);
+
+});
 
 // Test that a Player's currentTime is correct after pausing and unpausing, with
 // a non-zero startTime.
-setTimeout(function() {
+addEventListener("load", function() {
   var player = document.timeline.play(new Animation(
       document.getElementById("anim"), {left: ["100px", "200px"]}, 1.0));
   check(player.startTime > 0, true, "Player has started");
   testPauseUnpause("non-zero starttime,", player);
 
   animTestRunner.done();
-}, 100);
+});
 
 // TODO: Test pausing and unpausing with a forced currentTime while the
 // Timeline is not started. See
