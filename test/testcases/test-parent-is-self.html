@@ -15,44 +15,15 @@ limitations under the License.
 -->
 
 <!DOCTYPE html>
-<style>
-body {
-  background-color: green;
-}
-body div#fail {
-  display: none;
-}
-body.fail {
-  background-color: red;
-}
-body.fail div#pass {
-  display: none;
-}
-body.fail div#fail {
-  display: block;
-}
-</style>
-
-<div id="pass">PASS</div>
-<div id="fail">FAIL</div>
 <div id="anim"></div>
 
 <script src="../../web-animations.js"></script>
 <script src="../anim-test-pre.js"></script>
 <script>
 
-var fail = function(failureMessage) {
-  var div = document.createElement("div");
-  div.innerText = failureMessage;
-  document.body.appendChild(div);
-  document.body.className = "fail";
-};
-
-var check = function(actual, expected, failureMessage) {
-  if (actual !== expected) {
-    fail(failureMessage + ". Expected '" + expected + "', got '" + actual +
-        "'.");
-  }
+var check = function(actual, expected, description) {
+  console.log('check', actual, expected);
+  test(function() { assert_equals(actual, expected); }, description);
 };
 
 var elem = document.getElementById("anim");
@@ -78,50 +49,47 @@ check(child2.parentGroup, group, "Sceond child's parent incorrect");
 var x = new ParGroup();
 var y = new ParGroup([x]);
 x.add(y);
-check(x.parentGroup, null, "x.parentGroup");
-check(x.children.length, 1, "x.children.length");
-check(x.children[0], y, "x's first child");
-check(y.parentGroup, x, "y.parentGroup");
-check(y.children.length, 0, "y.children.length");
+check(x.parentGroup, null, "ParGroup1 - x.parentGroup");
+check(x.children.length, 1, "ParGroup1 - x.children.length");
+check(x.children[0], y, "ParGroup1 - x's first child");
+check(y.parentGroup, x, "ParGroup1 - y.parentGroup");
+check(y.children.length, 0, "ParGroup1 - y.children.length");
 
 // Test case of immediate circular reference when constructing a new group.
 // Should end up with null -> y -> x.
 var x = new ParGroup();
 var y = new ParGroup([x], undefined, x);
-check(y.parentGroup, null, "y.parentGroup");
-check(y.children.length, 1, "y.children.length");
-check(y.children[0], x, "y's first child");
-check(x.parentGroup, y, "x.parentGroup");
-check(x.children.length, 0, "x.children.length");
+check(y.parentGroup, null, "ParGroup2 - y.parentGroup");
+check(y.children.length, 1, "ParGroup2 - y.children.length");
+check(y.children[0], x, "ParGroup2 - y's first child");
+check(x.parentGroup, y, "ParGroup2 - x.parentGroup");
+check(x.children.length, 0, "ParGroup2 - x.children.length");
 
 // Test case of general circular reference when constructing a new group. Should
 // end up with null -> x -> z -> y.
 var x = new ParGroup();
 var y = new ParGroup([x]);
 var z = new ParGroup([y], undefined, x);
-check(x.parentGroup, null, "x.parentGroup");
-check(x.children.length, 1, "x.children.length");
-check(x.children[0], z, "x's first child");
-check(z.parentGroup, x, "z.parentGroup");
-check(z.children.length, 1, "z.children.length");
-check(z.children[0], y, "z's first child");
-check(y.parentGroup, z, "y.parentGroup");
-check(y.children.length, 0, "y.children.length");
+check(x.parentGroup, null, "ParGroup3 - x.parentGroup");
+check(x.children.length, 1, "ParGroup3 - x.children.length");
+check(x.children[0], z, "ParGroup3 - x's first child");
+check(z.parentGroup, x, "ParGroup3 - z.parentGroup");
+check(z.children.length, 1, "ParGroup3 - z.children.length");
+check(z.children[0], y, "ParGroup3 - z's first child");
+check(y.parentGroup, z, "ParGroup3 - y.parentGroup");
+check(y.children.length, 0, "ParGroup3 - y.children.length");
 
 // Test case of circular reference which breaks existing chain. Should end up
 // with document.animationTimeline -> y and z -> x.
 var x = new ParGroup();
 var y = new ParGroup([x]);
 var z = new ParGroup([x], undefined, x);
-check(y.parentGroup, null, "y.parentGroup");
-check(y.children.length, 0, "y.children.length");
-check(z.parentGroup, null, "z.parentGroup");
-check(z.children.length, 1, "z.children.length");
-check(z.children[0], x, "z's first child");
-check(x.parentGroup, z, "x.parentGroup");
-check(x.children.length, 0, "x.children.length");
+check(y.parentGroup, null, "ParGroup4 - y.parentGroup");
+check(y.children.length, 0, "ParGroup4 - y.children.length");
+check(z.parentGroup, null, "ParGroup4 - z.parentGroup");
+check(z.children.length, 1, "ParGroup4 - z.children.length");
+check(z.children[0], x, "ParGroup4 - z's first child");
+check(x.parentGroup, z, "ParGroup4 - x.parentGroup");
+check(x.children.length, 0, "ParGroup4 - x.children.length");
 
 </script>
-
-
-

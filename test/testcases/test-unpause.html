@@ -16,75 +16,52 @@ limitations under the License.
 
 <!DOCTYPE html>
 <style>
-body {
-  background-color: green;
-}
-body div#fail {
-  display: none;
-}
-body.fail {
-  background-color: red;
-}
-body.fail div#pass {
-  display: none;
-}
-body.fail div#fail {
-  display: block;
-}
 div.anim {
   position: relative;
   left: 0px;
 }
 </style>
 
-<div id="pass">PASS</div>
-<div id="fail">FAIL</div>
 <div id="anim" class="anim"></div>
 
 <script src="../../web-animations.js"></script>
 <script src="../anim-test-pre.js"></script>
 <script>
 
-var fail = function(failureMessage) {
-  var div = document.createElement("div");
-  div.innerText = failureMessage;
-  document.body.appendChild(div);
-  document.body.className = "fail";
+var check = function(actual, expected, description) {
+  console.log('check', actual, expected);
+  test(function() { assert_equals(actual, expected); }, description);
 };
 
-var check = function(actual, expected, failureMessage) {
-  if (actual != expected) {
-    fail(failureMessage + ". Expected '" + expected + "', got '" + actual +
-        "'.");
-  }
-};
+animTestRunner.waitUntilDone();
 
-var testPauseUnpause = function(player) {
+var testPauseUnpause = function(name, player) {
   player.currentTime = 5.0;
   player.paused = true;
-  check(player.currentTime, 5.0, "Player.currentTime should be unaffected by " +
-        "pausing");
+  check(player.currentTime, 5.0,
+    name + " Player.currentTime should be unaffected by pausing");
   player.paused = false;
-  check(player.currentTime, 5.0, "Player.currentTime should be unaffected by " +
-        "unpausing");
+  check(player.currentTime, 5.0,
+    name + " Player.currentTime should be unaffected by unpausing");
 };
 
 // Test that a Player's currentTime is correct after pausing and unpausing,
 // with a zero startTime.
 addEventListener("load", function() {
-  testPauseUnpause(document.timeline.play(new Animation(
+  testPauseUnpause("zero starttime,", document.timeline.play(new Animation(
       document.getElementById("anim"), {left: ["100px", "200px"]}, 1.0)));
+
 });
 
 // Test that a Player's currentTime is correct after pausing and unpausing, with
 // a non-zero startTime.
 addEventListener("load", function() {
-  setTimeout(function() {
-    var player = document.timeline.play(new Animation(
-        document.getElementById("anim"), {left: ["100px", "200px"]}, 1.0));
-    check(player.startTime > 0, true);
-    testPauseUnpause(player);
-  }, 0);
+  var player = document.timeline.play(new Animation(
+      document.getElementById("anim"), {left: ["100px", "200px"]}, 1.0));
+  check(player.startTime > 0, true, "Player has started");
+  testPauseUnpause("non-zero starttime,", player);
+
+  animTestRunner.done();
 });
 
 // TODO: Test pausing and unpausing with a forced currentTime while the
