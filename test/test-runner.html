@@ -358,6 +358,15 @@ function updateStatus() {
 window.onload = function createTestRunners() {
   statusIntervalId = window.setInterval(updateStatus, 10);
 
+  // Filter the tests
+  var filter = window.location.href.split("?")[1];
+  if (filter) {
+    filter = new RegExp(filter);
+    tests = tests.filter(function(v) {
+        return filter.exec(v);
+      });
+  }
+
   for (var i = 0; i < tests.length; i++) {
     var testName = tests[i];
     var testURL = "testcases/" + testName;
