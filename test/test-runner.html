@@ -157,7 +157,7 @@ function createTestRows(testName, testURL) {
 
   // iframe containing a preview of object
   var iframe = document.createElement("iframe");
-  iframe.src = testURL;
+  iframe.src = testURL + '?NoStart';
 
   var iframeCell = document.createElement("td");
   iframeCell.colSpan = "4";

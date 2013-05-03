@@ -78,6 +78,8 @@ var PLAYERS = [];
 })();
 
 // Boolean flag for whether the program is running in automatic mode
+var autoStart = true;
+// Boolean flag for whether the program is running in automatic mode
 var runInAutoMode;
 // Holds which test packet we are up to.
 var testIndex = 0;
@@ -262,7 +264,12 @@ function setupTests(timeouts) {
       new Option('Manual Run', 'Manual');
   select.options[select.options.length] =
       new Option('Auto Run', 'Auto');
+
+  // FIXME(mithro): Should use a proper href parser here.
   setAutoMode(window.location.href.split("?")[1] !== "Manual");
+
+  if (window.location.href.split("?")[1] === "NoStart")
+    autoStart = false;
 
   // Set the inital selected drop down list item
   select.selectedIndex = runInAutoMode;
@@ -874,6 +881,9 @@ window.addEventListener('load', function() {
     return;
   }
 
+  if (autoStart) {
+    setTimeout(runAnimTests, 0);
+  }
 });
 
 function runAnimTests() {
