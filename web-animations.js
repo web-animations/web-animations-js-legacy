@@ -2891,19 +2891,19 @@ if (!raf) {
         callback(clockMillis());
       }, 1000/60);
     };
-  } else if (usePerformanceTiming) {
-    // platform requestAnimationFrame provides only millisecond accuracy, wrap
-    // it and use performance.now()
-    raf = function(callback) {
-      nativeRaf(function() {
-        callback(performance.now());
-      });
-    };
   } else {
-    // platform requestAnimationFrame provides only millisecond accuracy, and
-    // we can't do any better
     raf = nativeRaf;
   }
+}
+if (usePerformanceTiming) {
+  // platform requestAnimationFrame provides only millisecond accuracy, wrap
+  // it and use performance.now()
+  var _raf = raf;
+  raf = function(callback) {
+    _raf(function() {
+      callback(performance.now());
+    });
+  };
 }
 
 var clockMillis = function() {
