@@ -57,6 +57,7 @@ var PLAYERS = [];
 
   function play(item) { 
     var player = originalPlay.call(document.timeline, item);
+    console.log(PLAYERS, player);
     PLAYERS.push(player);
     return player;
   }
@@ -320,7 +321,11 @@ function skipFrameBack() {
 
 function TimeBar() {
   this.timeBar = document.createElement('div');
+
   this.slider = document.createElement('div');
+  this.slider.style.height = "10px";
+  this.slider.style.background = "black";
+
   this.timeBar.id = "timeBar";
   this.slider.id = "slider";
   this.timeBar.appendChild(this.slider);
@@ -349,6 +354,7 @@ TimeBar.prototype.updateSlider = function() {
   if (!isScrubbing) return;
   var setPercent =
       ((event.clientX - this.timeBar.offsetLeft) / this.timeBar.offsetWidth).toFixed(2);
+  console.log("updateSlider", setPercent);
   this.slider.style.width = (setPercent * 100) + '%';
   setTestCurrentTime(setPercent * testLength);
 }

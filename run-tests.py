@@ -296,7 +296,7 @@ else:
 import subunit, testtools, unittest
 
 if args.load_list:
-    tests = list(set(x.split(':')[0].strip() for x in args.load_list.readlines()))
+    tests = list(set(x.split(':')[0].strip()+'.html' for x in args.load_list.readlines()))
 else:
     tests = []
 
