@@ -12,6 +12,7 @@ var tests = [
   'test-duration.html',
   'test-element-animate.html',
   'test-fill-values.html',
+  'test-fill-wrapping.html',
   'test-font-weight.html',
   'test-grouped-anim-func.html',
   'test-integer.html',

@@ -437,8 +437,9 @@ TimedItem.prototype = {
   // TimedItem or an Player. This requires either logic in
   // TimedItem, or for TimedItem and Player to implement Timeline
   // (or an equivalent), both of which are ugly.
-  _updateInheritedTime: function(inheritedTime) {
+  _updateInheritedTime: function(inheritedTime, filling) {
     this._inheritedTime = inheritedTime;
+    this._parentInFill = filling;
     this._updateTimeMarkers();
   },
   _updateAnimationTime: function() {
@@ -446,16 +447,21 @@ TimedItem.prototype = {
       if (this.timing.fillMode === 'backwards' ||
           this.timing.fillMode === 'both') {
         this.animationTime = 0;
+        this._isInFill = true;
       } else {
         this.animationTime = null;
       }
-    } else if (this.localTime <=
-        this.timing.startDelay + this.animationDuration) {
+    } else if (this.localTime <
+        this.timing.startDelay + this.animationDuration ||
+        (this.localTime == this.timing.startDelay + this.animationDuration &&
+        !this._parentInFill)) {
       this.animationTime = this.localTime - this.timing.startDelay;
+      this._isInFill = false;
     } else {
       if (this.timing.fillMode === 'forwards' ||
           this.timing.fillMode === 'both') {
         this.animationTime = this.animationDuration;
+        this._isInFill = true;
       } else {
         this.animationTime = null;
       }
@@ -731,15 +737,16 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
 
     this._isInChildrenStateModified = false;
   },
-  _updateInheritedTime: function(inheritedTime) {
+  _updateInheritedTime: function(inheritedTime, filling) {
     this._inheritedTime = inheritedTime;
     this._updateTimeMarkers();
-    this._updateChildInheritedTimes();
+    this._updateChildInheritedTimes(filling);
   },
-  _updateChildInheritedTimes: function() {
+  _updateChildInheritedTimes: function(filling) {
+    filling |= this._isInFill;
     for (var i = 0; i < this.children.length; i++) {
       var child = this.children[i];
-      child._updateInheritedTime(this.iterationTime);
+      child._updateInheritedTime(this.iterationTime, filling);
     }
   },
   _updateChildStartTimes: function() {
