@@ -442,7 +442,6 @@ TimedItem.prototype = {
     this._updateTimeMarkers();
   },
   _updateAnimationTime: function() {
-    console.log(this.localTime, this.timing.startDelay);
     if (this.localTime < this.timing.startDelay) {
       if (this.timing.fillMode === 'backwards' ||
           this.timing.fillMode === 'both') {
@@ -453,7 +452,6 @@ TimedItem.prototype = {
     } else if (this.localTime <
         this.timing.startDelay + this.animationDuration) {
       this.animationTime = this.localTime - this.timing.startDelay;
-      console.log(this.animationTime, this.animationDuration);
     } else {
       if (this.timing.fillMode === 'forwards' ||
           this.timing.fillMode === 'both') {
