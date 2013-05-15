@@ -10,6 +10,7 @@ var tests = [
   'test-compositor.html',
   'test-document-timeline.html',
   'test-duration.html',
+  'test-dynamic-load.html',
   'test-element-animate.html',
   'test-fill-values.html',
   'test-font-weight.html',
@@ -20,6 +21,7 @@ var tests = [
   'test-iteration-start.html',
   'test-keyframe-creation.html',
   'test-length-units.html',
+  'test-matrix-transforms.html',
   'test-media.html',
   'test-modify-timing-params.html',
   'test-non-numeric.html',
@@ -48,4 +50,5 @@ var tests = [
   'test-transform-units.html',
   'test-unpause.html',
   'test-visibility.html',
+  'test-wrapping-bug.html',
 ];

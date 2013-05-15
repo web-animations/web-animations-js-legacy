@@ -449,7 +449,7 @@ TimedItem.prototype = {
       } else {
         this.animationTime = null;
       }
-    } else if (this.localTime <=
+    } else if (this.localTime <
         this.timing.startDelay + this.animationDuration) {
       this.animationTime = this.localTime - this.timing.startDelay;
     } else {
