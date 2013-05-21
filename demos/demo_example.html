@@ -131,12 +131,12 @@ function second() {
 
 function third() {
   a.timing.timingFunc = TimingFunction.createFromString('ease-in');
-  a.play();
+  document.timeline.play(a);
 }
 
 function fourth() {
-  a.timing.timingFunc = TimingFunction.createFromString('[0, 0.2,0.8, 1]');
-  a.play();
+  a.timing.timingFunc = TimingFunction.createFromString('cubic-beziel(0, 0.2,0.8, 1)');
+  document.timeline.play(a);
 }
 
 // STEP 3
@@ -155,7 +155,7 @@ function sixth() {
   var dust = document.querySelector(".dust");
   var dustPuff = new Animation(dust, { opacity: ["0", "0.4", "0"] }, 0.3);
   group.add(new ParGroup([ pictureTilting, dustPuff ]));
-  group.play();
+  document.timeline.play(group);
 }
 
 // STEP 4
@@ -176,14 +176,14 @@ function seventh() {
   closeAnim.timing.timingFunc = a.timing.timingFunc;
   a.timing.timingFunc = null;
   group.splice(0, 0, closeAnim);
-  group.play();
+  document.timeline.play(group);
 }
 
 // STEP 5
 
 function eighth() {
   group.timing.playbackRate = 2;
-  group.play();
+  document.timeline.play(group);
 }
 </script>
 <script src="../web-animations-visualization.js"></script>
