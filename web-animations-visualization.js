@@ -65,7 +65,7 @@ function createText(x, y, data) {
 var default_rect = createRect("5%", "10px", "90%", "20px");
 visRoot.appendChild(default_rect);
 
-document.animationTimeline._vis = default_rect;
+document.timeline._vis = default_rect;
 */
 
 function updateRects(anim, startP, widthP, y) {
@@ -124,14 +124,14 @@ function round(num) {
 
 function webAnimVisUpdateAnims() {
 	var earliestStart = Infinity;
-	for (var i = 0; i < document.animationTimeline.children.length; i++) {
-		var child = document.animationTimeline.children[i];
+	for (var i = 0; i < document.timeline.getCurrentPlayers().length; i++) {
+		var child = document.timeline.getCurrentPlayers()[i];
 		if (child.timeDrift + child.startTime < earliestStart) {
 			earliestStart = child.timeDrift + child.startTime;
 		}
 	}
 	// want to set the zero point such that earliestStart is at 5%, and width s.t. 90% represents the distance between earliestStart and endTime.
-	var length = document.animationTimeline.endTime;
+	var length = document.timeline.endTime;
 	var width = 90 * length / (length - earliestStart);
 	var left = 90 - width + 5;
 
@@ -139,10 +139,10 @@ function webAnimVisUpdateAnims() {
 		return;
 	}
 
-	var results = updateRects(document.animationTimeline, left, width, 10);
+	var results = updateRects(document.timeline, left, width, 10);
 	var height = results[0];
 	var length = results[2];
-	var xPos = (document.animationTimeline.iterationTime - earliestStart) / (length - earliestStart) * 90 + 5;
+	var xPos = (document.timeline.iterationTime - earliestStart) / (length - earliestStart) * 90 + 5;
 	if (line == undefined && !isNaN(xPos)) {
 		line = createVLine(xPos + "%", "0px", (height + 20) + "px");
 		visRoot.appendChild(line);
