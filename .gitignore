@@ -6,3 +6,4 @@
 *.pyc*
 *.log*
 tools/*
+.testrepository
