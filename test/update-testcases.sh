@@ -1,2 +1,2 @@
 #!/bin/sh
-(echo 'var tests = [' && (cd testcases && ls *.html) | sed "s/.*/  '\0',/" && echo '];') > testcases.js
+(echo 'testCases([' && (cd testcases && ls *.html) | sed "s/.*/  \"\0\",/" | head -c"-2" && echo ']);') > testcases.jsonp

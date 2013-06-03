@@ -4,6 +4,7 @@
 # vim: set ts=4 sw=4 et sts=4 ai:
 
 import atexit
+import json as simplejson
 import os
 import platform
 import pprint
@@ -295,7 +296,7 @@ else:
 import subunit, testtools, unittest
 if args.list:
     for test in simplejson.loads(
-            file("test/testcases.js").read()[len("var tests = "):]):
+            file("test/testcases.js").read()[len("testCases("):-(len(");")+1)]):
         print test[:-5]
     sys.exit(-1)
 
@@ -333,7 +334,6 @@ import SimpleHTTPServer
 import SocketServer
 import threading
 import cgi
-import json as simplejson
 import re
 
 import itertools
