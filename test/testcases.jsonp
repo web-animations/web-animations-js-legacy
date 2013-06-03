@@ -1,4 +1,4 @@
-var tests = [
+testCases([
   "test-bounds.html",
   "test-calc.html",
   "test-change-playback-rate.html",
@@ -50,5 +50,4 @@ var tests = [
   "test-transform-units.html",
   "test-unpause.html",
   "test-visibility.html",
-  "test-wrapping-bug.html",
-];
+  "test-wrapping-bug.html"]);
