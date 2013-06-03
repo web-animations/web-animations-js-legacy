@@ -34,7 +34,11 @@ iframe {
 <div id="results"></div>
 <iframe id="result-post-frame" src="test-results-post.html"></iframe>
 
-<script src="testcases.js"></script>
+<script>
+var tests = [];
+function testCases(new_tests) { tests = new_tests; };
+</script>
+<script src="testcases.jsonp?jsonp=testCases"></script>
 <script>
 var finished = false;
 
