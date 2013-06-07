@@ -894,7 +894,7 @@ var MediaReference = function(mediaElement, timing, parentGroup) {
   TimedItem.call(this, constructorToken, timing, parentGroup);
   this._media = mediaElement;
 
-  // We can never be sure when _updtaeInheritedTime() is going to be called
+  // We can never be sure when _updateInheritedTime() is going to be called
   // next, due to skipped frames or the player being seeked. Plus the media
   // element's currentTime may drift from our iterationTime. So if a media
   // element has loop set, we can't be sure that we'll stop it before it wraps.
@@ -904,8 +904,8 @@ var MediaReference = function(mediaElement, timing, parentGroup) {
 
   // If the media element has a media controller, we detach it. This mirrors the
   // behaviour when re-parenting a TimedItem, or attaching one to a Player.
-  // TODO: It would be neater to assign to controller, but this currently fails
-  // in Chrome. See https://bugs.webkit.org/show_bug.cgi?id=112641
+  // TODO: It would be neater to assign to MediaElement.controller, but this was
+  // broken in Chrome until recently. See crbug.com/226270.
   this._media.mediaGroup = '';
 };
 
