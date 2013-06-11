@@ -1522,7 +1522,7 @@ var fontWeightType = {
 // name, we need to be able to read underlying calc values from
 // computedStyle so can't easily restrict the input here.
 var outerCalcRE = /calc\s*\(\s*([^)]*)\)/;
-var valueRE = /\s*([0-9.]*)([a-zA-Z%]*)/;
+var valueRE = /\s*(-?[0-9.]*)([a-zA-Z%]*)/;
 var operatorRE = /\s*([+-])/;
 var percentLengthType = {
   zero: function() { return {}; },
