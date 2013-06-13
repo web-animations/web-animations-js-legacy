@@ -74,7 +74,6 @@ window.addEventListener(
     switch(evt.data['type']) {
     case 'start':
       console.log('start');
-      testCasesRun = 0;
       results = [];
       break;
 
@@ -86,17 +85,19 @@ window.addEventListener(
     case 'complete':
       testCasesRun++;
       logResults(results);
-
-      var finishPacket = {};
-      finishPacket["type"] = "finished";
-      finishPacket["testsPassed"] = testCasesPassed + " out of " + testCasesRun;
-      finishPacket["testRunId"] = runID;
-      postResultsToServer(finishPacket);
-
       console.log('complete');
 
-      testCasesRun = 0;
       results = [];
+
+      if (testCasesRun == tests.length) {
+        var finishPacket = {};
+        finishPacket["type"] = "finished";
+        finishPacket["testsPassed"] = testCasesPassed + " out of " + testCasesRun;
+        finishPacket["testRunId"] = runID;
+        postResultsToServer(finishPacket);
+
+        finished = true;
+      }
       break;
 
     default:
