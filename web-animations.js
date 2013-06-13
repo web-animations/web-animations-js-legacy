@@ -2975,6 +2975,12 @@ var documentTime = function() {
 };
 
 var ticker = function(rafTime) {
+  // Don't tick till the page is loaded....
+  if (!isDefined(documentTimeZeroAsRafTime)) {
+    raf(ticker);
+    return;
+  }
+
   cachedDocumentTimeMillis = relativeTime(rafTime, documentTimeZeroAsRafTime);
 
   // Get animations for this sample. We order first by Player start time, and

@@ -28,15 +28,10 @@ div.anim {
 <div id="target4" class="anim"></div>
 
 <script src="../../web-animations.js"></script>
-<script src="../anim-test-pre.js"></script>
+<script src="../testharness_bootstrap.js"></script>
 <script>
 
 animTestRunner.waitUntilDone();
-
-var check = function(actual, expected, description) {
-  console.log('check', actual, expected);
-  test(function() { assert_equals(actual, expected); }, description);
-}
 
 var leftToRight = {left: ["100px", "200px"]};
 var rightToLeft = {left: ["200px", "100px"]};
@@ -60,11 +55,8 @@ var player = document.timeline.play(new ParGroup([
   ]),
 ]));
 
-player.currentTime = 3.0;
-setTimeout(function() {
-  check(getComputedStyle(target1).getPropertyValue("left"), "100px",
-      "First animation should have earlier compositing order");
-}, 100.0);
+test_at(3.0, function() {assert_equals(getComputedStyle(target1).getPropertyValue("left"), "100px")},
+        "First animation should have earlier compositing order");
 
 // Test that compositing order takes account of playback rate.
 //
@@ -80,12 +72,8 @@ var player = document.timeline.play(new ParGroup([
   ], {playbackRate: 4.0}),
 ]));
 
-player.paused = true;
-player.currentTime = 3.0;
-setTimeout(function() {
-  check(getComputedStyle(target2).getPropertyValue("left"), "100px",
-      "Second animation should have later compositing order");
-}, 100.0);
+test_at(3.0, function() {assert_equals((getComputedStyle(target2).getPropertyValue("left"), "100px")},
+        "Second animation should have later compositing order");
 
 // Test compositing order follows Player start time order.
 var target3 = document.getElementById("target3");
@@ -95,14 +83,8 @@ player1.startTime += 1.0;
 var player2 = document.timeline.play(
   new Animation(target3, {left: ["100px", "1000px"]}, 2.0));
 
-player1.paused = true;
-player1.currentTime = 2.0;
-player2.paused = true;
-player2.currentTime = 2.0;
-setTimeout(function() {
-  check(getComputedStyle(target3).getPropertyValue("left"), "200px",
-      "First animation should have latest compositing order");
-}, 100.0);
+test_at(2.0, function() {assert_equals((getComputedStyle(target3).getPropertyValue("left"), "200px"},
+        "First animation should have latest compositing order");
 
 // Test compositing order follows tree order.
 var target4 = document.getElementById("target4");
@@ -121,13 +103,7 @@ var player = document.timeline.play(new ParGroup([
   ]),
 ]));
 
-player.paused = true;
-player.currentTime = 2.0;
-setTimeout(function() {
-  check(getComputedStyle(target4).getPropertyValue("left"), "200px",
-      "Last animation should have latest compositing order");
-}, 100.0);
-
-setTimeout(function() { animTestRunner.done(); }, 200.0);
+test_at(2.0, function() {assert_equals((getComputedStyle(target4).getPropertyValue("left"), "200px"},
+        "Last animation should have latest compositing order");
 
 </script>

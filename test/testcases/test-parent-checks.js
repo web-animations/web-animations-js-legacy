@@ -1,32 +1,48 @@
-check(document.querySelectorAll('.anim')[0],{'left':'100px'},0);
-check(document.querySelectorAll('.anim')[1],{'left':'100px'},0);
-check(document.querySelectorAll('.anim')[2],{'left':'100px'},0);
-check(document.querySelectorAll('.anim')[3],{'left':'100px'},0);
-check(document.querySelectorAll('.anim')[0],{'left':'150px'},0.5);
-check(document.querySelectorAll('.anim')[1],{'left':'150px'},0.5);
-check(document.querySelectorAll('.anim')[2],{'left':'150px'},0.5);
-check(document.querySelectorAll('.anim')[3],{'left':'150px'},0.5);
-check(document.querySelectorAll('.anim')[0],{'left':'200px'},1);
-check(document.querySelectorAll('.anim')[1],{'left':'200px'},1);
-check(document.querySelectorAll('.anim')[2],{'left':'100px'},1);
-check(document.querySelectorAll('.anim')[3],{'left':'100px'},1);
-check(document.querySelectorAll('.anim')[0],{'left':'200px'},1.5);
-check(document.querySelectorAll('.anim')[1],{'left':'200px'},1.5);
-check(document.querySelectorAll('.anim')[2],{'left':'150px'},1.5);
-check(document.querySelectorAll('.anim')[3],{'left':'150px'},1.5);
-check(document.querySelectorAll('.anim')[0],{'left':'200px'},2);
-check(document.querySelectorAll('.anim')[1],{'left':'200px'},2);
-check(document.querySelectorAll('.anim')[2],{'left':'100px'},2);
-check(document.querySelectorAll('.anim')[3],{'left':'100px'},2);
-check(document.querySelectorAll('.anim')[0],{'left':'200px'},2.5);
-check(document.querySelectorAll('.anim')[1],{'left':'200px'},2.5);
-check(document.querySelectorAll('.anim')[2],{'left':'150px'},2.5);
-check(document.querySelectorAll('.anim')[3],{'left':'150px'},2.5);
-check(document.querySelectorAll('.anim')[0],{'left':'200px'},3);
-check(document.querySelectorAll('.anim')[1],{'left':'200px'},3);
-check(document.querySelectorAll('.anim')[2],{'left':'200px'},3);
-check(document.querySelectorAll('.anim')[3],{'left':'200px'},3);
-check(document.querySelectorAll('.anim')[0],{'left':'200px'},3.5);
-check(document.querySelectorAll('.anim')[1],{'left':'200px'},3.5);
-check(document.querySelectorAll('.anim')[2],{'left':'200px'},3.5);
-check(document.querySelectorAll('.anim')[3],{'left':'200px'},3.5);
+generate_tests_at(0, assert_dom_style, [
+    [null,0,'.anim',{'left':'100px'}],
+    [null,1,'.anim',{'left':'100px'}],
+    [null,2,'.anim',{'left':'100px'}],
+    [null,3,'.anim',{'left':'100px'}],
+    ]);
+generate_tests_at(0.5, assert_dom_style, [
+    [null,0,'.anim',{'left':'150px'}],
+    [null,1,'.anim',{'left':'150px'}],
+    [null,2,'.anim',{'left':'150px'}],
+    [null,3,'.anim',{'left':'150px'}],
+    ]);
+generate_tests_at(1, assert_dom_style, [
+    [null,0,'.anim',{'left':'200px'}],
+    [null,1,'.anim',{'left':'200px'}],
+    [null,2,'.anim',{'left':'100px'}],
+    [null,3,'.anim',{'left':'100px'}],
+    ]);
+generate_tests_at(1.5, assert_dom_style, [
+    [null,0,'.anim',{'left':'200px'}],
+    [null,1,'.anim',{'left':'200px'}],
+    [null,2,'.anim',{'left':'150px'}],
+    [null,3,'.anim',{'left':'150px'}],
+    ]);
+generate_tests_at(2, assert_dom_style, [
+    [null,0,'.anim',{'left':'200px'}],
+    [null,1,'.anim',{'left':'200px'}],
+    [null,2,'.anim',{'left':'100px'}],
+    [null,3,'.anim',{'left':'100px'}],
+    ]);
+generate_tests_at(2.5, assert_dom_style, [
+    [null,0,'.anim',{'left':'200px'}],
+    [null,1,'.anim',{'left':'200px'}],
+    [null,2,'.anim',{'left':'150px'}],
+    [null,3,'.anim',{'left':'150px'}],
+    ]);
+generate_tests_at(3, assert_dom_style, [
+    [null,0,'.anim',{'left':'200px'}],
+    [null,1,'.anim',{'left':'200px'}],
+    [null,2,'.anim',{'left':'200px'}],
+    [null,3,'.anim',{'left':'200px'}],
+    ]);
+generate_tests_at(3.5, assert_dom_style, [
+    [null,0,'.anim',{'left':'200px'}],
+    [null,1,'.anim',{'left':'200px'}],
+    [null,2,'.anim',{'left':'200px'}],
+    [null,3,'.anim',{'left':'200px'}],
+    ]);

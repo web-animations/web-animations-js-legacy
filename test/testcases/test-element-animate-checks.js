@@ -1,2 +1,6 @@
-check(document.querySelectorAll('body')[0],{'display':'none'},0);
-check(document.querySelectorAll('body')[0],{'display':'block'},0.5);
+generate_tests_at(0, assert_dom_style, [
+    [null,0,'body',{'display':'none'}],
+    ]);
+generate_tests_at(0.5, assert_dom_style, [
+    [null,0,'body',{'display':'block'}],
+    ]);

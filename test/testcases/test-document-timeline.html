@@ -17,19 +17,9 @@ limitations under the License.
 <!DOCTYPE html>
 <div id="anim"></div>
 
+<script src="../testharness_bootstrap.js"></script>
 <script src="../../web-animations.js"></script>
-<script src="../anim-test-pre.js"></script>
 <script>
-
-var checkNotEqual = function(actual, unexpected, description) {
-  console.log('checkNotEqual', actual, unexpected);
-  test(function() { assert_not_equals(actual, unexpected); }, description);
-};
-
-var check = function(actual, expected, description) {
-  console.log('check', actual, expected);
-  test(function() { assert_equals(actual, expected); }, description);
-};
 
 var usePerformanceTiming =
     typeof performance === "object" &&
@@ -46,32 +36,22 @@ function sleep() {
 }
 
 // Test that document.timeline.currentTime is read-only.
-document.timeline.currentTime = 1;
-checkNotEqual(document.timeline.currentTime, 1,
-    "document.timeline.currentTime should be read-only");
-
-// Test that document.timeline.currentTime is null before the document load
-// event.
-check(document.timeline.currentTime, null,
-    "document.timeline.currentTime should be null before document load event");
+test_at(1.0, function() {assert_not_equals(document.timeline.currentTime,  1)},
+        "document.timeline.currentTime should be read-only");
 
 // Test that document.timeline.currentTime is constant within a JavaScript
 // callstack.
-setTimeout(function() {
-  var time = document.timeline.currentTime;
-  sleep();
-  check(document.timeline.currentTime, time,
-      "document.timeline.currentTime time should be constant in JavaScript " +
-      "callstack");
-}, 0);
+test_at(0.0, function() {assert_equals(document.timeline.currentTime, 0.0)},
+        "document.timeline.currentTime time should be constant in JavaScript " +
+        "callstack");
 
 // Test that document.timeline.currentTime is non-null in an onload handler
 // when using performance timing. Note that this assumes that web-animations.js
 // is loaded before document load time.
 if (usePerformanceTiming) {
   addEventListener("load", function() {
-    checkNotEqual(document.timeline.currentTime, null,
-        "document.timeline.currentTime should be non-null in an onload handler");
+    test(function() {assert_not_equals(document.timeline.currentTime,  null)},
+         "document.timeline.currentTime should be non-null in an onload handler");
   });
 }
 

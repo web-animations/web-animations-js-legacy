@@ -1,36 +1,44 @@
-check(document.querySelectorAll('.test')[0],{'visibility':'visible'},0);
-check(document.querySelectorAll('.test')[1],{'visibility':'visible'},0);
-check(document.querySelectorAll('.test')[2],{'visibility':'visible'},0);
-check(document.querySelectorAll('.test')[3],{'visibility':'hidden'},0);
-check(document.querySelectorAll('.test')[4],{'visibility':'hidden'},0);
-check(document.querySelectorAll('.test')[5],{'visibility':'hidden'},0);
-check(document.querySelectorAll('.test')[6],{'visibility':'collapse'},0);
-check(document.querySelectorAll('.test')[7],{'visibility':'collapse'},0);
-check(document.querySelectorAll('.test')[8],{'visibility':'collapse'},0);
-check(document.querySelectorAll('.test')[0],{'visibility':'visible'},0.2);
-check(document.querySelectorAll('.test')[1],{'visibility':'visible'},0.2);
-check(document.querySelectorAll('.test')[2],{'visibility':'visible'},0.2);
-check(document.querySelectorAll('.test')[3],{'visibility':'hidden'},0.2);
-check(document.querySelectorAll('.test')[4],{'visibility':'hidden'},0.2);
-check(document.querySelectorAll('.test')[5],{'visibility':'hidden'},0.2);
-check(document.querySelectorAll('.test')[6],{'visibility':'collapse'},0.2);
-check(document.querySelectorAll('.test')[7],{'visibility':'collapse'},0.2);
-check(document.querySelectorAll('.test')[8],{'visibility':'collapse'},0.2);
-check(document.querySelectorAll('.test')[0],{'visibility':'visible'},0.4);
-check(document.querySelectorAll('.test')[1],{'visibility':'visible'},0.4);
-check(document.querySelectorAll('.test')[2],{'visibility':'visible'},0.4);
-check(document.querySelectorAll('.test')[3],{'visibility':'visible'},0.4);
-check(document.querySelectorAll('.test')[4],{'visibility':'hidden'},0.4);
-check(document.querySelectorAll('.test')[5],{'visibility':'collapse'},0.4);
-check(document.querySelectorAll('.test')[6],{'visibility':'visible'},0.4);
-check(document.querySelectorAll('.test')[7],{'visibility':'hidden'},0.4);
-check(document.querySelectorAll('.test')[8],{'visibility':'collapse'},0.4);
-check(document.querySelectorAll('.test')[0],{'visibility':'visible'},0.6000000000000001);
-check(document.querySelectorAll('.test')[1],{'visibility':'hidden'},0.6000000000000001);
-check(document.querySelectorAll('.test')[2],{'visibility':'collapse'},0.6000000000000001);
-check(document.querySelectorAll('.test')[3],{'visibility':'visible'},0.6000000000000001);
-check(document.querySelectorAll('.test')[4],{'visibility':'hidden'},0.6000000000000001);
-check(document.querySelectorAll('.test')[5],{'visibility':'collapse'},0.6000000000000001);
-check(document.querySelectorAll('.test')[6],{'visibility':'visible'},0.6000000000000001);
-check(document.querySelectorAll('.test')[7],{'visibility':'hidden'},0.6000000000000001);
-check(document.querySelectorAll('.test')[8],{'visibility':'collapse'},0.6000000000000001);
+generate_tests_at(0, assert_dom_style, [
+    [null,0,'.test',{'visibility':'visible'}],
+    [null,1,'.test',{'visibility':'visible'}],
+    [null,2,'.test',{'visibility':'visible'}],
+    [null,3,'.test',{'visibility':'hidden'}],
+    [null,4,'.test',{'visibility':'hidden'}],
+    [null,5,'.test',{'visibility':'hidden'}],
+    [null,6,'.test',{'visibility':'collapse'}],
+    [null,7,'.test',{'visibility':'collapse'}],
+    [null,8,'.test',{'visibility':'collapse'}],
+    ]);
+generate_tests_at(0.2, assert_dom_style, [
+    [null,0,'.test',{'visibility':'visible'}],
+    [null,1,'.test',{'visibility':'visible'}],
+    [null,2,'.test',{'visibility':'visible'}],
+    [null,3,'.test',{'visibility':'hidden'}],
+    [null,4,'.test',{'visibility':'hidden'}],
+    [null,5,'.test',{'visibility':'hidden'}],
+    [null,6,'.test',{'visibility':'collapse'}],
+    [null,7,'.test',{'visibility':'collapse'}],
+    [null,8,'.test',{'visibility':'collapse'}],
+    ]);
+generate_tests_at(0.4, assert_dom_style, [
+    [null,0,'.test',{'visibility':'visible'}],
+    [null,1,'.test',{'visibility':'visible'}],
+    [null,2,'.test',{'visibility':'visible'}],
+    [null,3,'.test',{'visibility':'visible'}],
+    [null,4,'.test',{'visibility':'hidden'}],
+    [null,5,'.test',{'visibility':'collapse'}],
+    [null,6,'.test',{'visibility':'visible'}],
+    [null,7,'.test',{'visibility':'hidden'}],
+    [null,8,'.test',{'visibility':'collapse'}],
+    ]);
+generate_tests_at(0.6000000000000001, assert_dom_style, [
+    [null,0,'.test',{'visibility':'visible'}],
+    [null,1,'.test',{'visibility':'hidden'}],
+    [null,2,'.test',{'visibility':'collapse'}],
+    [null,3,'.test',{'visibility':'visible'}],
+    [null,4,'.test',{'visibility':'hidden'}],
+    [null,5,'.test',{'visibility':'collapse'}],
+    [null,6,'.test',{'visibility':'visible'}],
+    [null,7,'.test',{'visibility':'hidden'}],
+    [null,8,'.test',{'visibility':'collapse'}],
+    ]);

@@ -1,7 +1,6 @@
 testCases([
   "test-bounds.html",
   "test-calc.html",
-  "test-change-playback-rate.html",
   "test-clone.html",
   "test-color.html",
   "test-color-names.html",
@@ -22,7 +21,6 @@ testCases([
   "test-keyframe-creation.html",
   "test-length-units.html",
   "test-matrix-transforms.html",
-  "test-media.html",
   "test-modify-timing-params.html",
   "test-non-numeric.html",
   "test-parent.html",
