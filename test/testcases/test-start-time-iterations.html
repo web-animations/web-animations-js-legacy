@@ -78,8 +78,8 @@ that the position of the last element in each group is approximate.</div>
   <div style="width: 600px;" class="expected"><div class="anim b"></div></div>
 </div>
 
+<script src="../testharness_bootstrap.js"></script>
 <script src="../../web-animations.js"></script>
-<script src="../anim-test-pre.js"></script>
 <script>
 
 var containers = ["ca", "cb", "cc", "cd"];
@@ -110,13 +110,14 @@ for (var i = 0; i < directions.length; i++) {
   document.timeline.play(group1);
   var group2 = groupWithFixedDuration(direction);
   document.timeline.play(group2);
-  setTimeout(function(container, group1, group2) {
+
+  test_at(0.75, (function(container, group1, group2) {
     return function() {
       new Animation(container.getElementsByClassName("a")[0], animation,
           {duration: 1.0}, group1);
       new Animation(container.getElementsByClassName("b")[0], animation,
           {duration: 1.0}, group2);
     };
-  }(container, group1, group2), 500);
+  }(container, group1, group2)));
 }
 </script>

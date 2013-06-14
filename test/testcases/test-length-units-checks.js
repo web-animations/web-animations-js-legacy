@@ -1,320 +1,340 @@
-check(document.querySelectorAll('.anim')[0],{'width':'160px'},0);
-check(document.querySelectorAll('.anim')[1],{'width':'50px'},0);
-check(document.querySelectorAll('.anim')[2],{'width':'80px'},0);
-check(document.querySelectorAll('.anim')[3],{'width':'94.484375px'},0);
-check(document.querySelectorAll('.anim')[4],{'width':'75.578125px'},0);
-check(document.querySelectorAll('.anim')[5],{'width':'192px'},0);
-check(document.querySelectorAll('.anim')[6],{'width':'66.65625px'},0);
-check(document.querySelectorAll('.anim')[7],{'width':'80px'},0);
-check(document.querySelectorAll('.anim')[8],{'width':'160px'},0);
-check(document.querySelectorAll('.anim')[9],{'width':'50px'},0);
-check(document.querySelectorAll('.anim')[10],{'width':'80px'},0);
-check(document.querySelectorAll('.anim')[11],{'width':'94.484375px'},0);
-check(document.querySelectorAll('.anim')[12],{'width':'75.578125px'},0);
-check(document.querySelectorAll('.anim')[13],{'width':'192px'},0);
-check(document.querySelectorAll('.anim')[14],{'width':'66.65625px'},0);
-check(document.querySelectorAll('.anim')[15],{'width':'80px'},0);
-check(document.querySelectorAll('.anim')[16],{'width':'160px'},0);
-check(document.querySelectorAll('.anim')[17],{'width':'50px'},0);
-check(document.querySelectorAll('.anim')[18],{'width':'80px'},0);
-check(document.querySelectorAll('.anim')[19],{'width':'94.484375px'},0);
-check(document.querySelectorAll('.anim')[20],{'width':'75.578125px'},0);
-check(document.querySelectorAll('.anim')[21],{'width':'192px'},0);
-check(document.querySelectorAll('.anim')[22],{'width':'66.65625px'},0);
-check(document.querySelectorAll('.anim')[23],{'width':'80px'},0);
-check(document.querySelectorAll('.anim')[24],{'width':'160px'},0);
-check(document.querySelectorAll('.anim')[25],{'width':'50px'},0);
-check(document.querySelectorAll('.anim')[26],{'width':'80px'},0);
-check(document.querySelectorAll('.anim')[27],{'width':'94.484375px'},0);
-check(document.querySelectorAll('.anim')[28],{'width':'75.578125px'},0);
-check(document.querySelectorAll('.anim')[29],{'width':'192px'},0);
-check(document.querySelectorAll('.anim')[30],{'width':'66.65625px'},0);
-check(document.querySelectorAll('.anim')[31],{'width':'80px'},0);
-check(document.querySelectorAll('.anim')[32],{'width':'160px'},0);
-check(document.querySelectorAll('.anim')[33],{'width':'50px'},0);
-check(document.querySelectorAll('.anim')[34],{'width':'80px'},0);
-check(document.querySelectorAll('.anim')[35],{'width':'94.484375px'},0);
-check(document.querySelectorAll('.anim')[36],{'width':'75.578125px'},0);
-check(document.querySelectorAll('.anim')[37],{'width':'192px'},0);
-check(document.querySelectorAll('.anim')[38],{'width':'66.65625px'},0);
-check(document.querySelectorAll('.anim')[39],{'width':'80px'},0);
-check(document.querySelectorAll('.anim')[40],{'width':'160px'},0);
-check(document.querySelectorAll('.anim')[41],{'width':'50px'},0);
-check(document.querySelectorAll('.anim')[42],{'width':'80px'},0);
-check(document.querySelectorAll('.anim')[43],{'width':'94.484375px'},0);
-check(document.querySelectorAll('.anim')[44],{'width':'75.578125px'},0);
-check(document.querySelectorAll('.anim')[45],{'width':'192px'},0);
-check(document.querySelectorAll('.anim')[46],{'width':'66.65625px'},0);
-check(document.querySelectorAll('.anim')[47],{'width':'80px'},0);
-check(document.querySelectorAll('.anim')[48],{'width':'160px'},0);
-check(document.querySelectorAll('.anim')[49],{'width':'50px'},0);
-check(document.querySelectorAll('.anim')[50],{'width':'80px'},0);
-check(document.querySelectorAll('.anim')[51],{'width':'94.484375px'},0);
-check(document.querySelectorAll('.anim')[52],{'width':'75.578125px'},0);
-check(document.querySelectorAll('.anim')[53],{'width':'192px'},0);
-check(document.querySelectorAll('.anim')[54],{'width':'66.65625px'},0);
-check(document.querySelectorAll('.anim')[55],{'width':'80px'},0);
-check(document.querySelectorAll('.anim')[56],{'width':'160px'},0);
-check(document.querySelectorAll('.anim')[57],{'width':'50px'},0);
-check(document.querySelectorAll('.anim')[58],{'width':'80px'},0);
-check(document.querySelectorAll('.anim')[59],{'width':'94.484375px'},0);
-check(document.querySelectorAll('.anim')[60],{'width':'75.578125px'},0);
-check(document.querySelectorAll('.anim')[61],{'width':'192px'},0);
-check(document.querySelectorAll('.anim')[62],{'width':'66.65625px'},0);
-check(document.querySelectorAll('.anim')[63],{'width':'80px'},0);
-check(document.querySelectorAll('.anim')[0],{'width':'83.1875px'},0.6);
-check(document.querySelectorAll('.anim')[1],{'width':'26px'},0.6);
-check(document.querySelectorAll('.anim')[2],{'width':'41.59375px'},0.6);
-check(document.querySelectorAll('.anim')[3],{'width':'49.125px'},0.6);
-check(document.querySelectorAll('.anim')[4],{'width':'52.90625px'},0.6);
-check(document.querySelectorAll('.anim')[5],{'width':'134.390625px'},0.6);
-check(document.querySelectorAll('.anim')[6],{'width':'34.65625px'},0.6);
-check(document.querySelectorAll('.anim')[7],{'width':'41.59375px'},0.6);
-check(document.querySelectorAll('.anim')[8],{'width':'83.1875px'},0.6);
-check(document.querySelectorAll('.anim')[9],{'width':'26px'},0.6);
-check(document.querySelectorAll('.anim')[10],{'width':'41.59375px'},0.6);
-check(document.querySelectorAll('.anim')[11],{'width':'49.125px'},0.6);
-check(document.querySelectorAll('.anim')[12],{'width':'52.90625px'},0.6);
-check(document.querySelectorAll('.anim')[13],{'width':'134.390625px'},0.6);
-check(document.querySelectorAll('.anim')[14],{'width':'34.65625px'},0.6);
-check(document.querySelectorAll('.anim')[15],{'width':'41.59375px'},0.6);
-check(document.querySelectorAll('.anim')[16],{'width':'83.1875px'},0.6);
-check(document.querySelectorAll('.anim')[17],{'width':'26px'},0.6);
-check(document.querySelectorAll('.anim')[18],{'width':'41.59375px'},0.6);
-check(document.querySelectorAll('.anim')[19],{'width':'49.125px'},0.6);
-check(document.querySelectorAll('.anim')[20],{'width':'52.90625px'},0.6);
-check(document.querySelectorAll('.anim')[21],{'width':'134.390625px'},0.6);
-check(document.querySelectorAll('.anim')[22],{'width':'34.65625px'},0.6);
-check(document.querySelectorAll('.anim')[23],{'width':'41.59375px'},0.6);
-check(document.querySelectorAll('.anim')[24],{'width':'83.1875px'},0.6);
-check(document.querySelectorAll('.anim')[25],{'width':'26px'},0.6);
-check(document.querySelectorAll('.anim')[26],{'width':'41.59375px'},0.6);
-check(document.querySelectorAll('.anim')[27],{'width':'49.125px'},0.6);
-check(document.querySelectorAll('.anim')[28],{'width':'52.90625px'},0.6);
-check(document.querySelectorAll('.anim')[29],{'width':'134.390625px'},0.6);
-check(document.querySelectorAll('.anim')[30],{'width':'34.65625px'},0.6);
-check(document.querySelectorAll('.anim')[31],{'width':'41.59375px'},0.6);
-check(document.querySelectorAll('.anim')[32],{'width':'83.1875px'},0.6);
-check(document.querySelectorAll('.anim')[33],{'width':'26px'},0.6);
-check(document.querySelectorAll('.anim')[34],{'width':'41.59375px'},0.6);
-check(document.querySelectorAll('.anim')[35],{'width':'49.125px'},0.6);
-check(document.querySelectorAll('.anim')[36],{'width':'52.90625px'},0.6);
-check(document.querySelectorAll('.anim')[37],{'width':'134.390625px'},0.6);
-check(document.querySelectorAll('.anim')[38],{'width':'34.65625px'},0.6);
-check(document.querySelectorAll('.anim')[39],{'width':'41.59375px'},0.6);
-check(document.querySelectorAll('.anim')[40],{'width':'83.1875px'},0.6);
-check(document.querySelectorAll('.anim')[41],{'width':'26px'},0.6);
-check(document.querySelectorAll('.anim')[42],{'width':'41.59375px'},0.6);
-check(document.querySelectorAll('.anim')[43],{'width':'49.125px'},0.6);
-check(document.querySelectorAll('.anim')[44],{'width':'52.90625px'},0.6);
-check(document.querySelectorAll('.anim')[45],{'width':'134.390625px'},0.6);
-check(document.querySelectorAll('.anim')[46],{'width':'34.65625px'},0.6);
-check(document.querySelectorAll('.anim')[47],{'width':'41.59375px'},0.6);
-check(document.querySelectorAll('.anim')[48],{'width':'83.1875px'},0.6);
-check(document.querySelectorAll('.anim')[49],{'width':'26px'},0.6);
-check(document.querySelectorAll('.anim')[50],{'width':'41.59375px'},0.6);
-check(document.querySelectorAll('.anim')[51],{'width':'49.125px'},0.6);
-check(document.querySelectorAll('.anim')[52],{'width':'52.90625px'},0.6);
-check(document.querySelectorAll('.anim')[53],{'width':'134.390625px'},0.6);
-check(document.querySelectorAll('.anim')[54],{'width':'34.65625px'},0.6);
-check(document.querySelectorAll('.anim')[55],{'width':'41.59375px'},0.6);
-check(document.querySelectorAll('.anim')[56],{'width':'83.1875px'},0.6);
-check(document.querySelectorAll('.anim')[57],{'width':'26px'},0.6);
-check(document.querySelectorAll('.anim')[58],{'width':'41.59375px'},0.6);
-check(document.querySelectorAll('.anim')[59],{'width':'49.125px'},0.6);
-check(document.querySelectorAll('.anim')[60],{'width':'52.90625px'},0.6);
-check(document.querySelectorAll('.anim')[61],{'width':'134.390625px'},0.6);
-check(document.querySelectorAll('.anim')[62],{'width':'34.65625px'},0.6);
-check(document.querySelectorAll('.anim')[63],{'width':'41.59375px'},0.6);
-check(document.querySelectorAll('.anim')[0],{'width':'57.59375px'},1.2);
-check(document.querySelectorAll('.anim')[1],{'width':'40px'},1.2);
-check(document.querySelectorAll('.anim')[2],{'width':'44.796875px'},1.2);
-check(document.querySelectorAll('.anim')[3],{'width':'47.109375px'},1.2);
-check(document.querySelectorAll('.anim')[4],{'width':'62.234375px'},1.2);
-check(document.querySelectorAll('.anim')[5],{'width':'108.796875px'},1.2);
-check(document.querySelectorAll('.anim')[6],{'width':'42.65625px'},1.2);
-check(document.querySelectorAll('.anim')[7],{'width':'44.796875px'},1.2);
-check(document.querySelectorAll('.anim')[8],{'width':'35.59375px'},1.2);
-check(document.querySelectorAll('.anim')[9],{'width':'18px'},1.2);
-check(document.querySelectorAll('.anim')[10],{'width':'22.796875px'},1.2);
-check(document.querySelectorAll('.anim')[11],{'width':'25.109375px'},1.2);
-check(document.querySelectorAll('.anim')[12],{'width':'40.234375px'},1.2);
-check(document.querySelectorAll('.anim')[13],{'width':'86.796875px'},1.2);
-check(document.querySelectorAll('.anim')[14],{'width':'20.65625px'},1.2);
-check(document.querySelectorAll('.anim')[15],{'width':'22.796875px'},1.2);
-check(document.querySelectorAll('.anim')[16],{'width':'41.59375px'},1.2);
-check(document.querySelectorAll('.anim')[17],{'width':'24px'},1.2);
-check(document.querySelectorAll('.anim')[18],{'width':'28.796875px'},1.2);
-check(document.querySelectorAll('.anim')[19],{'width':'31.109375px'},1.2);
-check(document.querySelectorAll('.anim')[20],{'width':'46.234375px'},1.2);
-check(document.querySelectorAll('.anim')[21],{'width':'92.796875px'},1.2);
-check(document.querySelectorAll('.anim')[22],{'width':'26.65625px'},1.2);
-check(document.querySelectorAll('.anim')[23],{'width':'28.796875px'},1.2);
-check(document.querySelectorAll('.anim')[24],{'width':'44.484375px'},1.2);
-check(document.querySelectorAll('.anim')[25],{'width':'26.890625px'},1.2);
-check(document.querySelectorAll('.anim')[26],{'width':'31.6875px'},1.2);
-check(document.querySelectorAll('.anim')[27],{'width':'34.015625px'},1.2);
-check(document.querySelectorAll('.anim')[28],{'width':'49.125px'},1.2);
-check(document.querySelectorAll('.anim')[29],{'width':'95.6875px'},1.2);
-check(document.querySelectorAll('.anim')[30],{'width':'29.5625px'},1.2);
-check(document.querySelectorAll('.anim')[31],{'width':'31.6875px'},1.2);
-check(document.querySelectorAll('.anim')[32],{'width':'40.703125px'},1.2);
-check(document.querySelectorAll('.anim')[33],{'width':'23.109375px'},1.2);
-check(document.querySelectorAll('.anim')[34],{'width':'27.90625px'},1.2);
-check(document.querySelectorAll('.anim')[35],{'width':'30.234375px'},1.2);
-check(document.querySelectorAll('.anim')[36],{'width':'45.34375px'},1.2);
-check(document.querySelectorAll('.anim')[37],{'width':'91.90625px'},1.2);
-check(document.querySelectorAll('.anim')[38],{'width':'25.78125px'},1.2);
-check(document.querySelectorAll('.anim')[39],{'width':'27.90625px'},1.2);
-check(document.querySelectorAll('.anim')[40],{'width':'64px'},1.2);
-check(document.querySelectorAll('.anim')[41],{'width':'46.390625px'},1.2);
-check(document.querySelectorAll('.anim')[42],{'width':'51.1875px'},1.2);
-check(document.querySelectorAll('.anim')[43],{'width':'53.515625px'},1.2);
-check(document.querySelectorAll('.anim')[44],{'width':'68.625px'},1.2);
-check(document.querySelectorAll('.anim')[45],{'width':'115.1875px'},1.2);
-check(document.querySelectorAll('.anim')[46],{'width':'49.0625px'},1.2);
-check(document.querySelectorAll('.anim')[47],{'width':'51.1875px'},1.2);
-check(document.querySelectorAll('.anim')[48],{'width':'38.921875px'},1.2);
-check(document.querySelectorAll('.anim')[49],{'width':'21.328125px'},1.2);
-check(document.querySelectorAll('.anim')[50],{'width':'26.125px'},1.2);
-check(document.querySelectorAll('.anim')[51],{'width':'28.4375px'},1.2);
-check(document.querySelectorAll('.anim')[52],{'width':'43.5625px'},1.2);
-check(document.querySelectorAll('.anim')[53],{'width':'90.125px'},1.2);
-check(document.querySelectorAll('.anim')[54],{'width':'24px'},1.2);
-check(document.querySelectorAll('.anim')[55],{'width':'26.125px'},1.2);
-check(document.querySelectorAll('.anim')[56],{'width':'41.59375px'},1.2);
-check(document.querySelectorAll('.anim')[57],{'width':'24px'},1.2);
-check(document.querySelectorAll('.anim')[58],{'width':'28.796875px'},1.2);
-check(document.querySelectorAll('.anim')[59],{'width':'31.109375px'},1.2);
-check(document.querySelectorAll('.anim')[60],{'width':'46.234375px'},1.2);
-check(document.querySelectorAll('.anim')[61],{'width':'92.796875px'},1.2);
-check(document.querySelectorAll('.anim')[62],{'width':'26.65625px'},1.2);
-check(document.querySelectorAll('.anim')[63],{'width':'28.796875px'},1.2);
-check(document.querySelectorAll('.anim')[0],{'width':'134.390625px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[1],{'width':'130px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[2],{'width':'131.1875px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[3],{'width':'131.765625px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[4],{'width':'135.546875px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[5],{'width':'147.1875px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[6],{'width':'130.65625px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[7],{'width':'131.1875px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[8],{'width':'46.390625px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[9],{'width':'42px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[10],{'width':'43.1875px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[11],{'width':'43.765625px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[12],{'width':'47.546875px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[13],{'width':'59.1875px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[14],{'width':'42.65625px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[15],{'width':'43.1875px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[16],{'width':'70.390625px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[17],{'width':'66px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[18],{'width':'67.1875px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[19],{'width':'67.765625px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[20],{'width':'71.546875px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[21],{'width':'83.1875px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[22],{'width':'66.65625px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[23],{'width':'67.1875px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[24],{'width':'81.984375px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[25],{'width':'77.578125px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[26],{'width':'78.78125px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[27],{'width':'79.359375px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[28],{'width':'83.140625px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[29],{'width':'94.78125px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[30],{'width':'78.25px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[31],{'width':'78.78125px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[32],{'width':'66.859375px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[33],{'width':'62.46875px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[34],{'width':'63.671875px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[35],{'width':'64.25px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[36],{'width':'68.03125px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[37],{'width':'79.671875px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[38],{'width':'63.125px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[39],{'width':'63.671875px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[40],{'width':'160px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[41],{'width':'155.59375px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[42],{'width':'156.796875px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[43],{'width':'157.375px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[44],{'width':'161.15625px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[45],{'width':'172.796875px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[46],{'width':'156.265625px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[47],{'width':'156.796875px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[48],{'width':'59.71875px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[49],{'width':'55.328125px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[50],{'width':'56.53125px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[51],{'width':'57.109375px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[52],{'width':'60.890625px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[53],{'width':'72.53125px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[54],{'width':'56px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[55],{'width':'56.53125px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[56],{'width':'70.390625px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[57],{'width':'66px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[58],{'width':'67.1875px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[59],{'width':'67.765625px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[60],{'width':'71.546875px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[61],{'width':'83.1875px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[62],{'width':'66.65625px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[63],{'width':'67.1875px'},1.7999999999999998);
-check(document.querySelectorAll('.anim')[0],{'width':'160px'},2.4);
-check(document.querySelectorAll('.anim')[1],{'width':'160px'},2.4);
-check(document.querySelectorAll('.anim')[2],{'width':'160px'},2.4);
-check(document.querySelectorAll('.anim')[3],{'width':'160px'},2.4);
-check(document.querySelectorAll('.anim')[4],{'width':'160px'},2.4);
-check(document.querySelectorAll('.anim')[5],{'width':'160px'},2.4);
-check(document.querySelectorAll('.anim')[6],{'width':'160px'},2.4);
-check(document.querySelectorAll('.anim')[7],{'width':'160px'},2.4);
-check(document.querySelectorAll('.anim')[8],{'width':'50px'},2.4);
-check(document.querySelectorAll('.anim')[9],{'width':'50px'},2.4);
-check(document.querySelectorAll('.anim')[10],{'width':'50px'},2.4);
-check(document.querySelectorAll('.anim')[11],{'width':'50px'},2.4);
-check(document.querySelectorAll('.anim')[12],{'width':'50px'},2.4);
-check(document.querySelectorAll('.anim')[13],{'width':'50px'},2.4);
-check(document.querySelectorAll('.anim')[14],{'width':'50px'},2.4);
-check(document.querySelectorAll('.anim')[15],{'width':'50px'},2.4);
-check(document.querySelectorAll('.anim')[16],{'width':'80px'},2.4);
-check(document.querySelectorAll('.anim')[17],{'width':'80px'},2.4);
-check(document.querySelectorAll('.anim')[18],{'width':'80px'},2.4);
-check(document.querySelectorAll('.anim')[19],{'width':'80px'},2.4);
-check(document.querySelectorAll('.anim')[20],{'width':'80px'},2.4);
-check(document.querySelectorAll('.anim')[21],{'width':'80px'},2.4);
-check(document.querySelectorAll('.anim')[22],{'width':'80px'},2.4);
-check(document.querySelectorAll('.anim')[23],{'width':'80px'},2.4);
-check(document.querySelectorAll('.anim')[24],{'width':'94.484375px'},2.4);
-check(document.querySelectorAll('.anim')[25],{'width':'94.484375px'},2.4);
-check(document.querySelectorAll('.anim')[26],{'width':'94.484375px'},2.4);
-check(document.querySelectorAll('.anim')[27],{'width':'94.484375px'},2.4);
-check(document.querySelectorAll('.anim')[28],{'width':'94.484375px'},2.4);
-check(document.querySelectorAll('.anim')[29],{'width':'94.484375px'},2.4);
-check(document.querySelectorAll('.anim')[30],{'width':'94.484375px'},2.4);
-check(document.querySelectorAll('.anim')[31],{'width':'94.484375px'},2.4);
-check(document.querySelectorAll('.anim')[32],{'width':'75.578125px'},2.4);
-check(document.querySelectorAll('.anim')[33],{'width':'75.578125px'},2.4);
-check(document.querySelectorAll('.anim')[34],{'width':'75.578125px'},2.4);
-check(document.querySelectorAll('.anim')[35],{'width':'75.578125px'},2.4);
-check(document.querySelectorAll('.anim')[36],{'width':'75.578125px'},2.4);
-check(document.querySelectorAll('.anim')[37],{'width':'75.578125px'},2.4);
-check(document.querySelectorAll('.anim')[38],{'width':'75.578125px'},2.4);
-check(document.querySelectorAll('.anim')[39],{'width':'75.578125px'},2.4);
-check(document.querySelectorAll('.anim')[40],{'width':'192px'},2.4);
-check(document.querySelectorAll('.anim')[41],{'width':'192px'},2.4);
-check(document.querySelectorAll('.anim')[42],{'width':'192px'},2.4);
-check(document.querySelectorAll('.anim')[43],{'width':'192px'},2.4);
-check(document.querySelectorAll('.anim')[44],{'width':'192px'},2.4);
-check(document.querySelectorAll('.anim')[45],{'width':'192px'},2.4);
-check(document.querySelectorAll('.anim')[46],{'width':'192px'},2.4);
-check(document.querySelectorAll('.anim')[47],{'width':'192px'},2.4);
-check(document.querySelectorAll('.anim')[48],{'width':'66.65625px'},2.4);
-check(document.querySelectorAll('.anim')[49],{'width':'66.65625px'},2.4);
-check(document.querySelectorAll('.anim')[50],{'width':'66.65625px'},2.4);
-check(document.querySelectorAll('.anim')[51],{'width':'66.65625px'},2.4);
-check(document.querySelectorAll('.anim')[52],{'width':'66.65625px'},2.4);
-check(document.querySelectorAll('.anim')[53],{'width':'66.65625px'},2.4);
-check(document.querySelectorAll('.anim')[54],{'width':'66.65625px'},2.4);
-check(document.querySelectorAll('.anim')[55],{'width':'66.65625px'},2.4);
-check(document.querySelectorAll('.anim')[56],{'width':'80px'},2.4);
-check(document.querySelectorAll('.anim')[57],{'width':'80px'},2.4);
-check(document.querySelectorAll('.anim')[58],{'width':'80px'},2.4);
-check(document.querySelectorAll('.anim')[59],{'width':'80px'},2.4);
-check(document.querySelectorAll('.anim')[60],{'width':'80px'},2.4);
-check(document.querySelectorAll('.anim')[61],{'width':'80px'},2.4);
-check(document.querySelectorAll('.anim')[62],{'width':'80px'},2.4);
-check(document.querySelectorAll('.anim')[63],{'width':'80px'},2.4);
+test_at(0, function() {
+    assert_styles(
+      '.anim',
+      [{'width':'160px'},
+       {'width':'50px'},
+       {'width':'80px'},
+       {'width':'94.484375px'},
+       {'width':'75.578125px'},
+       {'width':'192px'},
+       {'width':'66.65625px'},
+       {'width':'80px'},
+       {'width':'160px'},
+       {'width':'50px'},
+       {'width':'80px'},
+       {'width':'94.484375px'},
+       {'width':'75.578125px'},
+       {'width':'192px'},
+       {'width':'66.65625px'},
+       {'width':'80px'},
+       {'width':'160px'},
+       {'width':'50px'},
+       {'width':'80px'},
+       {'width':'94.484375px'},
+       {'width':'75.578125px'},
+       {'width':'192px'},
+       {'width':'66.65625px'},
+       {'width':'80px'},
+       {'width':'160px'},
+       {'width':'50px'},
+       {'width':'80px'},
+       {'width':'94.484375px'},
+       {'width':'75.578125px'},
+       {'width':'192px'},
+       {'width':'66.65625px'},
+       {'width':'80px'},
+       {'width':'160px'},
+       {'width':'50px'},
+       {'width':'80px'},
+       {'width':'94.484375px'},
+       {'width':'75.578125px'},
+       {'width':'192px'},
+       {'width':'66.65625px'},
+       {'width':'80px'},
+       {'width':'160px'},
+       {'width':'50px'},
+       {'width':'80px'},
+       {'width':'94.484375px'},
+       {'width':'75.578125px'},
+       {'width':'192px'},
+       {'width':'66.65625px'},
+       {'width':'80px'},
+       {'width':'160px'},
+       {'width':'50px'},
+       {'width':'80px'},
+       {'width':'94.484375px'},
+       {'width':'75.578125px'},
+       {'width':'192px'},
+       {'width':'66.65625px'},
+       {'width':'80px'},
+       {'width':'160px'},
+       {'width':'50px'},
+       {'width':'80px'},
+       {'width':'94.484375px'},
+       {'width':'75.578125px'},
+       {'width':'192px'},
+       {'width':'66.65625px'},
+       {'width':'80px'}]);
+    }, "Autogenerated test at t=0");
+test_at(0.6, function() {
+    assert_styles(
+      '.anim',
+      [{'width':'83.1875px'},
+       {'width':'26px'},
+       {'width':'41.59375px'},
+       {'width':'49.125px'},
+       {'width':'52.90625px'},
+       {'width':'134.390625px'},
+       {'width':'34.65625px'},
+       {'width':'41.59375px'},
+       {'width':'83.1875px'},
+       {'width':'26px'},
+       {'width':'41.59375px'},
+       {'width':'49.125px'},
+       {'width':'52.90625px'},
+       {'width':'134.390625px'},
+       {'width':'34.65625px'},
+       {'width':'41.59375px'},
+       {'width':'83.1875px'},
+       {'width':'26px'},
+       {'width':'41.59375px'},
+       {'width':'49.125px'},
+       {'width':'52.90625px'},
+       {'width':'134.390625px'},
+       {'width':'34.65625px'},
+       {'width':'41.59375px'},
+       {'width':'83.1875px'},
+       {'width':'26px'},
+       {'width':'41.59375px'},
+       {'width':'49.125px'},
+       {'width':'52.90625px'},
+       {'width':'134.390625px'},
+       {'width':'34.65625px'},
+       {'width':'41.59375px'},
+       {'width':'83.1875px'},
+       {'width':'26px'},
+       {'width':'41.59375px'},
+       {'width':'49.125px'},
+       {'width':'52.90625px'},
+       {'width':'134.390625px'},
+       {'width':'34.65625px'},
+       {'width':'41.59375px'},
+       {'width':'83.1875px'},
+       {'width':'26px'},
+       {'width':'41.59375px'},
+       {'width':'49.125px'},
+       {'width':'52.90625px'},
+       {'width':'134.390625px'},
+       {'width':'34.65625px'},
+       {'width':'41.59375px'},
+       {'width':'83.1875px'},
+       {'width':'26px'},
+       {'width':'41.59375px'},
+       {'width':'49.125px'},
+       {'width':'52.90625px'},
+       {'width':'134.390625px'},
+       {'width':'34.65625px'},
+       {'width':'41.59375px'},
+       {'width':'83.1875px'},
+       {'width':'26px'},
+       {'width':'41.59375px'},
+       {'width':'49.125px'},
+       {'width':'52.90625px'},
+       {'width':'134.390625px'},
+       {'width':'34.65625px'},
+       {'width':'41.59375px'}]);
+    }, "Autogenerated test at t=0.6");
+test_at(1.2, function() {
+    assert_styles(
+      '.anim',
+      [{'width':'57.59375px'},
+       {'width':'40px'},
+       {'width':'44.796875px'},
+       {'width':'47.109375px'},
+       {'width':'62.234375px'},
+       {'width':'108.796875px'},
+       {'width':'42.65625px'},
+       {'width':'44.796875px'},
+       {'width':'35.59375px'},
+       {'width':'18px'},
+       {'width':'22.796875px'},
+       {'width':'25.109375px'},
+       {'width':'40.234375px'},
+       {'width':'86.796875px'},
+       {'width':'20.65625px'},
+       {'width':'22.796875px'},
+       {'width':'41.59375px'},
+       {'width':'24px'},
+       {'width':'28.796875px'},
+       {'width':'31.109375px'},
+       {'width':'46.234375px'},
+       {'width':'92.796875px'},
+       {'width':'26.65625px'},
+       {'width':'28.796875px'},
+       {'width':'44.484375px'},
+       {'width':'26.890625px'},
+       {'width':'31.6875px'},
+       {'width':'34.015625px'},
+       {'width':'49.125px'},
+       {'width':'95.6875px'},
+       {'width':'29.5625px'},
+       {'width':'31.6875px'},
+       {'width':'40.703125px'},
+       {'width':'23.109375px'},
+       {'width':'27.90625px'},
+       {'width':'30.234375px'},
+       {'width':'45.34375px'},
+       {'width':'91.90625px'},
+       {'width':'25.78125px'},
+       {'width':'27.90625px'},
+       {'width':'64px'},
+       {'width':'46.390625px'},
+       {'width':'51.1875px'},
+       {'width':'53.515625px'},
+       {'width':'68.625px'},
+       {'width':'115.1875px'},
+       {'width':'49.0625px'},
+       {'width':'51.1875px'},
+       {'width':'38.921875px'},
+       {'width':'21.328125px'},
+       {'width':'26.125px'},
+       {'width':'28.4375px'},
+       {'width':'43.5625px'},
+       {'width':'90.125px'},
+       {'width':'24px'},
+       {'width':'26.125px'},
+       {'width':'41.59375px'},
+       {'width':'24px'},
+       {'width':'28.796875px'},
+       {'width':'31.109375px'},
+       {'width':'46.234375px'},
+       {'width':'92.796875px'},
+       {'width':'26.65625px'},
+       {'width':'28.796875px'}]);
+    }, "Autogenerated test at t=1.2");
+test_at(1.7999999999999998, function() {
+    assert_styles(
+      '.anim',
+      [{'width':'134.390625px'},
+       {'width':'130px'},
+       {'width':'131.1875px'},
+       {'width':'131.765625px'},
+       {'width':'135.546875px'},
+       {'width':'147.1875px'},
+       {'width':'130.65625px'},
+       {'width':'131.1875px'},
+       {'width':'46.390625px'},
+       {'width':'42px'},
+       {'width':'43.1875px'},
+       {'width':'43.765625px'},
+       {'width':'47.546875px'},
+       {'width':'59.1875px'},
+       {'width':'42.65625px'},
+       {'width':'43.1875px'},
+       {'width':'70.390625px'},
+       {'width':'66px'},
+       {'width':'67.1875px'},
+       {'width':'67.765625px'},
+       {'width':'71.546875px'},
+       {'width':'83.1875px'},
+       {'width':'66.65625px'},
+       {'width':'67.1875px'},
+       {'width':'81.984375px'},
+       {'width':'77.578125px'},
+       {'width':'78.78125px'},
+       {'width':'79.359375px'},
+       {'width':'83.140625px'},
+       {'width':'94.78125px'},
+       {'width':'78.25px'},
+       {'width':'78.78125px'},
+       {'width':'66.859375px'},
+       {'width':'62.46875px'},
+       {'width':'63.671875px'},
+       {'width':'64.25px'},
+       {'width':'68.03125px'},
+       {'width':'79.671875px'},
+       {'width':'63.125px'},
+       {'width':'63.671875px'},
+       {'width':'160px'},
+       {'width':'155.59375px'},
+       {'width':'156.796875px'},
+       {'width':'157.375px'},
+       {'width':'161.15625px'},
+       {'width':'172.796875px'},
+       {'width':'156.265625px'},
+       {'width':'156.796875px'},
+       {'width':'59.71875px'},
+       {'width':'55.328125px'},
+       {'width':'56.53125px'},
+       {'width':'57.109375px'},
+       {'width':'60.890625px'},
+       {'width':'72.53125px'},
+       {'width':'56px'},
+       {'width':'56.53125px'},
+       {'width':'70.390625px'},
+       {'width':'66px'},
+       {'width':'67.1875px'},
+       {'width':'67.765625px'},
+       {'width':'71.546875px'},
+       {'width':'83.1875px'},
+       {'width':'66.65625px'},
+       {'width':'67.1875px'}]);
+    }, "Autogenerated test at t=1.7999999999999998");
+test_at(2.4, function() {
+    assert_styles(
+      '.anim',
+      [{'width':'160px'},
+       {'width':'160px'},
+       {'width':'160px'},
+       {'width':'160px'},
+       {'width':'160px'},
+       {'width':'160px'},
+       {'width':'160px'},
+       {'width':'160px'},
+       {'width':'50px'},
+       {'width':'50px'},
+       {'width':'50px'},
+       {'width':'50px'},
+       {'width':'50px'},
+       {'width':'50px'},
+       {'width':'50px'},
+       {'width':'50px'},
+       {'width':'80px'},
+       {'width':'80px'},
+       {'width':'80px'},
+       {'width':'80px'},
+       {'width':'80px'},
+       {'width':'80px'},
+       {'width':'80px'},
+       {'width':'80px'},
+       {'width':'94.484375px'},
+       {'width':'94.484375px'},
+       {'width':'94.484375px'},
+       {'width':'94.484375px'},
+       {'width':'94.484375px'},
+       {'width':'94.484375px'},
+       {'width':'94.484375px'},
+       {'width':'94.484375px'},
+       {'width':'75.578125px'},
+       {'width':'75.578125px'},
+       {'width':'75.578125px'},
+       {'width':'75.578125px'},
+       {'width':'75.578125px'},
+       {'width':'75.578125px'},
+       {'width':'75.578125px'},
+       {'width':'75.578125px'},
+       {'width':'192px'},
+       {'width':'192px'},
+       {'width':'192px'},
+       {'width':'192px'},
+       {'width':'192px'},
+       {'width':'192px'},
+       {'width':'192px'},
+       {'width':'192px'},
+       {'width':'66.65625px'},
+       {'width':'66.65625px'},
+       {'width':'66.65625px'},
+       {'width':'66.65625px'},
+       {'width':'66.65625px'},
+       {'width':'66.65625px'},
+       {'width':'66.65625px'},
+       {'width':'66.65625px'},
+       {'width':'80px'},
+       {'width':'80px'},
+       {'width':'80px'},
+       {'width':'80px'},
+       {'width':'80px'},
+       {'width':'80px'},
+       {'width':'80px'},
+       {'width':'80px'}]);
+    }, "Autogenerated test at t=2.4");

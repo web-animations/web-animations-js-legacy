@@ -59,8 +59,8 @@ limitations under the License.
 
 <div style="height: 450px"></div>
 
+<script src="../testharness_bootstrap.js"></script>
 <script src="../../web-animations.js"></script>
-<script src="../anim-test-pre.js"></script>
 <script>
 
 var a1 = new Animation(document.querySelector("#a"), {left: ["100px", "200px"]},
@@ -76,17 +76,10 @@ var pgroup2 = new ParGroup([a3, a4], {name: "p2"});
 var player = document.timeline.play(
     new SeqGroup([pgroup1, pgroup2], {name: "s"}));
 
-setTimeout(function() {
-  player.paused = true;
-}, 1000);
-setTimeout(function() {
-  player.paused = false;
-}, 2000);
-setTimeout(function() {
-  player.paused = true;
-}, 4000);
-setTimeout(function() {
-  player.paused = false;
-}, 5000);
+// FIXME: Tests!?
+test_at(1.0, function() { player.paused = true; });
+test_at(2.0, function() { player.paused = false; });
+test_at(4.0, function() { player.paused = true; });
+test_at(5.0, function() { player.paused = false; });
 
 </script>
