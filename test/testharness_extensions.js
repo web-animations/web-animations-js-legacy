@@ -28,7 +28,38 @@
 
 (function() {
     /**
+     * These functions come from testharness.js but can't be access because
+     * testharness uses an anonymous function to hide them.
+     **************************************************************************
      */
+    function forEach (array, callback, thisObj)
+    {
+        for (var i=0; i<array.length; i++)
+        {
+            if (array.hasOwnProperty(i))
+            {
+                callback.call(thisObj, array[i], i, array);
+            }
+        }
+    }
+
+    function expose(object, name)
+    {
+        var components = name.split(".");
+        var target = window;
+        for (var i=0; i<components.length - 1; i++)
+        {
+            if (!(components[i] in target))
+            {
+                target[components[i]] = {};
+            }
+            target = target[components[i]];
+        }
+        target[components[components.length - 1]] = object;
+    }
+
+    /* ********************************************************************* */
+
     var svg_properties = {
         'cx': 1,
         'width': 1,
@@ -44,7 +75,8 @@
 
     var svg_namespace_uri = 'http://www.w3.org/2000/svg';
 
-    var features = (function ()
+    var features = (
+        function ()
         {
             var style = document.createElement('style');
             style.textContent = '' +
@@ -68,13 +100,57 @@
             };
         })();
 
+    /**
+     * Figure out a useful name for an element.
+     *
+     * @param {Element} element Element to get the name for.
+     *
+     * @private
+     */
+    function _element_name(element)
+    {
+        if (element.id) {
+            return element.id;
+        } else {
+            return "An anonymous " + element.tagName;
+        }
+    }
 
     /**
-     * assert_style(actual, expected, description)
-     *    asserts that actual has the same styles as the dictionary given by
-     *    expected.
+     * Get the style for a given element.
+     *
+     * @param {Array.<Object.<string, string>>|Object.<string, string>} style
+     *     Either;
+     *      * A list of dictionaries, each node returned is checked against the
+     *        associated dictionary, or
+     *      * A single dictionary, each node returned is checked against the
+     *        given dictionary.
+     *     Each dictionary should be of the form {style_name: style_value}.
+     *
+     * @private
      */
-    function assert_style(object, style)
+    function _assert_style_get(style, i)
+    {
+        if (typeof style[i] === 'undefined') {
+            return style;
+        } else {
+            return style[i];
+        }
+    }
+
+    /**
+     * asserts that actual has the same styles as the dictionary given by
+     * expected.
+     *
+     * @param {Element} object DOM node to check the styles on
+     * @param {Object.<string, string>} styles Dictionary of {style_name: style_value} to check
+     *     on the object.
+     * @param {String} description Human readable description of what you are
+     *     trying to check.
+     *
+     * @private
+     */
+    function _assert_style_element(object, style, description)
     {
         // Create an element of the same type as testing so the style can be applied
         // from the test. This is so the css property (not the -webkit-does-something
@@ -162,7 +238,94 @@
         }
         reference_element.parentNode.removeChild(reference_element);
     }
-    window.assert_style = assert_style;
+
+    /**
+     * asserts that elements in the list have given styles.
+     *
+     * @param {Array.<Element>} objects List of DOM nodes to check the styles on
+     * @param {Array.<Object.<string, string>>|Object.<string, string>} style
+     *     See _assert_style_get for information.
+     * @param {String} description Human readable description of what you are
+     *     trying to check.
+     *
+     * @private
+     */
+    function _assert_style_element_list(objects, style, description)
+    {
+        forEach(
+            objects,
+            function(object, i)
+            {
+                _assert_style_element(
+                    object, _assert_style_get(style, i),
+                    description + " " + _element_name(object)
+                    );
+            });
+    }
+
+    /**
+     * asserts that elements returned from a query selector have a list of styles.
+     *
+     * @param {string} qs A query selector to use to get the DOM nodes.
+     * @param {Array.<Object.<string, string>>|Object.<string, string>} style
+     *     See _assert_style_get for information.
+     * @param {String} description Human readable description of what you are
+     *     trying to check.
+     *
+     * @private
+     */
+    function _assert_style_queryselector(qs, style, description)
+    {
+        var objects = document.querySelectorAll(qs);
+        _assert_style_element_list(objects, style, description);
+    }
+
+    /**
+     * asserts that elements returned from a query selector have a list of styles.
+     *
+     * Assert the element with id #hello is 100px wide;
+     *     assert_styles(document.getElementById('hello'), {'width': '100px'})
+     *     assert_styles('#hello'), {'width': '100px'})
+     *
+     * Assert all divs are 100px wide;
+     *     assert_styles(document.getElementsByTagName('div'), {'width': '100px'})
+     *     assert_styles('div', {'width': '100px'})
+     *
+     * Assert all objects with class "red" are 100px wide;
+     *     assert_styles(document.getElementsByClassName('red'), {'width': '100px'})
+     *     assert_styles('.red', {'width': '100px'})
+     *
+     * Assert first div is 100px wide, second div is 200px wide;
+     *     assert_styles(document.getElementsByTagName('div'),
+     *                   [{'width': '100px'}, {'width': '200px'}])
+     *     assert_styles('div',
+     *                   [{'width': '100px'}, {'width': '200px'}])
+     *
+     * @param {string|Element|Array.<Element>} objects Either;
+     *      * A query selector to use to get DOM nodes,
+     *      * A DOM node.
+     *      * A list of DOM nodes.
+     * @param {Array.<Object.<string, string>>|Object.<string, string>} style
+     *     See _assert_style_get for information.
+     */
+    function assert_styles(objects, style, description)
+    {
+        switch(typeof objects) {
+        case "string":
+            _assert_style_queryselector(objects, style, description);
+            break;
+
+        case "object":
+            if (objects instanceof Array || objects instanceof NodeList) {
+                _assert_style_element_list(objects, style, description);
+            } else if (objects instanceof Element) {
+                _assert_style_element(objects, style, description);
+            } else {
+                throw "Error";
+            }
+            break;
+        }
+    }
 
     /**
      * assert_transform(actual, expected, description)
@@ -199,15 +362,6 @@
             }
         }
     }
-    window.assert_transform = assert_transform;
-
-    function assert_dom_style(index, query_selector, style)
-    {
-        var object = document.querySelectorAll(query_selector)[index];
-        return assert_style(object, style);
-    }
-    window.assert_dom_style = assert_dom_style;
-
 
     // Generate a name from an assert function and the arguments.
     function generate_name(func, args)
@@ -215,7 +369,7 @@
         var testName = "";
 
         var object = null;
-        if (func == assert_dom_style) {
+        if (func == assert_style) {
             object = document.querySelectorAll(args[1])[args[0]];
             testName += "("+args[1]+")["+args[0]+"] ";
         } else if (func == assert_style) {
@@ -223,11 +377,7 @@
         }
 
         if (object != null) {
-            if (object.id) {
-                testName += object.id + " ";
-            } else {
-                testName += "An anonymous " + object.tagName + " ";
-            }
+            testName += _element_name(object) + " ";
         }
 
         if (func == assert_dom_style) {
@@ -244,7 +394,9 @@
         }
         return testName;
     }
-    window.generate_name = generate_name;
+
+    expose(assert_styles, 'assert_styles');
+    expose(assert_transform, 'assert_transform');
 
     // Override generate_at to generate a name if one isn't set.
     var test_harness_generate_tests = generate_tests;

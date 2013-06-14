@@ -1,140 +1,160 @@
-generate_tests_at(0, assert_dom_style, [
-    [null,0,'.anim',{'left':'100px'}],
-    [null,1,'.anim',{'left':'100px'}],
-    [null,2,'.anim',{'left':'180px'}],
-    [null,3,'.anim',{'left':'180px'}],
-    [null,4,'.anim',{'left':'180px'}],
-    [null,5,'.anim',{'left':'180px'}],
-    [null,6,'.anim',{'left':'100px'}],
-    [null,7,'.anim',{'left':'100px'}],
-    [null,8,'.anim',{'left':'180px'}],
-    [null,9,'.anim',{'left':'180px'}],
-    [null,10,'.anim',{'left':'180px'}],
-    [null,11,'.anim',{'left':'180px'}],
-    ]);
-generate_tests_at(0.9, assert_dom_style, [
-    [null,0,'.anim',{'left':'280px'}],
-    [null,1,'.anim',{'left':'172px'}],
-    [null,2,'.anim',{'left':'180px'}],
-    [null,3,'.anim',{'left':'120px'}],
-    [null,4,'.anim',{'left':'180px'}],
-    [null,5,'.anim',{'left':'180px'}],
-    [null,6,'.anim',{'left':'280px'}],
-    [null,7,'.anim',{'left':'172px'}],
-    [null,8,'.anim',{'left':'180px'}],
-    [null,9,'.anim',{'left':'120px'}],
-    [null,10,'.anim',{'left':'180px'}],
-    [null,11,'.anim',{'left':'180px'}],
-    ]);
-generate_tests_at(1.8, assert_dom_style, [
-    [null,0,'.anim',{'left':'260px'}],
-    [null,1,'.anim',{'left':'164px'}],
-    [null,2,'.anim',{'left':'180px'}],
-    [null,3,'.anim',{'left':'140px'}],
-    [null,4,'.anim',{'left':'116px'}],
-    [null,5,'.anim',{'left':'180px'}],
-    [null,6,'.anim',{'left':'260px'}],
-    [null,7,'.anim',{'left':'164px'}],
-    [null,8,'.anim',{'left':'180px'}],
-    [null,9,'.anim',{'left':'140px'}],
-    [null,10,'.anim',{'left':'116px'}],
-    [null,11,'.anim',{'left':'180px'}],
-    ]);
-generate_tests_at(2.7, assert_dom_style, [
-    [null,0,'.anim',{'left':'240px'}],
-    [null,1,'.anim',{'left':'156px'}],
-    [null,2,'.anim',{'left':'180px'}],
-    [null,3,'.anim',{'left':'160px'}],
-    [null,4,'.anim',{'left':'124px'}],
-    [null,5,'.anim',{'left':'180px'}],
-    [null,6,'.anim',{'left':'240px'}],
-    [null,7,'.anim',{'left':'156px'}],
-    [null,8,'.anim',{'left':'180px'}],
-    [null,9,'.anim',{'left':'160px'}],
-    [null,10,'.anim',{'left':'124px'}],
-    [null,11,'.anim',{'left':'180px'}],
-    ]);
-generate_tests_at(3.6, assert_dom_style, [
-    [null,0,'.anim',{'left':'180px'}],
-    [null,1,'.anim',{'left':'180px'}],
-    [null,2,'.anim',{'left':'180px'}],
-    [null,3,'.anim',{'left':'180px'}],
-    [null,4,'.anim',{'left':'132px'}],
-    [null,5,'.anim',{'left':'180px'}],
-    [null,6,'.anim',{'left':'180px'}],
-    [null,7,'.anim',{'left':'180px'}],
-    [null,8,'.anim',{'left':'180px'}],
-    [null,9,'.anim',{'left':'180px'}],
-    [null,10,'.anim',{'left':'132px'}],
-    [null,11,'.anim',{'left':'180px'}],
-    ]);
-generate_tests_at(4.5, assert_dom_style, [
-    [null,0,'.anim',{'left':'200px'}],
-    [null,1,'.anim',{'left':'140px'}],
-    [null,2,'.anim',{'left':'180px'}],
-    [null,3,'.anim',{'left':'180px'}],
-    [null,4,'.anim',{'left':'180px'}],
-    [null,5,'.anim',{'left':'180px'}],
-    [null,6,'.anim',{'left':'180px'}],
-    [null,7,'.anim',{'left':'180px'}],
-    [null,8,'.anim',{'left':'180px'}],
-    [null,9,'.anim',{'left':'200px'}],
-    [null,10,'.anim',{'left':'140px'}],
-    [null,11,'.anim',{'left':'180px'}],
-    ]);
-generate_tests_at(5.4, assert_dom_style, [
-    [null,0,'.anim',{'left':'180px'}],
-    [null,1,'.anim',{'left':'132px'}],
-    [null,2,'.anim',{'left':'180px'}],
-    [null,3,'.anim',{'left':'220px'}],
-    [null,4,'.anim',{'left':'148px'}],
-    [null,5,'.anim',{'left':'180px'}],
-    [null,6,'.anim',{'left':'220px'}],
-    [null,7,'.anim',{'left':'148px'}],
-    [null,8,'.anim',{'left':'180px'}],
-    [null,9,'.anim',{'left':'180px'}],
-    [null,10,'.anim',{'left':'132px'}],
-    [null,11,'.anim',{'left':'180px'}],
-    ]);
-generate_tests_at(6.300000000000001, assert_dom_style, [
-    [null,0,'.anim',{'left':'160px'}],
-    [null,1,'.anim',{'left':'124px'}],
-    [null,2,'.anim',{'left':'180px'}],
-    [null,3,'.anim',{'left':'240px'}],
-    [null,4,'.anim',{'left':'156px'}],
-    [null,5,'.anim',{'left':'180px'}],
-    [null,6,'.anim',{'left':'240px'}],
-    [null,7,'.anim',{'left':'156px'}],
-    [null,8,'.anim',{'left':'180px'}],
-    [null,9,'.anim',{'left':'160px'}],
-    [null,10,'.anim',{'left':'124px'}],
-    [null,11,'.anim',{'left':'180px'}],
-    ]);
-generate_tests_at(7.200000000000001, assert_dom_style, [
-    [null,0,'.anim',{'left':'140px'}],
-    [null,1,'.anim',{'left':'180px'}],
-    [null,2,'.anim',{'left':'180px'}],
-    [null,3,'.anim',{'left':'260px'}],
-    [null,4,'.anim',{'left':'164px'}],
-    [null,5,'.anim',{'left':'180px'}],
-    [null,6,'.anim',{'left':'260px'}],
-    [null,7,'.anim',{'left':'164px'}],
-    [null,8,'.anim',{'left':'180px'}],
-    [null,9,'.anim',{'left':'140px'}],
-    [null,10,'.anim',{'left':'180px'}],
-    [null,11,'.anim',{'left':'180px'}],
-    ]);
-generate_tests_at(8.100000000000001, assert_dom_style, [
-    [null,0,'.anim',{'left':'180px'}],
-    [null,1,'.anim',{'left':'180px'}],
-    [null,2,'.anim',{'left':'180px'}],
-    [null,3,'.anim',{'left':'100px'}],
-    [null,4,'.anim',{'left':'100px'}],
-    [null,5,'.anim',{'left':'180px'}],
-    [null,6,'.anim',{'left':'100px'}],
-    [null,7,'.anim',{'left':'100px'}],
-    [null,8,'.anim',{'left':'180px'}],
-    [null,9,'.anim',{'left':'180px'}],
-    [null,10,'.anim',{'left':'180px'}],
-    [null,11,'.anim',{'left':'180px'}],
-    ]);
+test_at(0, function() {
+    assert_styles(
+      '.anim',
+      [{'left':'100px'},
+       {'left':'100px'},
+       {'left':'180px'},
+       {'left':'180px'},
+       {'left':'180px'},
+       {'left':'180px'},
+       {'left':'100px'},
+       {'left':'100px'},
+       {'left':'180px'},
+       {'left':'180px'},
+       {'left':'180px'},
+       {'left':'180px'}]);
+    }, "Autogenerated test at t=0");
+test_at(0.9, function() {
+    assert_styles(
+      '.anim',
+      [{'left':'280px'},
+       {'left':'172px'},
+       {'left':'180px'},
+       {'left':'120px'},
+       {'left':'180px'},
+       {'left':'180px'},
+       {'left':'280px'},
+       {'left':'172px'},
+       {'left':'180px'},
+       {'left':'120px'},
+       {'left':'180px'},
+       {'left':'180px'}]);
+    }, "Autogenerated test at t=0.9");
+test_at(1.8, function() {
+    assert_styles(
+      '.anim',
+      [{'left':'260px'},
+       {'left':'164px'},
+       {'left':'180px'},
+       {'left':'140px'},
+       {'left':'116px'},
+       {'left':'180px'},
+       {'left':'260px'},
+       {'left':'164px'},
+       {'left':'180px'},
+       {'left':'140px'},
+       {'left':'116px'},
+       {'left':'180px'}]);
+    }, "Autogenerated test at t=1.8");
+test_at(2.7, function() {
+    assert_styles(
+      '.anim',
+      [{'left':'240px'},
+       {'left':'156px'},
+       {'left':'180px'},
+       {'left':'160px'},
+       {'left':'124px'},
+       {'left':'180px'},
+       {'left':'240px'},
+       {'left':'156px'},
+       {'left':'180px'},
+       {'left':'160px'},
+       {'left':'124px'},
+       {'left':'180px'}]);
+    }, "Autogenerated test at t=2.7");
+test_at(3.6, function() {
+    assert_styles(
+      '.anim',
+      [{'left':'180px'},
+       {'left':'180px'},
+       {'left':'180px'},
+       {'left':'180px'},
+       {'left':'132px'},
+       {'left':'180px'},
+       {'left':'180px'},
+       {'left':'180px'},
+       {'left':'180px'},
+       {'left':'180px'},
+       {'left':'132px'},
+       {'left':'180px'}]);
+    }, "Autogenerated test at t=3.6");
+test_at(4.5, function() {
+    assert_styles(
+      '.anim',
+      [{'left':'200px'},
+       {'left':'140px'},
+       {'left':'180px'},
+       {'left':'180px'},
+       {'left':'180px'},
+       {'left':'180px'},
+       {'left':'180px'},
+       {'left':'180px'},
+       {'left':'180px'},
+       {'left':'200px'},
+       {'left':'140px'},
+       {'left':'180px'}]);
+    }, "Autogenerated test at t=4.5");
+test_at(5.4, function() {
+    assert_styles(
+      '.anim',
+      [{'left':'180px'},
+       {'left':'132px'},
+       {'left':'180px'},
+       {'left':'220px'},
+       {'left':'148px'},
+       {'left':'180px'},
+       {'left':'220px'},
+       {'left':'148px'},
+       {'left':'180px'},
+       {'left':'180px'},
+       {'left':'132px'},
+       {'left':'180px'}]);
+    }, "Autogenerated test at t=5.4");
+test_at(6.300000000000001, function() {
+    assert_styles(
+      '.anim',
+      [{'left':'160px'},
+       {'left':'124px'},
+       {'left':'180px'},
+       {'left':'240px'},
+       {'left':'156px'},
+       {'left':'180px'},
+       {'left':'240px'},
+       {'left':'156px'},
+       {'left':'180px'},
+       {'left':'160px'},
+       {'left':'124px'},
+       {'left':'180px'}]);
+    }, "Autogenerated test at t=6.300000000000001");
+test_at(7.200000000000001, function() {
+    assert_styles(
+      '.anim',
+      [{'left':'140px'},
+       {'left':'180px'},
+       {'left':'180px'},
+       {'left':'260px'},
+       {'left':'164px'},
+       {'left':'180px'},
+       {'left':'260px'},
+       {'left':'164px'},
+       {'left':'180px'},
+       {'left':'140px'},
+       {'left':'180px'},
+       {'left':'180px'}]);
+    }, "Autogenerated test at t=7.200000000000001");
+test_at(8.100000000000001, function() {
+    assert_styles(
+      '.anim',
+      [{'left':'180px'},
+       {'left':'180px'},
+       {'left':'180px'},
+       {'left':'100px'},
+       {'left':'100px'},
+       {'left':'180px'},
+       {'left':'100px'},
+       {'left':'100px'},
+       {'left':'180px'},
+       {'left':'180px'},
+       {'left':'180px'},
+       {'left':'180px'}]);
+    }, "Autogenerated test at t=8.100000000000001");
