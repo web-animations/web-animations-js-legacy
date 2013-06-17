@@ -124,7 +124,7 @@ test(function() {assert_equals(child.startTime,  1.0)},
      "After.add, Start time of 'child'");
 
 // Test that setting TimedItem.parentGroup is ignored.
-child.parentGroup = null;
+try { child.parentGroup = null; } catch (error) { }
 test(function() {assert_equals(seqGroup.children.length,  2)},
      "seqGroup.children.length");
 test(function() {assert_equals(seqGroup.children[0],  sibling)},
