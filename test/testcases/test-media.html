@@ -37,10 +37,10 @@ new MediaReference(video);
 test(function() {assert_equals(video.loop,  false)},
      "MediaReference should disable looping");
 
-// Test intrinsic duration is Infinity before video loads.
+// Test intrinsic iterationDuration is Infinity before video loads.
 mediaReference = new MediaReference(video);
-test(function() {assert_equals(mediaReference.duration,  Infinity)},
-     "Intrinsic duration should be Infinity before video loads");
+test(function() {assert_equals(mediaReference.iterationDuration,  Infinity)},
+     "Intrinsic iterationDuration should be Infinity before video loads");
 
 video.addEventListener("loadeddata", function() { continuation1(); });
 // Length is around 32s.
@@ -55,9 +55,9 @@ function addSourceToVideo(sourceString) {
 }
 
 var continuation1 = function() {
-  // Test intrinsic duration.
-  test(function() {assert_equals(mediaReference.duration,  video.duration)},
-       "Intrinsic duration should be video duration");
+  // Test intrinsic iterationDuration.
+  test(function() {assert_equals(mediaReference.iterationDuration,  video.iterationDuration)},
+       "Intrinsic iterationDuration should be video iterationDuration");
 
   // Test basic use.
   var player = dt.play(mediaReference);
@@ -74,8 +74,8 @@ var continuation1 = function() {
 };
 
 var continuation2 = function() {
-  // Test clipping where duration limits. Video should be frozen at end of
-  // duration.
+  // Test clipping where iterationDuration limits. Video should be frozen at end of
+  // iterationDuration.
   var player = dt.play(new MediaReference(video, {iterationDuration: 3.0}));
   player.paused = true;
   player.currentTime = 3.0;
@@ -83,7 +83,7 @@ var continuation2 = function() {
     test(function() {
       assert_equals(video.currentTime, 3.0);
       assert_equals(video.paused, true);
-    }, "Video should be frozen at duration");
+    }, "Video should be frozen at iterationDuration");
     player.source = null;
     continuation3();
   });
@@ -91,20 +91,20 @@ var continuation2 = function() {
 
 var continuation3 = function() {
   // Test clipping where video length limits. Video should be frozen at end for
-  // remainder of duration.
+  // remainder of iterationDuration.
   var player = dt.play(
-      new MediaReference(video, {iterationDuration: video.duration + 2}));
+      new MediaReference(video, {iterationDuration: video.iterationDuration + 2}));
   player.paused = true;
-  player.currentTime = video.duration + 1;
+  player.currentTime = video.iterationDuration + 1;
   raf(function() {
     test(function() {
-      assert_equals(video.currentTime, video.duration);
+      assert_equals(video.currentTime, video.iterationDuration);
       assert_equals(video.paused, true);
     }, "Video should be frozen at end");
-    player.currentTime = video.duration + 2;
+    player.currentTime = video.iterationDuration + 2;
     raf(function() {
       test(function() {
-        assert_equals(video.currentTime, video.duration);
+        assert_equals(video.currentTime, video.iterationDuration);
         assert_equals(video.paused, true);
       }, "Video should be frozen after end");
       player.source = null;
@@ -114,13 +114,13 @@ var continuation3 = function() {
 };
 
 var continuation4 = function() {
-  // Test fill with duration limiting. Video should be frozen at end of
-  // duration.
+  // Test fill with iterationDuration limiting. Video should be frozen at end of
+  // iterationDuration.
   var player = dt.play(new MediaReference(video, {iterationDuration: 1.0}));
   player.currentTime = 2.0;
   raf(function() {
     test(function() {assert_equals(video.currentTime,  1.0)},
-     "Should freeze video at duration for fill");
+     "Should freeze video at iterationDuration for fill");
     test(function() {assert_equals(video.paused,  true)},
      "Video should be frozen for fill");
     player.source = null;
@@ -131,10 +131,10 @@ var continuation4 = function() {
 var continuation5 = function() {
   // Test fill with video length limiting. Video should be at end.
   var player = dt.play(
-      new MediaReference(video, {iterationDuration: video.duration + 1}));
-  player.currentTime = video.duration + 2;
+      new MediaReference(video, {iterationDuration: video.iterationDuration + 1}));
+  player.currentTime = video.iterationDuration + 2;
   raf(function() {
-    test(function() {assert_equals(video.currentTime,  video.duration)},
+    test(function() {assert_equals(video.currentTime,  video.iterationDuration)},
          "Should freeze video at end for fill");
     player.source = null;
     continuation6();
@@ -144,7 +144,7 @@ var continuation5 = function() {
 var continuation6 = function() {
   // Test no fill. Video should be frozen at start.
   var player = dt.play(new MediaReference(video, {fillMode: "none"}));
-  player.currentTime = video.duration + 1;
+  player.currentTime = video.iterationDuration + 1;
   raf(function() {
     test(function() {assert_equals(video.currentTime,  0)},
          "Should freeze video at start for no fill");
@@ -239,7 +239,7 @@ var continuation12 = function() {
   player.currentTime = 1.0;
   raf(function() {
     test(function() {
-      assert_approx_equals(video.currentTime, video.duration - 1.0, 0.0001);
+      assert_approx_equals(video.currentTime, video.iterationDuration - 1.0, 0.0001);
       assert_equals(video.playbackRate, -1.0);
     }, "Video should respect reversing");
     player.source = null;
@@ -254,7 +254,7 @@ var continuation13 = function() {
   player.currentTime = 1.0;
   raf(function() {
     test(function() {
-      assert_approx_equals(video.currentTime, video.duration - 0.5, 0.0001);
+      assert_approx_equals(video.currentTime, video.iterationDuration - 0.5, 0.0001);
       assert_equals(video.playbackRate, -0.5);
     }, "Video should respect negative playbackRate");
     player.source = null;
@@ -280,17 +280,17 @@ var continuation14 = function() {
 };
 
 var continuation15 = function() {
-  // Test zero duration.
+  // Test zero iterationDuration.
   var player = dt.play(
       new MediaReference(video, {iterationDuration: 0.0, iterationStart: 0.5}));
   player.paused = true;
   raf(function() {
     test(function() {assert_equals(video.currentTime,  0.0)},
-         "Video should start at time zero when duration is zero");
+         "Video should start at time zero when iterationDuration is zero");
     player.currentTime = 1.0;
     raf(function() {
       test(function() {assert_equals(video.currentTime,  0.0)},
-           "Video should remain at time zero when duration is zero");
+           "Video should remain at time zero when iterationDuration is zero");
       player.source = null;
       continuation16();
     });
@@ -298,7 +298,7 @@ var continuation15 = function() {
 };
 
 var continuation16 = function() {
-  // Test zero intrinsic duration.
+  // Test zero intrinsic iterationDuration.
   // TODO: Need to find a zero length video.
   continuation17();
 };

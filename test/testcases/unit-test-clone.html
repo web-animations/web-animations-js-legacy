@@ -31,7 +31,7 @@ var clone = anim.clone();
 test(function() {assert_true(clone instanceof Animation)},
      "Clone should be an Animation");
 test(function() {assert_equals(clone.timing.iterationDuration, 1.0)},
-     "Clone should take Timing.duration");
+     "Clone should take Timing.iterationDuration");
 test(function() {assert_equals(clone.targetElement, elem)},
      "Clone should take targetElement");
 
@@ -47,18 +47,18 @@ var parGroup = new ParGroup([anim, clone], 4.0);
 var parGroupClone = parGroup.clone();
 test(function() {assert_true(parGroupClone instanceof ParGroup, true)},
      "ParGroup clone should be a ParGroup");
-test(function() {assert_equals(parGroupClone.timing.duration, 4.0)},
-     "ParGroup clone should take Timing.duration");
+test(function() {assert_equals(parGroupClone.timing.iterationDuration, 4.0)},
+     "ParGroup clone should take Timing.iterationDuration");
 test(function() {assert_equals(parGroupClone.children.length, 2)},
      "ParGroup clone should clone children");
 test(function() {assert_not_equals(parGroupClone.children[0], anim)},
      "ParGroup clone should clone first child");
-test(function() {assert_equals(parGroupClone.children[0].duration, 1.0)},
-     "ParGroup clone should clone first child's duration");
+test(function() {assert_equals(parGroupClone.children[0].iterationDuration, 1.0)},
+     "ParGroup clone should clone first child's iterationDuration");
 test(function() {assert_not_equals(parGroupClone.children[1], clone)},
      "ParGroup clone should clone second child");
-test(function() {assert_equals(parGroupClone.children[1].duration, 1.0)},
-     "ParGroup clone should clone second child's duration");
+test(function() {assert_equals(parGroupClone.children[1].iterationDuration, 1.0)},
+     "ParGroup clone should clone second child's iterationDuration");
 
 parGroup.iterationTime = 0.3;
 parGroupClone.iterationTime = 0.4;
@@ -72,18 +72,18 @@ var seqGroup = new SeqGroup([anim, clone], 6.0);
 var seqGroupClone = seqGroup.clone();
 test(function() {assert_true(seqGroupClone instanceof SeqGroup)},
      "SeqGroup clone should be a SeqGroup");
-test(function() {assert_equals(seqGroupClone.timing.duration, 6.0)},
-     "SeqGroup clone should take Timing.duration");
+test(function() {assert_equals(seqGroupClone.timing.iterationDuration, 6.0)},
+     "SeqGroup clone should take Timing.iterationDuration");
 test(function() {assert_equals(seqGroupClone.children.length, 2)},
      "SeqGroup clone should clone children");
 test(function() {assert_not_equals(seqGroupClone.children[0], anim)},
      "SeqGroup clone should clone first child");
-test(function() {assert_equals(seqGroupClone.children[0].duration, 1.0)},
-     "SeqGroup clone should clone first child's duration");
+test(function() {assert_equals(seqGroupClone.children[0].iterationDuration, 1.0)},
+     "SeqGroup clone should clone first child's iterationDuration");
 test(function() {assert_not_equals(seqGroupClone.children[1], clone)},
      "SeqGroup clone should clone second child");
-test(function() {assert_equals(seqGroupClone.children[1].duration, 1.0)},
-     "SeqGroup clone should clone second child's duration");
+test(function() {assert_equals(seqGroupClone.children[1].iterationDuration, 1.0)},
+     "SeqGroup clone should clone second child's iterationDuration");
 
 seqGroup.iterationTime = 0.5;
 seqGroupClone.iterationTime = 0.6;

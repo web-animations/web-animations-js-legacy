@@ -72,7 +72,7 @@ var TimingDict = function(timingInput) {
         this[k] = timingInput[k];
       }
     }
-  } else {
+  } else if (isDefinedAndNotNull(timingInput)) {
     this.iterationDuration = Number(timingInput);
   }
 };
@@ -126,7 +126,11 @@ Timing._defineProperty = function(prop) {
       return this._dict[prop];
     },
     set: function(value) {
-      this._dict[prop] = value;
+      if (isDefinedAndNotNull(value)) {
+        this._dict[prop] = value;
+      } else {
+        delete this._dict[prop];
+      }
       this._changeHandler();
     }
   }));
@@ -315,20 +319,22 @@ TimedItem.prototype = {
   get startTime() {
     return this._startTime;
   },
-  get duration() {
-    return isDefined(this._duration) ?
-        this._duration : (isDefined(this.timing.iterationDuration) ?
-            this.timing.iterationDuration : this._intrinsicDuration());
+  get iterationDuration() {
+    var result = this.timing.iterationDuration;
+    if (result == 'auto')
+        result = this._intrinsicDuration();
+    return result;
   },
-  get animationDuration() {
-    if (isDefined(this._animationDuration)) {
-      return this._animationDuration;
+  get activeDuration() {
+    var result = this.timing.activeDuration;
+    if (result == 'auto') {
+      var repeatedDuration = this.iterationDuration * this.timing.iterationCount;
+      result = repeatedDuration / Math.abs(this.timing.playbackRate);
     }
-    var repeatedDuration = this.duration * this.timing.iterationCount;
-    return repeatedDuration / Math.abs(this.timing.playbackRate);
+    return result;
   },
   get endTime() {
-    return this._startTime + this.animationDuration + this.timing.startDelay;
+    return this._startTime + this.activeDuration + this.timing.startDelay;
   },
   get parentGroup() {
     return this._parentGroup;
@@ -393,12 +399,12 @@ TimedItem.prototype = {
         this.animationTime = null;
       }
     } else if (this.localTime <
-        this.timing.startDelay + this.animationDuration) {
+        this.timing.startDelay + this.activeDuration) {
       this.animationTime = this.localTime - this.timing.startDelay;
     } else {
       if (this.timing.fillMode === 'forwards' ||
           this.timing.fillMode === 'both') {
-        this.animationTime = this.animationDuration;
+        this.animationTime = this.activeDuration;
       } else {
         this.animationTime = null;
       }
@@ -425,38 +431,38 @@ TimedItem.prototype = {
   },
   _getAdjustedAnimationTime: function(animationTime) {
     var startOffset =
-        multiplyZeroGivesZero(this.timing.iterationStart, this.duration);
+        multiplyZeroGivesZero(this.timing.iterationStart, this.iterationDuration);
     return (this.timing.playbackRate < 0 ?
-        (animationTime - this.animationDuration) : animationTime) *
+        (animationTime - this.activeDuration) : animationTime) *
         this.timing.playbackRate + startOffset;
   },
   _scaleIterationTime: function(unscaledIterationTime) {
     return this._isCurrentDirectionForwards() ?
         unscaledIterationTime :
-        this.duration - unscaledIterationTime;
+        this.iterationDuration - unscaledIterationTime;
   },
   _updateIterationParams: function() {
     var adjustedAnimationTime =
         this._getAdjustedAnimationTime(this.animationTime);
-    var repeatedDuration = this.duration * this.timing.iterationCount;
-    var startOffset = this.timing.iterationStart * this.duration;
+    var repeatedDuration = this.iterationDuration * this.timing.iterationCount;
+    var startOffset = this.timing.iterationStart * this.iterationDuration;
     var isAtEndOfIterations = (this.timing.iterationCount != 0) &&
         (adjustedAnimationTime - startOffset == repeatedDuration);
     this.currentIteration = isAtEndOfIterations ?
         this._floorWithOpenClosedRange(
-            adjustedAnimationTime, this.duration) :
+            adjustedAnimationTime, this.iterationDuration) :
         this._floorWithClosedOpenRange(
-            adjustedAnimationTime, this.duration);
+            adjustedAnimationTime, this.iterationDuration);
     var unscaledIterationTime = isAtEndOfIterations ?
         this._modulusWithOpenClosedRange(
-            adjustedAnimationTime, this.duration) :
+            adjustedAnimationTime, this.iterationDuration) :
         this._modulusWithClosedOpenRange(
-            adjustedAnimationTime, this.duration);
+            adjustedAnimationTime, this.iterationDuration);
     this.iterationTime = this._scaleIterationTime(unscaledIterationTime);
-    this._timeFraction = this.iterationTime / this.duration;
+    this._timeFraction = this.iterationTime / this.iterationDuration;
     this._timeFraction = this.timing._parsedTimingFunction().scaleTime(
           this._timeFraction);
-    this.iterationTime = this._timeFraction * this.duration;
+    this.iterationTime = this._timeFraction * this.iterationDuration;
   },
   _updateTimeMarkers: function() {
     if (this.localTime === null) {
@@ -471,7 +477,7 @@ TimedItem.prototype = {
       this.iterationTime = null;
       this.currentIteration = null;
       this._timeFraction = null;
-    } else if (this.duration == 0) {
+    } else if (this.iterationDuration == 0) {
       this._updateIterationParamsZeroDuration();
     } else {
       this._updateIterationParams();
@@ -660,7 +666,7 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
     this._isInChildrenStateModified = true;
 
     // We need to walk up and down the tree to re-layout. endTime and the
-    // various durations (which are all calculated lazily) are the only
+    // various iterationDurations (which are all calculated lazily) are the only
     // properties of a TimedItem which can affect the layout of its ancestors.
     // So it should be sufficient to simply update start times and time markers
     // on the way down.
@@ -701,7 +707,7 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
           child._updateInheritedTime(this.iterationTime);
         }
         cumulativeStartTime += Math.max(0, child.timing.startDelay +
-            child.animationDuration);
+            child.activeDuration);
       }
     }
   },
@@ -723,7 +729,7 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
     } else if (this.type == 'seq') {
       var result = 0;
       this.children.forEach(function(a) {
-        result += a.animationDuration + a.timing.startDelay;
+        result += a.activeDuration + a.timing.startDelay;
       });
       return result;
     } else {
@@ -843,7 +849,7 @@ var MediaReference = function(mediaElement, timing, parentGroup) {
   // element's currentTime may drift from our iterationTime. So if a media
   // element has loop set, we can't be sure that we'll stop it before it wraps.
   // For this reason, we simply disable looping.
-  // TODO: Maybe we should let it loop if our duration exceeds it's length?
+  // TODO: Maybe we should let it loop if our iterationDuration exceeds it's length?
   this._media.loop = false;
 
   // If the media element has a media controller, we detach it. This mirrors the
@@ -861,8 +867,8 @@ MediaReference.prototype = createObject(TimedItem.prototype, {
     // _updateInheritedTime(). One way around this would be to modify
     // TimedItem._isPastEndOfActiveInterval() to recurse down the tree, then we
     // could override it here.
-    return isNaN(this._media.duration) ?
-        Infinity : this._media.duration / this._media.defaultPlaybackRate;
+    return isNaN(this._media.iterationDuration) ?
+        Infinity : this._media.iterationDuration / this._media.defaultPlaybackRate;
   },
   _unscaledMediaCurrentTime: function() {
     return this._media.currentTime / this._media.defaultPlaybackRate;
@@ -892,11 +898,11 @@ MediaReference.prototype = createObject(TimedItem.prototype, {
     return false;
   },
   // Note that a media element's timeline may not start at zero, although it's
-  // duration is always the timeline time at the end point. This means that an
-  // element's duration isn't always it's length and not all values of the
+  // iterationDuration is always the timeline time at the end point. This means that an
+  // element's iterationDuration isn't always it's length and not all values of the
   // timline are seekable. Furthermore, some types of media further limit the
   // range of seekable timeline times. For this reason, we always map an
-  // iteration to the range [0, duration] and simply seek to the nearest
+  // iteration to the range [0, iterationDuration] and simply seek to the nearest
   // seekable time.
   _ensureIsAtUnscaledTime: function(time) {
     if (this._unscaledMediaCurrentTime() !== time) {
@@ -921,7 +927,7 @@ MediaReference.prototype = createObject(TimedItem.prototype, {
     }
 
     if (this.iterationTime >= this._intrinsicDuration()) {
-      // Our iteration time exceeds the media element's duration, so just make
+      // Our iteration time exceeds the media element's iterationDuration, so just make
       // sure the media element is at the end. It will stop automatically, but
       // that could take some time if the seek below is significant, so force
       // it.
@@ -936,10 +942,10 @@ MediaReference.prototype = createObject(TimedItem.prototype, {
         this.timing.iterationStart + this.timing.iterationCount, 1.0);
     if (this.currentIteration === finalIteration &&
         this._timeFraction === endTimeFraction &&
-        this._intrinsicDuration() >= this.duration) {
+        this._intrinsicDuration() >= this.iterationDuration) {
       // We have reached the end of our final iteration, but the media element
       // is not done.
-      this._ensureIsAtUnscaledTime(this.duration * endTimeFraction);
+      this._ensureIsAtUnscaledTime(this.iterationDuration * endTimeFraction);
       this._ensurePaused();
       return;
     }
@@ -2982,6 +2988,7 @@ window.SeqGroup = SeqGroup;
 window.SplineTimingFunction = SplineTimingFunction;
 window.StepTimingFunction = StepTimingFunction;
 window.TimedItem = TimedItem;
+window.Timing = Timing;
 window.Timeline = Timeline;
 window.TimingEvent = null; // TODO
 window.TimingFunction = TimingFunction;

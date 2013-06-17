@@ -90,7 +90,7 @@ var directions = ["normal", "reverse", "alternate", "alternate-reverse"];
 var animation = {left: ["100px", "500px"]};
 
 // We use a new group for each animation to avoid coupling due to the intrinsic
-// duration of a par group.
+// iterationDuration of a par group.
 var group = function(direction) {
   return new ParGroup([], {iterationCount: 2.0, direction: direction});
 };
@@ -105,7 +105,7 @@ for (var i = 0; i < directions.length; i++) {
 
   // Interaction of default start time with parent iterations. At the time of
   // addition, the child picks up a start time of zero. The parent then updates
-  // its duration and its iteration time jumps, causing the child to start
+  // its iterationDuration and its iteration time jumps, causing the child to start
   // playing part way through the animation.
   var group1 = group(direction);
   document.timeline.play(group1);
