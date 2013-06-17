@@ -1040,7 +1040,7 @@ var AnimationEffect = function(token, operation, accumulateOperation) {
   }
   this.operation = operation === undefined ? 'replace' : operation;
   this.accumulateOperation =
-      accumulateOperation == undefined ? 'replace' : operation;
+      accumulateOperation == undefined ? 'none' : accumulateOperation;
 };
 
 AnimationEffect.prototype = {
@@ -1301,11 +1301,10 @@ KeyframeAnimationEffect.prototype = createObject(
 });
 
 /** @constructor */
-var Keyframe = function(value, offset, timingFunction) {
+var Keyframe = function(value, offset) {
   this.value = value;
   this.rawValue = null;
   this.offset = offset;
-  this.timingFunction = timingFunction;
 };
 
 /** @constructor */
@@ -1355,8 +1354,7 @@ KeyframeList.prototype = {
   clone: function() {
     var result = new KeyframeList(constructorToken);
     for (var i = 0; i < this.frames.length; i++) {
-      result.add(new Keyframe(this.frames[i].value, this.frames[i].offset,
-          this.frames[i].timingFunction));
+      result.add(new Keyframe(this.frames[i].value, this.frames[i].offset));
     }
     return result;
   },
