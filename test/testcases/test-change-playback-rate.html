@@ -14,6 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
+
+<!--
+This test is currently broken.
+1) The test doesn't work without simulating all the frames
+2) The test fails when you simulate on t=0 boundary because currentTime_ ends
+   up null
+3) The test fails when you simulate on t=0 boundary because relativeTime
+   returns null when zeroTime is null
+-->
+
+
 <!DOCTYPE html>
 <style>
 .anim {
@@ -36,29 +47,8 @@ limitations under the License.
 <script>
 "use strict";
 
-/* FIXME -
-   _update: function() {
-    if (this.source !== null) {
-      this.source._updateInheritedTime(this._currentTime);
-    }
-  },
-
-should be
-
-  _update: function() {
-    if (this.source !== null) {
-      this.source._updateInheritedTime(this.currentTime);
-    }
-  },
-
-Otherwise weirdness happens.
-
-*/
-
-// FIXME - relativeTime returns null when zeroTime is null which cause this to behave weird.
-
 var a1 = new Animation(document.querySelector("#a"),
-    {left: ["0px", "500px"]},
+    [{left: "0px"}, {left: "500px"}],
     {iterationDuration: 10, direction: 'alternating', iterationCount: Infinity});
 var player1 = document.timeline.play(a1);
 

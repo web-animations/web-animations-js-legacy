@@ -30,7 +30,13 @@ body {
 <script src="../bootstrap.js"></script>
 <script>
 "use strict";
-document.timeline.play(new Animation(document.querySelector('#test'),
-    {'display': ['none', 'block', 'none', 'block', 'none', 'block', 'none']},
-    0.5));
+document.timeline.play(new Animation(document.querySelector('#test'), [
+  {display: 'none'},
+  {display: 'block'},
+  {display: 'none'},
+  {display: 'block'},
+  {display: 'none'},
+  {display: 'block'},
+  {display: 'none'},
+], 0.5));
 </script>

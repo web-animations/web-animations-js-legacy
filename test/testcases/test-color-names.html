@@ -184,8 +184,11 @@ var colors = [
 var divs = document.querySelectorAll('td.anim');
 var sliceSize = colors.length / 9;
 for (var i = 0; i < divs.length; i++) {
-  document.timeline.play(new Animation(divs[i],
-    {'backgroundColor': colors.slice(i * sliceSize, (i + 1) * sliceSize)}, 4));
+  var colorsToAnimate = colors.slice(i * sliceSize, (i + 1) * sliceSize);
+  var effect = colorsToAnimate.map(function(value) {
+    return { backgroundColor: value };
+  });
+  document.timeline.play(new Animation(divs[i], effect, 4));
 }
 
 //document.timeline.play(new Animation(document.body,

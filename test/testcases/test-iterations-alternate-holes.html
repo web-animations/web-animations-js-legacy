@@ -39,7 +39,7 @@ limitations under the License.
 //   https://www.w3.org/Bugs/Public/show_bug.cgi?id=22402
 
 var anim = new Animation(
-    document.getElementById("a"), {left: ["100px", "500px"]},
+    document.getElementById("a"), [{left: "100px"}, {left: "500px"}],
     {iterationCount: Infinity, iterationDuration: 1.0});
 var parGroup = new ParGroup([anim],
     {direction: "alternate", iterationDuration: 1.0, iterationCount: 3.0});

@@ -108,13 +108,14 @@ limitations under the License.
 var containers = ["ca", "cb", "cc", "cd"];
 var directions = ["normal", "reverse", "alternate", "alternate-reverse"];
 var fills = ["none", "backwards", "forwards", "both"];
+var effect = [{left: "100px"}, {left: "200px"}];
 
 for (var i = 0; i < containers.length; i++) {
   var divs =
       document.getElementById(containers[i]).getElementsByClassName('anim');
   for (var j = 0; j < fills.length; j++) {
     document.timeline.play(
-        new Animation(divs[2 * j], {left: ["100px", "200px"]}, {
+        new Animation(divs[2 * j], effect, {
           iterationCount: 4,
           direction: directions[i],
           iterationDuration: 1,
@@ -123,7 +124,7 @@ for (var i = 0; i < containers.length; i++) {
     divs[2 * j].innerHTML = "dir: " + directions[i] + " fill: " + fills[j] +
         " dur: 1";
     document.timeline.play(
-        new Animation(divs[2 * j + 1], {left: ["100px", "200px"]}, {
+        new Animation(divs[2 * j + 1], effect, {
           iterationCount: 4,
           direction: directions[i],
           iterationDuration: 0,

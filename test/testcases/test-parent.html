@@ -37,13 +37,15 @@ limitations under the License.
 <script>
 "use strict";
 
+var effect = [{left: "100px"}, {left: "200px"}];
+
 // Top level animation.
 document.timeline.play(new Animation(document.getElementById("a"),
-    {left: ["100px", "200px"]}, 1.0));
+    effect, 1.0));
 
 // Animation in group.
 document.timeline.play(new ParGroup([
-    new Animation(document.getElementById("c"), {left: ["100px", "200px"]}, 1.0)
-    ], {iterationCount: 3}));
+  new Animation(document.getElementById("c"), effect, 1.0)
+], {iterationCount: 3}));
 
 </script>

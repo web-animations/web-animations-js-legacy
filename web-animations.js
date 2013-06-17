@@ -599,10 +599,7 @@ TimedItem.prototype = {
     // TODO: 6.13.3 step 3. wtf?
     return d % 2 == 0;
   },
-  clone: function() {
-    throw new Error(
-        "Derived classes must override TimedItem.clone()");
-  },
+  clone: abstractMethod,
   before: function() {
     var newItems = [];
     for (var i = 0; i < arguments.length; i++) {
@@ -671,7 +668,10 @@ var interpretAnimationEffect = function(animationEffect) {
     return animationEffect;
   } else if (isDefinedAndNotNull(animationEffect) &&
       typeof animationEffect === 'object') {
-    return AnimationEffect.createFromProperties(animationEffect);
+    // The spec requires animationEffect to be an instance of
+    // OneOrMoreKeyframes, but this type is just a dictionary or a list of
+    // dictionaries, so the best we can do is test for an object.
+    return new KeyframeAnimationEffect(animationEffect);
   }
   return null;
 };
@@ -1118,13 +1118,13 @@ MediaReference.prototype = createObject(TimedItem.prototype, {
 
 
 /** @constructor */
-var AnimationEffect = function(token, operation, accumulateOperation) {
+var AnimationEffect = function(token, composite, accumulate) {
   if (token !== constructorToken) {
     throw new TypeError('Illegal constructor');
   }
-  this.operation = operation === undefined ? 'replace' : operation;
-  this.accumulateOperation =
-      accumulateOperation == undefined ? 'none' : accumulateOperation;
+  // Use the default value if an invalid string is specified.
+  this.composite = composite === 'add' ? 'add' : 'replace';
+  this.accumulate = accumulate == 'sum' ? 'sum' : 'none';
 };
 
 AnimationEffect.prototype = {
@@ -1134,87 +1134,6 @@ AnimationEffect.prototype = {
   toString: abstractMethod,
 };
 
-AnimationEffect.createFromProperties = function(properties) {
-  // Step 1 - determine set of animation properties
-  var animProps = [];
-  for (var candidate in properties) {
-    if (candidate == 'operation') {
-      continue;
-    }
-    animProps.push(candidate);
-  }
-
-  // Step 2 - Create AnimationEffect objects
-  if (animProps.length === 0) {
-    return null;
-  } else if (animProps.length === 1) {
-    return AnimationEffect._createKeyframeFunction(
-        animProps[0], properties[animProps[0]], properties.operation);
-  } else {
-    var result = new GroupedAnimationEffect();
-    for (var i = 0; i < animProps.length; i++) {
-      result.add(AnimationEffect._createKeyframeFunction(
-          animProps[i], properties[animProps[i]], properties.operation));
-    }
-    return result;
-  }
-}
-
-// Step 3 - Create a KeyframeAnimationEffect object
-AnimationEffect._createKeyframeFunction =
-    function(property, value, operation) {
-  var func = new KeyframeAnimationEffect(property);
-
-  if (typeof value === 'string') {
-    func.frames.add(new Keyframe(value, 0));
-    func.frames.add(new Keyframe(value, 1));
-    func.operation = 'merge';
-  } else if (Array.isArray(value)) {
-    for (var i = 0; i < value.length; i++) {
-      if (typeof value[i] !== 'string') {
-        var val = isDefinedAndNotNull(value[i].value) ? value[i].value : "";
-        var offset = isDefinedAndNotNull(value[i].offset) ? value[i].offset : 1;
-        func.frames.add(new Keyframe(val, offset));
-      } else {
-        var offset = i / (value.length - 1);
-        func.frames.add(new Keyframe(value[i], offset));
-      }
-    }
-  } else {
-    try {
-      throw new Error('TypeError');
-    } catch (e) { console.log(e.stack); throw e; }
-  }
-
-  if (isDefinedAndNotNull(operation)) {
-    func.operation = operation;
-  }
-
-  return func;
-}
-
-/** @constructor */
-var GroupedAnimationEffect = function() {
-  AnimationEffect.call(this, constructorToken);
-  this.children = [];
-};
-
-GroupedAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
-  item: function(i) {
-    return this.children[i];
-  },
-  add: function(func) {
-    this.children.push(func);
-  },
-  sample: function(timeFraction, currentIteration, target) {
-    for (var i = 0; i < this.children.length; i++) {
-      this.children[i].sample(timeFraction, currentIteration, target);
-    }
-  },
-  get length() {
-    return this.children.length;
-  }
-});
 
 /** @constructor */
 var PathAnimationEffect = function(path, autoRotate, angle, composite) {
@@ -1238,6 +1157,7 @@ var PathAnimationEffect = function(path, autoRotate, angle, composite) {
 
 PathAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
   sample: function(timeFraction, currentIteration, target) {
+    // TODO: Handle accumulation.
     var length = this._path.getTotalLength();
     var point = this._path.getPointAtLength(timeFraction * length);
     var x = point.x - target.offsetWidth / 2;
@@ -1255,8 +1175,8 @@ PathAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
       angle += rotation / 2 / Math.PI * 360;
     }
     value.push({t:'rotate', d: [angle]});
-    compositor.setAnimatedValue(target, 'transform',
-        new AnimatedResult(value, this.operation, timeFraction));
+    compositor.setAnimatedValue(target, "transform",
+        new AddReplaceCompositableValue(value, this.operation, timeFraction));
   },
   clone: function() {
     return new PathAnimationEffect(this._path.getAttribute('d'));
@@ -1307,178 +1227,310 @@ PathAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
   }
 });
 
-/** @constructor */
-var KeyframeAnimationEffect =
-    function(property, operation, accumulateOperation) {
-  AnimationEffect.call(this, constructorToken, operation, accumulateOperation);
-  this.property = property;
-  this.frames = new KeyframeList(constructorToken);
+
+var normalizeKeyframeDictionary = function(properties) {
+  var result = {
+    offset: null,
+    composite: null,
+  };
+  var animationProperties = [];
+  for (var property in properties) {
+    // TODO: Apply the CSS property to IDL attribute algorithm.
+    if (property === 'offset' && typeof properties.offset === 'number') {
+      result.offset = properties.offset;
+    } else if (property === 'composite' &&
+        (properties.composite === 'add' || properties.composite === 'replace')) {
+      result.composite = properties.composite;
+    } else {
+      // TODO: Check whether this is a supported property.
+      animationProperties.push(property);
+    }
+  }
+  // TODO: Remove prefixed properties if the unprefixed version is also
+  // supported and present.
+  animationProperties = animationProperties.sort();
+  for (var i = 0; i < animationProperties.length; i++) {
+    // TODO: Apply the IDL attribute to CSS property algorithm.
+    result[property] = properties[property].toString();
+  }
+  return result;
 };
 
-KeyframeAnimationEffect.prototype = createObject(
-    AnimationEffect.prototype, {
+
+/** @constructor */
+var KeyframeAnimationEffect = function(oneOrMoreKeyframesDictionaries,
+    composite, accumulate) {
+  AnimationEffect.call(this, constructorToken, composite, accumulate);
+  if (!Array.isArray(oneOrMoreKeyframesDictionaries)) {
+    oneOrMoreKeyframesDictionaries = [oneOrMoreKeyframesDictionaries];
+  }
+  this.keyframeDictionaries =
+      oneOrMoreKeyframesDictionaries.map(normalizeKeyframeDictionary);
+  // Set lazily
+  this._cachedProperties = null;
+  this._cachedDistributedKeyframes = null;
+};
+
+KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
   sample: function(timeFraction, currentIteration, target) {
-    var frames = this.frames._sorted();
-    if (frames.length == 0) {
-      return;
+    var properties = this._getProperties();
+    for (var i = 0; i < properties.length; i++) {
+      // TODO: Handle accumulation.
+      compositor.setAnimatedValue(target, properties[i],
+          this._sampleForProperty(timeFraction, properties[i]));
     }
-    var afterFrameNum = null;
-    var beforeFrameNum = null;
-    var i = 0;
-    while (i < frames.length) {
-      if (frames[i].offset == timeFraction) {
-        // TODO: This should probably call fromCssValue and toCssValue for
-        // cases where we have to massage the data before setting e.g.
-        // 'rotate(45deg)' is valid, but for UAs that don't support CSS
-        // Transforms syntax on SVG content we have to convert that to
-        // 'rotate(45)' before setting.
-        this.ensureRawValue(frames[i]);
-        compositor.setAnimatedValue(target, this.property,
-            new AnimatedResult(frames[i].rawValue, this.operation,
-            timeFraction));
-        return;
+  },
+  _sampleForProperty: function(timeFraction, property) {
+    // Extract the property-specific keyframes.
+    var frames = this._getDistributedKeyframes().slice(0);
+    for (var i = frames.length - 1; i >= 0; i--) {
+      if (!frames[i].hasValueForProperty(property)) {
+        frames.splice(i, 1);
       }
-      if (frames[i].offset > timeFraction) {
-        afterFrameNum = i;
-        break;
-      }
-      i++;
-    }
-    if (afterFrameNum == 0) {
-      // In the case where we have a negative time fraction and a keyframe at
-      // offset 0, the expected behavior is to extrapolate the interval that
-      // starts at 0, rather than to use the base value.
-      if (frames[0].offset === 0) {
-        afterFrameNum = frames.length > 1 ? 1 : frames.length;
-        beforeFrameNum = 0;
-      } else {
-        beforeFrameNum = -1;
-      }
-    } else if (afterFrameNum == null) {
-      // In the case where we have a time fraction greater than 1 and a
-      // keyframe at 1, the expected behavior is to extrapolate the interval
-      // that ends at 1, rather than to use the base value.
-      if (frames[frames.length-1].offset === 1) {
-        afterFrameNum = frames.length - 1;
-        beforeFrameNum = frames.length > 1 ? frames.length - 2 : -1;
-      } else {
-        beforeFrameNum = frames.length - 1;
-        afterFrameNum = frames.length;
-      }
-    } else {
-      beforeFrameNum = afterFrameNum - 1;
-    }
-    var beforeFrame;
-    if (beforeFrameNum == -1) {
-      beforeFrame = {
-        rawValue: zero(this.property, frames[afterFrameNum].value),
-        offset: 0
-      };
-    } else {
-      beforeFrame = frames[beforeFrameNum];
-      this.ensureRawValue(beforeFrame);
     }
 
-    var afterFrame;
-    if (afterFrameNum == frames.length) {
-      afterFrame = {
-        rawValue: zero(this.property, frames[beforeFrameNum].value),
-        offset: 1
-      };
-    } else {
-      afterFrame = frames[afterFrameNum];
-      this.ensureRawValue(afterFrame);
+    if (frames.length === 0) {
+      return new AddReplaceCompositableValue(rawNeutralValue, 'add');
     }
-    // TODO: apply time function
-    var localTimeFraction = (timeFraction - beforeFrame.offset) /
-        (afterFrame.offset - beforeFrame.offset);
-    // TODO: property-based interpolation for things that aren't simple
-    var animationValue = interpolate(this.property, beforeFrame.rawValue,
-        afterFrame.rawValue, localTimeFraction);
-    compositor.setAnimatedValue(target, this.property,
-        new AnimatedResult(animationValue, this.operation, timeFraction));
+
+    // Add 0 and 1 keyframes if required.
+    if (frames[0].offset !== 0.0) {
+      var keyframe = new KeyframeInternal(0.0, 'add');
+      keyframe.addPropertyValuePair(property, cssNeutralValue);
+      frames.splice(0, 0, keyframe);
+    }
+    if (frames[frames.length - 1].offset !== 1.0) {
+      var keyframe = new KeyframeInternal(1.0, 'add');
+      keyframe.addPropertyValuePair(property, cssNeutralValue);
+      frames.push(keyframe);
+    }
+
+    var startKeyframeIndex;
+    var length = frames.length;
+    // We extrapolate differently depending on whether or not there are multiple
+    // keyframes at offsets of 0 and 1.
+    if (timeFraction < 0.0) {
+      if (frames[1].offset === 0.0) {
+        return new AddReplaceCompositableValue(
+            frames[0].rawValueForProperty(property),
+            this._compositeForKeyframe(frames[0]));
+      } else {
+        startKeyframeIndex = 0;
+      }
+    } else if (timeFraction >= 1.0) {
+      if (frames[length - 2].offset === 1.0) {
+        return new AddReplaceCompositableValue(
+            frames[length - 1].rawValueForProperty(property),
+            this._compositeForKeyframe(frames[length - 1]));
+      } else {
+        startKeyframeIndex = length - 2;
+      }
+    } else {
+      for (var i = length - 1; i >= 0; i--) {
+        if (frames[i].offset <= timeFraction) {
+          console.assert(frames[i].offset !== 1.0);
+          startKeyframeIndex = i;
+          break;
+        }
+      }
+    }
+    var startKeyframe = frames[startKeyframeIndex];
+    var endKeyframe = frames[startKeyframeIndex + 1];
+    var intervalDistance = (timeFraction - startKeyframe.offset) /
+        (endKeyframe.offset - startKeyframe.offset);
+    return new BlendedCompositableValue(
+        new AddReplaceCompositableValue(
+            startKeyframe.rawValueForProperty(property),
+            this._compositeForKeyframe(startKeyframe)),
+        new AddReplaceCompositableValue(
+            endKeyframe.rawValueForProperty(property),
+            this._compositeForKeyframe(endKeyframe)),
+        intervalDistance);
   },
   getValue: function(target) {
     return getValue(target, this.property);
   },
   clone: function() {
-    var result = new KeyframeAnimationEffect(
-        this.property, this.operation, this.accumulateOperation);
-    result.frames = this.frames.clone();
+    var result = new KeyframeAnimationEffect([], this.composite,
+        this.accumulate);
+    result.keyframeDictionaries = this.keyframeDictionaries.slice(0);
     return result;
-  },
-  ensureRawValue: function(frame) {
-    if (isDefinedAndNotNull(frame.rawValue)) {
-      return;
-    }
-    frame.rawValue = fromCssValue(this.property, frame.value);
   },
   toString: function() {
     return this.property;
+  },
+  _compositeForKeyframe: function(keyframe) {
+    return isDefinedAndNotNull(keyframe.composite) ?
+        keyframe.composite : this.composite;
+  },
+  _areKeyframeDictionariesLooselySorted: function() {
+    var previousOffset = -Infinity;
+    for (var i = 0; i < this.keyframeDictionaries.length; i++) {
+      if (isDefinedAndNotNull(this.keyframeDictionaries[i].offset)) {
+        if (this.keyframeDictionaries[i].offset < previousOffset) {
+          return false;
+        }
+        previousOffset = this.keyframeDictionaries[i].offset;
+      }
+    }
+    return true;
+  },
+  // The spec describes both this process and the process for interpretting the
+  // properties of a keyframe dictionary as 'normalizing'. Here we use the term
+  // 'distributing' to avoid confusion with normalizeKeyframeDictionary().
+  _getDistributedKeyframes: function() {
+    if (isDefinedAndNotNull(this._cachedDistributedKeyframes)) {
+      return this._cachedDistributedKeyframes;
+    }
+
+    this._cachedDistributedKeyframes = [];
+    if (!this._areKeyframeDictionariesLooselySorted()) {
+      return this._cachedDistributedKeyframes;
+    }
+
+    this._cachedDistributedKeyframes = this.keyframeDictionaries.map(
+        KeyframeInternal.createFromNormalizedProperties);
+
+    // Remove keyframes with offsets out of bounds.
+    var length = this._cachedDistributedKeyframes.length;
+    var count = 0;
+    for (var i = 0; i < length; i++) {
+      var offset = this._cachedDistributedKeyframes[i].offset;
+      if (isDefinedAndNotNull(offset)) {
+        if (offset >= 0) {
+          break;
+        } else {
+          count = i;
+        }
+      }
+    }
+    this._cachedDistributedKeyframes.splice(0, count);
+
+    length = this._cachedDistributedKeyframes.length;
+    count = 0;
+    for (var i = length - 1; i >= 0; i--) {
+      var offset = this._cachedDistributedKeyframes[i].offset;
+      if (isDefinedAndNotNull(offset)) {
+        if (offset <= 1) {
+          break;
+        } else {
+          count = length - i;
+        }
+      }
+    }
+    this._cachedDistributedKeyframes.splice(length - count, count);
+
+    // Distribute offsets.
+    length = this._cachedDistributedKeyframes.length;
+    if (length > 1 && !isDefinedAndNotNull(this._cachedDistributedKeyframes[0].offset)) {
+      this._cachedDistributedKeyframes[0].offset = 0;
+    }
+    if (!isDefinedAndNotNull(this._cachedDistributedKeyframes[length - 1].offset)) {
+      this._cachedDistributedKeyframes[length - 1].offset = 1;
+    }
+    var lastOffsetIndex = 0;
+    var nextOffsetIndex = 0;
+    for (var i = 1; i < this._cachedDistributedKeyframes.length - 1; i++) {
+      var keyframe = this._cachedDistributedKeyframes[i];
+      if (isDefinedAndNotNull(keyframe.offset)) {
+        lastOffsetIndex = i;
+        continue;
+      }
+      if (i > nextOffsetIndex) {
+        nextOffsetIndex = i;
+        while (!isDefinedAndNotNull(
+            this._cachedDistributedKeyframes[nextOffsetIndex].offset)) {
+          nextOffsetIndex++;
+        }
+      }
+      var a = this._cachedDistributedKeyframes[lastOffsetIndex].offset;
+      var b = this._cachedDistributedKeyframes[nextOffsetIndex].offset;
+      var n = nextOffsetIndex - lastOffsetIndex - 1;
+      this._cachedDistributedKeyframes[i].offset = a + (b - a) * i / (n + 1);
+    }
+
+    // Remove invalid property values.
+    for (var i = this._cachedDistributedKeyframes.length - 1; i >= 0; i--) {
+      var keyframe = this._cachedDistributedKeyframes[i];
+      for (var property in keyframe.cssValues) {
+        if (!KeyframeInternal.isSupportedPropertyValue(
+            keyframe.cssValues[property])) {
+          delete(keyframe.cssValues[property]);
+        }
+      }
+      if (Object.keys(keyframe).length === 0) {
+        this._cachedDistributedKeyframes.splice(i, 1);
+      }
+    }
+
+    return this._cachedDistributedKeyframes;
+  },
+  _getProperties: function() {
+    if (!isDefinedAndNotNull(this._cachedProperties)) {
+      var properties = {};
+      var frames = this._getDistributedKeyframes();
+      for (var i = 0; i < frames.length; i++) {
+        for (var property in frames[i].cssValues) {
+          properties[property] = true;
+        }
+      }
+      this._cachedProperties = [];
+      for (var p in properties) {
+        if (properties.hasOwnProperty(p)) {
+          this._cachedProperties.push(p);
+        }
+      }
+    }
+    return this._cachedProperties;
   }
 });
 
+
+// An internal representation of a keyframe. The Keyframe type from the spec is
+// just a dictionary and is not exposed.
 /** @constructor */
-var Keyframe = function(value, offset) {
-  this.value = value;
-  this.rawValue = null;
+var KeyframeInternal = function(offset, composite) {
+  console.assert(typeof offset === 'number' || offset === null,
+      'Invalid offset value');
+  console.assert(composite === 'add' || composite === 'replace' || composite === null,
+      'Invalid composite value');
   this.offset = offset;
+  this.composite = composite;
+  this.cssValues = {};
+  // Set lazily
+  this.rawValues = {};
 };
 
-/** @constructor */
-var KeyframeList = function(token) {
-  if (token !== constructorToken) {
-    throw new TypeError('Illegal constructor');
+KeyframeInternal.prototype = {
+  rawValueForProperty: function(property) {
+    if (!isDefinedAndNotNull(this.rawValues[property])) {
+      this.rawValues[property] = fromCssValue(property, this.cssValues[property]);
+    }
+    return this.rawValues[property];
+  },
+  addPropertyValuePair: function(property, value) {
+    console.assert(!this.cssValues.hasOwnProperty(property));
+    this.cssValues[property] = value;
+  },
+  hasValueForProperty: function(property) {
+    return this.cssValues.hasOwnProperty(property);
   }
-  this.frames = [];
-  this._isSorted = true;
 };
 
-KeyframeList.prototype = {
-  _sorted: function() {
-    if (!this._isSorted) {
-      this.frames.sort(function(a, b) {
-        if (a.offset < b.offset) {
-          return -1;
-        }
-        if (a.offset > b.offset) {
-          return 1;
-        }
-        return 0;
-      });
-      this._isSorted = true;
-    }
-    return this.frames;
-  },
-  item: function(index) {
-    if (index >= this.length || index < 0) {
-      return null;
-    }
-    return this.frames[index];
-  },
-  add: function(frame) {
-    this.frames.push(frame);
-    this._isSorted = false;
-    return frame;
-  },
-  remove: function(frame) {
-    var index = this.frames.indexOf(frame);
-    if (index == -1) {
-      return undefined;
-    }
-    this.frames.splice(index, 1);
-    return frame;
-  },
-  clone: function() {
-    var result = new KeyframeList(constructorToken);
-    for (var i = 0; i < this.frames.length; i++) {
-      result.add(new Keyframe(this.frames[i].value, this.frames[i].offset));
-    }
-    return result;
-  },
-  get length() {
-    return this.frames.length;
+KeyframeInternal.isSupportedPropertyValue = function(value) {
+  // TODO: Check against a specific list of values.
+  return typeof value === 'string' || value === cssNeutralValue;
+};
+
+KeyframeInternal.createFromNormalizedProperties = function(properties) {
+  console.assert(
+      isDefinedAndNotNull(properties) && typeof properties === 'object',
+      'Properties must be an object');
+  var keyframe = new KeyframeInternal(properties.offset, properties.composite);
+  for (var candidate in properties) {
+    keyframe.addPropertyValuePair(candidate, properties[candidate]);
   }
+  return keyframe;
 };
 
 /** @constructor */
@@ -2758,11 +2810,10 @@ var getType = function(property) {
   return propertyTypes[property] || nonNumericType;
 }
 
-var zero = function(property, value) {
-  return getType(property).zero(value);
-};
-
 var add = function(property, base, delta) {
+  if (delta === rawNeutralValue) {
+    return base;
+  }
   return getType(property).add(base, delta);
 }
 
@@ -2790,15 +2841,76 @@ var toCssValue = function(property, value, svgMode) {
 }
 
 var fromCssValue = function(property, value) {
+  if (value === cssNeutralValue) {
+    return rawNeutralValue;
+  }
   return getType(property).fromCssValue(value);
 }
 
+// Sentinel values
+var cssNeutralValue = {};
+var rawNeutralValue = {};
+
 /** @constructor */
-var AnimatedResult = function(value, operation, fraction) {
+var CompositableValue = function() {
+};
+
+CompositableValue.prototype = {
+  compositeOnto: abstractMethod,
+  // This is purely an optimization.
+  dependsOnUnderlyingValue: function() {
+    return true;
+  },
+};
+
+
+/** @constructor */
+var AddReplaceCompositableValue = function(value, composite) {
   this.value = value;
-  this.operation = operation;
+  this.composite = composite;
+};
+
+AddReplaceCompositableValue.prototype =
+    createObject(CompositableValue.prototype, {
+  compositeOnto: function(property, underlyingValue) {
+    switch (this.composite) {
+      case 'replace':
+        // TODO: Is it correct that replace-compositing the neutral value yields
+        // the neutral value?
+        return this.value;
+      case 'add':
+        return add(property, underlyingValue, this.value);
+      default:
+        console.assert(false, 'Invalid composite operation ' + this.composite);
+    }
+  },
+  dependsOnUnderlyingValue: function() {
+    return this.composite === 'add';
+  },
+});
+
+
+/** @constructor */
+var BlendedCompositableValue = function(beforeValue, afterValue, fraction) {
+  this.beforeValue = beforeValue;
+  this.afterValue = afterValue;
   this.fraction = fraction;
 };
+
+BlendedCompositableValue.prototype =
+    createObject(CompositableValue.prototype, {
+  compositeOnto: function(property, underlyingValue) {
+    return interpolate(property,
+        this.beforeValue.compositeOnto(property, underlyingValue),
+        this.afterValue.compositeOnto(property, underlyingValue),
+        this.fraction);
+  },
+  dependsOnUnderlyingValue: function() {
+    return this.beforeValue.dependsOnUnderlyingValue() ||
+        this.afterValue.dependsOnUnderlyingValue();
+  },
+});
+
 
 /** @constructor */
 var CompositedPropertyMap = function(target) {
@@ -2811,56 +2923,44 @@ CompositedPropertyMap.prototype = {
     if (!(property in this.properties)) {
       this.properties[property] = [];
     }
-    if (!(animValue instanceof AnimatedResult)) {
-      throw new TypeError('expected AnimatedResult');
+    if (!(animValue instanceof CompositableValue)) {
+      throw new TypeError('expected CompositableValue');
     }
     this.properties[property].push(animValue);
   },
   applyAnimatedValues: function() {
     for (var property in this.properties) {
-      var resultList = this.properties[property];
-      if (resultList.length > 0) {
-        var i;
-        for (i = resultList.length - 1; i >= 0; i--) {
-          if (resultList[i].operation == 'replace') {
-            break;
-          }
-        }
-        // the baseValue will either be retrieved after clearing the value or
-        // will be overwritten by a 'replace'.
-        var baseValue = undefined;
-        if (i == -1) {
-          clearValue(this.target, property);
-          baseValue = fromCssValue(property, getValue(this.target, property));
-          i = 0;
-        }
-        for ( ; i < resultList.length; i++) {
-          var inValue = resultList[i].value;
-          switch (resultList[i].operation) {
-          case 'replace':
-            baseValue = inValue;
-            continue;
-          case 'add':
-            baseValue = add(property, baseValue, inValue);
-            continue;
-          case 'merge':
-            baseValue = interpolate(property, baseValue, inValue,
-                resultList[i].fraction);
-            continue;
-          }
-        }
-        var svgMode = propertyIsSVGAttrib(property, this.target);
-        setValue(this.target, property, toCssValue(property, baseValue,
-            svgMode));
-        this.properties[property] = [];
-      } else {
+      var valuesToComposite = this.properties[property];
+      if (valuesToComposite.length === 0) {
         // property has previously been set but no value was accumulated
         // in this animation iteration. Reset value and stop tracking.
         clearValue(this.target, property);
         delete this.properties[property];
+        continue;
       }
+      var i = valuesToComposite.length - 1;
+      for ( ; i >= 0; i--) {
+        if (!valuesToComposite[i].dependsOnUnderlyingValue()) {
+          break;
+        }
+      }
+      // the baseValue will either be retrieved after clearing the value or
+      // will be overwritten by a 'replace'.
+      var baseValue = undefined;
+      if (i === -1) {
+        clearValue(this.target, property);
+        baseValue = fromCssValue(property, getValue(this.target, property));
+        i = 0;
+      }
+      for ( ; i < valuesToComposite.length; i++) {
+        baseValue = valuesToComposite[i].compositeOnto(property, baseValue);
+      }
+      var isSvgMode = propertyIsSVGAttrib(property, this.target);
+      setValue(this.target, property, toCssValue(property, baseValue,
+          isSvgMode));
+      this.properties[property] = [];
     }
-  }
+  },
 };
 
 /** @constructor */
@@ -2931,7 +3031,7 @@ var initializeIfSVGAndUninitialized = function(property, target) {
 
 var setValue = function(target, property, value) {
   initializeIfSVGAndUninitialized(property, target);
-  if (property == "transform") {
+  if (property === "transform") {
     property = features.transformProperty;
   }
   if (propertyIsSVGAttrib(property, target)) {
@@ -3198,10 +3298,7 @@ window.Element.prototype.getCurrentAnimations = function() {
 
 window.Animation = Animation;
 window.AnimationEffect = AnimationEffect;
-window.GroupedAnimationEffect = GroupedAnimationEffect;
-window.Keyframe = Keyframe;
 window.KeyframeAnimationEffect = KeyframeAnimationEffect;
-window.KeyframeList = KeyframeList;
 window.MediaReference = MediaReference;
 window.ParGroup = ParGroup;
 window.PathAnimationEffect = PathAnimationEffect;

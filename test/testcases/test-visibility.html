@@ -67,10 +67,10 @@ var timing = {iterationDuration: 0.5, timingFunction: 'steps(2, end)'};
 var animations = [];
 for (var start in states) {
   for (var end in states) {
-    var frames = [start, end];
+    var effect = [{visibility: start}, {visibility: end}];
     var testElement = document.getElementById(start + "_" + end);
     animations.push(
-        new Animation(testElement, {visibility: frames}, timing));
+        new Animation(testElement, effect, timing));
   }
 }
 </script>

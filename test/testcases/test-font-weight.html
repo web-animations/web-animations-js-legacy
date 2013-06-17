@@ -38,5 +38,6 @@ limitations under the License.
 <script>
 "use strict";
 document.timeline.play(new Animation(document.querySelector('#test'),
-    {'fontWeight': ['100', '900']}, {iterationDuration: 1, startDelay: 1}));
+    [{fontWeight: '100'}, {fontWeight: '900'}],
+    {iterationDuration: 1, startDelay: 1}));
 </script>

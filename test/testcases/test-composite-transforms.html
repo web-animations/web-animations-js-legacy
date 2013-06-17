@@ -70,17 +70,17 @@ var divs = document.querySelectorAll(".anim");
 var dt = document.timeline;
 
 dt.play(new Animation(divs[0],
-    {"transform": ["translate(0px, 0px)", "translate(200px, 0px)"]},
+    [{transform: "translate(0px, 0px)"}, {transform: "translate(200px, 0px)"}],
     2));
 dt.play(new Animation(divs[1],
-    {"transform": ["rotate(0deg)", "rotate(90deg)"]}, 2));
-dt.play(new Animation(divs[2], {"transform": [
-  "translate(0px, 0px) rotate(0deg)",
-  "translate(200px, 0px) rotate(90deg)"
-]}, 2));
-dt.play(new Animation(divs[3], {"transform": [
-  "rotate(0deg) translate(0px, 0px)",
-  "rotate(90deg) translate(200px, 0px)"
-]}, 2));
+    [{transform: "rotate(0deg)"}, {transform: "rotate(90deg)"}], 2));
+dt.play(new Animation(divs[2], [
+  {transform: "translate(0px, 0px) rotate(0deg)"},
+  {transform: "translate(200px, 0px) rotate(90deg)"},
+], 2));
+dt.play(new Animation(divs[3], [
+  {transform: "rotate(0deg) translate(0px, 0px)"},
+  {transform: "rotate(90deg) translate(200px, 0px)"},
+], 2));
 
 </script>
