@@ -37,6 +37,7 @@ limitations under the License.
 <script src="../testharness_bootstrap.js"></script>
 <script src="../../web-animations.js"></script>
 <script>
+"use strict";
 document.timeline.play(new Animation(document.querySelector('#test'),
     {'fontWeight': ['100', '900']}, {duration: 1, startDelay: 1}));
 </script>

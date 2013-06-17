@@ -20,6 +20,7 @@ limitations under the License.
 <script src="../testharness_bootstrap.js"></script>
 <script src="../../web-animations.js"></script>
 <script>
+"use strict";
 
 var anim = new Animation(document.getElementById("anim"), {left: "100px"},
     1.0);
@@ -28,7 +29,7 @@ var anim = new Animation(document.getElementById("anim"), {left: "100px"},
 // cause corresponding updates to its endTime.
 test(function() {assert_equals(anim.endTime,  1.0)},
      "Incorrect endTime");
-anim.startTime = 2.0;
+try { anim.startTime = 2.0; } catch (error) { }
 test(function() {assert_equals(anim.startTime,  0.0)},
      "startTime should be read only");
 anim.timing.duration = 3.0;
@@ -41,8 +42,7 @@ anim.animationDuration = 5.0;
 test(function() {assert_equals(anim.endTime,  5.0)},
      "endTime does not reflect animationDuration");
 
-// Test that TimedItem.endTime is read-only.
-anim.endTime = 6.0;
+try { anim.endTime = 6.0; } catch (error) { }
 test(function() {assert_equals(anim.endTime,  5.0)},
      "TimedItem.endTime should be read-only");
 

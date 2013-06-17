@@ -27,6 +27,7 @@ div.anim {
 <script src="../testharness_bootstrap.js"></script>
 <script src="../../web-animations.js"></script>
 <script>
+"use strict";
 var player = document.timeline.play(new Animation(
     document.getElementById("anim"), {left: ["100px", "200px"]}, 1.0));
 

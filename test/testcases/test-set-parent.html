@@ -20,6 +20,7 @@ limitations under the License.
 <script src="../../web-animations.js"></script>
 <script src="../testharness_bootstrap.js"></script>
 <script>
+"use strict";
 
 var elem = document.getElementById("anim");
 var animFunc = {left: "100px"};
@@ -123,7 +124,7 @@ test(function() {assert_equals(child.startTime,  1.0)},
      "After.add, Start time of 'child'");
 
 // Test that setting TimedItem.parentGroup is ignored.
-child.parentGroup = null;
+try { child.parentGroup = null; } catch (error) { }
 test(function() {assert_equals(seqGroup.children.length,  2)},
      "seqGroup.children.length");
 test(function() {assert_equals(seqGroup.children[0],  sibling)},
