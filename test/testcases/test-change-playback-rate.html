@@ -60,7 +60,7 @@ Otherwise weirdness happens.
 
 var a1 = new Animation(document.querySelector("#a"),
     {left: ["0px", "500px"]},
-    {duration: 10, direction: 'alternating', iterationCount: Infinity});
+    {iterationDuration: 10, direction: 'alternating', iterationCount: Infinity});
 var player1 = document.timeline.play(a1);
 
 var a2 = new Animation(undefined,

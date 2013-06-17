@@ -76,7 +76,7 @@ var continuation1 = function() {
 var continuation2 = function() {
   // Test clipping where duration limits. Video should be frozen at end of
   // duration.
-  var player = dt.play(new MediaReference(video, {duration: 3.0}));
+  var player = dt.play(new MediaReference(video, {iterationDuration: 3.0}));
   player.paused = true;
   player.currentTime = 3.0;
   raf(function() {
@@ -93,7 +93,7 @@ var continuation3 = function() {
   // Test clipping where video length limits. Video should be frozen at end for
   // remainder of duration.
   var player = dt.play(
-      new MediaReference(video, {duration: video.duration + 2}));
+      new MediaReference(video, {iterationDuration: video.duration + 2}));
   player.paused = true;
   player.currentTime = video.duration + 1;
   raf(function() {
@@ -116,7 +116,7 @@ var continuation3 = function() {
 var continuation4 = function() {
   // Test fill with duration limiting. Video should be frozen at end of
   // duration.
-  var player = dt.play(new MediaReference(video, {duration: 1.0}));
+  var player = dt.play(new MediaReference(video, {iterationDuration: 1.0}));
   player.currentTime = 2.0;
   raf(function() {
     test(function() {assert_equals(video.currentTime,  1.0)},
@@ -131,7 +131,7 @@ var continuation4 = function() {
 var continuation5 = function() {
   // Test fill with video length limiting. Video should be at end.
   var player = dt.play(
-      new MediaReference(video, {duration: video.duration + 1}));
+      new MediaReference(video, {iterationDuration: video.duration + 1}));
   player.currentTime = video.duration + 2;
   raf(function() {
     test(function() {assert_equals(video.currentTime,  video.duration)},
@@ -158,7 +158,7 @@ var continuation6 = function() {
 var continuation7 = function() {
   // Test iterations.
   var player = dt.play(new MediaReference(video,
-      {iterationCount: 2.0, duration: 1.0}));
+      {iterationCount: 2.0, iterationDuration: 1.0}));
   player.paused = true;
   player.currentTime = 1.5;
   raf(function() {
@@ -172,7 +172,7 @@ var continuation7 = function() {
 var continuation8 = function() {
   // Test iterationStart.
   var player = dt.play(new MediaReference(video,
-      {iterationStart: 0.5, duration: 1.0}));
+      {iterationStart: 0.5, iterationDuration: 1.0}));
   player.paused = true;
   player.currentTime = 0;
   raf(function() {
@@ -282,7 +282,7 @@ var continuation14 = function() {
 var continuation15 = function() {
   // Test zero duration.
   var player = dt.play(
-      new MediaReference(video, {duration: 0.0, iterationStart: 0.5}));
+      new MediaReference(video, {iterationDuration: 0.0, iterationStart: 0.5}));
   player.paused = true;
   raf(function() {
     test(function() {assert_equals(video.currentTime,  0.0)},

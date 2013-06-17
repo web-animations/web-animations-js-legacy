@@ -103,6 +103,7 @@ Timing.prototype = {
     this._parsedTimingFunction = function() {
       return timingFunction;
     };
+    return timingFunction;
   },
   _clone: function() {
     return new Timing(constructorToken, this._dict);
@@ -118,8 +119,7 @@ var configureDescriptor = function(descriptor) {
   return descriptor;
 };
 
-for (var prop in TimingDict.prototype) {
-  var targetProp = prop;
+Timing._defineProperty = function(prop) {
   Object.defineProperty(Timing.prototype, prop, configureDescriptor({
     get: function() {
       return this._dict[prop];
@@ -127,6 +127,10 @@ for (var prop in TimingDict.prototype) {
     set: function() {
     }
   }));
+};
+
+for (var prop in TimingDict.prototype) {
+  Timing._defineProperty(prop);
 }
 
 var isDefined = function(val) {
@@ -421,7 +425,7 @@ TimedItem.prototype = {
     this._timeFraction = this._isCurrentDirectionForwards() ?
             unscaledFraction :
             1.0 - unscaledFraction;
-    this._timeFraction = this.timing._parsedTimingFunction.scaleTime(
+    this._timeFraction = this.timing._parsedTimingFunction().scaleTime(
         this._timeFraction);
   },
   _getAdjustedAnimationTime: function(animationTime) {
