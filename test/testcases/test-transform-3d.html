@@ -52,6 +52,7 @@ limitations under the License.
 <script src="../testharness_bootstrap.js"></script>
 <script src="../../web-animations.js"></script>
 <script>
+"use strict";
 
 var transformValues = [
   ['translate3d(0px, 0px, 0px)', 'translate3d(20px, 40px, 60px)',
@@ -131,5 +132,6 @@ for (var i = 0; i < transformValues.length; i++) {
 
 </script>
 <script>
+"use strict";
 animations.forEach(function(anim) { document.timeline.play(anim); });
 </script>

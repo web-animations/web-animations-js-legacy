@@ -36,6 +36,7 @@ limitations under the License.
 <script src="../testharness_bootstrap.js"></script>
 <script src="../../web-animations.js"></script>
 <script>
+"use strict";
 // TODO: refactor into test harness
 function detectFeatures() {
   var style = document.createElement('style');
@@ -109,5 +110,6 @@ for (var i = 0; i < transformValues.length; i++) {
 }
 </script>
 <script>
+"use strict";
 animations.forEach(function(anim) { document.timeline.play(anim); });
 </script>

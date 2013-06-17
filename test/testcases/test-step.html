@@ -30,6 +30,7 @@ span {
 <script src="../testharness_bootstrap.js"></script>
 <script src="../../web-animations.js"></script>
 <script>
+"use strict";
 function testStep(numSteps, position) {
   var stepFun = new StepTimingFunction(numSteps, position);
   var canvas = document.createElement('canvas');
