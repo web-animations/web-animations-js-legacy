@@ -277,6 +277,8 @@
     function _assert_style_queryselector(qs, style, description)
     {
         var objects = document.querySelectorAll(qs);
+        assert_true(objects.length > 0, description +
+            ' is invalid, no elements match query selector: ' + qs);
         _assert_style_element_list(objects, style, description);
     }
 
