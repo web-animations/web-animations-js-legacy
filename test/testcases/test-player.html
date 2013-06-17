@@ -36,20 +36,20 @@ var player1 = dt.play(animation);
 test(function() {assert_equals(player1.timeline,  document.timeline)},
      "Player.timeline incorrect");
 
-// Test that TimedItem.getPlayer() and Player.source are consistent.
+// Test that TimedItem.player and Player.source are consistent.
 test(function() {assert_not_equals(player1,  null)},
      "Player should not be null");
 test(function() {assert_equals(player1.source,  animation)},
      "Player.source incorrect");
-test(function() {assert_equals(animation.getPlayer(),  player1)},
-     "TimedItem.getPlayer() incorrect");
+test(function() {assert_equals(animation.player,  player1)},
+     "TimedItem.player incorrect");
 
 // Test that play() always returns a new Player.
 var player2 = dt.play(animation);
 test(function() {assert_not_equals(player2,  player1)},
      "Repeated calls to play() should create a new Player");
-test(function() {assert_equals(animation.getPlayer(),  player2)},
-     "Repeated play(): TimedItem.getPlayer() incorrect");
+test(function() {assert_equals(animation.player,  player2)},
+     "Repeated play(): TimedItem.player incorrect");
 test(function() {assert_equals(player2.source,  animation)},
      "Repeated play(): Player.source incorrect");
 test(function() {assert_equals(player2.startTime,  player1.startTime)},
@@ -61,22 +61,22 @@ test(function() {assert_equals(player2.source,  null)},
      "Set Player.source: Old Player.source incorrect");
 test(function() {assert_equals(player1.source,  animation)},
      "Set Player.source: New Player.source incorrect");
-test(function() {assert_equals(animation.getPlayer(),  player1)},
-     "Set Player.source: TimedItem.getPlayer() incorrect");
+test(function() {assert_equals(animation.player,  player1)},
+     "Set Player.source: TimedItem.player incorrect");
 
-// Test that TimedItem.getPlayer() gives null on a detached tree.
+// Test that TimedItem.player gives null on a detached tree.
 var animation2 =
     new Animation(document.getElementById("anim"), {left: "100px"});
 var parGroup = new ParGroup([animation2]);
-test(function() {assert_equals(parGroup.getPlayer(),  null)},
-     "TimedItem.getPlayer() should be null for root");
-test(function() {assert_equals(animation2.getPlayer(),  null)},
-     "TimedItem.getPlayer() should be null for leaf");
+test(function() {assert_equals(parGroup.player,  null)},
+     "TimedItem.player should be null for root");
+test(function() {assert_equals(animation2.player,  null)},
+     "TimedItem.player should be null for leaf");
 
-// Test that TimedItem.getPlayer() remotes to the root of the tree.
+// Test that TimedItem.player remotes to the root of the tree.
 var player3 = dt.play(parGroup);
-test(function() {assert_equals(animation2.getPlayer(),  player3)},
-     "TimedItem.getPlayer() should remote");
+test(function() {assert_equals(animation2.player,  player3)},
+     "TimedItem.player should remote");
 
 // Test that calling play() on a TimedItem with a parent results in
 // reparenting.
@@ -91,10 +91,10 @@ test(function() {assert_equals(player4.source,  animation2)},
 // Test that setting a parent on a TimedItem with a Player causes the player to
 // be disconnected.
 parGroup.add(animation2);
-test(function() {assert_equals(parGroup.getPlayer(),  player3)},
-     "TimedItem.getPlayer() should be updated for root");
-test(function() {assert_equals(animation2.getPlayer(),  player3)},
-     "TimedItem.getPlayer() should be updated for leaf");
+test(function() {assert_equals(parGroup.player,  player3)},
+     "TimedItem.player should be updated for root");
+test(function() {assert_equals(animation2.player,  player3)},
+     "TimedItem.player should be updated for leaf");
 test(function() {assert_equals(player4.source,  null)},
      "Player.source should be updated");
 test(function() {assert_equals(animation2.parentGroup,  parGroup)},
