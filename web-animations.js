@@ -585,9 +585,9 @@ TimedItem.prototype = {
   _isPastEndOfActiveInterval: function() {
     return this._inheritedTime > this.endTime;
   },
-  getPlayer: function() {
+  get player() {
     return this.parentGroup === null ?
-        this._player : this.parentGroup.getPlayer();
+        this._player : this.parentGroup.player;
   },
   _netEffectivePlaybackRate: function() {
     var effectivePlaybackRate = this._isCurrentDirectionForwards() ?
@@ -1012,7 +1012,7 @@ MediaReference.prototype = createObject(TimedItem.prototype, {
     // algorithm repositions the seek to the nearest seekable time. This is OK,
     // but in this case, we don't want to play the media element, as it prevents
     // us from synchronising properly.
-    if (this.getPlayer().paused ||
+    if (this.player.paused ||
         !this._isSeekableUnscaledTime(this.iterationTime)) {
       this._ensurePaused();
     } else {
