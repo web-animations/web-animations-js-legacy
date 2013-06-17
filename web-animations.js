@@ -65,73 +65,48 @@ var IndexSizeError = function(message) {
 IndexSizeError.prototype = Object.create(Error.prototype);
 
 /** @constructor */
-var Timing = function(timingDict) {
-  this.startDelay = timingDict.startDelay || 0.0;
-  this.duration = timingDict.duration;
-  if (this.duration < 0.0) {
-    throw new IndexSizeError('duration must be >= 0');
-  }
-  this.iterationCount = isDefined(timingDict.iterationCount) ?
-      timingDict.iterationCount : 1.0;
-  if (this.iterationCount < 0.0) {
-    throw new IndexSizeError('iterationCount must be >= 0');
-  }
-  this.iterationStart = timingDict.iterationStart || 0.0;
-  if (this.iterationStart < 0.0) {
-    throw new IndexSizeError('iterationStart must be >= 0');
-  }
-  this.playbackRate = isDefined(timingDict.playbackRate) ?
-      timingDict.playbackRate : 1.0;
-  //this.playbackRate = timingDict.playbackRate || 1.0;
-  this.direction = timingDict.direction || 'normal';
-  if (typeof timingDict.timingFunction === 'string') {
-    this.timingFunction =
-        TimingFunction.createFromString(timingDict.timingFunction);
+var TimingDict = function(timingInput) {
+  if (typeof timingInput == 'object') {
+    for (var k in timingInput) {
+      if (k in TimingDict.prototype) {
+        this[k] = timingInput[k];
+      }
+    }
   } else {
-    this.timingFunction = timingDict.timingFunction;
+    this.iterationDuration = Number(timingInput);
   }
-  this.fillMode = timingDict.fillMode || 'forwards';
+};
+
+TimingDict.prototype = {
+  startDelay: 0,
+  fillMode: 'forwards',
+  iterationStart: 0,
+  iterationCount: 1,
+  iterationDuration: 'auto',
+  activeDuration: 'auto',
+  playbackRate: 1,
+  direction: 'normal',
+  timingFunction: 'linear',
+}
+
+/** @constructor */
+var Timing = function(token, timingInput) {
+  if (token !== constructorToken) {
+    throw new TypeError('Illegal constructor');
+  }
+  this._dict = new TimingDict(timingInput);
 };
 
 Timing.prototype = {
-  // TODO: Is this supposed to be public?
-  clone: function() {
-    return new Timing({
-      startDelay: this.startDelay,
-      duration: this.duration,
-      iterationCount: this.iterationCount,
-      iterationStart: this.iterationStart,
-      playbackRate: this.playbackRate,
-      direction: this.direction,
-      timingFunction: this.timingFunction ? this.timingFunction.clone() : null,
-      fillMode: this.fillMode
-    });
-  }
-};
-
-/** @constructor */
-var TimingProxy = function(timing, setter) {
-  this._timing = timing;
-  this._setter = setter;
-};
-
-TimingProxy.prototype = {
-  extractMutableTiming: function() {
-    return new Timing({
-      startDelay: this._timing.startDelay,
-      duration: this._timing.duration,
-      iterationCount: this._timing.iterationCount,
-      iterationStart: this._timing.iterationStart,
-      playbackRate: this._timing.playbackRate,
-      direction: this._timing.direction,
-      timingFunction: this._timing.timingFunction ?
-                  this._timing.timingFunction.clone() : null,
-      fillMode: this._timing.fillMode
-    });
+  _parsedTimingFunction: function() {
+    var timingFunction = TimingFunction.createFromString(this.timingFunction);
+    this._parsedTimingFunction = function() {
+      return timingFunction;
+    };
   },
-  clone: function() {
-    return this._timing.clone();
-  }
+  _clone: function() {
+    return new Timing(constructorToken, this._dict);
+  },
 };
 
 // Configures an accessor descriptor for use with Object.defineProperty() to
@@ -143,24 +118,16 @@ var configureDescriptor = function(descriptor) {
   return descriptor;
 };
 
-['startDelay', 'duration', 'iterationCount', 'iterationStart', 'playbackRate',
-    'direction', 'timingFunction', 'fillMode'].forEach(function(s) {
-  Object.defineProperty(TimingProxy.prototype, s, configureDescriptor({
+for (var prop in TimingDict.prototype) {
+  var targetProp = prop;
+  Object.defineProperty(Timing.prototype, prop, configureDescriptor({
     get: function() {
-      return this._timing[s];
+      return this._dict[prop];
     },
-    set: function(v) {
-      var old = this._timing[s];
-      this._timing[s] = v;
-      try {
-        this._setter(v);
-      } catch (e) {
-        this._timing[s] = old;
-        throw e;
-      }
-    },
+    set: function() {
+    }
   }));
-});
+}
 
 var isDefined = function(val) {
   return typeof val !== 'undefined';
@@ -311,13 +278,11 @@ Player.prototype = {
 
 
 /** @constructor */
-var TimedItem = function(token, timing) {
+var TimedItem = function(token, timingInput) {
   if (token !== constructorToken) {
     throw new TypeError('Illegal constructor');
   }
-  this.timing = new TimingProxy(interpretTimingParam(timing), function() {
-    this._updateInternalState();
-  }.bind(this));
+  this.timing = new Timing(constructorToken, timingInput);
   this._inheritedTime = null;
   this.currentIteration = null;
   this.iterationTime = null;
@@ -349,8 +314,8 @@ TimedItem.prototype = {
   },
   get duration() {
     return isDefined(this._duration) ?
-        this._duration : (isDefined(this.timing.duration) ?
-            this.timing.duration : this._intrinsicDuration());
+        this._duration : (isDefined(this.timing.iterationDuration) ?
+            this.timing.iterationDuration : this._intrinsicDuration());
   },
   set animationDuration(animationDuration) {
     this._animationDuration = animationDuration;
@@ -456,10 +421,8 @@ TimedItem.prototype = {
     this._timeFraction = this._isCurrentDirectionForwards() ?
             unscaledFraction :
             1.0 - unscaledFraction;
-    if (this.timing.timingFunction) {
-      this._timeFraction = this.timing.timingFunction.scaleTime(
-          this._timeFraction);
-    }
+    this._timeFraction = this.timing._parsedTimingFunction.scaleTime(
+        this._timeFraction);
   },
   _getAdjustedAnimationTime: function(animationTime) {
     var startOffset =
@@ -492,11 +455,9 @@ TimedItem.prototype = {
             adjustedAnimationTime, this.duration);
     this.iterationTime = this._scaleIterationTime(unscaledIterationTime);
     this._timeFraction = this.iterationTime / this.duration;
-    if (this.timing.timingFunction) {
-      this._timeFraction = this.timing.timingFunction.scaleTime(
+    this._timeFraction = this.timing._parsedTimingFunction().scaleTime(
           this._timeFraction);
-      this.iterationTime = this._timeFraction * this.duration;
-    }
+    this.iterationTime = this._timeFraction * this.duration;
   },
   _updateTimeMarkers: function() {
     if (this.localTime === null) {
@@ -634,30 +595,11 @@ var cloneAnimationEffect = function(animationEffect) {
   }
 };
 
-var interpretTimingParam = function(timing) {
-  if (!isDefinedAndNotNull(timing)) {
-    return new Timing({});
-  }
-  if (timing instanceof Timing || timing instanceof TimingProxy) {
-    return timing;
-  }
-  if (typeof(timing) === 'number') {
-    return new Timing({duration: timing});
-  }
-  if (typeof(timing) === 'object') {
-    return new Timing(timing);
-  }
-  throw new TypeError('timing parameters must be undefined, Timing objects, ' +
-      'numbers, or timing dictionaries; not \'' + timing + '\'');
-};
-
 /** @constructor */
-var Animation = function(target, animationEffect, timing) {
+var Animation = function(target, animationEffect, timingInput) {
+  TimedItem.call(this, constructorToken, timingInput);
+
   this.animationEffect = interpretAnimationEffect(animationEffect);
-  this.timing = interpretTimingParam(timing);
-
-  TimedItem.call(this, constructorToken, timing);
-
   this.targetElement = target;
   this.name = this.animationEffect instanceof KeyframeAnimationEffect ?
       this.animationEffect.property : '<anon>';
@@ -690,7 +632,7 @@ function throwNewHierarchyRequestError() {
 }
 
 /** @constructor */
-var TimingGroup = function(token, type, children, timing, parentGroup) {
+var TimingGroup = function(token, type, children, timing) {
   if (token !== constructorToken) {
     throw new TypeError('Illegal constructor');
   }
@@ -704,7 +646,7 @@ var TimingGroup = function(token, type, children, timing, parentGroup) {
   this.type = type || 'par';
   this._children = [];
   this.length = 0;
-  TimedItem.call(this, constructorToken, timing, parentGroup);
+  TimedItem.call(this, constructorToken, timing);
   // We add children after setting the parent. This means that if an ancestor
   // (including the parent) is specified as a child, it will be removed from our
   // ancestors and used as a child,
