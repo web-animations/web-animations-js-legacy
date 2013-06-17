@@ -669,12 +669,6 @@ TimedItem.prototype = {
   },
   _isTargetingElement: abstractMethod,
   _getAnimationsTargetingElement: abstractMethod,
-  _netEffectivePlaybackRate: function() {
-    var effectivePlaybackRate = this._isCurrentDirectionForwards() ?
-        this.specified.playbackRate : -this.specified.playbackRate;
-    return this.parent === null ? effectivePlaybackRate :
-        effectivePlaybackRate * this.parent._netEffectivePlaybackRate();
-  },
   set onstart(fun) {
     this._startHandler = fun;
     this._newHandler(fun);
@@ -3622,7 +3616,6 @@ window.Element.prototype.getCurrentAnimations = function() {
 window.Animation = Animation;
 window.AnimationEffect = AnimationEffect;
 window.KeyframeAnimationEffect = KeyframeAnimationEffect;
-window.MediaReference = MediaReference;
 window.ParGroup = ParGroup;
 window.PathAnimationEffect = PathAnimationEffect;
 window.Player = Player;
