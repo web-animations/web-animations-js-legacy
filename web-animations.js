@@ -1531,7 +1531,7 @@ var percentLengthType = {
   zero: function() { return {}; },
   add: function(base, delta) {
     var out = {};
-    for (value in base) {
+    for (var value in base) {
       out[value] = base[value] + (delta[value] || 0);
     }
     for (value in delta) {
@@ -2051,8 +2051,8 @@ function buildRotationMatcher(name, numValues, hasOptionalValue,
       function(x) {
         var r = m[1](x);
         return r.map(function(v) {
-          result = 0;
-          for (type in v) {
+          var result = 0;
+          for (var type in v) {
             result += convertToDeg(v[type], type);
           }
           return result;
@@ -2431,8 +2431,8 @@ function interpTransformValue(from, to, f) {
         var maxVal = to.d.length;
       }
       for (var j = 0; j < maxVal; j++) {
-        fromVal = from.d ? from.d[j] : {};
-        toVal = to.d ? to.d[j] : {};
+        var fromVal = from.d ? from.d[j] : {};
+        var toVal = to.d ? to.d[j] : {};
         result.push(lengthType.interpolate(fromVal, toVal, f));
       }
       return {t: type, d: result};
