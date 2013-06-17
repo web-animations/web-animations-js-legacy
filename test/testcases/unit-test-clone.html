@@ -30,7 +30,7 @@ var anim = new Animation(elem, animFunc, 1.0);
 var clone = anim.clone();
 test(function() {assert_true(clone instanceof Animation)},
      "Clone should be an Animation");
-test(function() {assert_equals(clone.timing.duration, 1.0)},
+test(function() {assert_equals(clone.timing.iterationDuration, 1.0)},
      "Clone should take Timing.duration");
 test(function() {assert_equals(clone.targetElement, elem)},
      "Clone should take targetElement");

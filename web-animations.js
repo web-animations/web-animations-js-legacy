@@ -620,7 +620,7 @@ Animation.prototype = createObject(TimedItem.prototype, {
   },
   clone: function() {
     return new Animation(this.targetElement,
-        cloneAnimationEffect(this.animationEffect), this.timing.clone());
+        cloneAnimationEffect(this.animationEffect), this.timing._dict);
   },
   toString: function() {
     var funcDescr = this.animationEffect instanceof AnimationEffect ?
@@ -746,8 +746,8 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
       children.push(child.clone());
     });
     return this.type === "par" ?
-        new ParGroup(children, this.timing.clone()) :
-        new SeqGroup(children, this.timing.clone());
+        new ParGroup(children, this.timing._dict):
+        new SeqGroup(children, this.timing._dict);
   },
   _lengthChanged: function() {
     while (this.length < this.children.length) {
