@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 (function() {
+"use strict";
 
 function detectFeatures() {
   var style = document.createElement('style');
@@ -1294,6 +1295,7 @@ KeyframeAnimationEffect.prototype = createObject(
     } else {
       beforeFrameNum = afterFrameNum - 1;
     }
+    var beforeFrame;
     if (beforeFrameNum == -1) {
       beforeFrame = {
         rawValue: zero(this.property, frames[afterFrameNum].value),
@@ -1304,6 +1306,7 @@ KeyframeAnimationEffect.prototype = createObject(
       this.ensureRawValue(beforeFrame);
     }
 
+    var afterFrame;
     if (afterFrameNum == frames.length) {
       afterFrame = {
         rawValue: zero(this.property, frames[beforeFrameNum].value),
@@ -1568,7 +1571,7 @@ var percentLengthType = {
   zero: function() { return {}; },
   add: function(base, delta) {
     var out = {};
-    for (value in base) {
+    for (var value in base) {
       out[value] = base[value] + (delta[value] || 0);
     }
     for (value in delta) {
@@ -2088,8 +2091,8 @@ function buildRotationMatcher(name, numValues, hasOptionalValue,
       function(x) {
         var r = m[1](x);
         return r.map(function(v) {
-          result = 0;
-          for (type in v) {
+          var result = 0;
+          for (var type in v) {
             result += convertToDeg(v[type], type);
           }
           return result;
@@ -2468,8 +2471,8 @@ function interpTransformValue(from, to, f) {
         var maxVal = to.d.length;
       }
       for (var j = 0; j < maxVal; j++) {
-        fromVal = from.d ? from.d[j] : {};
-        toVal = to.d ? to.d[j] : {};
+        var fromVal = from.d ? from.d[j] : {};
+        var toVal = to.d ? to.d[j] : {};
         result.push(lengthType.interpolate(fromVal, toVal, f));
       }
       return {t: type, d: result};

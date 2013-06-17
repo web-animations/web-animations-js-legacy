@@ -30,6 +30,7 @@ body {
 <script src="../testharness_bootstrap.js"></script>
 <script src="../../web-animations.js"></script>
 <script>
+"use strict";
 document.timeline.play(new Animation(document.querySelector('#test'),
     {'display': ['none', 'block', 'none', 'block', 'none', 'block', 'none']},
     0.5));
