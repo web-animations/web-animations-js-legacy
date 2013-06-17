@@ -63,6 +63,14 @@ var IndexSizeError = function(message) {
 
 IndexSizeError.prototype = Object.create(Error.prototype);
 
+var HierarchyRequestError = function(message) {
+  Error.call(this);
+  this.name = 'HierarchyRequestError';
+  this.message = message;
+}
+
+HierarchyRequestError.prototype = Object.create(Error.prototype);
+
 /** @constructor */
 var Timing = function(timingDict) {
   this.startDelay = timingDict.startDelay || 0.0;
@@ -3082,6 +3090,7 @@ window.Element.prototype.animate = function(effect, timing) {
 window.Animation = Animation;
 window.AnimationEffect = AnimationEffect;
 window.GroupedAnimationEffect = GroupedAnimationEffect;
+window.HierarchyRequestError = new HierarchyRequestError;
 window.Keyframe = Keyframe;
 window.KeyframeAnimationEffect = KeyframeAnimationEffect;
 window.KeyframeList = KeyframeList;
