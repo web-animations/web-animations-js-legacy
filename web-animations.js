@@ -90,11 +90,12 @@ TimingDict.prototype = {
 }
 
 /** @constructor */
-var Timing = function(token, timingInput) {
+var Timing = function(token, timingInput, changeHandler) {
   if (token !== constructorToken) {
     throw new TypeError('Illegal constructor');
   }
   this._dict = new TimingDict(timingInput);
+  this._changeHandler = changeHandler;
 };
 
 Timing.prototype = {
@@ -106,7 +107,7 @@ Timing.prototype = {
     return timingFunction;
   },
   _clone: function() {
-    return new Timing(constructorToken, this._dict);
+    return new Timing(constructorToken, this._dict, this._updateInternalState.bind(this));
   },
 };
 
@@ -124,7 +125,9 @@ Timing._defineProperty = function(prop) {
     get: function() {
       return this._dict[prop];
     },
-    set: function() {
+    set: function(value) {
+      this._dict[prop] = value;
+      this._changeHandler();
     }
   }));
 };
@@ -286,7 +289,7 @@ var TimedItem = function(token, timingInput) {
   if (token !== constructorToken) {
     throw new TypeError('Illegal constructor');
   }
-  this.timing = new Timing(constructorToken, timingInput);
+  this.timing = new Timing(constructorToken, timingInput, this._updateInternalState.bind(this));
   this._inheritedTime = null;
   this.currentIteration = null;
   this.iterationTime = null;
@@ -312,18 +315,10 @@ TimedItem.prototype = {
   get startTime() {
     return this._startTime;
   },
-  set duration(duration) {
-    this._duration = duration;
-    this._updateInternalState();
-  },
   get duration() {
     return isDefined(this._duration) ?
         this._duration : (isDefined(this.timing.iterationDuration) ?
             this.timing.iterationDuration : this._intrinsicDuration());
-  },
-  set animationDuration(animationDuration) {
-    this._animationDuration = animationDuration;
-    this._updateInternalState();
   },
   get animationDuration() {
     if (isDefined(this._animationDuration)) {
