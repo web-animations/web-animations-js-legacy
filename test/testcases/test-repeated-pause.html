@@ -24,38 +24,31 @@ div.anim {
 
 <div id="anim" class="anim"></div>
 
+<script src="../testharness_bootstrap.js"></script>
 <script src="../../web-animations.js"></script>
-<script src="../anim-test-pre.js"></script>
 <script>
-var check = function(actual, expected, description) {
-  console.log('check', actual, expected);
-  test(function() { assert_equals(actual, expected); }, description);
-};
-
-animTestRunner.waitUntilDone();
-
 var player = document.timeline.play(new Animation(
     document.getElementById("anim"), {left: ["100px", "200px"]}, 1.0));
 
 // Test that repeatedly setting Player.paused to true does not affect the
 // Player's currentTime.
-player.paused = true;
-var currentTime = player.currentTime;
-setTimeout(function() {
-  player.paused = true;
-  check(player.currentTime, currentTime, "Player.currentTime should be " +
-      "unaffected by repeatedly setting Player.paused to true");
+test_at(
+  0.1,
+  function() {
+    player.paused = true;
+    assert_equals(player.currentTime, 0.1);
+  },
+  "Player.currentTime should be " +
+  "unaffected by repeatedly setting Player.paused to true");
 
-  // Test that repeatedly setting Player.paused to false has no effect.
-  player.paused = false;
-  setTimeout(function() {
-    currentTime = player.currentTime;
-    player.paused = false;
-    check(player.currentTime, currentTime, "Player.currentTime should be " +
-        "unaffected by repeatedly setting Player.paused to false");
-
-    animTestRunner.done();
-  }, 100);
-}, 100);
+// Test that repeatedly setting Player.paused to false has no effect.
+test_at(
+   0.2,
+   function() {
+       player.paused = false;
+       assert_equals(player.currentTime, 0.1);
+   },
+   "Player.currentTime should be " +
+   "unaffected by repeatedly setting Player.paused to false");
 
 </script>

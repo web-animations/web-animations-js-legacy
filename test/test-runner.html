@@ -1,6 +1,8 @@
 <!--
 Copyright 2012 Google Inc. All Rights Reserved.
 
+vim: set expandtab shiftwidth=2 tabstop=2:
+
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -22,8 +24,14 @@ iframe {
 .fail-text {
   color: red;
 }
+.notest-text {
+  color: blue;
+}
 .fail-result {
   background: #FFCCCC;
+}
+.notest-result {
+  background: #CCCCFF;
 }
 </style>
 <button id=prev-button onclick="updateStateManual(-1)">Prev</button>
@@ -40,6 +48,7 @@ function testCases(new_tests) { tests = new_tests; };
 </script>
 <script src="testcases.jsonp?jsonp=testCases"></script>
 <script>
+
 var finished = false;
 
 (function() {
@@ -55,13 +64,51 @@ var testCasesPassed = 0;
 var runID = window.location.href.split("?")[1];
 var checkForResultsTimeout;
 
-document.querySelector('#test-frame').addEventListener('load', function() {
-  checkForResults();
-});
+// Get the information from testharness running in the window
+
+var results = [];
+
+window.addEventListener(
+  "message",
+  function(evt) {
+    switch(evt.data['type']) {
+    case 'start':
+      console.log('start');
+      results = [];
+      break;
+
+    case 'result':
+      console.log(evt.data['test']);
+      results.push(evt.data['test']);
+      break;
+
+    case 'complete':
+      testCasesRun++;
+      logResults(results);
+      console.log('complete');
+
+      results = [];
+
+      if (testCasesRun == tests.length) {
+        var finishPacket = {};
+        finishPacket["type"] = "finished";
+        finishPacket["testsPassed"] = testCasesPassed + " out of " + testCasesRun;
+        finishPacket["testRunId"] = runID;
+        postResultsToServer(finishPacket);
+
+        finished = true;
+      }
+      break;
+
+    default:
+      console.log(evt.data);
+    }
+  },
+  false);
+
 updateState(0);
 
 function now() {
-  if (window.performance && window.performance.now) return window.performance.now();
   return Date.now();
 }
 
@@ -70,7 +117,8 @@ function postResultsToServer(resultObject) {
   post_iframe.onload = function(){
     post_iframe.src = "test-results-post.html";
     post_iframe.onload = function() {
-      updateState(1);
+      if (autoAdvance)
+        updateState(1);
     }
   };
   post_iframe.contentDocument.getElementById(
@@ -114,32 +162,10 @@ function updateState(change) {
       currentTest >= tests.length - 1);
 }
 
-function checkForResults() {
-  if (!autoAdvance) {
-    return;
-  }
-  var testWindow = document.querySelector('#test-frame').contentWindow;
-  if (testWindow.animTestRunner && testWindow.animTestRunner.results) {
-    logResults(testWindow.animTestRunner.results);
-    testWindow.animTestRunner.results = null;
-    testCasesRun++;
-  }
-
-  if (testCasesRun < tests.length) {
-    checkForResultsTimeout = setTimeout(checkForResults, 25);
-  } else {
-    finished = true;
-
-    var finishPacket = {};
-    finishPacket["type"] = "finished";
-    finishPacket["testsPassed"] = testCasesPassed + " out of " + testCasesRun;
-    finishPacket["testRunId"] = runID;
-    postResultsToServer(finishPacket);
-  }
-}
-
 function logResults(results){
   var duration = now() - currentTestStart;
+  console.log(results);
+
   var testResult = {};
   testResult["type"] = "result";
   testResult["testRunID"] = runID;
@@ -155,7 +181,7 @@ function logResults(results){
   newTestDiv.appendChild(document.createTextNode(tests[currentTest] + ': '));
   if (results.length == 0) {
     var failSpan = document.createElement('span');
-    failSpan.classList.add('fail-text');
+    failSpan.classList.add('notest-text');
     failSpan.innerText = 'No tests! ';
     newTestDiv.appendChild(failSpan);
   }
@@ -168,7 +194,10 @@ function logResults(results){
   newTestDiv.appendChild(document.createTextNode(Math.round(duration) + 'ms'));
   newTestDiv.id = tests[currentTest];
   newTestDiv.onclick = function(){ showDetails(this); };
-  if (failed > 0 || results.length == 0) {
+  if (results.length == 0) {
+    newTestDiv.classList.add('notest-result');
+  }
+  if (failed > 0) {
     newTestDiv.classList.add('fail-result');
   }
   document.getElementById("results").appendChild(newTestDiv);
@@ -224,4 +253,6 @@ function showDetails(object){
 window.updateStateManual = updateStateManual;
 
 })();
+
+
 </script>
