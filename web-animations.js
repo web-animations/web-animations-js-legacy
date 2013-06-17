@@ -64,6 +64,14 @@ var IndexSizeError = function(message) {
 
 IndexSizeError.prototype = Object.create(Error.prototype);
 
+var HierarchyRequestError = function(message) {
+  Error.call(this);
+  this.name = 'HierarchyRequestError';
+  this.message = message;
+}
+
+HierarchyRequestError.prototype = Object.create(Error.prototype);
+
 /** @constructor */
 var Timing = function(timingDict) {
   this.startDelay = timingDict.startDelay || 0.0;
@@ -409,7 +417,7 @@ TimedItem.prototype = {
       this._player = null;
     }
     if (this.parentGroup !== null) {
-      this.parentGroup.remove(this.parentGroup.indexOf(this), 1);
+      this.remove();
     }
     this._parentGroup = parentGroup;
     // In the case of a SeqGroup parent, _startTime will be updated by
@@ -571,6 +579,30 @@ TimedItem.prototype = {
     throw new Error(
         "Derived classes must override TimedItem.clone()");
   },
+  before: function() {
+    var newItems = [];
+    for (var i = 0; i < arguments.length; i++) {
+      newItems.push(arguments[i]);
+    }
+    this.parentGroup._splice(this.parentGroup.indexOf(this), 0, newItems);
+  },
+  after: function() {
+    var newItems = [];
+    for (var i = 0; i < arguments.length; i++) {
+      newItems.push(arguments[i]);
+    }
+    this.parentGroup._splice(this.parentGroup.indexOf(this) + 1, 0, newItems);
+  },
+  replace: function() {
+    var newItems = [];
+    for (var i = 0; i < arguments.length; i++) {
+      newItems.push(arguments[i]);
+    }
+    this.parentGroup._splice(this.parentGroup.indexOf(this), 1, newItems);
+  },
+  remove: function() {
+    this.parentGroup._splice(this.parentGroup.indexOf(this), 1);
+  },
   // Gets the leaf TimedItems currently in effect. Note that this is a superset
   // of the leaf TimedItems in their active interval, as a TimedItem can have an
   // effect outside its active interval due to fill.
@@ -586,9 +618,9 @@ TimedItem.prototype = {
   _isPastEndOfActiveInterval: function() {
     return this._inheritedTime > this.endTime;
   },
-  getPlayer: function() {
+  get player() {
     return this.parentGroup === null ?
-        this._player : this.parentGroup.getPlayer();
+        this._player : this.parentGroup.player;
   },
   _netEffectivePlaybackRate: function() {
     var effectivePlaybackRate = this._isCurrentDirectionForwards() ?
@@ -699,15 +731,13 @@ var TimingGroup = function(token, type, children, timing, parentGroup) {
   // used by TimedItem via _intrinsicDuration(), so needs to be set before
   // initializing super.
   this.type = type || 'par';
-  this.children = [];
+  this._children = [];
   this.length = 0;
   TimedItem.call(this, constructorToken, timing, parentGroup);
   // We add children after setting the parent. This means that if an ancestor
   // (including the parent) is specified as a child, it will be removed from our
   // ancestors and used as a child,
-  for (var i = 0; i < childrenCopy.length; i++) {
-    this.add(childrenCopy[i]);
-  }
+  this.append.apply(this, childrenCopy);
   // TODO: Work out where to expose name in the API
   // this.name = properties.name || '<anon>';
 };
@@ -762,6 +792,15 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
             child.animationDuration);
       }
     }
+  },
+  get children() {
+    return this._children;
+  },
+  get firstChild() {
+    return this.children[0];
+  },
+  get lastChild() {
+    return this.children[this.children.length - 1];
   },
   getAnimationsForElement: function(elem) {
     var result = [];
@@ -820,13 +859,19 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
   clear: function() {
     this.splice(0, this.children.length);
   },
-  add: function() {
+  append: function() {
     var newItems = [];
     for (var i = 0; i < arguments.length; i++) {
       newItems.push(arguments[i]);
     }
-    this.splice(this.length, 0, newItems);
-    return newItems;
+    this._splice(this.length, 0, newItems);
+  },
+  prepend: function() {
+    var newItems = [];
+    for (var i = 0; i < arguments.length; i++) {
+      newItems.push(arguments[i]);
+    }
+    this._splice(0, 0, newItems);
   },
   _addInternal: function(child) {
     this.children.push(child);
@@ -836,21 +881,15 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
   indexOf: function(item) {
     return this.children.indexOf(item);
   },
-  splice: function(start, deleteCount, newItems) {
+  _splice: function(start, deleteCount, newItems) {
     var args = arguments;
     if (args.length == 3) {
       args = [start, deleteCount].concat(newItems);
     }
     for (var i = 2; i < args.length; i++) {
       var newChild = args[i];
-      // Check whether the new child is an ancestor. If so, we need to break the
-      // chain immediately below the new child.
-      for (var ancestor = this; ancestor.parentGroup != null;
-          ancestor = ancestor.parentGroup) {
-        if (ancestor.parentGroup === newChild) {
-          newChild.remove(ancestor);
-          break;
-        }
+      if (this._isInclusiveAncestor(newChild)) {
+        throw new HierarchyRequestError();
       }
       newChild._reparent(this);
     }
@@ -862,11 +901,14 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
     this._childrenStateModified();
     return result;
   },
-  remove: function(index, count) {
-    if (!isDefined(count)) {
-      count = 1;
+  _isInclusiveAncestor: function(item) {
+    for (var ancestor = this; ancestor != null;
+      ancestor = ancestor.parentGroup) {
+      if (ancestor === item) {
+        return true;
+      }
     }
-    return this.splice(index, count);
+    return false;
   },
   toString: function() {
     return this.type + ' ' + this.startTime + '-' + this.endTime + ' (' +
@@ -1013,7 +1055,7 @@ MediaReference.prototype = createObject(TimedItem.prototype, {
     // algorithm repositions the seek to the nearest seekable time. This is OK,
     // but in this case, we don't want to play the media element, as it prevents
     // us from synchronising properly.
-    if (this.getPlayer().paused ||
+    if (this.player.paused ||
         !this._isSeekableUnscaledTime(this.iterationTime)) {
       this._ensurePaused();
     } else {
@@ -1041,7 +1083,7 @@ var AnimationEffect = function(token, operation, accumulateOperation) {
   }
   this.operation = operation === undefined ? 'replace' : operation;
   this.accumulateOperation =
-      accumulateOperation == undefined ? 'replace' : operation;
+      accumulateOperation == undefined ? 'none' : accumulateOperation;
 };
 
 AnimationEffect.prototype = {
@@ -1304,11 +1346,10 @@ KeyframeAnimationEffect.prototype = createObject(
 });
 
 /** @constructor */
-var Keyframe = function(value, offset, timingFunction) {
+var Keyframe = function(value, offset) {
   this.value = value;
   this.rawValue = null;
   this.offset = offset;
-  this.timingFunction = timingFunction;
 };
 
 /** @constructor */
@@ -1358,8 +1399,7 @@ KeyframeList.prototype = {
   clone: function() {
     var result = new KeyframeList(constructorToken);
     for (var i = 0; i < this.frames.length; i++) {
-      result.add(new Keyframe(this.frames[i].value, this.frames[i].offset,
-          this.frames[i].timingFunction));
+      result.add(new Keyframe(this.frames[i].value, this.frames[i].offset));
     }
     return result;
   },
@@ -3051,6 +3091,7 @@ window.Element.prototype.animate = function(effect, timing) {
 window.Animation = Animation;
 window.AnimationEffect = AnimationEffect;
 window.GroupedAnimationEffect = GroupedAnimationEffect;
+window.HierarchyRequestError = new HierarchyRequestError;
 window.Keyframe = Keyframe;
 window.KeyframeAnimationEffect = KeyframeAnimationEffect;
 window.KeyframeList = KeyframeList;
