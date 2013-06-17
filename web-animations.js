@@ -1040,7 +1040,7 @@ var AnimationEffect = function(token, operation, accumulateOperation) {
   }
   this.operation = operation === undefined ? 'replace' : operation;
   this.accumulateOperation =
-      accumulateOperation == undefined ? 'replace' : operation;
+      accumulateOperation == undefined ? 'none' : accumulateOperation;
 };
 
 AnimationEffect.prototype = {
