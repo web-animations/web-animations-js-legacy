@@ -68,11 +68,11 @@ table += "</tr>"
 var anims = {}
 
 for (var j = 0; j < to.length; j++) {
-  toVal = to[j];
+  var toVal = to[j];
   table += "<tr><td>" + toVal + "</td>";
   for (var i = 0; i < from.length; i++) {
-    fromVal = from[i];
-    id = 'a' + toVal + fromVal;
+    var fromVal = from[i];
+    var id = 'a' + toVal + fromVal;
     table +=
         "<td><div class='container'><div class='expectation' style='width: " +
         toVal + "'</div><div id="+id+" class='anim'></div></div></td>";
