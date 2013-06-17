@@ -1253,6 +1253,7 @@ KeyframeAnimationEffect.prototype = createObject(
     } else {
       beforeFrameNum = afterFrameNum - 1;
     }
+    var beforeFrame;
     if (beforeFrameNum == -1) {
       beforeFrame = {
         rawValue: zero(this.property, frames[afterFrameNum].value),
@@ -1263,6 +1264,7 @@ KeyframeAnimationEffect.prototype = createObject(
       this.ensureRawValue(beforeFrame);
     }
 
+    var afterFrame;
     if (afterFrameNum == frames.length) {
       afterFrame = {
         rawValue: zero(this.property, frames[beforeFrameNum].value),
