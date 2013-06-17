@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 (function() {
+"use strict";
 
 function detectFeatures() {
   var style = document.createElement('style');
