@@ -1,7 +1,5 @@
 /**
- * @preserve Copyright 2013 Google Inc. All Rights Reserved.
- *
- * vim: set expandtab shiftwidth=4 tabstop=4:
+ * Copyright 2013 Google Inc. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,21 +39,6 @@
                 callback.call(thisObj, array[i], i, array);
             }
         }
-    }
-
-    function expose(object, name)
-    {
-        var components = name.split(".");
-        var target = window;
-        for (var i=0; i<components.length - 1; i++)
-        {
-            if (!(components[i] in target))
-            {
-                target[components[i]] = {};
-            }
-            target = target[components[i]];
-        }
-        target[components[components.length - 1]] = object;
     }
 
     /* ********************************************************************* */
@@ -329,90 +312,5 @@
         }
     }
 
-    /**
-     * assert_transform(actual, expected, description)
-     *    asserts that actual has the same styles as the dictionary given by
-     *    expected.
-     */
-    function assert_transform(actual, expected, description)
-    {
-        var current = actual.attributes["style"].value;
-        current = current.replace(/[;\s]/,"");
-        // Get rid of the begining property name bit.
-        current = current.split(":")[1];
-
-        // FIXME(mithro): Using regex to parse CSS, yick...
-        current = current.split(/[()]+/);
-        expected = expected.split(/[()]+/);
-
-        for (var x = 0; x < current.length - 1; x++)
-        {
-            // Compare property name
-            assert_equals(
-                current[x], expected[x], 
-                "Property "+ x + " is not " + expected[x] + ", actually " + current[x]);
-            x++;
-
-            // Compare property values
-            var c = current[x].split(",");
-            var t = expected[x].split(",");
-            for (var i in c)
-            {
-                assert_equals(
-                    c[i], t[i],
-                    "Property value "+ x-1 + "(" + i + ") is not " + t[i] + ", actually " + c[i]);
-            }
-        }
-    }
-
-    // Generate a name from an assert function and the arguments.
-    function generate_name(func, args)
-    {
-        var testName = "";
-
-        var object = null;
-        if (func == assert_style) {
-            object = document.querySelectorAll(args[1])[args[0]];
-            testName += "("+args[1]+")["+args[0]+"] ";
-        } else if (func == assert_style) {
-            object = args[0];
-        }
-
-        if (object != null) {
-            testName += _element_name(object) + " ";
-        }
-
-        if (func == assert_dom_style) {
-            testName += "has style ";
-            testName += JSON.stringify(args[2]);
-        } else if (func == assert_style) {
-            testName += "has style ";
-            testName += JSON.stringify(args[1]);
-        } else { 
-            testName += func.name;
-            testName += "(";
-            testName += JSON.stringify(args);
-            testName += ")";
-        }
-        return testName;
-    }
-
-    expose(assert_styles, 'assert_styles');
-    expose(assert_transform, 'assert_transform');
-
-    // Override generate_at to generate a name if one isn't set.
-    var test_harness_generate_tests = generate_tests;
-    function generate_tests(func, args, properties)
-    {
-            // Generate names if they don't exist...
-            forEach(args, function(x, i)
-                {
-                    if (x[0] == null) {
-                         x[0] = generate_name(func, x.slice(1));
-                    }
-                });
-            return test_harness_generate_tests(func, args, properties);
-    }
-    window.generate_tests = generate_tests;
-
+    window.assert_styles = assert_styles;
 })();
