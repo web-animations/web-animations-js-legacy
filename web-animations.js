@@ -143,7 +143,10 @@ Timing._defineProperty = function(prop) {
       } else {
         delete this._dict[prop];
       }
+      // FIXME: probably need to implement specialized handling parsing
+      // for each property
       if (prop == 'timingFunction') {
+        // Cached timing function may be invalid now.
         delete this._timingFunction;
       }
       this._changeHandler();
@@ -1319,23 +1322,15 @@ KeyframeList.prototype = {
   }
 };
 
-var presetTimings = {
-  'ease': [0.25, 0.1, 0.25, 1.0],
-  // 'linear': [0.0, 0.0, 1.0, 1.0],
-  'ease-in': [0.42, 0, 1.0, 1.0],
-  'ease-out': [0, 0, 0.58, 1.0],
-  'ease-in-out': [0.42, 0, 0.58, 1.0]
-};
-
 /** @constructor */
 var TimingFunction = function() {
   throw new TypeError('Illegal constructor');
 };
 
 TimingFunction.createFromString = function(spec) {
-  var preset = presetTimings[spec];
+  var preset = presetTimingFunctions[spec];
   if (preset) {
-    return new SplineTimingFunction(presetTimings[spec]);
+    return preset;
   }
   var stepMatch = /steps\(\s*(\d+)\s*,\s*(start|end|middle)\s*\)/.exec(spec);
   if (stepMatch) {
@@ -1350,7 +1345,7 @@ TimingFunction.createFromString = function(spec) {
         Number(bezierMatch[3]),
         Number(bezierMatch[4])]);
   }
-  return null;
+  return presetTimingFunctions.linear;
 };
 
 /** @constructor */
@@ -1381,6 +1376,15 @@ SplineTimingFunction.prototype = createObject(TimingFunction.prototype, {
     return this.map[fst - 1][1] + p * yDiff;
   }
 });
+
+var presetTimingFunctions = {
+  'linear': null,
+  'ease': new SplineTimingFunction([0.25, 0.1, 0.25, 1.0]),
+  'ease-in': new SplineTimingFunction([0.42, 0, 1.0, 1.0]),
+  'ease-out': new SplineTimingFunction([0, 0, 0.58, 1.0]),
+  'ease-in-out': new SplineTimingFunction([0.42, 0, 0.58, 1.0]),
+};
+
 
 /** @constructor */
 var StepTimingFunction = function(numSteps, position) {
