@@ -33,6 +33,7 @@ body {
 }
 </style>
 <script>
+"use strict";
 // Create the elements
 var states = {'visible':1, 'hidden':1, 'collapse':1};
 for (var start in states) {
@@ -60,6 +61,7 @@ for (var start in states) {
 <script src="../testharness_bootstrap.js"></script>
 <script src="../../web-animations.js"></script>
 <script>
+"use strict";
 var timing = {duration: 0.5, timingFunction: 'steps(2, end)'};
 
 // Add the animations
@@ -74,5 +76,6 @@ for (var start in states) {
 }
 </script>
 <script>
+"use strict";
 animations.forEach(function(anim) { document.timeline.play(anim); });
 </script>

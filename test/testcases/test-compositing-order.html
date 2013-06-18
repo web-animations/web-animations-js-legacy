@@ -30,6 +30,10 @@ div.anim {
 <script src="../testharness_bootstrap.js"></script>
 <script src="../../web-animations.js"></script>
 <script>
+"use strict";
+
+animTestRunner.waitUntilDone();
+
 var leftToRight = {left: ["100px", "200px"]};
 var rightToLeft = {left: ["200px", "100px"]};
 var noop = {color: "red"};

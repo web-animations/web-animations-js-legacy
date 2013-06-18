@@ -81,11 +81,11 @@ li.pass {
 
 </style>
 <script>
+"use strict";
 var tests = [];
 function testCases(new_tests) { tests = new_tests; };
 </script>
 <script src="testcases.jsonp?jsonp=testCases"></script>
-
 
 <div id=status-box>
 <h1 id=status>Pending</h1>
@@ -99,6 +99,7 @@ Finished: <span id=finished></span>
 <table id="results"></table>
 
 <script>
+"use strict";
 
 (function() {
 window.finished = false;

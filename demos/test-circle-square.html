@@ -82,6 +82,7 @@ limitations under the License.
     </div>
     <script src="../web-animations.js"></script>
     <script>
+      "use strict";
       var around1 = new Animation(document.querySelector("#a"), {left: "450px"}, 2);
       var around2 = new Animation(document.querySelector("#a"), {"background-color": ["lightsteelblue", "red", "green", "lightsteelblue"]}, 8);
       var around3 = new Animation(document.querySelector("#a"), {top: "250px"}, {startDelay: 2, duration: 2});
