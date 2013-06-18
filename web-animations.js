@@ -52,8 +52,8 @@ var createObject = function(proto, obj) {
   return newObject;
 };
 
-var strip = function(str) {
-  return str.replace(/^\s+/, '').replace(/\s+$/, '');
+var abstractMethod = function() {
+  throw "Abstract method not implemented.";
 };
 
 var IndexSizeError = function(message) {
@@ -581,10 +581,7 @@ TimedItem.prototype = {
       this._getLeafItemsInEffectImpl(items);
     }
   },
-  _getLeafItemsInEffectImpl: function(items) {
-    throw new Error(
-        "Derived classes must override TimedItem._getLeafItemsInEffectImpl()");
-  },
+  _getLeafItemsInEffectImpl: abstractMethod,
   _isPastEndOfActiveInterval: function() {
     return this._inheritedTime > this.endTime;
   },
@@ -1061,15 +1058,9 @@ var AnimationEffect = function(token, operation, accumulateOperation) {
 };
 
 AnimationEffect.prototype = {
-  sample: function(timeFraction, currentIteration, target) {
-    throw 'Unimplemented sample function';
-  },
-  getValue: function(target) {
-    return;
-  },
-  clone: function() {
-    throw 'Unimplemented clone method'
-  }
+  sample: abstractMethod,
+  getValue: abstractMethod,
+  clone: abstractMethod
 };
 
 AnimationEffect.createFromProperties = function(properties) {
