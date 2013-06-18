@@ -35,13 +35,6 @@ test(function() {assert_equals(clone.specified.iterationDuration, 1.0)},
 test(function() {assert_equals(clone.targetElement, elem)},
      "Clone should take targetElement");
 
-anim.iterationTime = 0.1;
-clone.iterationTime = 0.2;
-test(function() {assert_equals(anim.iterationTime, 0.1)},
-     "Original should have own iterationTime");
-test(function() {assert_equals(clone.iterationTime, 0.2)},
-     "Clone should have own iterationTime");
-
 // ParGroup
 var parGroup = new ParGroup([anim, clone], 4.0);
 var parGroupClone = parGroup.clone();
@@ -60,13 +53,6 @@ test(function() {assert_not_equals(parGroupClone.children[1], clone)},
 test(function() {assert_equals(parGroupClone.children[1].iterationDuration, 1.0)},
      "ParGroup clone should clone second child's iterationDuration");
 
-parGroup.iterationTime = 0.3;
-parGroupClone.iterationTime = 0.4;
-test(function() {assert_equals(parGroup.iterationTime, 0.3)},
-     "ParGroup original should have own iterationTime");
-test(function() {assert_equals(parGroupClone.iterationTime, 0.4)},
-     "ParGroup clone should have own iterationTime");
-
 // SeqGroup
 var seqGroup = new SeqGroup([anim, clone], 6.0);
 var seqGroupClone = seqGroup.clone();
@@ -84,13 +70,6 @@ test(function() {assert_not_equals(seqGroupClone.children[1], clone)},
      "SeqGroup clone should clone second child");
 test(function() {assert_equals(seqGroupClone.children[1].iterationDuration, 1.0)},
      "SeqGroup clone should clone second child's iterationDuration");
-
-seqGroup.iterationTime = 0.5;
-seqGroupClone.iterationTime = 0.6;
-test(function() {assert_equals(seqGroup.iterationTime, 0.5)},
-     "SeqGroup original should have own iterationTime");
-test(function() {assert_equals(seqGroupClone.iterationTime, 0.6)},
-     "SeqGroup clone should have own iterationTime");
 
 // Child
 var childClone = anim.clone();

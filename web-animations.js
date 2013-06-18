@@ -314,7 +314,7 @@ var TimedItem = function(token, timingInput) {
   this.specified = new Timing(constructorToken, timingInput, this._updateInternalState.bind(this));
   this._inheritedTime = null;
   this.currentIteration = null;
-  this.iterationTime = null;
+  this._iterationTime = null;
   this._animationTime = null;
   this._startTime = 0.0;
   this._player = null;
@@ -327,8 +327,8 @@ TimedItem.prototype = {
   // call sites to instead rely on a call from the parent.
   get _effectiveParentTime() {
     return
-        this.parentGroup !== null && this.parentGroup.iterationTime !== null ?
-        this.parentGroup.iterationTime : 0;
+        this.parentGroup !== null && this.parentGroup._iterationTime !== null ?
+        this.parentGroup._iterationTime : 0;
   },
   get localTime() {
     return this._inheritedTime === null ?
@@ -429,7 +429,7 @@ TimedItem.prototype = {
     }
   },
   _updateIterationParamsZeroDuration: function() {
-    this.iterationTime = 0;
+    this._iterationTime = 0;
     var isAtEndOfIterations = this.specified._iterationCount() != 0 &&
         this.localTime >= this.specified.startDelay;
     this.currentIteration = isAtEndOfIterations ?
@@ -478,25 +478,25 @@ TimedItem.prototype = {
             adjustedAnimationTime, this.iterationDuration) :
         this._modulusWithClosedOpenRange(
             adjustedAnimationTime, this.iterationDuration);
-    this.iterationTime = this._scaleIterationTime(unscaledIterationTime);
-    this._timeFraction = this.iterationTime / this.iterationDuration;
+    this._iterationTime = this._scaleIterationTime(unscaledIterationTime);
+    this._timeFraction = this._iterationTime / this.iterationDuration;
     var timingFunction = this.specified._timingFunction();
     if (timingFunction) {
       this._timeFraction = timingFunction.scaleTime(this._timeFraction);
     }
-    this.iterationTime = this._timeFraction * this.iterationDuration;
+    this._iterationTime = this._timeFraction * this.iterationDuration;
   },
   _updateTimeMarkers: function() {
     if (this.localTime === null) {
       this._animationTime = null;
-      this.iterationTime = null;
+      this._iterationTime = null;
       this.currentIteration = null;
       this._timeFraction = null;
       return false;
     }
     this._updateAnimationTime();
     if (this._animationTime === null) {
-      this.iterationTime = null;
+      this._iterationTime = null;
       this.currentIteration = null;
       this._timeFraction = null;
     } else if (this.iterationDuration == 0) {
@@ -710,7 +710,7 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
   _updateChildInheritedTimes: function() {
     for (var i = 0; i < this.children.length; i++) {
       var child = this.children[i];
-      child._updateInheritedTime(this.iterationTime);
+      child._updateInheritedTime(this._iterationTime);
     }
   },
   _updateChildStartTimes: function() {
@@ -726,7 +726,7 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
         // about to be done in the down phase of _childrenStateModified().
         if (!child._isInChildrenStateModified) {
           // This calls _updateTimeMarkers() on the child.
-          child._updateInheritedTime(this.iterationTime);
+          child._updateInheritedTime(this._iterationTime);
         }
         cumulativeStartTime += Math.max(0, child.specified.startDelay +
             child.activeDuration);
@@ -942,13 +942,13 @@ MediaReference.prototype = createObject(TimedItem.prototype, {
     // play() and pause().
 
     // Handle the case of being outside our effect interval.
-    if (this.iterationTime === null) {
+    if (this._iterationTime === null) {
       this._ensureIsAtUnscaledTime(0);
       this._ensurePaused();
       return;
     }
 
-    if (this.iterationTime >= this._intrinsicDuration()) {
+    if (this._iterationTime >= this._intrinsicDuration()) {
       // Our iteration time exceeds the media element's iterationDuration, so just make
       // sure the media element is at the end. It will stop automatically, but
       // that could take some time if the seek below is significant, so force
@@ -985,7 +985,7 @@ MediaReference.prototype = createObject(TimedItem.prototype, {
     // but in this case, we don't want to play the media element, as it prevents
     // us from synchronising properly.
     if (this.player.paused ||
-        !this._isSeekableUnscaledTime(this.iterationTime)) {
+        !this._isSeekableUnscaledTime(this._iterationTime)) {
       this._ensurePaused();
     } else {
       this._ensurePlaying();
@@ -997,9 +997,9 @@ MediaReference.prototype = createObject(TimedItem.prototype, {
     // first played.
     // TODO: What's the right value for this delta?
     var delta = 0.2 * Math.abs(this._media.playbackRate);
-    if (Math.abs(this.iterationTime - this._unscaledMediaCurrentTime()) >
+    if (Math.abs(this._iterationTime - this._unscaledMediaCurrentTime()) >
         delta) {
-      this._ensureIsAtUnscaledTime(this.iterationTime);
+      this._ensureIsAtUnscaledTime(this._iterationTime);
     }
   },
 });

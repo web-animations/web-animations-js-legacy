@@ -144,7 +144,7 @@ function webAnimVisUpdateAnims() {
 	var results = updateRects(document.timeline, left, width, 10);
 	var height = results[0];
 	var length = results[2];
-	var xPos = (document.timeline.iterationTime - earliestStart) / (length - earliestStart) * 90 + 5;
+	var xPos = (document.timeline._iterationTime - earliestStart) / (length - earliestStart) * 90 + 5;
 	if (line == undefined && !isNaN(xPos)) {
 		line = createVLine(xPos + "%", "0px", (height + 20) + "px");
 		visRoot.appendChild(line);
