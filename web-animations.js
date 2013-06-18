@@ -224,6 +224,7 @@ var Player = function(token, source, timeline) {
   this._hasTicked = false;
 
   this.source = source;
+  this._checkForHandlers();
 
   PLAYERS.push(this);
   maybeRestartAnimation();
@@ -248,6 +249,7 @@ Player.prototype = {
     } finally {
       exitModifyCurrentAnimationState(this._hasTicked);
     }
+    this._checkForHandlers();
   },
   get source() {
     return this._source;
@@ -356,6 +358,12 @@ Player.prototype = {
       this.source._getAnimationsTargetingElement(element, animations);
     }
   },
+  _handlerAdded: function() {
+    this._needsHandlerPass = true;
+  },
+  _checkForHandlers: function() {
+    this._needsHandlerPass = this.source !== null && this.source._hasHandler();
+  }
 };
 
 
@@ -651,6 +659,51 @@ TimedItem.prototype = {
         this.specified.playbackRate : -this.specified.playbackRate;
     return this.parent === null ? effectivePlaybackRate :
         effectivePlaybackRate * this.parent._netEffectivePlaybackRate();
+  },
+  set onstart(fun) {
+    this._startHandler = fun;
+    this._newHandler(fun);
+  },
+  get onstart() {
+    return this._startHandler;
+  },
+  set oniteration(fun) {
+    this._iterationHandler = fun;
+    this._newHandler(fun);
+  },
+  get oniteration() {
+    return this._iterationHandler;
+  },
+  set onend(fun) {
+    this._endHandler = fun;
+    this._newHandler(fun);
+  },
+  get onend() {
+    return this._endHandler;
+  },
+  set oncancel(fun) {
+    this._cancelHandler = fun;
+    this._newHandler(fun);
+  },
+  get oncancel() {
+    return this._cancelHander;
+  },
+  _newHandler: function(fun) {
+    if (isDefinedAndNotNull(fun)) {
+      if (this.player) {
+        this.player._handlerAdded();
+      }
+    } else {
+      if (this.player) {
+        this.player._checkForHandlers();
+      }
+    }
+  },
+  _hasHandler: function() {
+    return isDefinedAndNotNull(this._startHandler) || 
+      isDefinedAndNotNull(this._iterationHandler) || 
+      isDefinedAndNotNull(this._endHandler) ||
+      isDefinedAndNotNull(this._cancelHandler);
   },
 };
 
@@ -956,6 +1009,12 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
         this.localTime + ') ' + ' [' +
         this.children.map(function(a) { return a.toString(); }) + ']'
   },
+  _hasHandler: function() {
+    return TimedItem.prototype._hasHandler.bind(this)() ||
+      (this.children.length > 0 && 
+        this.children.map(function(a) { return a._hasHandler(); }).reduce(
+          function(a, b) { return a || b }));
+  }
 });
 
 /** @constructor */
