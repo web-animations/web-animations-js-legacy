@@ -31,33 +31,20 @@ limitations under the License.
 
 <div>Right edge of each box should align with black line at end of test.</div>
 <div style="width: 300px;" class="expect"><div id="a" class="anim"></div></div>
-<div style="width: 300px;" class="expect"><div id="b" class="anim"></div></div>
 <div style="width: 300px;" class="expect"><div id="c" class="anim"></div></div>
-<div style="width: 300px;" class="expect"><div id="d" class="anim"></div></div>
 
 <script src="../testharness_bootstrap.js"></script>
 <script src="../../web-animations.js"></script>
 <script>
 "use strict";
 
-var dt = document.timeline;
-
-// Lone animation with default parent.
-dt.play(new Animation(document.getElementById("a"),
+// Top level animation.
+document.timeline.play(new Animation(document.getElementById("a"),
     {left: ["100px", "200px"]}, 1.0));
-// Lone animation with explicit default parent.
-dt.play(new Animation(document.getElementById("b"),
-    {left: ["100px", "200px"]}, 1.0, undefined));
 
-// Animation in group with default parent.
-var group1 = new ParGroup([], {iterationCount: 3});
-new Animation(document.getElementById("c"), {left: ["100px", "200px"]}, 1.0,
-    group1);
-dt.play(group1);
-// Animation in group with explicit default parent.
-var group2 = new ParGroup([], {iterationCount: 3}, undefined);
-new Animation(document.getElementById("d"), {left: ["100px", "200px"]}, 1.0,
-              group2);
-dt.play(group2);
+// Animation in group.
+document.timeline.play(new ParGroup([
+    new Animation(document.getElementById("c"), {left: ["100px", "200px"]}, 1.0)
+    ], {iterationCount: 3}));
 
 </script>
