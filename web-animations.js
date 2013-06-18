@@ -817,7 +817,7 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
     }
   },
   clear: function() {
-    this.splice(0, this.children.length);
+    this._splice(0, this.children.length);
   },
   append: function() {
     var newItems = [];
