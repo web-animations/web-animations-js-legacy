@@ -700,8 +700,8 @@ TimedItem.prototype = {
     }
   },
   _hasHandler: function() {
-    return isDefinedAndNotNull(this._startHandler) || 
-      isDefinedAndNotNull(this._iterationHandler) || 
+    return isDefinedAndNotNull(this._startHandler) ||
+      isDefinedAndNotNull(this._iterationHandler) ||
       isDefinedAndNotNull(this._endHandler) ||
       isDefinedAndNotNull(this._cancelHandler);
   },
@@ -1011,7 +1011,7 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
   },
   _hasHandler: function() {
     return TimedItem.prototype._hasHandler.bind(this)() ||
-      (this.children.length > 0 && 
+      (this.children.length > 0 &&
         this.children.map(function(a) { return a._hasHandler(); }).reduce(
           function(a, b) { return a || b }));
   }

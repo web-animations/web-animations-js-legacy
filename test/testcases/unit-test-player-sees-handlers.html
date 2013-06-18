@@ -74,7 +74,7 @@ test(function() {
   assert_true(player._needsHandlerPass);
   aTree.children[0].children[1].oncancel = new function() { };
   assert_true(player._needsHandlerPass);
-  aTree.children[0].children[0].onstart = null; 
+  aTree.children[0].children[0].onstart = null;
   assert_true(player._needsHandlerPass);
   aTree.children[0].children[1].oncancel = undefined;
   assert_false(player._needsHandlerPass);
