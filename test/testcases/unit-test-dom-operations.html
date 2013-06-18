@@ -144,17 +144,17 @@ test(function() {
   group2.append(group);
   var group3 = new SeqGroup();
   group3.append(group);
-  assert_throws(HierarchyRequestError,
+  assert_throws("HierarchyRequestError",
     function() {
       group.append(group3);
     },
     'group3 should be in hierarchy of group');
-  assert_throws(HierarchyRequestError,
+  assert_throws("HierarchyRequestError",
     function() {
       group.append(group);
     },
     'group should be in its own hierarchy');
-  assert_throws(HierarchyRequestError,
+  assert_throws("HierarchyRequestError",
     function() {
       anims[3].replace(group);
     },
