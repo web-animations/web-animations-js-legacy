@@ -773,17 +773,6 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
   get lastChild() {
     return this.children[this.children.length - 1];
   },
-  getAnimationsForElement: function(elem) {
-    var result = [];
-    for (var i = 0; i < this.children.length; i++) {
-      if (this.children[i].getAnimationsForElement) {
-        result = result.concat(this.children[i].getAnimationsForElement(elem));
-      } else if (this.children[i].targetElement == elem) {
-        result.push(this.children[i]);
-      }
-    }
-    return result;
-  },
   _intrinsicDuration: function() {
     if (this.type == 'par') {
       var dur = Math.max.apply(undefined, this.children.map(function(a) {
@@ -1135,18 +1124,9 @@ GroupedAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
   add: function(func) {
     this.children.push(func);
   },
-  remove: function(i) {
-    this.children.splice(i, 1);
-  },
   sample: function(timeFraction, currentIteration, target) {
     for (var i = 0; i < this.children.length; i++) {
       this.children[i].sample(timeFraction, currentIteration, target);
-    }
-  },
-  clone: function() {
-    var result = new GroupedAnimationEffect();
-    for (var i = 0; i < this.children.length; i++) {
-      result.add(this.children[i].clone());
     }
   },
   get length() {
@@ -1433,9 +1413,6 @@ SplineTimingFunction.prototype = createObject(TimingFunction.prototype, {
     var xDiff = this.map[fst][0] - this.map[fst - 1][0];
     var p = (fraction - this.map[fst - 1][0]) / xDiff;
     return this.map[fst - 1][1] + p * yDiff;
-  },
-  clone: function() {
-    return new SplineTimingFunction(this.params);
   }
 });
 
@@ -1456,9 +1433,6 @@ StepTimingFunction.prototype = createObject(TimingFunction.prototype, {
       fraction += stepSize / 2;
     }
     return fraction - fraction % stepSize;
-  },
-  clone: function() {
-    return new StepTimingFunction(this.numSteps, this.position);
   }
 });
 
