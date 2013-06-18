@@ -315,7 +315,7 @@ var TimedItem = function(token, timingInput) {
   this._inheritedTime = null;
   this.currentIteration = null;
   this.iterationTime = null;
-  this.animationTime = null;
+  this._animationTime = null;
   this._startTime = 0.0;
   this._player = null;
   this._parentGroup = null;
@@ -412,19 +412,19 @@ TimedItem.prototype = {
     if (this.localTime < this.specified.startDelay) {
       if (this.specified.fillMode === 'backwards' ||
           this.specified.fillMode === 'both') {
-        this.animationTime = 0;
+        this._animationTime = 0;
       } else {
-        this.animationTime = null;
+        this._animationTime = null;
       }
     } else if (this.localTime <
         this.specified.startDelay + this.activeDuration) {
-      this.animationTime = this.localTime - this.specified.startDelay;
+      this._animationTime = this.localTime - this.specified.startDelay;
     } else {
       if (this.specified.fillMode === 'forwards' ||
           this.specified.fillMode === 'both') {
-        this.animationTime = this.activeDuration;
+        this._animationTime = this.activeDuration;
       } else {
-        this.animationTime = null;
+        this._animationTime = null;
       }
     }
   },
@@ -463,7 +463,7 @@ TimedItem.prototype = {
   },
   _updateIterationParams: function() {
     var adjustedAnimationTime =
-        this._getAdjustedAnimationTime(this.animationTime);
+        this._getAdjustedAnimationTime(this._animationTime);
     var repeatedDuration = this.iterationDuration * this.specified._iterationCount();
     var startOffset = this.specified.iterationStart * this.iterationDuration;
     var isAtEndOfIterations = (this.specified._iterationCount() != 0) &&
@@ -488,14 +488,14 @@ TimedItem.prototype = {
   },
   _updateTimeMarkers: function() {
     if (this.localTime === null) {
-      this.animationTime = null;
+      this._animationTime = null;
       this.iterationTime = null;
       this.currentIteration = null;
       this._timeFraction = null;
       return false;
     }
     this._updateAnimationTime();
-    if (this.animationTime === null) {
+    if (this._animationTime === null) {
       this.iterationTime = null;
       this.currentIteration = null;
       this._timeFraction = null;
