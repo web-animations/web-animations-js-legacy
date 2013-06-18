@@ -268,6 +268,7 @@ var States = {
   RUNNING: 3,    /* Test that is currently running. */
   POSTING: 4,    /* Test that is currently posting results to server. */
   FINISHED: 5,   /* Test which has completed. */
+  TIMEOUT: 6,    /* Test which has timed out rather then completed. */
 };
 
 /**
@@ -316,6 +317,7 @@ function changeTestState(test, newState) {
     postingTests.unshift(test);
     break;
   case States.FINISHED:
+  case States.TIMEOUT:
     finishedTests.unshift(test);
     haveAllTestsFinished();
     break;
@@ -415,6 +417,14 @@ function runTests() {
     var msg = {"type": "start", "url": testWindow.location.href + ""};
     testWindow.postMessage(msg, "*");
   }
+
+  for (var i in runningTests) {
+    var running = runningTests[i];
+    if (now() - running.start > 5000) {
+      // Test has timed out or stuck in some way...
+      changeTestState(running, States.TIMEOUT);
+    }
+  }
 }
 
 
@@ -427,7 +437,6 @@ window.addEventListener(
   function(evt) {
     var testname = evt.source.location.pathname.split('/').pop().replace('.', '-');
     var test = document.getElementById(testname);
-    console.log(evt.data['type'], testname, test);
 
     switch(evt.data['type']) {
     case 'start':
@@ -439,7 +448,6 @@ window.addEventListener(
       break;
 
     case 'complete':
-      console.log(testname, testResults[testname]);
       var result = processResults(test, testResults[testname]);
       if (result) {
         // Move from running to posting state
@@ -474,7 +482,19 @@ window.addEventListener(
  *
  * @param {Element} test DOM object representing the test.
  */
+
+
 function processResults(test, results) {
+  function trueOffsetTop(element) {
+    var t = 0;
+    if (element.offsetParent) {
+      do {
+        t += element.offsetTop;
+      } while (element = element.offsetParent);
+    return [t];
+    }
+  }
+
   var logElement = test.querySelector(".log");
 
   var newResultsDiv = document.createElement('ul');
@@ -514,17 +534,6 @@ function processResults(test, results) {
 
       // Open up the window of the failed result
       test.querySelector('.info-row').click();
-
-      function trueOffsetTop(element) {
-        var t = 0;
-        if (element.offsetParent) {
-          do {
-            t += element.offsetTop;
-          } while (element = element.offsetParent);
-        return [t];
-        }
-      }
-
       // Scroll to it.
       window.scroll(0,trueOffsetTop(test));
     }

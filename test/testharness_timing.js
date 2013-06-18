@@ -18,6 +18,8 @@
 "use strict";
 
 (function() {
+    setup(function() {}, {explicit_timeout: true});
+
     /**
      * These functions come from testharness.js but can't be access because
      * testharness uses an anonymous function to hide them.
@@ -569,7 +571,7 @@
 
     function test_at(time, f, desc)
     {
-        var t = async_test(desc, {timeout: 10000});
+        var t = async_test(desc);
         t.f = f;
         window.testharness_timeline.schedule(time*1000, t);
     }
