@@ -99,12 +99,24 @@ var Timing = function(token, timingInput, changeHandler) {
 };
 
 Timing.prototype = {
-  _parsedTimingFunction: function() {
+  _timingFunction: function() {
     var timingFunction = TimingFunction.createFromString(this.timingFunction);
-    this._parsedTimingFunction = function() {
+    this._timingFunction = function() {
       return timingFunction;
     };
     return timingFunction;
+  },
+  _iterationCount: function() {
+    var value = this._dict.iterationCount;
+    return value < 0 ? 1 : value;
+  },
+  _iterationDuration: function() {
+    var value = this._dict.iterationDuration;
+    return typeof value == 'number' ? value : 'auto';
+  },
+  _activeDuration: function() {
+    var value = this._dict.activeDuration;
+    return typeof value == 'number' ? value : 'auto';
   },
   _clone: function() {
     return new Timing(constructorToken, this._dict, this._updateInternalState.bind(this));
@@ -130,6 +142,9 @@ Timing._defineProperty = function(prop) {
         this._dict[prop] = value;
       } else {
         delete this._dict[prop];
+      }
+      if (prop == 'timingFunction') {
+        delete this._timingFunction;
       }
       this._changeHandler();
     }
@@ -320,15 +335,15 @@ TimedItem.prototype = {
     return this._startTime;
   },
   get iterationDuration() {
-    var result = this.timing.iterationDuration;
+    var result = this.timing._iterationDuration();
     if (result == 'auto')
         result = this._intrinsicDuration();
     return result;
   },
   get activeDuration() {
-    var result = this.timing.activeDuration;
+    var result = this.timing._activeDuration();
     if (result == 'auto') {
-      var repeatedDuration = this.iterationDuration * this.timing.iterationCount;
+      var repeatedDuration = this.iterationDuration * this.timing._iterationCount();
       result = repeatedDuration / Math.abs(this.timing.playbackRate);
     }
     return result;
@@ -412,22 +427,24 @@ TimedItem.prototype = {
   },
   _updateIterationParamsZeroDuration: function() {
     this.iterationTime = 0;
-    var isAtEndOfIterations = this.timing.iterationCount != 0 &&
+    var isAtEndOfIterations = this.timing._iterationCount() != 0 &&
         this.localTime >= this.timing.startDelay;
     this.currentIteration = isAtEndOfIterations ?
        this._floorWithOpenClosedRange(this.timing.iterationStart +
-           this.timing.iterationCount, 1.0) :
+           this.timing._iterationCount(), 1.0) :
        this._floorWithClosedOpenRange(this.timing.iterationStart, 1.0);
     // Equivalent to unscaledIterationTime below.
     var unscaledFraction = isAtEndOfIterations ?
         this._modulusWithOpenClosedRange(this.timing.iterationStart +
-            this.timing.iterationCount, 1.0) :
+            this.timing._iterationCount(), 1.0) :
         this._modulusWithClosedOpenRange(this.timing.iterationStart, 1.0);
+    var timingFunction = this.timing._timingFunction();
     this._timeFraction = this._isCurrentDirectionForwards() ?
             unscaledFraction :
             1.0 - unscaledFraction;
-    this._timeFraction = this.timing._parsedTimingFunction().scaleTime(
-        this._timeFraction);
+    if (timingFunction) {
+      this._timeFraction = timingFunction.scaleTime(this._timeFraction);
+    }
   },
   _getAdjustedAnimationTime: function(animationTime) {
     var startOffset =
@@ -444,9 +461,9 @@ TimedItem.prototype = {
   _updateIterationParams: function() {
     var adjustedAnimationTime =
         this._getAdjustedAnimationTime(this.animationTime);
-    var repeatedDuration = this.iterationDuration * this.timing.iterationCount;
+    var repeatedDuration = this.iterationDuration * this.timing._iterationCount();
     var startOffset = this.timing.iterationStart * this.iterationDuration;
-    var isAtEndOfIterations = (this.timing.iterationCount != 0) &&
+    var isAtEndOfIterations = (this.timing._iterationCount() != 0) &&
         (adjustedAnimationTime - startOffset == repeatedDuration);
     this.currentIteration = isAtEndOfIterations ?
         this._floorWithOpenClosedRange(
@@ -460,8 +477,10 @@ TimedItem.prototype = {
             adjustedAnimationTime, this.iterationDuration);
     this.iterationTime = this._scaleIterationTime(unscaledIterationTime);
     this._timeFraction = this.iterationTime / this.iterationDuration;
-    this._timeFraction = this.timing._parsedTimingFunction().scaleTime(
-          this._timeFraction);
+    var timingFunction = this.timing._timingFunction();
+    if (timingFunction) {
+      this._timeFraction = timingFunction.scaleTime(this._timeFraction);
+    }
     this.iterationTime = this._timeFraction * this.iterationDuration;
   },
   _updateTimeMarkers: function() {
@@ -937,9 +956,9 @@ MediaReference.prototype = createObject(TimedItem.prototype, {
     }
 
     var finalIteration = this._floorWithOpenClosedRange(
-        this.timing.iterationStart + this.timing.iterationCount, 1.0);
+        this.timing.iterationStart + this.timing._iterationCount(), 1.0);
     var endTimeFraction = this._modulusWithOpenClosedRange(
-        this.timing.iterationStart + this.timing.iterationCount, 1.0);
+        this.timing.iterationStart + this.timing._iterationCount(), 1.0);
     if (this.currentIteration === finalIteration &&
         this._timeFraction === endTimeFraction &&
         this._intrinsicDuration() >= this.iterationDuration) {
@@ -1302,7 +1321,7 @@ KeyframeList.prototype = {
 
 var presetTimings = {
   'ease': [0.25, 0.1, 0.25, 1.0],
-  'linear': [0.0, 0.0, 1.0, 1.0],
+  // 'linear': [0.0, 0.0, 1.0, 1.0],
   'ease-in': [0.42, 0, 1.0, 1.0],
   'ease-out': [0, 0, 0.58, 1.0],
   'ease-in-out': [0.42, 0, 0.58, 1.0]
@@ -1331,7 +1350,7 @@ TimingFunction.createFromString = function(spec) {
         Number(bezierMatch[3]),
         Number(bezierMatch[4])]);
   }
-  throw 'not a timing function: ' + spec;
+  return null;
 };
 
 /** @constructor */
@@ -2991,7 +3010,6 @@ window.TimedItem = TimedItem;
 window.Timing = Timing;
 window.Timeline = Timeline;
 window.TimingEvent = null; // TODO
-window.TimingFunction = TimingFunction;
 window.TimingGroup = TimingGroup;
 
 })();
