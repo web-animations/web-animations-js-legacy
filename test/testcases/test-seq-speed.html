@@ -64,21 +64,21 @@ limitations under the License.
 
 <div style="height:450px"></div>
 
+<script src="../testharness_bootstrap.js"></script>
 <script src="../../web-animations.js"></script>
-<script src="../anim-test-pre.js"></script>
 <script>
 
-var a1 = new Animation(document.querySelector("#a"), {left: ["100px", "200px"]},
-    0.6);
-var a2 = new Animation(document.querySelector("#b"), {left: ["100px", "200px"]},
-    0.5);
-var a3 = new Animation(document.querySelector("#c"), {left: ["100px", "200px"]},
-    0.5);
-var a4 = new Animation(document.querySelector("#d"), {left: ["100px", "200px"]},
-    0.3);
+var a1 = new Animation(
+    document.querySelector("#a"), {left: ["100px", "200px"]}, 1.0);
+var a2 = new Animation(
+    document.querySelector("#b"), {left: ["100px", "200px"]}, 2.0);
+var a3 = new Animation(
+    document.querySelector("#c"), {left: ["100px", "200px"]}, 1.0);
+var a4 = new Animation(
+    document.querySelector("#d"), {left: ["100px", "200px"]}, 2.0);
 var pgroup1 = new ParGroup([a1, a2], {name: "p1"});
-var pgroup2 = new ParGroup([a3, a4], {name: "p2"});
+var pgroup2 = new ParGroup([a4, a3], {name: "p2"});
 document.timeline.play(
-    new SeqGroup([pgroup1, pgroup2], {name: "s", playbackRate: 2}));
+    new SeqGroup([pgroup1, pgroup2], {name: "s"}));
 
 </script>

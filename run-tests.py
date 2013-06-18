@@ -290,10 +290,15 @@ else:
     # Send travis information upstream
     if 'TRAVIS_BUILD_NUMBER' in os.environ:
         args.remote_caps.append('build=%s' % os.environ['TRAVIS_BUILD_NUMBER'])
-        
+
 # -----------------------------------------------------------------------------
 
 import subunit, testtools, unittest
+if args.list:
+    for test in simplejson.loads(
+            file("test/testcases.jsonp").read()[len("testCases("):-(len(");")+1)]):
+        print test[:-5]
+    sys.exit(-1)
 
 if args.load_list:
     tests = list(set(x.split(':')[0].strip()+'.html' for x in args.load_list.readlines()))

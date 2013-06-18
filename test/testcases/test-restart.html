@@ -25,16 +25,9 @@ div.anim {
 <div id="anim1" class="anim"></div>
 <div id="anim2" class="anim"></div>
 
+<script src="../testharness_bootstrap.js"></script>
 <script src="../../web-animations.js"></script>
-<script src="../anim-test-pre.js"></script>
 <script>
-
-var check = function(actual, expected, description) {
-  console.log('check', actual, expected);
-  test(function() { assert_equals(actual, expected); }, description);
-};
-
-animTestRunner.waitUntilDone();
 
 // Don't use a local named requestAnimationFrame, to avoid potential problems
 // with hoisting.
@@ -50,14 +43,14 @@ var player2 = document.timeline.play(anim2);
 // Check that once an animation is completed, creating a new Player restarts it.
 player1.currentTime = 1.0;
 raf(function() {
-  check(getComputedStyle(anim1.targetElement).left, "100px",
-      "Animation 1 should be in end state");
+  test(function() {assert_equals(getComputedStyle(anim1.targetElement).left,  "100px")},
+       "Animation 1 should be in end state");
   document.timeline.play(anim1);
   raf(function() {
-    check(parseInt(getComputedStyle(anim1.targetElement).left) > 0, true,
-        "Animation 1 should not be in start state");
-    check(parseInt(getComputedStyle(anim1.targetElement).left) < 100, true,
-        "Animation 1 should not be in end state");
+    test(function() {assert_equals(parseInt(getComputedStyle(anim1.targetElement).left) > 0,  true)},
+         "Animation 1 should not be in start state");
+    test(function() {assert_equals(parseInt(getComputedStyle(anim1.targetElement).left) < 100,  true)},
+         "Animation 1 should not be in end state");
   });
 });
 
@@ -65,14 +58,14 @@ raf(function() {
 // restarts it.
 player2.currentTime = 1.0;
 raf(function() {
-  check(getComputedStyle(anim2.targetElement).left, "100px",
-      "Animation 2 should be in end state");
+  test(function() {assert_equals(getComputedStyle(anim2.targetElement).left,  "100px")},
+       "Animation 2 should be in end state");
   player2.currentTime = 0.0;
   raf(function() {
-    check(parseInt(getComputedStyle(anim2.targetElement).left) > 0, true,
-        "Animation 2 should not be in start state");
-    check(parseInt(getComputedStyle(anim2.targetElement).left) < 100, true,
-        "Animation 2 should not be in end state");
+    test(function() {assert_equals(parseInt(getComputedStyle(anim2.targetElement).left) > 0,  true)},
+         "Animation 2 should not be in start state");
+    test(function() {assert_equals(parseInt(getComputedStyle(anim2.targetElement).left) < 100,  true)},
+         "Animation 2 should not be in end state");
 
     animTestRunner.done();
   });
@@ -82,6 +75,7 @@ raf(function() {
 var anim3 = new Animation(document.getElementById("anim2"), animFunc, 1.0);
 document.timeline.play(anim3);
 anim3.localTime = 0;
-check(anim3.localTime, null, "TimedItem.localTime should be read-only");
+test(function() {assert_equals(anim3.localTime,  null)},
+     "TimedItem.localTime should be read-only");
 
 </script>

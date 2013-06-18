@@ -32,11 +32,8 @@ body {
   background: red;
 }
 </style>
-<script src="../../web-animations.js"></script>
 <script>
-var timing = {duration: 0.5, timingFunction: 'steps(2, end)'};
-
-var animations = [];
+// Create the elements
 var states = {'visible':1, 'hidden':1, 'collapse':1};
 for (var start in states) {
   for (var end in states) {
@@ -56,12 +53,26 @@ for (var start in states) {
       testElement.classList.add('red');
     }
     testContainer.appendChild(testElement);
+  }
+}
+
+</script>
+<script src="../testharness_bootstrap.js"></script>
+<script src="../../web-animations.js"></script>
+<script>
+var timing = {duration: 0.5, timingFunction: 'steps(2, end)'};
+
+// Add the animations
+var animations = [];
+for (var start in states) {
+  for (var end in states) {
+    var frames = [start, end];
+    var testElement = document.getElementById(start + "_" + end);
     animations.push(
         new Animation(testElement, {visibility: frames}, timing));
   }
 }
 </script>
-<script src="../anim-test-pre.js"></script>
 <script>
 animations.forEach(function(anim) { document.timeline.play(anim); });
 </script>

@@ -1,112 +1,144 @@
-check(document.querySelectorAll('.anim')[0],{'left':'100px'},0);
-check(document.querySelectorAll('.anim')[1],{'left':'100px'},0);
-check(document.querySelectorAll('.anim')[2],{'left':'100px'},0);
-check(document.querySelectorAll('.anim')[3],{'left':'100px'},0);
-check(document.querySelectorAll('.anim')[4],{'left':'100px'},0);
-check(document.querySelectorAll('.anim')[5],{'left':'100px'},0);
-check(document.querySelectorAll('.anim')[6],{'left':'300px'},0);
-check(document.querySelectorAll('.anim')[7],{'left':'300px'},0);
-check(document.querySelectorAll('.anim')[8],{'left':'300px'},0);
-check(document.querySelectorAll('.anim')[9],{'left':'300px'},0);
-check(document.querySelectorAll('.anim')[10],{'left':'300px'},0);
-check(document.querySelectorAll('.anim')[11],{'left':'300px'},0);
-check(document.querySelectorAll('.anim')[12],{'left':'300px'},0);
-check(document.querySelectorAll('.anim')[13],{'left':'300px'},0);
-check(document.querySelectorAll('.anim')[0],{'left':'200px'},0.5);
-check(document.querySelectorAll('.anim')[1],{'left':'200px'},0.5);
-check(document.querySelectorAll('.anim')[2],{'left':'200px'},0.5);
-check(document.querySelectorAll('.anim')[3],{'left':'200px'},0.5);
-check(document.querySelectorAll('.anim')[4],{'left':'200px'},0.5);
-check(document.querySelectorAll('.anim')[5],{'left':'200px'},0.5);
-check(document.querySelectorAll('.anim')[6],{'left':'300px'},0.5);
-check(document.querySelectorAll('.anim')[7],{'left':'300px'},0.5);
-check(document.querySelectorAll('.anim')[8],{'left':'300px'},0.5);
-check(document.querySelectorAll('.anim')[9],{'left':'300px'},0.5);
-check(document.querySelectorAll('.anim')[10],{'left':'300px'},0.5);
-check(document.querySelectorAll('.anim')[11],{'left':'300px'},0.5);
-check(document.querySelectorAll('.anim')[12],{'left':'300px'},0.5);
-check(document.querySelectorAll('.anim')[13],{'left':'300px'},0.5);
-check(document.querySelectorAll('.anim')[0],{'left':'300px'},1);
-check(document.querySelectorAll('.anim')[1],{'left':'300px'},1);
-check(document.querySelectorAll('.anim')[2],{'left':'300px'},1);
-check(document.querySelectorAll('.anim')[3],{'left':'300px'},1);
-check(document.querySelectorAll('.anim')[4],{'left':'300px'},1);
-check(document.querySelectorAll('.anim')[5],{'left':'300px'},1);
-check(document.querySelectorAll('.anim')[6],{'left':'300px'},1);
-check(document.querySelectorAll('.anim')[7],{'left':'300px'},1);
-check(document.querySelectorAll('.anim')[8],{'left':'300px'},1);
-check(document.querySelectorAll('.anim')[9],{'left':'300px'},1);
-check(document.querySelectorAll('.anim')[10],{'left':'300px'},1);
-check(document.querySelectorAll('.anim')[11],{'left':'300px'},1);
-check(document.querySelectorAll('.anim')[12],{'left':'300px'},1);
-check(document.querySelectorAll('.anim')[13],{'left':'300px'},1);
-check(document.querySelectorAll('.anim')[0],{'left':'300px'},1.5);
-check(document.querySelectorAll('.anim')[1],{'left':'300px'},1.5);
-check(document.querySelectorAll('.anim')[2],{'left':'300px'},1.5);
-check(document.querySelectorAll('.anim')[3],{'left':'300px'},1.5);
-check(document.querySelectorAll('.anim')[4],{'left':'300px'},1.5);
-check(document.querySelectorAll('.anim')[5],{'left':'300px'},1.5);
-check(document.querySelectorAll('.anim')[6],{'left':'300px'},1.5);
-check(document.querySelectorAll('.anim')[7],{'left':'300px'},1.5);
-check(document.querySelectorAll('.anim')[8],{'left':'300px'},1.5);
-check(document.querySelectorAll('.anim')[9],{'left':'300px'},1.5);
-check(document.querySelectorAll('.anim')[10],{'left':'300px'},1.5);
-check(document.querySelectorAll('.anim')[11],{'left':'300px'},1.5);
-check(document.querySelectorAll('.anim')[12],{'left':'300px'},1.5);
-check(document.querySelectorAll('.anim')[13],{'left':'300px'},1.5);
-check(document.querySelectorAll('.anim')[0],{'left':'300px'},2);
-check(document.querySelectorAll('.anim')[1],{'left':'300px'},2);
-check(document.querySelectorAll('.anim')[2],{'left':'300px'},2);
-check(document.querySelectorAll('.anim')[3],{'left':'300px'},2);
-check(document.querySelectorAll('.anim')[4],{'left':'300px'},2);
-check(document.querySelectorAll('.anim')[5],{'left':'300px'},2);
-check(document.querySelectorAll('.anim')[6],{'left':'300px'},2);
-check(document.querySelectorAll('.anim')[7],{'left':'300px'},2);
-check(document.querySelectorAll('.anim')[8],{'left':'300px'},2);
-check(document.querySelectorAll('.anim')[9],{'left':'300px'},2);
-check(document.querySelectorAll('.anim')[10],{'left':'300px'},2);
-check(document.querySelectorAll('.anim')[11],{'left':'300px'},2);
-check(document.querySelectorAll('.anim')[12],{'left':'300px'},2);
-check(document.querySelectorAll('.anim')[13],{'left':'300px'},2);
-check(document.querySelectorAll('.anim')[0],{'left':'300px'},2.5);
-check(document.querySelectorAll('.anim')[1],{'left':'300px'},2.5);
-check(document.querySelectorAll('.anim')[2],{'left':'300px'},2.5);
-check(document.querySelectorAll('.anim')[3],{'left':'300px'},2.5);
-check(document.querySelectorAll('.anim')[4],{'left':'300px'},2.5);
-check(document.querySelectorAll('.anim')[5],{'left':'300px'},2.5);
-check(document.querySelectorAll('.anim')[6],{'left':'300px'},2.5);
-check(document.querySelectorAll('.anim')[7],{'left':'200px'},2.5);
-check(document.querySelectorAll('.anim')[8],{'left':'200px'},2.5);
-check(document.querySelectorAll('.anim')[9],{'left':'200px'},2.5);
-check(document.querySelectorAll('.anim')[10],{'left':'200px'},2.5);
-check(document.querySelectorAll('.anim')[11],{'left':'200px'},2.5);
-check(document.querySelectorAll('.anim')[12],{'left':'200px'},2.5);
-check(document.querySelectorAll('.anim')[13],{'left':'300px'},2.5);
-check(document.querySelectorAll('.anim')[0],{'left':'300px'},3);
-check(document.querySelectorAll('.anim')[1],{'left':'300px'},3);
-check(document.querySelectorAll('.anim')[2],{'left':'300px'},3);
-check(document.querySelectorAll('.anim')[3],{'left':'300px'},3);
-check(document.querySelectorAll('.anim')[4],{'left':'300px'},3);
-check(document.querySelectorAll('.anim')[5],{'left':'300px'},3);
-check(document.querySelectorAll('.anim')[6],{'left':'300px'},3);
-check(document.querySelectorAll('.anim')[7],{'left':'100px'},3);
-check(document.querySelectorAll('.anim')[8],{'left':'100px'},3);
-check(document.querySelectorAll('.anim')[9],{'left':'100px'},3);
-check(document.querySelectorAll('.anim')[10],{'left':'100px'},3);
-check(document.querySelectorAll('.anim')[11],{'left':'100px'},3);
-check(document.querySelectorAll('.anim')[12],{'left':'100px'},3);
-check(document.querySelectorAll('.anim')[13],{'left':'300px'},3);
-check(document.querySelectorAll('.anim')[0],{'left':'300px'},3.5);
-check(document.querySelectorAll('.anim')[1],{'left':'300px'},3.5);
-check(document.querySelectorAll('.anim')[2],{'left':'300px'},3.5);
-check(document.querySelectorAll('.anim')[3],{'left':'300px'},3.5);
-check(document.querySelectorAll('.anim')[4],{'left':'300px'},3.5);
-check(document.querySelectorAll('.anim')[5],{'left':'300px'},3.5);
-check(document.querySelectorAll('.anim')[6],{'left':'300px'},3.5);
-check(document.querySelectorAll('.anim')[7],{'left':'100px'},3.5);
-check(document.querySelectorAll('.anim')[8],{'left':'100px'},3.5);
-check(document.querySelectorAll('.anim')[9],{'left':'100px'},3.5);
-check(document.querySelectorAll('.anim')[10],{'left':'100px'},3.5);
-check(document.querySelectorAll('.anim')[11],{'left':'100px'},3.5);
-check(document.querySelectorAll('.anim')[12],{'left':'100px'},3.5);
-check(document.querySelectorAll('.anim')[13],{'left':'300px'},3.5);
+test_at(0, function() {
+    assert_styles(
+      '.anim',
+      [{'left':'100px'},
+       {'left':'100px'},
+       {'left':'100px'},
+       {'left':'100px'},
+       {'left':'100px'},
+       {'left':'100px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'}]);
+  }, "Autogenerated test at t=0");
+test_at(0.5, function() {
+    assert_styles(
+      '.anim',
+      [{'left':'200px'},
+       {'left':'200px'},
+       {'left':'200px'},
+       {'left':'200px'},
+       {'left':'200px'},
+       {'left':'200px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'}]);
+  }, "Autogenerated test at t=0.5");
+test_at(1, function() {
+    assert_styles(
+      '.anim',
+      [{'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'}]);
+  }, "Autogenerated test at t=1");
+test_at(1.5, function() {
+    assert_styles(
+      '.anim',
+      [{'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'}]);
+  }, "Autogenerated test at t=1.5");
+test_at(2, function() {
+    assert_styles(
+      '.anim',
+      [{'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'}]);
+  }, "Autogenerated test at t=2");
+test_at(2.5, function() {
+    assert_styles(
+      '.anim',
+      [{'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'200px'},
+       {'left':'200px'},
+       {'left':'200px'},
+       {'left':'200px'},
+       {'left':'200px'},
+       {'left':'200px'},
+       {'left':'300px'}]);
+  }, "Autogenerated test at t=2.5");
+test_at(3, function() {
+    assert_styles(
+      '.anim',
+      [{'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'100px'},
+       {'left':'100px'},
+       {'left':'100px'},
+       {'left':'100px'},
+       {'left':'100px'},
+       {'left':'100px'},
+       {'left':'300px'}]);
+  }, "Autogenerated test at t=3");
+test_at(3.5, function() {
+    assert_styles(
+      '.anim',
+      [{'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'300px'},
+       {'left':'100px'},
+       {'left':'100px'},
+       {'left':'100px'},
+       {'left':'100px'},
+       {'left':'100px'},
+       {'left':'100px'},
+       {'left':'300px'}]);
+  }, "Autogenerated test at t=3.5");

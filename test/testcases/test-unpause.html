@@ -24,25 +24,18 @@ div.anim {
 
 <div id="anim" class="anim"></div>
 
+<script src="../testharness_bootstrap.js"></script>
 <script src="../../web-animations.js"></script>
-<script src="../anim-test-pre.js"></script>
 <script>
-
-var check = function(actual, expected, description) {
-  console.log('check', actual, expected);
-  test(function() { assert_equals(actual, expected); }, description);
-};
-
-animTestRunner.waitUntilDone();
 
 var testPauseUnpause = function(name, player) {
   player.currentTime = 5.0;
   player.paused = true;
-  check(player.currentTime, 5.0,
-    name + " Player.currentTime should be unaffected by pausing");
+  test(function() {assert_equals(player.currentTime,  5.0)},
+       name + " Player.currentTime should be unaffected by pausing");
   player.paused = false;
-  check(player.currentTime, 5.0,
-    name + " Player.currentTime should be unaffected by unpausing");
+  test(function() {assert_equals(player.currentTime,  5.0)},
+       name + " Player.currentTime should be unaffected by unpausing");
 };
 
 // Test that a Player's currentTime is correct after pausing and unpausing,
@@ -58,10 +51,9 @@ addEventListener("load", function() {
 addEventListener("load", function() {
   var player = document.timeline.play(new Animation(
       document.getElementById("anim"), {left: ["100px", "200px"]}, 1.0));
-  check(player.startTime > 0, true, "Player has started");
+  test(function() {assert_equals(player.startTime > 0,  true)},
+       "Player has started");
   testPauseUnpause("non-zero starttime,", player);
-
-  animTestRunner.done();
 });
 
 // TODO: Test pausing and unpausing with a forced currentTime while the

@@ -3,6 +3,8 @@
 
 vim: set ts=2 sw=2 et sts=2 ai:
 
+vim: set expandtab shiftwidth=2 tabstop=2:
+
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -48,21 +50,6 @@ tbody {
   color: gray;
 }
 
-/* Pass styles */
-tbody.pass {
-  color: green;
-}
-
-li.pass {
-  color: green;
-}
-
-
-/* Pass styles */
-tbody.no-tests {
-  color: #ff8a00;
-}
-
 /* Fail styles */
 tbody.fail {
   color: red;
@@ -72,8 +59,33 @@ li.fail {
   color: red;
 }
 
+
+/* Pass styles */
+tbody.pass {
+  color: green;
+}
+
+li.pass {
+  color: green;
+}
+
+/* No-test styles */
+tbody.no-tests {
+  color: #ff8a00;
+}
+
+li.pass {
+  color: #ff8a00;
+}
+
+
 </style>
-<script src="testcases.js"></script>
+<script>
+var tests = [];
+function testCases(new_tests) { tests = new_tests; };
+</script>
+<script src="testcases.jsonp?jsonp=testCases"></script>
+
 
 <div id=status-box>
 <h1 id=status>Pending</h1>
@@ -91,13 +103,16 @@ Finished: <span id=finished></span>
 (function() {
 window.finished = false;
 
+var results = [];
+
+
+
 /**
  * Get the most accurate version of time possible.
  *
  * @return {number} Time as this very moment.
  */
 function now() {
-  if (window.performance && window.performance.now) return window.performance.now();
   return Date.now();
 }
 
@@ -118,7 +133,7 @@ function now() {
  */
 function createTestRows(testName, testURL) {
   var tablegroup = document.createElement("tbody");
-  tablegroup.id = testName;
+  tablegroup.id = testName.replace('.', '-');
 
   var basicInfoRow = document.createElement("tr");
   basicInfoRow.className = "info-row";
@@ -157,7 +172,7 @@ function createTestRows(testName, testURL) {
 
   // iframe containing a preview of object
   var iframe = document.createElement("iframe");
-  iframe.src = testURL + '?NoStart';
+  iframe.src = testURL + '#start=message';
 
   var iframeCell = document.createElement("td");
   iframeCell.colSpan = "4";
@@ -316,7 +331,6 @@ function changeTestState(test, newState) {
   postingTests.sort(testSort);
 }
 
-
 /**
  * Elements for reporting the overall status.
  */
@@ -381,7 +395,7 @@ window.onload = function createTestRunners() {
     }.bind(test);
 
   }
-}
+};
 
 var maxParallel = 1;
 
@@ -390,50 +404,69 @@ var maxParallel = 1;
  * them.
  */
 function runTests() {
-
   // Start as many unstarted tests as possible
   while (unstartedTests.length > 0 && runningTests.length < maxParallel) {
     // Move from unstarted to running state
     var test = unstartedTests[0];
-
-    var testWindow = test.querySelector("iframe").contentWindow;
-    testWindow.setTimeout(testWindow.animTestRunner.start, 1);
-
     changeTestState(test, States.RUNNING);
-  }
-
-  // Get the results from finished tests and post them.
-  for (var i = 0; i < runningTests.length; i++) {
-    var test = runningTests[i];
 
     var testWindow = test.querySelector("iframe").contentWindow;
-    if (!testWindow.animTestRunner || !testWindow.animTestRunner.results)
-      continue;
-
-    var result = processResults(test, testWindow.animTestRunner.results);
-    if (result) {
-      // Move from running to posting state
-      changeTestState(test, States.POSTING);
-      i--;
-
-      var data = new FormData();
-      data.append("data", JSON.stringify(result));
-
-      var xhr = new XMLHttpRequest();
-      xhr.onload = function () {
-        // Move from running to finished state
-        changeTestState(this, States.FINISHED);
-      }.bind(test);
-      xhr.open("POST", "test-results-post.html", true);
-      xhr.send(data);
-    } else {
-      // Move directly to finished state
-      changeTestState(test, States.FINISHED);
-      i--;
-    }
-
+    var msg = {"type": "start", "url": testWindow.location.href + ""};
+    testWindow.postMessage(msg, "*");
   }
 }
+
+
+/* @type {Object.<string, Object>} */ var testResults = {};
+/**
+ * Callback that occurs when the test has finished running.
+ */
+window.addEventListener(
+  "message",
+  function(evt) {
+    var testname = evt.source.location.pathname.split('/').pop().replace('.', '-');
+    var test = document.getElementById(testname);
+    console.log(evt.data['type'], testname, test);
+
+    switch(evt.data['type']) {
+    case 'start':
+      testResults[testname] = [];
+      break;
+
+    case 'result':
+      testResults[testname].push(evt.data['test']);
+      break;
+
+    case 'complete':
+      console.log(testname, testResults[testname]);
+      var result = processResults(test, testResults[testname]);
+      if (result) {
+        // Move from running to posting state
+        changeTestState(test, States.POSTING);
+
+        var data = new FormData();
+        data.append("data", JSON.stringify(result));
+
+        var xhr = new XMLHttpRequest();
+        xhr.onload = function () {
+          // Move from running to finished state
+          changeTestState(this, States.FINISHED);
+        }.bind(test);
+        xhr.open("POST", "test-results-post.html", true);
+        xhr.send(data);
+      } else {
+        // Move directly to finished state
+        changeTestState(test, States.FINISHED);
+        i--;
+      }
+      break;
+
+    default:
+      console.log(evt.data);
+    }
+  },
+  false);
+
 
 /**
  * Processes the test's results and put the information into the test object.
@@ -444,7 +477,7 @@ function processResults(test, results) {
   var logElement = test.querySelector(".log");
 
   var newResultsDiv = document.createElement('ul');
-  for (var x in results){
+  for (var x in results) {
     var output = document.createElement('li');
     output.innerHTML += results[x].name + " ";
 
@@ -506,4 +539,6 @@ function processResults(test, results) {
 }
 
 })();
+
+
 </script>
