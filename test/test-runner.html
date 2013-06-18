@@ -37,6 +37,7 @@ iframe {
 <button id=prev-button onclick="updateStateManual(-1)">Prev</button>
 <button id=reload-button onclick="updateStateManual(0)">Reload</button>
 <button id=next-button onclick="updateStateManual(1)">Next</button>
+<a download="coverage.json" href="x" onclick="event.target.href = 'data:,' + JSON.stringify(__coverage__)">Coverage</a>
 <div><span id="test-status"></span>: <a id="test-link"></a></div>
 <iframe id="test-frame"></iframe>
 <div id="results"></div>
@@ -51,6 +52,7 @@ function testCases(new_tests) { tests = new_tests; };
 <script>
 "use strict";
 
+var __coverage__ = {};
 var finished = false;
 
 (function() {

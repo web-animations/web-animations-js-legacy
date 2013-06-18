@@ -45,3 +45,5 @@ loadScript(location.pathname.replace('.html', '-checks.js'));
 
 document.write('<div id="log"></div>');
 loadScript('../testharness/testharnessreport.js');
+
+window.__coverage__ = parent.window.__coverage__;
