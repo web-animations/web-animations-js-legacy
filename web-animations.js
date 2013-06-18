@@ -311,7 +311,7 @@ Player.prototype = {
 
 
 /** @constructor */
-var TimedItem = function(token, timing, parentGroup) {
+var TimedItem = function(token, timing) {
   if (token !== constructorToken) {
     throw new TypeError('Illegal constructor');
   }
@@ -323,22 +323,8 @@ var TimedItem = function(token, timing, parentGroup) {
   this.iterationTime = null;
   this.animationTime = null;
   this._startTime = 0.0;
-
-  // A TimedItem has either a _player, or a _parentGroup, or neither, but
-  // never both.
   this._player = null;
-
-  // Note that we don't use the public setter, because we call _addInternal()
-  // below.
-  if (parentGroup === this) {
-    throw new Error('parentGroup can not be set to self!');
-  }
-  this._parentGroup = this._sanitizeParent(parentGroup);
-
-  if (this.parentGroup) {
-    // This will set our inheritedTime via _childrenStateModified().
-    this.parentGroup._addInternal(this);
-  }
+  this._parentGroup = null;
   this._updateInternalState();
 };
 
@@ -388,14 +374,6 @@ TimedItem.prototype = {
     // exsisting player.
     this._reparent(null);
     this._player = player;
-  },
-  _sanitizeParent: function(parentGroup) {
-    if (parentGroup === null || parentGroup instanceof TimingGroup) {
-      return parentGroup;
-    } else if (!isDefined(parentGroup)) {
-      return null;
-    }
-    throw new TypeError('parentGroup is not a TimingGroup');
   },
   // Takes care of updating the outgoing parent. This is called with a non-null
   // parent only from TimingGroup.splice(), which takes care of calling
@@ -677,11 +655,11 @@ var interpretTimingParam = function(timing) {
 };
 
 /** @constructor */
-var Animation = function(target, animationEffect, timing, parentGroup) {
+var Animation = function(target, animationEffect, timing) {
   this.animationEffect = interpretAnimationEffect(animationEffect);
   this.timing = interpretTimingParam(timing);
 
-  TimedItem.call(this, constructorToken, timing, parentGroup);
+  TimedItem.call(this, constructorToken, timing);
 
   this.targetElement = target;
   this.name = this.animationEffect instanceof KeyframeAnimationEffect ?

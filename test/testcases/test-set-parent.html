@@ -26,123 +26,82 @@ var elem = document.getElementById("anim");
 var animFunc = {left: "100px"};
 
 // Test that Animation is constructed with no parent.
-var anim = new Animation(elem, animFunc);
-test(function() {assert_equals(anim.parentGroup,  null)},
-     "Child should have no parent");
+var child = new Animation(elem, animFunc, 1);
+test(function() {assert_equals(child.parentGroup, null)},
+    "Child should have no parent");
 
 // Test that group is constructed with zero children.
 var parentGroup = new ParGroup();
-test(function() {assert_equals(parentGroup.children.length,  0)},
-     "Parent should have zero children");
-
-// Test that parent must be an AnimationGroup when constructing.
-try {
-  new Animation(elem, animFunc, 1.0, anim);
-  fail("Creating group with Animation as parent should throw");
-} catch(e) {
-  test(function() {assert_equals(e.message,  "parentGroup is not a TimingGroup")},
-    
-      "Expected error exception message");
-}
+test(function() {assert_equals(parentGroup.children.length, 0)},
+    "Parent should have zero children");
 
 // Test that updates are made to child when constructing parent.
-var parentGroup = new ParGroup([anim]);
-test(function() {assert_equals(anim.parentGroup,  parentGroup)},
-     "Parent's constructor, Child's parentGroup should be set to parent");
-test(function() {assert_equals(parentGroup.children.length,  1)},
-     "Parent's constructor, Parent should have 1 child");
-test(function() {assert_equals(parentGroup.children[0],  anim)},
-     "Parent's constructor, Parent should have correct child");
+var parentGroup = new ParGroup([child]);
+test(function() {assert_equals(child.parentGroup, parentGroup)},
+    "Parent's constructor, Child's parentGroup should be set to parent");
+test(function() {assert_equals(parentGroup.children.length, 1)},
+    "Parent's constructor, Parent should have 1 child");
+test(function() {assert_equals(parentGroup.children[0], child)},
+    "Parent's constructor, Parent should have correct child");
 
-// Test that updates are made to parent when constructing child.
-var parentGroup = new ParGroup();
-var child = new Animation(elem, animFunc, 1.0, parentGroup);
-test(function() {assert_equals(child.parentGroup,  parentGroup)},
-     "Child's constructor, Child's parentGroup should be set");
-test(function() {assert_equals(parentGroup.children.length,  1)},
-     "Child's constructor, Parent should now have 1 child");
-test(function() {assert_equals(parentGroup.children[0],  child)},
-     "Child's constructor, Parent should have correct child");
+// Test that updates are made to previous and new parent when using append().
+var newParent = new ParGroup();
+newParent.append(child);
+test(function() {assert_equals(child.parentGroup, newParent)},
+    "With .append, child's parentGroup should be updated to new parent");
+test(function() {assert_equals(parentGroup.children.length, 0)},
+    "With .append, Previous parent should no longer have children");
+test(function() {assert_equals(newParent.children.length, 1)},
+    "With .append, New parent should now have 1 child");
+test(function() {assert_equals(newParent.children[0], child)},
+    "With .append, New parent should now have correct child");
 
-// Test that updates are made to previous and new parents when constructing new
-// parent.
-var newParent = new ParGroup([child]);
-test(function() {assert_equals(child.parentGroup,  newParent)},
-    
-    "New Parent, Child's parentGroup should be updated to new parent");
-test(function() {assert_equals(parentGroup.children.length,  0)},
-    
-    "New Parent, Previous parent should no longer have children");
-test(function() {assert_equals(newParent.children.length,  1)},
-     "New parent should now have 1 child");
-test(function() {assert_equals(newParent.children[0],  child)},
-     "New parent should now have correct child");
-
-// Test that updates are made to previous and new parent when using add().
-var newerParent = new ParGroup();
-newerParent.add(child);
-test(function() {assert_equals(child.parentGroup,  newerParent)},
-    
-    "With .add, child's parentGroup should be updated to new parent");
-test(function() {assert_equals(newParent.children.length,  0)},
-    
-    "With .add, Previous parent should no longer have children");
-test(function() {assert_equals(newerParent.children.length,  1)},
-    
-    "With .add, New parent should now have 1 child");
-test(function() {assert_equals(newerParent.children[0],  child)},
-    
-    "With .add, New parent should now have correct child");
-
-// Test that calling add() with an existing child causes that child to be moved
+// Test that calling append() with an existing child causes that child to be moved
 // to the end of the list of children.
 var sibling = new Animation(elem, animFunc, 1.0);
 var seqGroup = new SeqGroup([child, sibling]);
-test(function() {assert_equals(seqGroup.children.length,  2)},
-    
+test(function() {assert_equals(seqGroup.children.length, 2)},
     "Moved child, new seqGroup.children.length");
-test(function() {assert_equals(seqGroup.children[0],  child)},
-    
+test(function() {assert_equals(seqGroup.children[0], child)},
     "Moved child, new seqGroup's first child should be 'child'");
-test(function() {assert_equals(seqGroup.children[1],  sibling)},
-    
+test(function() {assert_equals(seqGroup.children[1], sibling)},
     "Moved child, Second child should be 'sibling'");
-test(function() {assert_equals(child.startTime,  0.0)},
-     "Moved child, start time of 'child' == 0.0");
-test(function() {assert_equals(sibling.startTime,  1.0)},
-     "Moved child, start time of 'sibling' == 1.0");
-seqGroup.add(seqGroup.children[0]);
-test(function() {assert_equals(seqGroup.children.length,  2)},
-     "After .add, seqGroup.children.length");
-test(function() {assert_equals(seqGroup.children[0],  sibling)},
-     "After .add, First child should be 'sibling'");
-test(function() {assert_equals(seqGroup.children[1],  child)},
-     "After .add, Second child should be 'child'");
-test(function() {assert_equals(sibling.startTime,  0.0)},
-     "After .add, Start time of 'sibling'");
-test(function() {assert_equals(child.startTime,  1.0)},
-     "After.add, Start time of 'child'");
+test(function() {assert_equals(child.startTime, 0.0)},
+    "Moved child, start time of 'child' == 0.0");
+test(function() {assert_equals(sibling.startTime, 1.0)},
+    "Moved child, start time of 'sibling' == 1.0");
+seqGroup.append(seqGroup.children[0]);
+test(function() {assert_equals(seqGroup.children.length, 2)},
+     "After .append, seqGroup.children.length");
+test(function() {assert_equals(seqGroup.children[0], sibling)},
+     "After .append, First child should be 'sibling'");
+test(function() {assert_equals(seqGroup.children[1], child)},
+     "After .append, Second child should be 'child'");
+test(function() {assert_equals(sibling.startTime, 0.0)},
+     "After .append, Start time of 'sibling'");
+test(function() {assert_equals(child.startTime, 1.0)},
+     "After.append, Start time of 'child'");
 
 // Test that setting TimedItem.parentGroup is ignored.
 try { child.parentGroup = null; } catch (error) { }
-test(function() {assert_equals(seqGroup.children.length,  2)},
+test(function() {assert_equals(seqGroup.children.length, 2)},
      "seqGroup.children.length");
-test(function() {assert_equals(seqGroup.children[0],  sibling)},
+test(function() {assert_equals(seqGroup.children[0], sibling)},
      "First child should be 'sibling'");
-test(function() {assert_equals(seqGroup.children[1],  child)},
+test(function() {assert_equals(seqGroup.children[1], child)},
      "Second child should be 'child'");
-test(function() {assert_equals(sibling.startTime,  0.0)},
+test(function() {assert_equals(sibling.startTime, 0.0)},
      "Start time of 'sibling'");
-test(function() {assert_equals(child.startTime,  1.0)},
+test(function() {assert_equals(child.startTime, 1.0)},
      "Start time of 'child'");
 
 // Test that TimedItem.clear() updates both parent and children.
 seqGroup.clear();
-test(function() {assert_equals(seqGroup.children.length,  0)},
+test(function() {assert_equals(seqGroup.children.length, 0)},
      "Parent's children should be cleared");
-test(function() {assert_equals(child.parentGroup,  null)},
+test(function() {assert_equals(child.parentGroup, null)},
      "Child's parentGroup should be cleared");
-test(function() {assert_equals(sibling.parentGroup,  null)},
+test(function() {assert_equals(sibling.parentGroup, null)},
      "Sibling's parentGroup should be cleared");
 
 </script>
