@@ -64,14 +64,6 @@ var IndexSizeError = function(message) {
 
 IndexSizeError.prototype = Object.create(Error.prototype);
 
-var HierarchyRequestError = function(message) {
-  Error.call(this);
-  this.name = 'HierarchyRequestError';
-  this.message = message;
-}
-
-HierarchyRequestError.prototype = Object.create(Error.prototype);
-
 /** @constructor */
 var Timing = function(timingDict) {
   this.startDelay = timingDict.startDelay || 0.0;
@@ -717,6 +709,10 @@ Animation.prototype = createObject(TimedItem.prototype, {
   }
 });
 
+function throwNewHierarchyRequestError() {
+  var element = document.createElement('span');
+  element.appendChild(element);
+}
 
 /** @constructor */
 var TimingGroup = function(token, type, children, timing, parentGroup) {
@@ -889,7 +885,7 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
     for (var i = 2; i < args.length; i++) {
       var newChild = args[i];
       if (this._isInclusiveAncestor(newChild)) {
-        throw new HierarchyRequestError();
+        throwNewHierarchyRequestError();
       }
       newChild._reparent(this);
     }
@@ -3091,7 +3087,6 @@ window.Element.prototype.animate = function(effect, timing) {
 window.Animation = Animation;
 window.AnimationEffect = AnimationEffect;
 window.GroupedAnimationEffect = GroupedAnimationEffect;
-window.HierarchyRequestError = new HierarchyRequestError;
 window.Keyframe = Keyframe;
 window.KeyframeAnimationEffect = KeyframeAnimationEffect;
 window.KeyframeList = KeyframeList;
