@@ -131,12 +131,12 @@ function second() {
 // STEP 2
 
 function third() {
-  a.timing.timingFunc = TimingFunction.createFromString('ease-in');
+  a.specified.timingFunc = TimingFunction.createFromString('ease-in');
   document.timeline.play(a);
 }
 
 function fourth() {
-  a.timing.timingFunc = TimingFunction.createFromString('cubic-beziel(0, 0.2,0.8, 1)');
+  a.specified.timingFunc = TimingFunction.createFromString('cubic-beziel(0, 0.2,0.8, 1)');
   document.timeline.play(a);
 }
 
@@ -174,8 +174,8 @@ function seventh() {
   var doorCreakAnim =
       new Animation(null, new audioAnimFunction("CREEEEEEAAAAKKK"), 2);
   var closeAnim = new ParGroup([ a, doorCreakAnim ]);
-  closeAnim.timing.timingFunc = a.timing.timingFunc;
-  a.timing.timingFunc = null;
+  closeAnim.specified.timingFunc = a.specified.timingFunc;
+  a.specified.timingFunc = null;
   group.splice(0, 0, closeAnim);
   document.timeline.play(group);
 }
@@ -183,7 +183,7 @@ function seventh() {
 // STEP 5
 
 function eighth() {
-  group.timing.playbackRate = 2;
+  group.specified.playbackRate = 2;
   document.timeline.play(group);
 }
 </script>

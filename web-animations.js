@@ -308,7 +308,7 @@ var TimedItem = function(token, timingInput) {
   if (token !== constructorToken) {
     throw new TypeError('Illegal constructor');
   }
-  this.timing = new Timing(constructorToken, timingInput, this._updateInternalState.bind(this));
+  this.specified = new Timing(constructorToken, timingInput, this._updateInternalState.bind(this));
   this._inheritedTime = null;
   this.currentIteration = null;
   this.iterationTime = null;
@@ -335,21 +335,21 @@ TimedItem.prototype = {
     return this._startTime;
   },
   get iterationDuration() {
-    var result = this.timing._iterationDuration();
+    var result = this.specified._iterationDuration();
     if (result == 'auto')
         result = this._intrinsicDuration();
     return result;
   },
   get activeDuration() {
-    var result = this.timing._activeDuration();
+    var result = this.specified._activeDuration();
     if (result == 'auto') {
-      var repeatedDuration = this.iterationDuration * this.timing._iterationCount();
-      result = repeatedDuration / Math.abs(this.timing.playbackRate);
+      var repeatedDuration = this.iterationDuration * this.specified._iterationCount();
+      result = repeatedDuration / Math.abs(this.specified.playbackRate);
     }
     return result;
   },
   get endTime() {
-    return this._startTime + this.activeDuration + this.timing.startDelay;
+    return this._startTime + this.activeDuration + this.specified.startDelay;
   },
   get parentGroup() {
     return this._parentGroup;
@@ -406,19 +406,19 @@ TimedItem.prototype = {
     this._updateTimeMarkers();
   },
   _updateAnimationTime: function() {
-    if (this.localTime < this.timing.startDelay) {
-      if (this.timing.fillMode === 'backwards' ||
-          this.timing.fillMode === 'both') {
+    if (this.localTime < this.specified.startDelay) {
+      if (this.specified.fillMode === 'backwards' ||
+          this.specified.fillMode === 'both') {
         this.animationTime = 0;
       } else {
         this.animationTime = null;
       }
     } else if (this.localTime <
-        this.timing.startDelay + this.activeDuration) {
-      this.animationTime = this.localTime - this.timing.startDelay;
+        this.specified.startDelay + this.activeDuration) {
+      this.animationTime = this.localTime - this.specified.startDelay;
     } else {
-      if (this.timing.fillMode === 'forwards' ||
-          this.timing.fillMode === 'both') {
+      if (this.specified.fillMode === 'forwards' ||
+          this.specified.fillMode === 'both') {
         this.animationTime = this.activeDuration;
       } else {
         this.animationTime = null;
@@ -427,18 +427,18 @@ TimedItem.prototype = {
   },
   _updateIterationParamsZeroDuration: function() {
     this.iterationTime = 0;
-    var isAtEndOfIterations = this.timing._iterationCount() != 0 &&
-        this.localTime >= this.timing.startDelay;
+    var isAtEndOfIterations = this.specified._iterationCount() != 0 &&
+        this.localTime >= this.specified.startDelay;
     this.currentIteration = isAtEndOfIterations ?
-       this._floorWithOpenClosedRange(this.timing.iterationStart +
-           this.timing._iterationCount(), 1.0) :
-       this._floorWithClosedOpenRange(this.timing.iterationStart, 1.0);
+       this._floorWithOpenClosedRange(this.specified.iterationStart +
+           this.specified._iterationCount(), 1.0) :
+       this._floorWithClosedOpenRange(this.specified.iterationStart, 1.0);
     // Equivalent to unscaledIterationTime below.
     var unscaledFraction = isAtEndOfIterations ?
-        this._modulusWithOpenClosedRange(this.timing.iterationStart +
-            this.timing._iterationCount(), 1.0) :
-        this._modulusWithClosedOpenRange(this.timing.iterationStart, 1.0);
-    var timingFunction = this.timing._timingFunction();
+        this._modulusWithOpenClosedRange(this.specified.iterationStart +
+            this.specified._iterationCount(), 1.0) :
+        this._modulusWithClosedOpenRange(this.specified.iterationStart, 1.0);
+    var timingFunction = this.specified._timingFunction();
     this._timeFraction = this._isCurrentDirectionForwards() ?
             unscaledFraction :
             1.0 - unscaledFraction;
@@ -448,10 +448,10 @@ TimedItem.prototype = {
   },
   _getAdjustedAnimationTime: function(animationTime) {
     var startOffset =
-        multiplyZeroGivesZero(this.timing.iterationStart, this.iterationDuration);
-    return (this.timing.playbackRate < 0 ?
+        multiplyZeroGivesZero(this.specified.iterationStart, this.iterationDuration);
+    return (this.specified.playbackRate < 0 ?
         (animationTime - this.activeDuration) : animationTime) *
-        this.timing.playbackRate + startOffset;
+        this.specified.playbackRate + startOffset;
   },
   _scaleIterationTime: function(unscaledIterationTime) {
     return this._isCurrentDirectionForwards() ?
@@ -461,9 +461,9 @@ TimedItem.prototype = {
   _updateIterationParams: function() {
     var adjustedAnimationTime =
         this._getAdjustedAnimationTime(this.animationTime);
-    var repeatedDuration = this.iterationDuration * this.timing._iterationCount();
-    var startOffset = this.timing.iterationStart * this.iterationDuration;
-    var isAtEndOfIterations = (this.timing._iterationCount() != 0) &&
+    var repeatedDuration = this.iterationDuration * this.specified._iterationCount();
+    var startOffset = this.specified.iterationStart * this.iterationDuration;
+    var isAtEndOfIterations = (this.specified._iterationCount() != 0) &&
         (adjustedAnimationTime - startOffset == repeatedDuration);
     this.currentIteration = isAtEndOfIterations ?
         this._floorWithOpenClosedRange(
@@ -477,7 +477,7 @@ TimedItem.prototype = {
             adjustedAnimationTime, this.iterationDuration);
     this.iterationTime = this._scaleIterationTime(unscaledIterationTime);
     this._timeFraction = this.iterationTime / this.iterationDuration;
-    var timingFunction = this.timing._timingFunction();
+    var timingFunction = this.specified._timingFunction();
     if (timingFunction) {
       this._timeFraction = timingFunction.scaleTime(this._timeFraction);
     }
@@ -517,14 +517,14 @@ TimedItem.prototype = {
     return ret == 0 ? range : ret;
   },
   _isCurrentDirectionForwards: function() {
-    if (this.timing.direction == 'normal') {
+    if (this.specified.direction == 'normal') {
       return true;
     }
-    if (this.timing.direction == 'reverse') {
+    if (this.specified.direction == 'reverse') {
       return false;
     }
     var d = this.currentIteration;
-    if (this.timing.direction == 'alternate-reverse') {
+    if (this.specified.direction == 'alternate-reverse') {
       d += 1;
     }
     // TODO: 6.13.3 step 3. wtf?
@@ -576,7 +576,7 @@ TimedItem.prototype = {
   },
   _netEffectivePlaybackRate: function() {
     var effectivePlaybackRate = this._isCurrentDirectionForwards() ?
-        this.timing.playbackRate : -this.timing.playbackRate;
+        this.specified.playbackRate : -this.specified.playbackRate;
     return this.parentGroup === null ? effectivePlaybackRate :
         effectivePlaybackRate * this.parentGroup._netEffectivePlaybackRate();
   },
@@ -640,7 +640,7 @@ Animation.prototype = createObject(TimedItem.prototype, {
   },
   clone: function() {
     return new Animation(this.targetElement,
-        cloneAnimationEffect(this.animationEffect), this.timing._dict);
+        cloneAnimationEffect(this.animationEffect), this.specified._dict);
   },
   toString: function() {
     var funcDescr = this.animationEffect instanceof AnimationEffect ?
@@ -725,7 +725,7 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
           // This calls _updateTimeMarkers() on the child.
           child._updateInheritedTime(this.iterationTime);
         }
-        cumulativeStartTime += Math.max(0, child.timing.startDelay +
+        cumulativeStartTime += Math.max(0, child.specified.startDelay +
             child.activeDuration);
       }
     }
@@ -748,7 +748,7 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
     } else if (this.type == 'seq') {
       var result = 0;
       this.children.forEach(function(a) {
-        result += a.activeDuration + a.timing.startDelay;
+        result += a.activeDuration + a.specified.startDelay;
       });
       return result;
     } else {
@@ -766,8 +766,8 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
       children.push(child.clone());
     });
     return this.type === "par" ?
-        new ParGroup(children, this.timing._dict):
-        new SeqGroup(children, this.timing._dict);
+        new ParGroup(children, this.specified._dict):
+        new SeqGroup(children, this.specified._dict);
   },
   _lengthChanged: function() {
     while (this.length < this.children.length) {
@@ -956,9 +956,9 @@ MediaReference.prototype = createObject(TimedItem.prototype, {
     }
 
     var finalIteration = this._floorWithOpenClosedRange(
-        this.timing.iterationStart + this.timing._iterationCount(), 1.0);
+        this.specified.iterationStart + this.specified._iterationCount(), 1.0);
     var endTimeFraction = this._modulusWithOpenClosedRange(
-        this.timing.iterationStart + this.timing._iterationCount(), 1.0);
+        this.specified.iterationStart + this.specified._iterationCount(), 1.0);
     if (this.currentIteration === finalIteration &&
         this._timeFraction === endTimeFraction &&
         this._intrinsicDuration() >= this.iterationDuration) {

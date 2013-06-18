@@ -32,13 +32,13 @@ test(function() {assert_equals(anim.endTime,  1.0)},
 try { anim.startTime = 2.0; } catch (error) { }
 test(function() {assert_equals(anim.startTime,  0.0)},
      "startTime should be read only");
-anim.timing.iterationDuration = 3.0;
+anim.specified.iterationDuration = 3.0;
 test(function() {assert_equals(anim.endTime,  3.0)},
      "endTime does not reflect Timing.iterationDuration");
-anim.timing.iterationDuration = 4.0;
+anim.specified.iterationDuration = 4.0;
 test(function() {assert_equals(anim.endTime,  4.0)},
      "endTime does not reflect iterationDuration");
-anim.timing.activeDuration = 5.0;
+anim.specified.activeDuration = 5.0;
 test(function() {assert_equals(anim.endTime,  5.0)},
      "endTime does not reflect activeDuration");
 
@@ -48,27 +48,27 @@ test(function() {assert_equals(anim.endTime,  5.0)},
 
 // Test that updates to a TimedItem's endTime cause re-layout of a parent
 // parallel group.
-anim.timing.iterationDuration = 'auto';
-anim.timing.activeDuration = 'auto';
+anim.specified.iterationDuration = 'auto';
+anim.specified.activeDuration = 'auto';
 var parGroup = new ParGroup([anim]);
 test(function() {assert_equals(parGroup.iterationDuration,  3.0)},
      "Parallel group iterationDuration should reflect child endTime");
 test(function() {assert_equals(parGroup.endTime,  3.0)},
      "Parallel group end time should reflect child endTime");
 // Update via Timing.iterationDuration
-anim.timing.iterationDuration = 8.0;
+anim.specified.iterationDuration = 8.0;
 test(function() {assert_equals(parGroup.iterationDuration,  8.0)},
      "Parallel group iterationDuration should reflect updated child Timing.iterationDuration");
 test(function() {assert_equals(parGroup.endTime,  8.0)},
      "Parallel group end time should reflect updated child Timing.iterationDuration");
 // Update via iterationDuration
-anim.timing.iterationDuration = 9.0;
+anim.specified.iterationDuration = 9.0;
 test(function() {assert_equals(parGroup.iterationDuration,  9.0)},
      "Parallel group iterationDuration should reflect updated child iterationDuration");
 test(function() {assert_equals(parGroup.endTime,  9.0)},
      "Parallel group end time should reflect updated child iterationDuration");
 // Update via activeDuration
-anim.timing.activeDuration = 10.0;
+anim.specified.activeDuration = 10.0;
 test(function() {assert_equals(parGroup.iterationDuration,  10.0)},
      "Parallel group iterationDuration should reflect updated child activeDuration");
 test(function() {assert_equals(parGroup.endTime,  10.0)},
@@ -76,7 +76,7 @@ test(function() {assert_equals(parGroup.endTime,  10.0)},
 
 // Test that updates to a TimedItem's startDelay and activeDuration cause
 // re-layout of a parent sequence group.
-anim.timing.iterationDuration = undefined;
+anim.specified.iterationDuration = undefined;
 anim.activeDuration = undefined;
 var siblingAnim = new Animation(document.getElementById("anim"), {top: "100px"},
     1.0);
@@ -92,7 +92,7 @@ test(function() {assert_equals(seqGroup.iterationDuration,  9.0)},
 test(function() {assert_equals(seqGroup.endTime,  9.0)},
      "Sequence group end time should reflect child iterationDurations");
 // startDelay
-anim.timing.startDelay = 11.0;
+anim.specified.startDelay = 11.0;
 test(function() {assert_equals(siblingAnim.startTime,  19.0)},
      "Sequence group should update sibling after updated child startDelay");
 test(function() {assert_equals(seqGroup.iterationDuration,  20.0)},
@@ -100,7 +100,7 @@ test(function() {assert_equals(seqGroup.iterationDuration,  20.0)},
 test(function() {assert_equals(seqGroup.endTime,  20.0)},
      "Sequence group end time should reflect updated child startDelay");
 // activeDuration via Timing.iterationDuration
-anim.timing.iterationDuration = 12.0;
+anim.specified.iterationDuration = 12.0;
 test(function() {assert_equals(siblingAnim.startTime,  23.0)},
      "Sequence group should update sibling after updated child Timing.iterationDuration");
 test(function() {assert_equals(seqGroup.iterationDuration,  24.0)},
