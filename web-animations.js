@@ -312,9 +312,23 @@ Player.prototype = {
     return this.source === null ||
         this.source._isPastEndOfActiveInterval();
   },
+  _isCurrent: function() {
+    return this.source === null ||
+        this.source._isCurrent();
+  },
   _getLeafItemsInEffect: function(items) {
     if (this.source) {
       this.source._getLeafItemsInEffect(items);
+    }
+  },
+  _isTargetingElement: function(element) {
+    if (this.source) {
+      return this.source._isTargetingElement(element);
+    }
+  },
+  _getAnimationsTargetingElement: function(element, animations) {
+    if (this.source) {
+      return this.source._getAnimationsTargetingElement(element, animations);
     }
   },
 };
@@ -591,6 +605,18 @@ TimedItem.prototype = {
     return this.parent === null ?
         this._player : this.parent.player;
   },
+  _isCurrent: function() {
+    return !this._isPastEndOfActiveInterval() || (this.parentGroup !== null && this.parentGroup._isCurrent());
+  },
+  _isTargetingElement: function(element) {
+    throw new Error(
+        "Derived classes must override TimedItem._isTargetingElement()");
+  },
+  _getAnimationsTargetingElement: function(element, animations) {
+    throw new Error(
+        "Derived classes must override " +
+        "TimedItem._getAnimationsTargetingElement()");
+  },
   _netEffectivePlaybackRate: function() {
     var effectivePlaybackRate = this._isCurrentDirectionForwards() ?
         this.specified.playbackRate : -this.specified.playbackRate;
@@ -655,6 +681,14 @@ Animation.prototype = createObject(TimedItem.prototype, {
   _getLeafItemsInEffectImpl: function(items) {
     items.push(this);
   },
+  _isTargetingElement: function(element) {
+    return element === this.targetElement;
+  },
+  _getAnimationsTargetingElement: function(element, animations) {
+    if (this._isTargetingElement(element)) {
+      animations.push(this);
+    }
+  },
   clone: function() {
     return new Animation(this.targetElement,
         cloneAnimationEffect(this.animationEffect), this.specified._dict);
@@ -664,7 +698,7 @@ Animation.prototype = createObject(TimedItem.prototype, {
         this.animationEffect.toString() : 'Custom scripted function';
     return 'Animation ' + this.startTime + '-' + this.endTime + ' (' +
         this.localTime + ') ' + funcDescr;
-  }
+  },
 });
 
 function throwNewHierarchyRequestError() {
@@ -853,6 +887,16 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
     }
     return false;
   },
+  _isTargetingElement: function(element) {
+    return this.children.some(function(child) {
+      return child._isTargetingElement(element);
+    });
+  },
+  _getAnimationsTargetingElement: function(element, animations) {
+    this.children.map(function(child) {
+      return child._getAnimationsTargetingElement(element, animations);
+    });
+  },
   toString: function() {
     return this.type + ' ' + this.startTime + '-' + this.endTime + ' (' +
         this.localTime + ') ' + ' [' +
@@ -1016,6 +1060,10 @@ MediaReference.prototype = createObject(TimedItem.prototype, {
       this._ensureIsAtUnscaledTime(this._iterationTime);
     }
   },
+  _isTargetingElement: function(element) {
+    return this._media === element && this._isCurrent();
+  },
+  _getAnimationsTargetingElement: function(element, animations) { },
 });
 
 
@@ -3007,6 +3055,20 @@ window.Element.prototype.animate = function(effect, timing) {
   var anim = new Animation(this, effect, timing);
   DOCUMENT_TIMELINE.play(anim);
   return anim;
+};
+window.Element.prototype.getCurrentPlayers = function() {
+  return PLAYERS.filter((function(player) {
+      return player._isCurrent() && player._isTargetingElement(this);
+    }).bind(this));
+};
+window.Element.prototype.getCurrentAnimations = function() {
+  var animations = [];
+  PLAYERS.forEach((function(player) {
+      if (player._isCurrent()) {
+        player._getAnimationsTargetingElement(this, animations);
+      }
+    }).bind(this));
+  return animations;
 };
 
 window.Animation = Animation;
