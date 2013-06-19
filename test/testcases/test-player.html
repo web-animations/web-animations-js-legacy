@@ -91,7 +91,7 @@ test(function() {assert_equals(player4.source,  animation2)},
 
 // Test that setting a parent on a TimedItem with a Player causes the player to
 // be disconnected.
-parGroup.add(animation2);
+parGroup.append(animation2);
 test(function() {assert_equals(parGroup.player,  player3)},
      "TimedItem.player should be updated for root");
 test(function() {assert_equals(animation2.player,  player3)},
