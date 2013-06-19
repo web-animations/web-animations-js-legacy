@@ -14,6 +14,7 @@ testCases([
   "test-grouped-anim-func.html",
   "test-integer.html",
   "test-iteration-start.html",
+  "test-iterations-alternate.html",
   "test-iterations-basic.html",
   "test-iterations-fill.html",
   "test-keyframe-creation.html",
