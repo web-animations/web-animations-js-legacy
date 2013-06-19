@@ -43,18 +43,21 @@ limitations under the License.
 
 // Run a simple animation. It should animate indefinitely.
 var anim = new Animation(document.getElementById("a"),
-    {left: ["100px", "500px"]}, {iterationCount: Infinity, iterationDuration: 1.0});
+    {left: ["100px", "500px"]}, {iterationCount: Infinity, iterationDuration: 2.0});
 document.timeline.play(anim);
 
-// After 2.5s, move it to a parallel group and run that.
-setTimeout(function() {
-  document.timeline.play(new ParGroup([anim],
-      {direction: "alternate", iterationDuration: 2.0, iterationCount: 2.0}));
-}, 2500);
+// After 3.0s, move it to a parallel group and run that.
+testharness_timeline.schedule(3000,
+  function() {
+    document.timeline.play(new ParGroup([anim],
+        {iterationDuration: 1.0, iterationCount: 3.0}));
+  });
 
-// Move it to a new group and run that.
-setTimeout(function() {
-  document.timeline.play(new ParGroup([anim], {iterationDuration: 1.5}));
-}, 8000);
+// After 3.0s, move it to a parallel group and run that.
+testharness_timeline.schedule(8000,
+  function() {
+    document.timeline.play(new ParGroup([anim],
+        {iterationDuration: 1.5, iterationCount: 3.0}));
+  });
 
 </script>
