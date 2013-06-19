@@ -101,7 +101,7 @@ function getSettings(){
     process(obProp);
     testLength = 0;
     window.frames[0].animTestRunner.players.forEach(function(player) {
-      testLength = Math.max(testLength, player.source.animationDuration + player.source.timing.startDelay);
+      testLength = Math.max(testLength, player.source.animationDuration + player.source.specified.startDelay);
     });
     pause();
     setTestCurrentTime(0);

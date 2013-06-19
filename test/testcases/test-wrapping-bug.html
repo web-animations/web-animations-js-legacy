@@ -35,22 +35,22 @@ var group = new ParGroup();
 document.timeline.play(new ParGroup([
     new Animation(overflow,
                   { transform: ["translate(-800px,0px)", "translate(0px,0px)"] },
-                  { duration: 0.3, startDelay: 0.25, fillMode: 'forwards' })]));
+                  { iterationDuration: 0.3, startDelay: 0.25, fillMode: 'forwards' })]));
 
 document.timeline.play(new ParGroup([
     new Animation(overflowControl,
                   { transform: ["translate(-800px,0px)", "translate(0px,0px)"] },
-                  { duration: 0.3, startDelay: 0.2, fillMode: 'forwards' })]));
+                  { iterationDuration: 0.3, startDelay: 0.2, fillMode: 'forwards' })]));
 
 document.timeline.play(new ParGroup([
     new Animation(underflow,
                   { transform: ["translate(-800px,0px)", "translate(0px,0px)"] },
-                  { duration: 0.3, startDelay: 0.20001, fillMode: 'none' })]));
+                  { iterationDuration: 0.3, startDelay: 0.20001, fillMode: 'none' })]));
 
 document.timeline.play(new ParGroup([
     new Animation(underflowControl,
                   { transform: ["translate(-800px,0px)", "translate(0px,0px)"] },
-                  { duration: 0.3, startDelay: 0.2, fillMode: 'none' })]));
+                  { iterationDuration: 0.3, startDelay: 0.2, fillMode: 'none' })]));
 
 </script>
 
