@@ -13,7 +13,7 @@ testCases([
   "test-font-weight.html",
   "test-grouped-anim-func.html",
   "test-integer.html",
-  "test-iteration-start.html",
+  "test-iterations-alternate-holes.html",
   "test-iterations-alternate.html",
   "test-iterations-basic.html",
   "test-iterations-fill.html",
