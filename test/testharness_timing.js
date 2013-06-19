@@ -1,5 +1,7 @@
 /**
- * Copyright 2013 Google Inc. All Rights Reserved.
+ * @preserve Copyright 2013 Google Inc. All Rights Reserved.
+ *
+ * vim: set expandtab shiftwidth=4 tabstop=4:
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -212,7 +214,7 @@
         this.currentTime_ = -this.frameMillis;
 
         // Schedule an event at t=0, needed temporarily.
-        this.schedule(0, function() {});
+        this.schedule(function() {}, 0);
 
         this.reset();
     }
@@ -282,12 +284,12 @@
     /**
      * Schedule something to be called at a given time.
      *
-     * @param {number} millis Milliseconds after start at which the callback should
-     *     be called.
      * @param {function(number)} callback Callback to call after the number of millis
      *     have elapsed.
+     * @param {number} millis Milliseconds after start at which the callback should
+     *     be called.
      */
-    TestTimeline.prototype.schedule = function(millis, callback)
+    TestTimeline.prototype.schedule = function(callback, millis)
     {
         if (millis < this.currentTime_)
         {
@@ -516,9 +518,16 @@
         this.toNextEvent();
     };
 
+    // FIXME
+    if (/start=disable/.test(window.location.hash)) {
+        window.testharness_timeline = {"schedule": function(f, t) { setTimeout(f, t) }};
+        window.test_at = function() {};
+        return;
+    }
 
     function testharness_timeline_setup()
     {
+
         testharness_timeline.createGUI(document.getElementsByTagName("body")[0]);
         testharness_timeline.start();
         testharness_timeline.updateGUI();
@@ -538,8 +547,14 @@
         // Start running the test on #start=message or no #start= is given.
         } else if (/start=auto/.test(window.location.hash)
                   || !(/start=/.test(window.location.hash))) {
+
+            var delay = 1;
+            if (/delay=/.test(window.location.hash)) {
+                delay = Number(/delay=([0-9]+)/.exec(window.location.hash)[1]);
+            }
+
             // Need non-zero timeout to allow chrome to run other code.
-            setTimeout(testharness_timeline.autorun.bind(testharness_timeline), 1);
+            setTimeout(testharness_timeline.autorun.bind(testharness_timeline), delay);
         }
     }
     addEventListener('load', testharness_timeline_setup);
@@ -548,7 +563,7 @@
     {
         var t = async_test(desc);
         t.f = f;
-        window.testharness_timeline.schedule(time*1000, t);
+        window.testharness_timeline.schedule(t, time*1000);
     }
 
     // Expose the extra API
