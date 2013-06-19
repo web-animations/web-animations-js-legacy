@@ -22,7 +22,6 @@ Written by Steph McArthur
 <script src="../testharness_bootstrap.js"></script>
 <script src="../../web-animations.js"></script>
 <script>
-"use strict";
 
 // Don't use a local named requestAnimationFrame, to avoid potential problems
 // with hoisting.
@@ -82,7 +81,7 @@ test(function() {assert_equals(animation2.player,  player3)},
 // Test that calling play() on a TimedItem with a parent results in
 // reparenting.
 var player4 = dt.play(animation2);
-test(function() {assert_equals(animation2.parentGroup,  null)},
+test(function() {assert_equals(animation2.parent,  null)},
      "Animation should be reparented");
 test(function() {assert_equals(parGroup.children.length, 0)},
      "Animation parent should be updated, leaving parGroup.children.length = 0");
@@ -91,15 +90,15 @@ test(function() {assert_equals(player4.source,  animation2)},
 
 // Test that setting a parent on a TimedItem with a Player causes the player to
 // be disconnected.
-parGroup.append(animation2);
+parGroup.add(animation2);
 test(function() {assert_equals(parGroup.player,  player3)},
      "TimedItem.player should be updated for root");
 test(function() {assert_equals(animation2.player,  player3)},
      "TimedItem.player should be updated for leaf");
 test(function() {assert_equals(player4.source,  null)},
      "Player.source should be updated");
-test(function() {assert_equals(animation2.parentGroup,  parGroup)},
-     "Animation.parentGroup should be updated");
+test(function() {assert_equals(animation2.parent,  parGroup)},
+     "Animation.parent should be updated");
 test(function() {assert_equals(parGroup.children.length,  1)},
       "Animation parent should be updated, leaving parGroup.children.length = 1");
 test(function() {assert_equals(parGroup.children[0],  animation2)},
