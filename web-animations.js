@@ -1243,7 +1243,7 @@ KeyframeAnimationEffect.prototype = createObject(
     var beforeFrame;
     if (beforeFrameNum == -1) {
       beforeFrame = {
-        rawValue: zero(this.property, frames[afterFrameNum].value),
+        rawValue: zero(this.property),
         offset: 0
       };
     } else {
@@ -1254,7 +1254,7 @@ KeyframeAnimationEffect.prototype = createObject(
     var afterFrame;
     if (afterFrameNum == frames.length) {
       afterFrame = {
-        rawValue: zero(this.property, frames[beforeFrameNum].value),
+        rawValue: zero(this.property),
         offset: 1
       };
     } else {
@@ -2429,7 +2429,7 @@ function n(num) {
 }
 
 var transformType = {
-  zero: function(t) { throw 'UNIMPLEMENTED'; },
+  zero: function() { throw 'UNIMPLEMENTED'; },
   add: function(base, delta) { return base.concat(delta); },
   interpolate: function(from, to, f) {
     var out = []
@@ -2629,8 +2629,8 @@ var getType = function(property) {
   return propertyTypes[property] || nonNumericType;
 }
 
-var zero = function(property, value) {
-  return getType(property).zero(value);
+var zero = function(property) {
+  return getType(property).zero();
 };
 
 var add = function(property, base, delta) {
