@@ -1,7 +1,5 @@
 /**
- * @preserve Copyright 2013 Google Inc. All Rights Reserved.
- *
- * vim: set expandtab shiftwidth=4 tabstop=4:
+ * Copyright 2013 Google Inc. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,40 +17,6 @@
 
 (function() {
     setup(function() {}, {explicit_timeout: true});
-
-    /**
-     * These functions come from testharness.js but can't be access because
-     * testharness uses an anonymous function to hide them.
-     **************************************************************************
-     */
-    function forEach (array, callback, thisObj)
-    {
-        for (var i=0; i<array.length; i++)
-        {
-            if (array.hasOwnProperty(i))
-            {
-                callback.call(thisObj, array[i], i, array);
-            }
-        }
-    }
-
-    function expose(object, name)
-    {
-        var components = name.split(".");
-        var target = window;
-        for (var i=0; i<components.length - 1; i++)
-        {
-            if (!(components[i] in target))
-            {
-                target[components[i]] = {};
-            }
-            target = target[components[i]];
-        }
-        target[components[components.length - 1]] = object;
-    }
-
-    /* ********************************************************************* */
-
 
     /**
      * Schedule something to be called at a given time.
@@ -93,7 +57,6 @@
         this.info = document.createElement('div');
 
         this.setup_();
-
     }
 
     TestTimelineGroup.prototype.setup_ = function()
@@ -149,7 +112,6 @@
     TestTimelineGroup.prototype.start = function()
     {
         this.lateCallbacks = new Array();
-
     };
 
     /**
@@ -163,11 +125,17 @@
         var overallResult = true;
         while (callbacks.length > 0)
         {
-            var callback = callbacks.shift();
+            var callback = callbacks.pop();
+            console.log(callback);
+
             var status_ = statuses[statuses.length - callbacks.length-1];
 
-            var result = callback.step(callback.f);
-            callback.done();
+            if (typeof callback == "function") {
+                callback();
+            } else {
+                var result = callback.step(callback.f);
+                callback.done();
+            }
 
             if (result === undefined || result == null) {
                 overallResult = overallResult && true;
@@ -242,6 +210,9 @@
         this.frameMillis = 1000.0 / 60; //60fps 
 
         this.currentTime_ = -this.frameMillis;
+
+        // Schedule an event at t=0, needed temporarily.
+        this.schedule(0, function() {});
 
         this.reset();
     }
@@ -380,32 +351,30 @@
         var events = this.timeline_.slice(0);
 
         // Already processed events
-        while (events.length > 0 && events[0].millis < this.currentTime_)
+        while (events.length > 0 && events[0].millis <= this.currentTime_)
         {
             events.shift();
         }
 
         while (this.currentTime_ < millis)
         {
-            var nextTick = Math.min(this.currentTime_ + this.frameMillis, millis);
+            var event_ = null;
+            var moveTo = millis;
 
-            while (events.length > 0 && events[0].millis <= nextTick)
-            {
-                var event_ = events.shift();
-
-                // Call the callback
-                if (this.currentTime_ != event_.millis) {
-                    this.currentTime_ = event_.millis;
-                    this.animationFrame(this.currentTime_);
-                }
-                event_.call();
+            if (events.length > 0 && events[0].millis <= millis) {
+                event_ = events.shift();
+                moveTo = event_.millis;
             }
 
-            if (this.currentTime_ != nextTick) {
-                this.currentTime_ = nextTick;
-                if (this.everyFrame) {
-                    this.animationFrame(this.currentTime_);
-                }
+            // Call the callback
+            if (this.currentTime_ != moveTo) {
+                this.currentTime_ = moveTo;
+                this.animationFrame(this.currentTime_);
+            }
+
+            if (event_) {
+                console.log(this.currentTime_);
+                event_.call();
             }
         }
 
@@ -420,13 +389,20 @@
      */
     TestTimeline.prototype.animationFrame = function(millis)
     {
+        /* FIXME(mithro): Code should appear here to allow testing of running
+         * every animation frame.
+
+        if (this.everyFrame) {
+        }
+
+        */
+
         var callbacks = this.animationFrameCallbacks;
         callbacks.reverse();
         this.animationFrameCallbacks = [];
-        forEach(callbacks, function(callback, x)
-            {
-                callback(millis) / 1000.0;
-            });
+        for (var i = 0; i < callbacks.length; i++) {
+            callbacks[i](millis);
+        }
     };
 
     /**
@@ -519,18 +495,18 @@
             this.timeline_[t].draw(this.timelinebar, this.endTime_);
 
             this.timeline_[t].marker.onclick = function(event)
-                {
-                    parent.setTime(this.millis);
-                    event.stopPropagation();
-                }.bind(this.timeline_[t]);
+            {
+                parent.setTime(this.millis);
+                event.stopPropagation();
+            }.bind(this.timeline_[t]);
         }
 
         this.timelinebar.onclick = function(evt)
-            {
-                var setPercent =
-                    ((evt.clientX - this.offsetLeft) / this.offsetWidth);
-                parent.setTime(setPercent * parent.endTime_);
-            }.bind(this.timelinebar);
+        {
+            var setPercent =
+                ((evt.clientX - this.offsetLeft) / this.offsetWidth);
+            parent.setTime(setPercent * parent.endTime_);
+        }.bind(this.timelinebar);
     };
 
 
@@ -576,38 +552,15 @@
         window.testharness_timeline.schedule(time*1000, t);
     }
 
-    function generate_tests_at(time, func, args, properties)
-    {
-        forEach(args, function(x, i)
-            {
-                if (x[0] == null) {
-                   x[0] = generate_name(func, x.slice(1));
-                }
-            });
-
-        forEach(args, function(x, i)
-            {
-                var name = "At " + time*1e3 + "ms "+ x[0];
-                test_at(
-                    time, function()
-                        { func.apply(this, x.slice(1)); },
-                    name,
-                    Array.isArray(properties) ? properties[i] : properties
-                );
-            });
-    }
-
     // Expose the extra API
-    expose(test_at, 'test_at');
-    expose(generate_tests_at, 'generate_tests_at');
-
-    var tht = new TestTimeline();
-    expose(tht, 'testharness_timeline');
+    window.test_at = test_at;
+    window.testharness_timeline = new TestTimeline();
 
     // Override existing timing functions
-    window.requestAnimationFrame = tht.requestAnimationFrame.bind(tht);
+    window.requestAnimationFrame =
+        testharness_timeline.requestAnimationFrame.bind(testharness_timeline);
     window.performance.now = null;
-    window.Date.now = tht.now.bind(tht);
+    window.Date.now = testharness_timeline.now.bind(testharness_timeline);
 
 })();
 

@@ -1,4 +1,3 @@
-    ]);
 test_at(0.5, function() {
     assert_styles(
       '.anim',
