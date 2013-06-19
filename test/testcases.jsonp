@@ -25,7 +25,6 @@ testCases([
   "test-pause.html",
   "test-playback-rate.html",
   "test-player.html",
-  "test-preset-timings.html",
   "test-rectangle.html",
   "test-reparent.html",
   "test-repeated-pause.html",
