@@ -172,6 +172,7 @@ var Timeline = function(token) {
   if (token !== constructorToken) {
     throw new TypeError('Illegal constructor');
   }
+  this.startTime = documentTime();
 };
 
 Timeline.prototype = {
@@ -185,6 +186,12 @@ Timeline.prototype = {
     return PLAYERS.filter(function(player) {
       return !player._isPastEndOfActiveInterval();
     });
+  },
+  toTimelineTime: function(otherTime, other) {
+    if ((this.startTime === null) || (other.startTime === null)) {
+      return null;
+    }
+    else return (otherTime + other.startTime - this.startTime);
   },
 };
 
