@@ -91,7 +91,6 @@
         this.info = document.createElement('div');
 
         this.setup_();
-
     }
 
     TestTimelineGroup.prototype.setup_ = function()
@@ -164,8 +163,12 @@
             var callback = callbacks.shift();
             var status_ = statuses[statuses.length - callbacks.length-1];
 
-            var result = callback.step(callback.f);
-            callback.done();
+            if (typeof callback == "function") {
+                callback();
+            } else {
+                var result = callback.step(callback.f);
+                callback.done();
+            }
 
             if (result === undefined || result == null) {
                 overallResult = overallResult && true;
@@ -240,6 +243,9 @@
         this.frameMillis = 1000.0 / 60; //60fps 
 
         this.currentTime_ = -this.frameMillis;
+
+        // Schedule an event at t=0, needed temporarily.
+        this.schedule(0, function() {});
 
         this.reset();
     }
@@ -378,32 +384,29 @@
         var events = this.timeline_.slice(0);
 
         // Already processed events
-        while (events.length > 0 && events[0].millis < this.currentTime_)
+        while (events.length > 0 && events[0].millis <= this.currentTime_)
         {
             events.shift();
         }
 
         while (this.currentTime_ < millis)
         {
-            var nextTick = Math.min(this.currentTime_ + this.frameMillis, millis);
+            var event_ = null;
+            var moveTo = millis;
 
-            while (events.length > 0 && events[0].millis <= nextTick)
-            {
-                var event_ = events.shift();
-
-                // Call the callback
-                if (this.currentTime_ != event_.millis) {
-                    this.currentTime_ = event_.millis;
-                    this.animationFrame(this.currentTime_);
-                }
-                event_.call();
+            if (events.length > 0 && events[0].millis <= millis) {
+                event_ = events.shift();
+                moveTo = event_.millis;
             }
 
-            if (this.currentTime_ != nextTick) {
-                this.currentTime_ = nextTick;
-                if (this.everyFrame) {
-                    this.animationFrame(this.currentTime_);
-                }
+            // Call the callback
+            if (this.currentTime_ != moveTo) {
+                this.currentTime_ = moveTo;
+                this.animationFrame(this.currentTime_);
+            }
+
+            if (event_) {
+                event_.call();
             }
         }
 
@@ -418,6 +421,14 @@
      */
     TestTimeline.prototype.animationFrame = function(millis)
     {
+        /* FIXME(mithro): Code should appear here to allow testing of running
+         * every animation frame.
+
+        if (this.everyFrame) {
+        }
+
+        */
+
         var callbacks = this.animationFrameCallbacks;
         callbacks.reverse();
         this.animationFrameCallbacks = [];
