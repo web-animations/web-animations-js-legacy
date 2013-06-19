@@ -73,9 +73,9 @@ test(function() {assert_equals(seqGroupClone.children[1].iterationDuration, 1.0)
 
 // Child
 var childClone = anim.clone();
-test(function() {assert_equals(anim.parentGroup, seqGroup)},
+test(function() {assert_equals(anim.parent, seqGroup)},
      "Child clone should not equal seqGroup");
-test(function() {assert_equals(childClone.parentGroup, null)},
-     "Child clone should not take parentGroup");
+test(function() {assert_equals(childClone.parent, null)},
+     "Child clone should not take parent");
 
 </script>
