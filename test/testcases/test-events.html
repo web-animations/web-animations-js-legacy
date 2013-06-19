@@ -1,0 +1,83 @@
+<!--
+Copyright 2013 Google Inc. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<!DOCTYPE html>
+<style>
+div.anim {
+  position: relative;
+  left: 0px;
+  width: 100px;
+  height: 100px;
+  background-color: green;
+}
+</style>
+<!--<script src="../testharness_bootstrap.js"></script>-->
+<script src="../../web-animations.js"></script>
+<script>
+"use strict";
+function testTiming(timing, expectedEvents) {
+  var target = document.createElement('div');
+  target.classList.add('anim');
+  document.documentElement.appendChild(target);
+
+  var eventList = [];
+
+  var animation = new Animation(target, {left: '100px'}, timing); 
+  animation.onstart = function(e) { e.type = 'start'; eventList.push(e); }
+  animation.oniteration = function(e) { e.type = 'iteration'; eventList.push(e); }
+  animation.onend = function(e) { e.type = 'end'; eventList.push(e); }
+  var player = document.timeline.play(animation);
+
+  setTimeout(function() { assertEventsMatch(eventList, expectedEvents); }, 1500);
+}
+
+function assertEventsMatch(events, expectations) {
+  for (var i = 0; i < expectations.length; i++) {
+  }
+}
+
+function EventExpectation(type, local, global, iteration) {
+  this.type = type;
+  this.localTime = local;
+  this.timelineTime = global;
+  this.iterationIndex = iteration;
+};
+
+function ee(type, local, global, iteration) {
+  return new EventExpectation(type, local, global, iteration);
+}
+
+function eel(localStart, globalStart, iterStart, delta, count) {
+  var expectations = [];
+  for (var i = 0; i < count; i++) {
+    expectations.push(new EventExpectation('iteration', localStart, globalStart, iterStart));
+    localStart += delta;
+    globalStart += delta;
+    iterStart ++;
+  }
+  return expectations;
+}
+
+testTiming({duration: 0.2, iterationCount: 5}, 
+  [ee('start', 0, 0, 0)].concat(eel(0.2, 0.2, 1, 0.2, 3))
+                        .concat([ee('end', 1, 1, 4)]));
+
+testTiming(1);
+testTiming({duration: 0.4, iterationStart: 0.5, iterationCount: 2.5});
+testTiming({duration: 0.4, iterationStart: 0.3, iterationCount: 2.5});
+testTiming({duration: 0.4, iterationStart: 0.7, iterationCount: 2.5});
+testTiming({duration: 0.5, startDelay: 0.5});
+</script>

@@ -225,6 +225,7 @@ var Player = function(token, source, timeline) {
 
   this.source = source;
   this._checkForHandlers();
+  this._lastCurrentTime = this._startTime;
 
   PLAYERS.push(this);
   maybeRestartAnimation();
@@ -363,7 +364,16 @@ Player.prototype = {
   },
   _checkForHandlers: function() {
     this._needsHandlerPass = this.source !== null && this.source._hasHandler();
-  }
+  },
+  _generateEvents: function(eventList) {
+    if (this._needsHandlerPass) {
+      var timeDelta = this._currentTime - this._lastCurrentTime;
+      if (timeDelta > 0) {
+        this.source._generateEvents(timeDelta, this.timeline.currentTime, 1);
+      }
+    }
+    this._lastCurrentTime = this._currentTime;
+  },
 };
 
 
@@ -705,7 +715,113 @@ TimedItem.prototype = {
       isDefinedAndNotNull(this._endHandler) ||
       isDefinedAndNotNull(this._cancelHandler);
   },
+  _generateChildEventsForRange: function() { },
+  _generateEvents: function(timeDelta, globalTime, deltaScale) {
+    function toGlobal(time) {
+      return (globalTime - (this._inheritedTime - time) / deltaScale);
+    }
+    toGlobal = toGlobal.bind(this);
+    var fromTime = this._inheritedTime - timeDelta;
+    var toTime = this._inheritedTime;
+    var firstIteration = Math.floor(this.timing.iterationStart);
+    var lastIteration = Math.floor(this.timing.iterationStart +
+        this.timing.iterationCount);
+    if (lastIteration == this.timing.iterationStart + 
+      this.timing.iterationCount) {
+        lastIteration -= 1;
+    }
+    var startTime = this.startTime + this.timing.startDelay;
+
+    if (isDefinedAndNotNull(this.onstart)) {
+      if (fromTime <= startTime && toTime > startTime) {
+        this.onstart(new TimingEvent(constructorToken, this, 
+            this.timing.startDelay, toGlobal(startTime), firstIteration));
+      } else if (fromTime > this.endTime && toTime <= this.endTime) {
+        this.onstart(new TimingEvent(constructorToken, this,
+            this.endTime - this.startTime, toGlobal(this.endTime),
+            lastIteration));
+      }
+    }
+
+    if (isDefinedAndNotNull(this.onend)) {
+      if (fromTime <= this.endTime && toTime > this.endTime) {
+        this.onend(new TimingEvent(constructorToken, this, 
+            this.endTime - this.startTime, toGlobal(this.endTime),
+            lastIteration));
+      } else if (fromTime > startTime && toTime <= startTime) {
+        this.onend(new TimingEvent(constructorToken, this, 
+            this.timing.startDelay, toGlobal(startTime), firstIteration));
+      }
+    }
+
+    var iterationTimes = [];
+    for (var i = firstIteration + 1; i <= lastIteration; i++) {
+      iterationTimes.push(i - this.timing.iterationStart);
+    }
+    iterationTimes = iterationTimes.map(function(i) {
+      return i * this.duration + startTime;
+    }.bind(this));
+    if (iterationTimes.length > 0 && iterationTimes[0] > startTime) {
+      this._generateChildEventsForRange(startTime, iterationTimes[0], timeDelta,
+        globalTime, deltaScale);
+    }
+    for (var i = 0; i < iterationTimes.length; i++) {
+      if (fromTime <= iterationTimes[i] && toTime > iterationTimes[i] &&
+        isDefinedAndNotNull(this.oniteration)) {
+        this.oniteration(new TimingEvent(constructorToken, this, 
+          iterationTimes[i] - this.startTime, toGlobal(iterationTimes[i]),
+          i + firstIteration + 1));
+      }
+      if (i + 1 < iterationTimes.length) {
+        this._generateChildEventsForRange(iterationTimes[i], iterationTimes[i + 1],
+          timeDelta, globalTime, deltaScale);
+      }
+    }
+    if (iterationTimes.length > 0 && iterationTimes[i - 1] < this.endTime) {
+      this._generateChildEventsForRange(iterationTimes[i - 1], this.endTime,
+        timeDelta, globalTime, deltaScale);
+    } else if (iterationTimes.length == 0) {
+      this._generateChildEventsForRange(startTime, this.endTime, timeDelta,
+        globalTime, deltaScale);
+    }
+
+    if (iterationTimes.length > 0 && iterationTimes[i - 1] < this.endTime) {
+      this._generateChildEventsForRange(this.endTime, iterationTimes[i - 1],
+        timeDelta, globalTime, deltaScale);
+    }
+    for (var i = iterationTimes.length - 1; i >= 0; i--) {
+      if (fromTime > iterationTimes[i] && toTime <= iterationTimes[i] &&
+        isDefinedAndNotNull(this.oniteration)) {
+        this.oniteration(new TimingEvent(constructorToken, this,
+          iterationTimes[i] - this.startTime, toGlobal(iterationTimes[i]),
+          i + firstIteration));
+      }
+      if (i > 0) {
+        this._generateChildEventsForRange(iterationTimes[i], iterationTimes[i - 1],
+          timeDelta, globalTime, deltaScale);
+      }
+    }
+
+    if (iterationTimes.length > 0 && iterationTimes[0] > startTime) {
+      this._generateChildEventsForRange(iterationTimes[0], startTime, timeDelta,
+        globalTime, deltaScale);
+    } else if (iterationTimes.length == 0) {
+      this._generateChildEventsForRange(this.endTime, startTime, timeDelta,
+        globalTime, deltaScale);
+    }
+  },
 };
+
+var TimingEvent = function(token, target, localTime, timelineTime, iterationIndex, seeked) {
+  if (token !== constructorToken) {
+    throw new TypeError('Illegal constructor');
+  }
+  this.target = target;
+  this.localTime = localTime;
+  this.timelineTime = timelineTime;
+  this.iterationIndex = iterationIndex;
+  this.seeked = seeked ? true : false;
+}
 
 var isCustomAnimationEffect = function(animationEffect) {
   // TODO: How does WebIDL actually differentiate different callback interfaces?
@@ -1014,7 +1130,38 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
       (this.children.length > 0 &&
         this.children.map(function(a) { return a._hasHandler(); }).reduce(
           function(a, b) { return a || b }));
-  }
+  },
+  _generateChildEventsForRange: function(rangeStart, rangeEnd, timeDelta,
+    globalTime, deltaScale) {
+    // If our range is not going in the same direction as the delta then
+    // ignore.
+    if ((timeDelta > 0) === (rangeStart > rangeEnd)) {
+      return;
+    }
+
+    var start = this.currentTime - timeDelta;
+    var end = this.currentTime;
+
+    if (timeDelta < 0) {
+      start = Math.max(rangeStart, start);
+      end = Math.min(rangeEnd, end);
+      if (start >= end) {
+        return;
+      }
+    } else {
+      start = Math.min(rangeStart, start);
+      end = Math.max(rangeEnd, end);
+      if (start <= end) {
+        return;
+      }
+    }
+
+    var newDelta = end - start;
+
+    for (var i = 0; i < this.children.length; i++) {
+      _generateEvents(newDelta, globalTime + (end - this.currentTime) / deltaScale, deltaScale);
+    }
+  },
 });
 
 /** @constructor */
@@ -3314,6 +3461,12 @@ var ticker = function(rafTime, isRepeat) {
       animations[i]._sample();
     }
   }
+
+  var eventList = [];
+  // Generate events
+  sortedPlayers.forEach(function(player) {
+    player._generateEvents(eventList);
+  });
 
   // Composite animated values into element styles
   compositor.applyAnimatedValues();
