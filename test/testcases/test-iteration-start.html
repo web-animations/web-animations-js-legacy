@@ -138,20 +138,9 @@ for (var i = 0; i < containers.length; i++) {
   groups[i].append(new Animation(container.getElementsByClassName("a")[0],
       {left: ["100px", "300px"]},
       {iterationDuration: 1, iterationCount: 3.1, iterationStart: 0.3}));
-  try {
-    // Test that iterationStart has a lower bound of zero.
-    groups[i].append(new Animation(container.getElementsByClassName("b")[0],
-        {left: ["100px", "300px"]},
-        {iterationDuration: 1, iterationCount: 3.4, iterationStart: -0.2}));
-  } catch (e) {
-    if (e.name == "IndexSizeError") {
-      container.getElementsByClassName("b")[0].style["background-color"] =
-          "lightsteelblue";
-      if (i == 0 || i == 3) {
-        container.getElementsByClassName("b")[0].style["left"] = "180px";
-      }
-    }
-  }
+  groups[i].append(new Animation(container.getElementsByClassName("b")[0],
+      {left: ["100px", "300px"]},
+      {iterationDuration: 1, iterationCount: 3.4, iterationStart: -0.2}));
   // Test that iterationStart is not clipped to iterationCount.
   groups[i].append(new Animation(container.getElementsByClassName("c")[0],
       {left: ["100px", "300px"]},
