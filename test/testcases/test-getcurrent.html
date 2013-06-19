@@ -1,0 +1,234 @@
+<!--
+/*
+ * Copyright 2013 Google Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+-->
+
+<!DOCTYPE html>
+<style>
+.ball {
+  position: absolute;
+  color: white;
+  width: 3em;
+  height: 3em;
+  background-color: black;
+  border-radius: 100%;
+  text-align: center;
+}
+
+#a { top: 0px; }
+#b { top: 50px; }
+</style>
+
+<div id="a" class="ball">A</div>
+<div id="b" class="ball">B</div>
+
+<script src="../testharness_bootstrap.js"></script>
+<script src="../../web-animations.js"></script>
+<script>
+"use strict";
+
+var a = document.querySelector("#a");
+var b = document.querySelector("#b");
+
+var animationA = new Animation(a, {"left": "100%"}, {iterationDuration: 10});
+var animationB = new Animation(b, {"left": "100%"}, {iterationDuration: 10});
+var animationAClone = animationA.clone();
+var animationBClone = animationB.clone();
+
+var playerA;
+testharness_timeline.schedule(1000, function() {
+  playerA = document.timeline.play(animationA);
+});
+var playerB;
+testharness_timeline.schedule(2000, function() {
+  playerB = document.timeline.play(animationB);
+});
+var playerAB;
+testharness_timeline.schedule(3000, function() {
+  playerAB = document.timeline.play(new ParGroup([animationAClone, animationBClone]));
+});
+
+test_at(0, function () {
+    assert_equals(document.timeline.getCurrentPlayers().length, 0, "document.timeline.getCurrentPlayers() length");
+    assert_equals(a.getCurrentPlayers().length, 0, "a.getCurrentPlayers() length");
+    assert_equals(b.getCurrentPlayers().length, 0, "b.getCurrentPlayers() length");
+  }, "Check current players at t=0");
+test_at(1, function () {
+    assert_equals(document.timeline.getCurrentPlayers().length, 1, "document.timeline.getCurrentPlayers() length");
+    assert_in_array(playerA, document.timeline.getCurrentPlayers(), "document.timeline.getCurrentPlayers() contains playerA");
+    assert_equals(a.getCurrentPlayers().length, 1, "a.getCurrentPlayers() length");
+    assert_in_array(playerA, a.getCurrentPlayers(), "a.getCurrentPlayers() contains playerA");
+    assert_equals(b.getCurrentPlayers().length, 0, "b.getCurrentPlayers() length");
+  }, "Check current players at t=1");
+test_at(2, function () {
+    assert_equals(document.timeline.getCurrentPlayers().length, 2, "document.timeline.getCurrentPlayers() length");
+    assert_in_array(playerA, document.timeline.getCurrentPlayers(), "document.timeline.getCurrentPlayers() contains playerA");
+    assert_in_array(playerB, document.timeline.getCurrentPlayers(), "document.timeline.getCurrentPlayers() contains playerB");
+    assert_equals(a.getCurrentPlayers().length, 1, "a.getCurrentPlayers() length");
+    assert_in_array(playerA, a.getCurrentPlayers(), "a.getCurrentPlayers() contains playerA");
+    assert_equals(b.getCurrentPlayers().length, 1, "b.getCurrentPlayers() length");
+    assert_in_array(playerB, b.getCurrentPlayers(), "b.getCurrentPlayers() contains playerB");
+  }, "Check current players at t=2");
+test_at(3, function () {
+    assert_equals(document.timeline.getCurrentPlayers().length, 3, "document.timeline.getCurrentPlayers() length");
+    assert_in_array(playerA, document.timeline.getCurrentPlayers(), "document.timeline.getCurrentPlayers() contains playerA");
+    assert_in_array(playerB, document.timeline.getCurrentPlayers(), "document.timeline.getCurrentPlayers() contains playerB");
+    assert_in_array(playerAB, document.timeline.getCurrentPlayers(), "document.timeline.getCurrentPlayers() contains playerAB");
+    assert_equals(a.getCurrentPlayers().length, 2, "a.getCurrentPlayers() length");
+    assert_in_array(playerA, a.getCurrentPlayers(), "a.getCurrentPlayers() contains playerA");
+    assert_in_array(playerAB, a.getCurrentPlayers(), "a.getCurrentPlayers() contains playerAB");
+    assert_equals(b.getCurrentPlayers().length, 2, "b.getCurrentPlayers() length");
+    assert_in_array(playerB, b.getCurrentPlayers(), "b.getCurrentPlayers() contains playerB");
+    assert_in_array(playerAB, b.getCurrentPlayers(), "b.getCurrentPlayers() contains playerAB");
+  }, "Check current players at t=3");
+test_at(5, function () {
+    assert_equals(document.timeline.getCurrentPlayers().length, 3, "document.timeline.getCurrentPlayers() length");
+    assert_in_array(playerA, document.timeline.getCurrentPlayers(), "document.timeline.getCurrentPlayers() contains playerA");
+    assert_in_array(playerB, document.timeline.getCurrentPlayers(), "document.timeline.getCurrentPlayers() contains playerB");
+    assert_in_array(playerAB, document.timeline.getCurrentPlayers(), "document.timeline.getCurrentPlayers() contains playerAB");
+    assert_equals(a.getCurrentPlayers().length, 2, "a.getCurrentPlayers() length");
+    assert_in_array(playerA, a.getCurrentPlayers(), "a.getCurrentPlayers() contains playerA");
+    assert_in_array(playerAB, a.getCurrentPlayers(), "a.getCurrentPlayers() contains playerAB");
+    assert_equals(b.getCurrentPlayers().length, 2, "b.getCurrentPlayers() length");
+    assert_in_array(playerB, b.getCurrentPlayers(), "b.getCurrentPlayers() contains playerB");
+    assert_in_array(playerAB, b.getCurrentPlayers(), "b.getCurrentPlayers() contains playerAB");
+  }, "Check current players at t=5");
+test_at(11, function () {
+    assert_equals(document.timeline.getCurrentPlayers().length, 3, "document.timeline.getCurrentPlayers() length");
+    assert_in_array(playerA, document.timeline.getCurrentPlayers(), "document.timeline.getCurrentPlayers() contains playerA");
+    assert_in_array(playerB, document.timeline.getCurrentPlayers(), "document.timeline.getCurrentPlayers() contains playerB");
+    assert_in_array(playerAB, document.timeline.getCurrentPlayers(), "document.timeline.getCurrentPlayers() contains playerAB");
+    assert_equals(a.getCurrentPlayers().length, 2, "a.getCurrentPlayers() length");
+    assert_in_array(playerA, a.getCurrentPlayers(), "a.getCurrentPlayers() contains playerA");
+    assert_in_array(playerAB, a.getCurrentPlayers(), "a.getCurrentPlayers() contains playerAB");
+    assert_equals(b.getCurrentPlayers().length, 2, "b.getCurrentPlayers() length");
+    assert_in_array(playerB, b.getCurrentPlayers(), "b.getCurrentPlayers() contains playerB");
+    assert_in_array(playerAB, b.getCurrentPlayers(), "b.getCurrentPlayers() contains playerAB");
+  }, "Check current players at t=11");
+test_at(11.5, function () {
+    assert_equals(document.timeline.getCurrentPlayers().length, 2, "document.timeline.getCurrentPlayers() length");
+    assert_in_array(playerB, document.timeline.getCurrentPlayers(), "document.timeline.getCurrentPlayers() contains playerB");
+    assert_in_array(playerAB, document.timeline.getCurrentPlayers(), "document.timeline.getCurrentPlayers() contains playerAB");
+    assert_equals(a.getCurrentPlayers().length, 1, "a.getCurrentPlayers() length");
+    assert_in_array(playerAB, a.getCurrentPlayers(), "a.getCurrentPlayers() contains playerAB");
+    assert_equals(b.getCurrentPlayers().length, 2, "b.getCurrentPlayers() length");
+    assert_in_array(playerB, b.getCurrentPlayers(), "b.getCurrentPlayers() contains playerB");
+    assert_in_array(playerAB, b.getCurrentPlayers(), "b.getCurrentPlayers() contains playerAB");
+  }, "Check current players at t=11.5");
+test_at(12, function () {
+    assert_equals(document.timeline.getCurrentPlayers().length, 2, "document.timeline.getCurrentPlayers() length");
+    assert_in_array(playerB, document.timeline.getCurrentPlayers(), "document.timeline.getCurrentPlayers() contains playerB");
+    assert_in_array(playerAB, document.timeline.getCurrentPlayers(), "document.timeline.getCurrentPlayers() contains playerAB");
+    assert_equals(a.getCurrentPlayers().length, 1, "a.getCurrentPlayers() length");
+    assert_in_array(playerAB, a.getCurrentPlayers(), "a.getCurrentPlayers() contains playerAB");
+    assert_equals(b.getCurrentPlayers().length, 2, "b.getCurrentPlayers() length");
+    assert_in_array(playerB, b.getCurrentPlayers(), "b.getCurrentPlayers() contains playerB");
+    assert_in_array(playerAB, b.getCurrentPlayers(), "b.getCurrentPlayers() contains playerAB");
+  }, "Check current players at t=12");
+test_at(12.5, function () {
+    assert_equals(document.timeline.getCurrentPlayers().length, 1, "document.timeline.getCurrentPlayers() length");
+    assert_in_array(playerAB, document.timeline.getCurrentPlayers(), "document.timeline.getCurrentPlayers() contains playerAB");
+    assert_equals(a.getCurrentPlayers().length, 1, "a.getCurrentPlayers() length");
+    assert_in_array(playerAB, a.getCurrentPlayers(), "a.getCurrentPlayers() contains playerAB");
+    assert_equals(b.getCurrentPlayers().length, 1, "b.getCurrentPlayers() length");
+    assert_in_array(playerAB, b.getCurrentPlayers(), "b.getCurrentPlayers() contains playerAB");
+  }, "Check current players at t=12.5");
+test_at(13, function () {
+    assert_equals(document.timeline.getCurrentPlayers().length, 1, "document.timeline.getCurrentPlayers() length");
+    assert_in_array(playerAB, document.timeline.getCurrentPlayers(), "document.timeline.getCurrentPlayers() contains playerAB");
+    assert_equals(a.getCurrentPlayers().length, 1, "a.getCurrentPlayers() length");
+    assert_in_array(playerAB, a.getCurrentPlayers(), "a.getCurrentPlayers() contains playerAB");
+    assert_equals(b.getCurrentPlayers().length, 1, "b.getCurrentPlayers() length");
+    assert_in_array(playerAB, b.getCurrentPlayers(), "b.getCurrentPlayers() contains playerAB");
+  }, "Check current players at t=13");
+test_at(13.5, function () {
+    assert_equals(document.timeline.getCurrentPlayers().length, 0, "document.timeline.getCurrentPlayers() length");
+    assert_equals(a.getCurrentPlayers().length, 0, "a.getCurrentPlayers() length");
+    assert_equals(b.getCurrentPlayers().length, 0, "b.getCurrentPlayers() length");
+  }, "Check current players at t=13.5");
+
+
+test_at(0, function () {
+    assert_equals(a.getCurrentAnimations().length, 0, "a.getCurrentAnimations() length");
+    assert_equals(b.getCurrentAnimations().length, 0, "b.getCurrentAnimations() length");
+  }, "Check current animations at t=0");
+test_at(1, function () {
+    assert_equals(a.getCurrentAnimations().length, 1, "a.getCurrentAnimations() length");
+    assert_in_array(animationA, a.getCurrentAnimations(), "a.getCurrentAnimations() contains animationA");
+    assert_equals(b.getCurrentAnimations().length, 0, "b.getCurrentAnimations() length");
+  }, "Check current animations at t=1");
+test_at(2, function () {
+    assert_equals(a.getCurrentAnimations().length, 1, "a.getCurrentAnimations() length");
+    assert_in_array(animationA, a.getCurrentAnimations(), "a.getCurrentAnimations() contains animationA");
+    assert_equals(b.getCurrentAnimations().length, 1, "b.getCurrentAnimations() length");
+    assert_in_array(animationB, b.getCurrentAnimations(), "b.getCurrentAnimations() contains animationB");
+  }, "Check current animations at t=2");
+test_at(3, function () {
+    assert_equals(a.getCurrentAnimations().length, 2, "a.getCurrentAnimations() length");
+    assert_in_array(animationA, a.getCurrentAnimations(), "a.getCurrentAnimations() contains animationA");
+    assert_in_array(animationAClone, a.getCurrentAnimations(), "a.getCurrentAnimations() contains animationAClone");
+    assert_equals(b.getCurrentAnimations().length, 2, "b.getCurrentAnimations() length");
+    assert_in_array(animationB, b.getCurrentAnimations(), "b.getCurrentAnimations() contains animationB");
+    assert_in_array(animationBClone, b.getCurrentAnimations(), "b.getCurrentAnimations() contains animationBClone");
+  }, "Check current animations at t=3");
+test_at(5, function () {
+    assert_equals(a.getCurrentAnimations().length, 2, "a.getCurrentAnimations() length");
+    assert_in_array(animationA, a.getCurrentAnimations(), "a.getCurrentAnimations() contains animationA");
+    assert_in_array(animationAClone, a.getCurrentAnimations(), "a.getCurrentAnimations() contains animationAClone");
+    assert_equals(b.getCurrentAnimations().length, 2, "b.getCurrentAnimations() length");
+    assert_in_array(animationB, b.getCurrentAnimations(), "b.getCurrentAnimations() contains animationB");
+    assert_in_array(animationBClone, b.getCurrentAnimations(), "b.getCurrentAnimations() contains animationBClone");
+  }, "Check current animations at t=5");
+test_at(11, function () {
+    assert_equals(a.getCurrentAnimations().length, 2, "a.getCurrentAnimations() length");
+    assert_in_array(animationA, a.getCurrentAnimations(), "a.getCurrentAnimations() contains animationA");
+    assert_in_array(animationAClone, a.getCurrentAnimations(), "a.getCurrentAnimations() contains animationAClone");
+    assert_equals(b.getCurrentAnimations().length, 2, "b.getCurrentAnimations() length");
+    assert_in_array(animationB, b.getCurrentAnimations(), "b.getCurrentAnimations() contains animationB");
+    assert_in_array(animationBClone, b.getCurrentAnimations(), "b.getCurrentAnimations() contains animationBClone");
+  }, "Check current animations at t=11");
+test_at(11.5, function () {
+    assert_equals(a.getCurrentAnimations().length, 1, "a.getCurrentAnimations() length");
+    assert_in_array(animationAClone, a.getCurrentAnimations(), "a.getCurrentAnimations() contains animationAClone");
+    assert_equals(b.getCurrentAnimations().length, 2, "b.getCurrentAnimations() length");
+    assert_in_array(animationB, b.getCurrentAnimations(), "b.getCurrentAnimations() contains animationB");
+    assert_in_array(animationBClone, b.getCurrentAnimations(), "b.getCurrentAnimations() contains animationBClone");
+  }, "Check current animations at t=11.5");
+test_at(12, function () {
+    assert_equals(a.getCurrentAnimations().length, 1, "a.getCurrentAnimations() length");
+    assert_in_array(animationAClone, a.getCurrentAnimations(), "a.getCurrentAnimations() contains animationAClone");
+    assert_equals(b.getCurrentAnimations().length, 2, "b.getCurrentAnimations() length");
+    assert_in_array(animationB, b.getCurrentAnimations(), "b.getCurrentAnimations() contains animationB");
+    assert_in_array(animationBClone, b.getCurrentAnimations(), "b.getCurrentAnimations() contains animationBClone");
+  }, "Check current animations at t=12");
+test_at(12.5, function () {
+    assert_equals(a.getCurrentAnimations().length, 1, "a.getCurrentAnimations() length");
+    assert_in_array(animationAClone, a.getCurrentAnimations(), "a.getCurrentAnimations() contains animationAClone");
+    assert_equals(b.getCurrentAnimations().length, 1, "b.getCurrentAnimations() length");
+    assert_in_array(animationBClone, b.getCurrentAnimations(), "b.getCurrentAnimations() contains animationBClone");
+  }, "Check current animations at t=12.5");
+test_at(13, function () {
+    assert_equals(a.getCurrentAnimations().length, 1, "a.getCurrentAnimations() length");
+    assert_in_array(animationAClone, a.getCurrentAnimations(), "a.getCurrentAnimations() contains animationAClone");
+    assert_equals(b.getCurrentAnimations().length, 1, "b.getCurrentAnimations() length");
+    assert_in_array(animationBClone, b.getCurrentAnimations(), "b.getCurrentAnimations() contains animationBClone");
+  }, "Check current animations at t=13");
+test_at(13.5, function () {
+    assert_equals(a.getCurrentAnimations().length, 0, "a.getCurrentAnimations() length");
+    assert_equals(b.getCurrentAnimations().length, 0, "b.getCurrentAnimations() length");
+  }, "Check current animations at t=13.5");
+
+</script>
