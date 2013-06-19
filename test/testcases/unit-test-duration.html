@@ -63,11 +63,11 @@ anim.specified.iterationDuration = 6.0;
 test(function() {assert_equals(anim.iterationDuration,  6.0)},
      "Animation failed to override Timing.iterationDuration");
 anim.specified.iterationDuration = 7.0;
-test(function() {assert_equals(anim.iterationDuration,  6.0)},
+test(function() {assert_equals(anim.iterationDuration,  7.0)},
      "Animation Timing.iterationDuration should be overriden with 7.0");
 anim.specified.iterationDuration = null;
-test(function() {assert_equals(anim.iterationDuration,  null)},
-     "Animation Timing.iterationDuration should be overriden with null");
+test(function() {assert_equals(anim.iterationDuration, 0)},
+     "Animation Timing.iterationDuration should be overriden with 0");
 anim.iterationDuration = undefined;
 test(function() {assert_equals(anim.iterationDuration,  7.0)},
      "Animation Timing.iterationDuration should no longer be overriden");
