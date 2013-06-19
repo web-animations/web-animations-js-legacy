@@ -45,6 +45,9 @@ function testTiming(timing, expectedEvents) {
 }
 
 function assertEventsMatch(events, expectations) {
+  if (!expectations) {
+    return;
+  }
   for (var i = 0; i < expectations.length; i++) {
   }
 }

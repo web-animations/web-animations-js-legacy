@@ -723,19 +723,19 @@ TimedItem.prototype = {
     toGlobal = toGlobal.bind(this);
     var fromTime = this._inheritedTime - timeDelta;
     var toTime = this._inheritedTime;
-    var firstIteration = Math.floor(this.timing.iterationStart);
-    var lastIteration = Math.floor(this.timing.iterationStart +
-        this.timing.iterationCount);
-    if (lastIteration == this.timing.iterationStart + 
-      this.timing.iterationCount) {
+    var firstIteration = Math.floor(this.specified.iterationStart);
+    var lastIteration = Math.floor(this.specified.iterationStart +
+        this.specified.iterationCount);
+    if (lastIteration == this.specified.iterationStart + 
+      this.specified.iterationCount) {
         lastIteration -= 1;
     }
-    var startTime = this.startTime + this.timing.startDelay;
+    var startTime = this.startTime + this.specified.startDelay;
 
     if (isDefinedAndNotNull(this.onstart)) {
       if (fromTime <= startTime && toTime > startTime) {
         this.onstart(new TimingEvent(constructorToken, this, 
-            this.timing.startDelay, toGlobal(startTime), firstIteration));
+            this.specified.startDelay, toGlobal(startTime), firstIteration));
       } else if (fromTime > this.endTime && toTime <= this.endTime) {
         this.onstart(new TimingEvent(constructorToken, this,
             this.endTime - this.startTime, toGlobal(this.endTime),
@@ -750,13 +750,13 @@ TimedItem.prototype = {
             lastIteration));
       } else if (fromTime > startTime && toTime <= startTime) {
         this.onend(new TimingEvent(constructorToken, this, 
-            this.timing.startDelay, toGlobal(startTime), firstIteration));
+            this.specified.startDelay, toGlobal(startTime), firstIteration));
       }
     }
 
     var iterationTimes = [];
     for (var i = firstIteration + 1; i <= lastIteration; i++) {
-      iterationTimes.push(i - this.timing.iterationStart);
+      iterationTimes.push(i - this.specified.iterationStart);
     }
     iterationTimes = iterationTimes.map(function(i) {
       return i * this.duration + startTime;
