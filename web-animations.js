@@ -606,7 +606,7 @@ TimedItem.prototype = {
         this._player : this.parent.player;
   },
   _isCurrent: function() {
-    return !this._isPastEndOfActiveInterval() || (this.parentGroup !== null && this.parentGroup._isCurrent());
+    return !this._isPastEndOfActiveInterval() || (this.parent !== null && this.parent._isCurrent());
   },
   _isTargetingElement: function(element) {
     throw new Error(
