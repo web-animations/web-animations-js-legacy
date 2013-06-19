@@ -36,7 +36,7 @@ limitations under the License.
 <script src="../../web-animations.js"></script>
 <script>
 "use strict";
-// TODO: refactor into test harness
+
 function detectFeatures() {
   var style = document.createElement('style');
   style.textContent = '' +
@@ -107,8 +107,6 @@ for (var i = 0; i < transformValues.length; i++) {
   }
   y += separation_y;
 }
-</script>
-<script>
-"use strict";
+
 animations.forEach(function(anim) { document.timeline.play(anim); });
 </script>
