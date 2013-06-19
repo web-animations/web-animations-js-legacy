@@ -37,7 +37,7 @@ test(function() {assert_equals(anim.duration,  1.0)},
 // ParGroup
 test(function() {assert_equals(parGroup.duration,  0.0)},
      "ParGroup duration should use intrinsic value");
-parGroup.add(anim);
+parGroup.append(anim);
 test(function() {assert_equals(parGroup.duration,  3.0)},
      "ParGroup duration should be derived from child");
 parGroup.timing.duration = 2.0;
@@ -46,7 +46,7 @@ test(function() {assert_equals(parGroup.duration,  2.0)},
 // SeqGroup
 test(function() {assert_equals(seqGroup.duration,  0.0)},
      "SeqGroup duration should use intrinsic value");
-seqGroup.add(anim);
+seqGroup.append(anim);
 test(function() {assert_equals(seqGroup.duration,  3.0)},
      "SeqGroup duration should be derived from child");
 seqGroup.timing.duration = 4.0;
@@ -72,7 +72,7 @@ anim.duration = undefined;
 test(function() {assert_equals(anim.duration,  7.0)},
      "Animation Timing.duration should no longer be overriden");
 // ParGroup
-parGroup.add(anim);
+parGroup.append(anim);
 parGroup.timing.duration = 8.0;
 test(function() {assert_equals(parGroup.duration,  8.0)},
      "ParGroup Failed to update duration");
@@ -89,7 +89,7 @@ parGroup.duration = undefined;
 test(function() {assert_equals(parGroup.duration,  10.0)},
      "ParGroup Timing.duration should no longer be overriden");
 // SeqGroup
-seqGroup.add(anim);
+seqGroup.append(anim);
 seqGroup.timing.duration = 11.0;
 test(function() {assert_equals(seqGroup.duration,  11.0)},
      "SeqGroup Failed to update duration");
