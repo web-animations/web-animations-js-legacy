@@ -61,6 +61,8 @@ testharness_timeline.schedule(3000, function() {
   playerAB = document.timeline.play(new ParGroup([animationAClone, animationBClone]));
 });
 
+// These test_at calls are not in a *-checks.js file so they
+// can be declared after the calls to play() are scheduled.
 test_at(0, function () {
     assert_equals(document.timeline.getCurrentPlayers().length, 0, "document.timeline.getCurrentPlayers() length");
     assert_equals(a.getCurrentPlayers().length, 0, "a.getCurrentPlayers() length");
