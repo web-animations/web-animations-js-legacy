@@ -174,6 +174,9 @@ var Timeline = function(token) {
   }
   // TODO: This will probably need to change.
   this._startTime = documentTimeZeroAsClockTime;
+  if (this._startTime !== undefined) {
+    this._startTime /= 1000;
+  }
 };
 
 Timeline.prototype = {
@@ -182,6 +185,8 @@ Timeline.prototype = {
       this._startTime = documentTimeZeroAsClockTime;
       if (this._startTime === undefined) {
         return null;
+      } else {
+        this._startTime /= 1000;
       }
     }
     return relativeTime(cachedClockTime(), this._startTime);
@@ -2945,7 +2950,7 @@ var ticker = function(rafTime) {
     return;
   }
 
-  cachedClockTimeMillis = relativeTime(rafTime, documentTimeZeroAsRafTime);
+  cachedClockTimeMillis = rafTime;
 
   // Get animations for this sample. We order first by Player start time, and
   // second by DFS order within each Player's tree.
