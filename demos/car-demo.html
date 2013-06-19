@@ -136,19 +136,19 @@
 
   var carAnimation = new SeqGroup([
     new ParGroup([
-      new Animation(document.querySelector("#redLight"), {"background-color": lightOff}, {duration: 0.5}),
-      new Animation(document.querySelector("#greenLight"), {"background-color": "green"}, {duration: 0.5}),
+      new Animation(document.querySelector("#redLight"), {"background-color": lightOff}, {iterationDuration: 0.5}),
+      new Animation(document.querySelector("#greenLight"), {"background-color": "green"}, {iterationDuration: 0.5}),
     ], {}),
-    new Animation(document.querySelector(".car"), {left: "100%"}, {duration: 3, timingFunction: "ease-in"}),
+    new Animation(document.querySelector(".car"), {left: "100%"}, {iterationDuration: 3, timingFunction: "ease-in"}),
     new ParGroup([
-      new Animation(document.querySelector("#greenLight"), {"background-color": lightOff}, {duration: 0.5}),
-      new Animation(document.querySelector("#orangeLight"), {"background-color": "rgb(255,165,0)"}, {duration: 0.5}),
+      new Animation(document.querySelector("#greenLight"), {"background-color": lightOff}, {iterationDuration: 0.5}),
+      new Animation(document.querySelector("#orangeLight"), {"background-color": "rgb(255,165,0)"}, {iterationDuration: 0.5}),
     ], {startDelay: 0.25}),
     new ParGroup([
-      new Animation(document.querySelector("#orangeLight"), {"background-color": lightOff}, {duration: 0.5}),
-      new Animation(document.querySelector("#redLight"), {"background-color": "red"}, {duration: 0.5}),
+      new Animation(document.querySelector("#orangeLight"), {"background-color": lightOff}, {iterationDuration: 0.5}),
+      new Animation(document.querySelector("#redLight"), {"background-color": "red"}, {iterationDuration: 0.5}),
     ], {startDelay: 0.25}),
-    new Animation(document.querySelector(".car"), {left: ["-500px", "10px"]}, {duration: 2, timingFunction: "ease-out"}),
+    new Animation(document.querySelector(".car"), {left: ["-500px", "10px"]}, {iterationDuration: 2, timingFunction: "ease-out"}),
   ]);
 
   document.querySelector("#buttonA").addEventListener('mousedown', function() {
