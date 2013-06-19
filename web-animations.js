@@ -332,7 +332,7 @@ var TimedItem = function(token, timingInput) {
   this._animationTime = null;
   this._startTime = 0.0;
   this._player = null;
-  this._parentGroup = null;
+  this._parent = null;
   this._updateInternalState();
 };
 
@@ -341,8 +341,8 @@ TimedItem.prototype = {
   // call sites to instead rely on a call from the parent.
   get _effectiveParentTime() {
     return
-        this.parentGroup !== null && this.parentGroup._iterationTime !== null ?
-        this.parentGroup._iterationTime : 0;
+        this.parent !== null && this.parent._iterationTime !== null ?
+        this.parent._iterationTime : 0;
   },
   get localTime() {
     return this._inheritedTime === null ?
@@ -368,8 +368,8 @@ TimedItem.prototype = {
   get endTime() {
     return this._startTime + this.activeDuration + this.specified.startDelay;
   },
-  get parentGroup() {
-    return this._parentGroup;
+  get parent() {
+    return this._parent;
   },
   _attach: function(player) {
     // Remove ourselves from our parent, if we have one. This also removes any
@@ -380,21 +380,21 @@ TimedItem.prototype = {
   // Takes care of updating the outgoing parent. This is called with a non-null
   // parent only from TimingGroup.splice(), which takes care of calling
   // TimingGroup._childrenStateModified() for the new parent.
-  _reparent: function(parentGroup) {
-    if (parentGroup === this) {
-      throw new Error('parentGroup can not be set to self!');
+  _reparent: function(parent) {
+    if (parent === this) {
+      throw new Error('parent can not be set to self!');
     }
     if (this._player !== null) {
       this._player.source = null;
       this._player = null;
     }
-    if (this.parentGroup !== null) {
+    if (this.parent !== null) {
       this.remove();
     }
-    this._parentGroup = parentGroup;
+    this._parent = parent;
     // In the case of a SeqGroup parent, _startTime will be updated by
     // TimingGroup.splice().
-    if (this.parentGroup === null || this.parentGroup.type !== 'seq') {
+    if (this.parent === null || this.parent.type !== 'seq') {
       this._startTime =
           this._stashedStartTime === undefined ? 0.0 : this._stashedStartTime;
       this._stashedStartTime = undefined;
@@ -408,8 +408,8 @@ TimedItem.prototype = {
     return 0.0;
   },
   _updateInternalState: function() {
-    if (this.parentGroup) {
-      this.parentGroup._childrenStateModified();
+    if (this.parent) {
+      this.parent._childrenStateModified();
     }
     this._updateTimeMarkers();
   },
@@ -556,24 +556,24 @@ TimedItem.prototype = {
     for (var i = 0; i < arguments.length; i++) {
       newItems.push(arguments[i]);
     }
-    this.parentGroup._splice(this.parentGroup.indexOf(this), 0, newItems);
+    this.parent._splice(this.parent.indexOf(this), 0, newItems);
   },
   after: function() {
     var newItems = [];
     for (var i = 0; i < arguments.length; i++) {
       newItems.push(arguments[i]);
     }
-    this.parentGroup._splice(this.parentGroup.indexOf(this) + 1, 0, newItems);
+    this.parent._splice(this.parent.indexOf(this) + 1, 0, newItems);
   },
   replace: function() {
     var newItems = [];
     for (var i = 0; i < arguments.length; i++) {
       newItems.push(arguments[i]);
     }
-    this.parentGroup._splice(this.parentGroup.indexOf(this), 1, newItems);
+    this.parent._splice(this.parent.indexOf(this), 1, newItems);
   },
   remove: function() {
-    this.parentGroup._splice(this.parentGroup.indexOf(this), 1);
+    this.parent._splice(this.parent.indexOf(this), 1);
   },
   // Gets the leaf TimedItems currently in effect. Note that this is a superset
   // of the leaf TimedItems in their active interval, as a TimedItem can have an
@@ -588,14 +588,14 @@ TimedItem.prototype = {
     return this._inheritedTime > this.endTime;
   },
   get player() {
-    return this.parentGroup === null ?
-        this._player : this.parentGroup.player;
+    return this.parent === null ?
+        this._player : this.parent.player;
   },
   _netEffectivePlaybackRate: function() {
     var effectivePlaybackRate = this._isCurrentDirectionForwards() ?
         this.specified.playbackRate : -this.specified.playbackRate;
-    return this.parentGroup === null ? effectivePlaybackRate :
-        effectivePlaybackRate * this.parentGroup._netEffectivePlaybackRate();
+    return this.parent === null ? effectivePlaybackRate :
+        effectivePlaybackRate * this.parent._netEffectivePlaybackRate();
   },
 };
 
@@ -838,7 +838,7 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
     }
     var result = Array.prototype['splice'].apply(this.children, args);
     for (var i = 0; i < result.length; i++) {
-      result[i]._parentGroup = null;
+      result[i]._parent = null;
     }
     this._lengthChanged();
     this._childrenStateModified();
@@ -846,7 +846,7 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
   },
   _isInclusiveAncestor: function(item) {
     for (var ancestor = this; ancestor != null;
-      ancestor = ancestor.parentGroup) {
+      ancestor = ancestor.parent) {
       if (ancestor === item) {
         return true;
       }
@@ -861,23 +861,23 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
 });
 
 /** @constructor */
-var  ParGroup = function(children, timing, parentGroup) {
-  TimingGroup.call(this, constructorToken, 'par', children, timing, parentGroup);
+var  ParGroup = function(children, timing, parent) {
+  TimingGroup.call(this, constructorToken, 'par', children, timing, parent);
 };
 
 ParGroup.prototype = Object.create(TimingGroup.prototype);
 
 /** @constructor */
-var SeqGroup = function(children, timing, parentGroup) {
-  TimingGroup.call(this, constructorToken, 'seq', children, timing, parentGroup);
+var SeqGroup = function(children, timing, parent) {
+  TimingGroup.call(this, constructorToken, 'seq', children, timing, parent);
 };
 
 SeqGroup.prototype = Object.create(TimingGroup.prototype);
 
 
 /** @constructor */
-var MediaReference = function(mediaElement, timing, parentGroup) {
-  TimedItem.call(this, constructorToken, timing, parentGroup);
+var MediaReference = function(mediaElement, timing, parent) {
+  TimedItem.call(this, constructorToken, timing, parent);
   this._media = mediaElement;
 
   // We can never be sure when _updateInheritedTime() is going to be called
