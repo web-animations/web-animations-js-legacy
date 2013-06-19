@@ -48,7 +48,7 @@ test(function() {assert_equals(anim.endTime,  5.0)},
 
 // Test that updates to a TimedItem's endTime cause re-layout of a parent
 // parallel group.
-anim.specified.iterationDuration = 'auto';
+anim.specified.iterationDuration = 3;
 anim.specified.activeDuration = 'auto';
 var parGroup = new ParGroup([anim]);
 test(function() {assert_equals(parGroup.iterationDuration,  3.0)},
