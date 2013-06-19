@@ -65,7 +65,7 @@ parser.add_argument(
 
 parser.add_argument(
     "--list", action='store_true', default=False,
-    help="List tests which are avalible.")
+    help="List tests which are available.")
 
 parser.add_argument(
     "--load-list", type=argparse.FileType('r'),
@@ -296,12 +296,12 @@ else:
 import subunit, testtools, unittest
 if args.list:
     for test in simplejson.loads(
-            file("test/testcases.js").read()[len("testCases("):-(len(");")+1)]):
+            file("test/testcases.jsonp").read()[len("testCases("):-(len(");")+1)]):
         print test[:-5]
     sys.exit(-1)
 
 if args.load_list:
-    tests = args.load_list.readlines()
+    tests = list(set(x.split(':')[0].strip()+'.html' for x in args.load_list.readlines()))
 else:
     tests = []
 
@@ -323,8 +323,18 @@ else:
     from subunit.v2 import StreamResultToBytes
     pertest = StreamResultToBytes(sys.stdout)
 
-output = subunit.CopyStreamResult([summary, pertest])
+    if args.list:
+        output = subunit.CopyStreamResult([summary, pertest])
+        output.startTestRun()
 
+        for test in simplejson.loads(
+                file("test/testcases.js").read()[len("var tests = "):-5]+']'):
+            output.status(test_status='exists', test_id=test[:-5])
+
+        output.stopTestRun()
+        sys.exit(-1)
+
+output = subunit.CopyStreamResult([summary, pertest])
 output.startTestRun()
 
 # Start up a local HTTP server which serves the files to the browser and
@@ -430,11 +440,11 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
             overall_status += result['status']
             output.status(
-                test_id="%s.%s" % (data['testName'][:-5], result['name']),
+                test_id="%s:%s" % (data['testName'][:-5], result['name']),
                 test_status=self.STATUS[result['status']],
                 test_tags=[args.browser],
                 file_name='message',
-                file_bytes=result['message'],
+                file_bytes=repr(result['message']),
                 mime_type='text/plain; charset=UTF-8',
                 eof=True)
 
@@ -557,7 +567,7 @@ try:
             browser.close()
         raise
 
-    url = 'http://localhost:%i/test/test-runner.html' % port
+    url = 'http://localhost:%i/test/test-runner.html?%s' % (port, "|".join(tests))
     browser.get(url)
 
     def close_other_windows(browser, url):
