@@ -16,6 +16,8 @@
 "use strict";
 
 (function() {
+    setup(function() {}, {explicit_timeout: true});
+
     /**
      * Schedule something to be called at a given time.
      *
@@ -520,8 +522,25 @@
         testharness_timeline.createGUI(document.getElementsByTagName("body")[0]);
         testharness_timeline.start();
         testharness_timeline.updateGUI();
-        // FIXME(mithro): Make this an option using the URI.
-        setTimeout(testharness_timeline.autorun.bind(testharness_timeline), 10);
+
+        // Start running the test on #start=message
+        if (/start=message/.test(window.location.hash)) {
+            window.addEventListener("message", function(evt)
+                {
+                    switch(evt.data['type']) {
+                    case 'start':
+                        if (evt.data['url'] == window.location.href) {
+                            testharness_timeline.autorun();
+                        }
+                        break;
+                    }
+                });
+        // Start running the test on #start=message or no #start= is given.
+        } else if (/start=auto/.test(window.location.hash)
+                  || !(/start=/.test(window.location.hash))) {
+            // Need non-zero timeout to allow chrome to run other code.
+            setTimeout(testharness_timeline.autorun.bind(testharness_timeline), 1);
+        }
     }
     addEventListener('load', testharness_timeline_setup);
 
