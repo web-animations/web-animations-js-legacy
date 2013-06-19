@@ -235,15 +235,24 @@
      */
     function _assert_style_element_list(objects, style, description)
     {
-        forEach(
-            objects,
-            function(object, i)
-            {
+        var error = '';
+        forEach(objects, function(object, i)
+        {
+            try {
                 _assert_style_element(
                     object, _assert_style_get(style, i),
                     description + " " + _element_name(object)
                     );
-            });
+            } catch (e) {
+                if (error) {
+                    error += '; ';
+                }
+                error += _element_name(object) + ' at index ' + i + ' failed ' + e.message + '\n';
+            }
+        });
+        if (error) {
+            throw error;
+        }
     }
 
     /**
