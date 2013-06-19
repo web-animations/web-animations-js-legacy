@@ -172,12 +172,19 @@ var Timeline = function(token) {
   if (token !== constructorToken) {
     throw new TypeError('Illegal constructor');
   }
-  this.startTime = documentTime();
+  // TODO: This will probably need to change.
+  this._startTime = documentTimeZeroAsClockTime;
 };
 
 Timeline.prototype = {
   get currentTime() {
-    return documentTime();
+    if (this._startTime === undefined) {
+      this._startTime = documentTimeZeroAsClockTime;
+      if (this._startTime === undefined) {
+        return null;
+      }
+    }
+    return relativeTime(cachedClockTime(), this._startTime);
   },
   play: function(source) {
     return new Player(constructorToken, source, this);
@@ -188,10 +195,10 @@ Timeline.prototype = {
     });
   },
   toTimelineTime: function(otherTime, other) {
-    if ((this.startTime === null) || (other.startTime === null)) {
+    if ((this.currentTime === null) || (other.currentTime === null)) {
       return null;
     }
-    else return (otherTime + other.startTime - this.startTime);
+    else return (otherTime + other._startTime - this._startTime);
   },
 };
 
@@ -2905,32 +2912,30 @@ if (document.readyState == 'complete') {
   addEventListener('load', function() {
     load();
     if (usePerformanceTiming) {
-      // We use setTimeout() to clear cachedDocumentTimeMillis at the end of a
+      // We use setTimeout() to clear cachedClockTimeMillis at the end of a
       // frame, but this will not run until after other load handlers. We need
       // those handlers to pick up the new value of clockMillis(), so we must
       // clear the cached value.
-      cachedDocumentTimeMillis = undefined;
+      cachedClockTimeMillis = undefined;
     }
   });
 }
 
 // A cached document time for use during the current callstack.
-var cachedDocumentTimeMillis = undefined;
+var cachedClockTimeMillis = undefined;
 // Calculates one time relative to another, returning null if the zero time is
 // undefined.
 var relativeTime = function(time, zeroTime) {
   return isDefined(zeroTime) ? time - zeroTime : null;
 }
 
-var documentTime = function() {
+var cachedClockTime = function() {
   // Cache a document time for the remainder of this callstack.
-  if (!isDefined(cachedDocumentTimeMillis)) {
-    cachedDocumentTimeMillis =
-        relativeTime(clockMillis(), documentTimeZeroAsClockTime);
-    setTimeout(function() { cachedDocumentTimeMillis = undefined; }, 0);
+  if (!isDefined(cachedClockTimeMillis)) {
+    cachedClockTimeMillis = clockMillis();
+    setTimeout(function() { cachedClockTimeMillis = undefined; }, 0);
   }
-  return cachedDocumentTimeMillis === null ?
-      null : cachedDocumentTimeMillis / 1000;
+  return cachedClockTimeMillis / 1000;
 };
 
 var ticker = function(rafTime) {
@@ -2940,7 +2945,7 @@ var ticker = function(rafTime) {
     return;
   }
 
-  cachedDocumentTimeMillis = relativeTime(rafTime, documentTimeZeroAsRafTime);
+  cachedClockTimeMillis = relativeTime(rafTime, documentTimeZeroAsRafTime);
 
   // Get animations for this sample. We order first by Player start time, and
   // second by DFS order within each Player's tree.
@@ -2978,7 +2983,7 @@ var ticker = function(rafTime) {
     raf(ticker);
   }
 
-  cachedDocumentTimeMillis = undefined;
+  cachedClockTimeMillis = undefined;
 };
 
 // Multiplication where zero multiplied by any value (including infinity)
@@ -3022,5 +3027,7 @@ window.Timing = Timing;
 window.Timeline = Timeline;
 window.TimingEvent = null; // TODO
 window.TimingGroup = TimingGroup;
+
+window._WebAnimationsTestingUtilities = { _constructorToken : constructorToken }
 
 })();
