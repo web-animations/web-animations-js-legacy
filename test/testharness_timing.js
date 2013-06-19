@@ -1,7 +1,5 @@
 /**
- * @preserve Copyright 2013 Google Inc. All Rights Reserved.
- *
- * vim: set expandtab shiftwidth=4 tabstop=4:
+ * Copyright 2013 Google Inc. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,40 +16,6 @@
 "use strict";
 
 (function() {
-    /**
-     * These functions come from testharness.js but can't be access because
-     * testharness uses an anonymous function to hide them.
-     **************************************************************************
-     */
-    function forEach (array, callback, thisObj)
-    {
-        for (var i=0; i<array.length; i++)
-        {
-            if (array.hasOwnProperty(i))
-            {
-                callback.call(thisObj, array[i], i, array);
-            }
-        }
-    }
-
-    function expose(object, name)
-    {
-        var components = name.split(".");
-        var target = window;
-        for (var i=0; i<components.length - 1; i++)
-        {
-            if (!(components[i] in target))
-            {
-                target[components[i]] = {};
-            }
-            target = target[components[i]];
-        }
-        target[components[components.length - 1]] = object;
-    }
-
-    /* ********************************************************************* */
-
-
     /**
      * Schedule something to be called at a given time.
      *
@@ -146,7 +110,6 @@
     TestTimelineGroup.prototype.start = function()
     {
         this.lateCallbacks = new Array();
-
     };
 
     /**
@@ -432,10 +395,9 @@
         var callbacks = this.animationFrameCallbacks;
         callbacks.reverse();
         this.animationFrameCallbacks = [];
-        forEach(callbacks, function(callback, x)
-            {
-                callback(millis) / 1000.0;
-            });
+        for (var i = 0; i < callbacks.length; i++) {
+            callbacks[i](millis);
+        }
     };
 
     /**
@@ -528,18 +490,18 @@
             this.timeline_[t].draw(this.timelinebar, this.endTime_);
 
             this.timeline_[t].marker.onclick = function(event)
-                {
-                    parent.setTime(this.millis);
-                    event.stopPropagation();
-                }.bind(this.timeline_[t]);
+            {
+                parent.setTime(this.millis);
+                event.stopPropagation();
+            }.bind(this.timeline_[t]);
         }
 
         this.timelinebar.onclick = function(evt)
-            {
-                var setPercent =
-                    ((evt.clientX - this.offsetLeft) / this.offsetWidth);
-                parent.setTime(setPercent * parent.endTime_);
-            }.bind(this.timelinebar);
+        {
+            var setPercent =
+                ((evt.clientX - this.offsetLeft) / this.offsetWidth);
+            parent.setTime(setPercent * parent.endTime_);
+        }.bind(this.timelinebar);
     };
 
 
@@ -567,38 +529,15 @@
         window.testharness_timeline.schedule(time*1000, t);
     }
 
-    function generate_tests_at(time, func, args, properties)
-    {
-        forEach(args, function(x, i)
-            {
-                if (x[0] == null) {
-                   x[0] = generate_name(func, x.slice(1));
-                }
-            });
-
-        forEach(args, function(x, i)
-            {
-                var name = "At " + time*1e3 + "ms "+ x[0];
-                test_at(
-                    time, function()
-                        { func.apply(this, x.slice(1)); },
-                    name,
-                    Array.isArray(properties) ? properties[i] : properties
-                );
-            });
-    }
-
     // Expose the extra API
-    expose(test_at, 'test_at');
-    expose(generate_tests_at, 'generate_tests_at');
-
-    var tht = new TestTimeline();
-    expose(tht, 'testharness_timeline');
+    window.test_at = test_at;
+    window.testharness_timeline = new TestTimeline();
 
     // Override existing timing functions
-    window.requestAnimationFrame = tht.requestAnimationFrame.bind(tht);
+    window.requestAnimationFrame =
+        testharness_timeline.requestAnimationFrame.bind(testharness_timeline);
     window.performance.now = null;
-    window.Date.now = tht.now.bind(tht);
+    window.Date.now = testharness_timeline.now.bind(testharness_timeline);
 
 })();
 

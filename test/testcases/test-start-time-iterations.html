@@ -114,10 +114,10 @@ for (var i = 0; i < directions.length; i++) {
 
   test_at(0.75, (function(container, group1, group2) {
     return function() {
-      new Animation(container.getElementsByClassName("a")[0], animation,
-          {duration: 1.0}, group1);
-      new Animation(container.getElementsByClassName("b")[0], animation,
-          {duration: 1.0}, group2);
+      group1.append(new Animation(container.getElementsByClassName("a")[0],
+          animation, {duration: 1.0}));
+      group2.append(new Animation(container.getElementsByClassName("b")[0],
+          animation, {duration: 1.0}));
     };
   }(container, group1, group2)));
 }

@@ -52,8 +52,8 @@ var createObject = function(proto, obj) {
   return newObject;
 };
 
-var strip = function(str) {
-  return str.replace(/^\s+/, '').replace(/\s+$/, '');
+var abstractMethod = function() {
+  throw "Abstract method not implemented.";
 };
 
 var IndexSizeError = function(message) {
@@ -311,7 +311,7 @@ Player.prototype = {
 
 
 /** @constructor */
-var TimedItem = function(token, timing, parentGroup) {
+var TimedItem = function(token, timing) {
   if (token !== constructorToken) {
     throw new TypeError('Illegal constructor');
   }
@@ -323,22 +323,8 @@ var TimedItem = function(token, timing, parentGroup) {
   this.iterationTime = null;
   this.animationTime = null;
   this._startTime = 0.0;
-
-  // A TimedItem has either a _player, or a _parentGroup, or neither, but
-  // never both.
   this._player = null;
-
-  // Note that we don't use the public setter, because we call _addInternal()
-  // below.
-  if (parentGroup === this) {
-    throw new Error('parentGroup can not be set to self!');
-  }
-  this._parentGroup = this._sanitizeParent(parentGroup);
-
-  if (this.parentGroup) {
-    // This will set our inheritedTime via _childrenStateModified().
-    this.parentGroup._addInternal(this);
-  }
+  this._parentGroup = null;
   this._updateInternalState();
 };
 
@@ -388,14 +374,6 @@ TimedItem.prototype = {
     // exsisting player.
     this._reparent(null);
     this._player = player;
-  },
-  _sanitizeParent: function(parentGroup) {
-    if (parentGroup === null || parentGroup instanceof TimingGroup) {
-      return parentGroup;
-    } else if (!isDefined(parentGroup)) {
-      return null;
-    }
-    throw new TypeError('parentGroup is not a TimingGroup');
   },
   // Takes care of updating the outgoing parent. This is called with a non-null
   // parent only from TimingGroup.splice(), which takes care of calling
@@ -603,10 +581,7 @@ TimedItem.prototype = {
       this._getLeafItemsInEffectImpl(items);
     }
   },
-  _getLeafItemsInEffectImpl: function(items) {
-    throw new Error(
-        "Derived classes must override TimedItem._getLeafItemsInEffectImpl()");
-  },
+  _getLeafItemsInEffectImpl: abstractMethod,
   _isPastEndOfActiveInterval: function() {
     return this._inheritedTime > this.endTime;
   },
@@ -677,11 +652,11 @@ var interpretTimingParam = function(timing) {
 };
 
 /** @constructor */
-var Animation = function(target, animationEffect, timing, parentGroup) {
+var Animation = function(target, animationEffect, timing) {
   this.animationEffect = interpretAnimationEffect(animationEffect);
   this.timing = interpretTimingParam(timing);
 
-  TimedItem.call(this, constructorToken, timing, parentGroup);
+  TimedItem.call(this, constructorToken, timing);
 
   this.targetElement = target;
   this.name = this.animationEffect instanceof KeyframeAnimationEffect ?
@@ -798,17 +773,6 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
   get lastChild() {
     return this.children[this.children.length - 1];
   },
-  getAnimationsForElement: function(elem) {
-    var result = [];
-    for (var i = 0; i < this.children.length; i++) {
-      if (this.children[i].getAnimationsForElement) {
-        result = result.concat(this.children[i].getAnimationsForElement(elem));
-      } else if (this.children[i].targetElement == elem) {
-        result.push(this.children[i]);
-      }
-    }
-    return result;
-  },
   _intrinsicDuration: function() {
     if (this.type == 'par') {
       var dur = Math.max.apply(undefined, this.children.map(function(a) {
@@ -853,7 +817,7 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
     }
   },
   clear: function() {
-    this.splice(0, this.children.length);
+    this._splice(0, this.children.length);
   },
   append: function() {
     var newItems = [];
@@ -1083,15 +1047,9 @@ var AnimationEffect = function(token, operation, accumulateOperation) {
 };
 
 AnimationEffect.prototype = {
-  sample: function(timeFraction, currentIteration, target) {
-    throw 'Unimplemented sample function';
-  },
-  getValue: function(target) {
-    return;
-  },
-  clone: function() {
-    throw 'Unimplemented clone method'
-  }
+  sample: abstractMethod,
+  getValue: abstractMethod,
+  clone: abstractMethod
 };
 
 AnimationEffect.createFromProperties = function(properties) {
@@ -1166,18 +1124,9 @@ GroupedAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
   add: function(func) {
     this.children.push(func);
   },
-  remove: function(i) {
-    this.children.splice(i, 1);
-  },
   sample: function(timeFraction, currentIteration, target) {
     for (var i = 0; i < this.children.length; i++) {
       this.children[i].sample(timeFraction, currentIteration, target);
-    }
-  },
-  clone: function() {
-    var result = new GroupedAnimationEffect();
-    for (var i = 0; i < this.children.length; i++) {
-      result.add(this.children[i].clone());
     }
   },
   get length() {
@@ -1464,9 +1413,6 @@ SplineTimingFunction.prototype = createObject(TimingFunction.prototype, {
     var xDiff = this.map[fst][0] - this.map[fst - 1][0];
     var p = (fraction - this.map[fst - 1][0]) / xDiff;
     return this.map[fst - 1][1] + p * yDiff;
-  },
-  clone: function() {
-    return new SplineTimingFunction(this.params);
   }
 });
 
@@ -1487,9 +1433,6 @@ StepTimingFunction.prototype = createObject(TimingFunction.prototype, {
       fraction += stepSize / 2;
     }
     return fraction - fraction % stepSize;
-  },
-  clone: function() {
-    return new StepTimingFunction(this.numSteps, this.position);
   }
 });
 

@@ -105,28 +105,22 @@ for (var i = 0; i < directions.length; i++) {
 for (var i = 0; i < containers.length; i++) {
   var container = document.getElementById(containers[i]);
   // Test basic use.
-  new Animation(container.getElementsByClassName("a")[0],
-      {left: ["100px", "300px"]}, {duration: 1.0}, groups[i]);
-  new Animation(container.getElementsByClassName("b")[0],
-      {left: ["100px", "300px"]}, {duration: 0.5, playbackRate: 0.5},
-      groups[i]);
-  new Animation(container.getElementsByClassName("c")[0],
-      {left: ["100px", "300px"]}, {duration: 2.0, playbackRate: 2.0},
-      groups[i]);
+  groups[i].append(new Animation(container.getElementsByClassName("a")[0],
+      {left: ["100px", "300px"]}, {duration: 1.0}, groups[i]));
+  groups[i].append(new Animation(container.getElementsByClassName("b")[0],
+      {left: ["100px", "300px"]}, {duration: 0.5, playbackRate: 0.5}));
+  groups[i].append(new Animation(container.getElementsByClassName("c")[0],
+      {left: ["100px", "300px"]}, {duration: 2.0, playbackRate: 2.0}));
    // Test negative values.
-  new Animation(container.getElementsByClassName("d")[0],
-      {left: ["300px", "100px"]}, {duration: 1.0, playbackRate: -1.0},
-      groups[i]);
-  new Animation(container.getElementsByClassName("e")[0],
-      {left: ["300px", "100px"]}, {duration: 0.5, playbackRate: -0.5},
-      groups[i]);
-  new Animation(container.getElementsByClassName("f")[0],
-      {left: ["300px", "100px"]}, {duration: 2.0, playbackRate: -2.0},
-      groups[i]);
+  groups[i].append(new Animation(container.getElementsByClassName("d")[0],
+      {left: ["300px", "100px"]}, {duration: 1.0, playbackRate: -1.0}));
+  groups[i].append(new Animation(container.getElementsByClassName("e")[0],
+      {left: ["300px", "100px"]}, {duration: 0.5, playbackRate: -0.5}));
+  groups[i].append(new Animation(container.getElementsByClassName("f")[0],
+      {left: ["300px", "100px"]}, {duration: 2.0, playbackRate: -2.0}));
    // Test zero.
-  new Animation(container.getElementsByClassName("g")[0],
-      {left: ["300px", "100px"]}, {duration: 1.0, playbackRate: 0.0},
-      groups[i]);
+  groups[i].append(new Animation(container.getElementsByClassName("g")[0],
+      {left: ["300px", "100px"]}, {duration: 1.0, playbackRate: 0.0}));
   document.timeline.play(groups[i]);
 }
 </script>
