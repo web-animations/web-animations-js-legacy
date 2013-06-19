@@ -134,25 +134,24 @@
   "use strict";
   var lightOff = "rgb(50,50,50)";
 
-  var sgroup = new SeqGroup([]);
-
-  var go = new ParGroup([], {}, sgroup);
-  new Animation(document.querySelector("#redLight"), {"background-color": lightOff}, {duration: 0.5}, go);
-  new Animation(document.querySelector("#greenLight"), {"background-color": "green"}, {duration: 0.5}, go);
-
-  new Animation(document.querySelector(".car"), {left: "2000px"}, {duration: 5, timingFunction: "ease-in"}, sgroup);
-
-  var maybe = new ParGroup([], {startDelay: 0.25}, sgroup);
-  new Animation(document.querySelector("#greenLight"), {"background-color": lightOff}, {duration: 0.5}, maybe);
-  new Animation(document.querySelector("#orangeLight"), {"background-color": "rgb(255,165,0)"}, {duration: 0.5}, maybe);
-
-  var stop = new ParGroup([], {startDelay: 0.25}, sgroup);
-  new Animation(document.querySelector("#orangeLight"), {"background-color": lightOff}, {duration: 0.5}, stop);
-  new Animation(document.querySelector("#redLight"), {"background-color": "red"}, {duration: 0.5}, stop);
-
-  new Animation(document.querySelector(".car"), {left: ["-500px", "10px"]}, {duration: 2, timingFunction: "ease-out"}, sgroup);
+  var carAnimation = new SeqGroup([
+    new ParGroup([
+      new Animation(document.querySelector("#redLight"), {"background-color": lightOff}, {duration: 0.5}),
+      new Animation(document.querySelector("#greenLight"), {"background-color": "green"}, {duration: 0.5}),
+    ], {}),
+    new Animation(document.querySelector(".car"), {left: "100%"}, {duration: 3, timingFunction: "ease-in"}),
+    new ParGroup([
+      new Animation(document.querySelector("#greenLight"), {"background-color": lightOff}, {duration: 0.5}),
+      new Animation(document.querySelector("#orangeLight"), {"background-color": "rgb(255,165,0)"}, {duration: 0.5}),
+    ], {startDelay: 0.25}),
+    new ParGroup([
+      new Animation(document.querySelector("#orangeLight"), {"background-color": lightOff}, {duration: 0.5}),
+      new Animation(document.querySelector("#redLight"), {"background-color": "red"}, {duration: 0.5}),
+    ], {startDelay: 0.25}),
+    new Animation(document.querySelector(".car"), {left: ["-500px", "10px"]}, {duration: 2, timingFunction: "ease-out"}),
+  ]);
 
   document.querySelector("#buttonA").addEventListener('mousedown', function() {
-    document.timeline.play(sgroup);
+    document.timeline.play(carAnimation);
   }, false);
 </script>
