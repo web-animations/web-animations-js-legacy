@@ -54,7 +54,7 @@ var player = document.timeline.play(new ParGroup([
   ]),
 ]));
 
-test_at(3.0, function() {assert_equals(getComputedStyle(target1).getPropertyValue("left"), "200px")},
+test_at(3.0, function() {assert_equals(getComputedStyle(target1).getPropertyValue("left"), "100px")},
         "First animation should have earlier compositing order");
 
 // Test that compositing order takes account of playback rate.
@@ -71,7 +71,7 @@ var player = document.timeline.play(new ParGroup([
   ], {playbackRate: 4.0}),
 ]));
 
-test_at(3.0, function() {assert_equals(getComputedStyle(target2).getPropertyValue("left"), "200px")},
+test_at(3.0, function() {assert_equals(getComputedStyle(target2).getPropertyValue("left"), "100px")},
         "Second animation should have later compositing order");
 
 // Test compositing order follows Player start time order.
@@ -82,7 +82,7 @@ player1.startTime += 1.0;
 var player2 = document.timeline.play(
   new Animation(target3, {left: ["100px", "1000px"]}, 2.0));
 
-test_at(2.0, function() {assert_equals(getComputedStyle(target3).getPropertyValue("left"), "100px")},
+test_at(2.0, function() {assert_equals(getComputedStyle(target3).getPropertyValue("left"), "200px")},
         "First animation should have latest compositing order");
 
 // Test compositing order follows tree order.
@@ -102,7 +102,7 @@ var player = document.timeline.play(new ParGroup([
   ]),
 ]));
 
-test_at(2.0, function() {assert_equals(getComputedStyle(target4).getPropertyValue("left"), "100px")},
+test_at(2.0, function() {assert_equals(getComputedStyle(target4).getPropertyValue("left"), "200px")},
         "Last animation should have latest compositing order");
 
 </script>
