@@ -1,0 +1,58 @@
+<!--
+Copyright 2013 Google Inc. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<!DOCTYPE html>
+<script src="../testharness_bootstrap.js"></script>
+<script src="../../web-animations.js"></script>
+<script>
+"use strict";
+
+var element = document.createElement('span');
+document.body.appendChild(element);
+
+var anim = element.animate({left: ['0px', '1000px']}, 10);
+test_at(1, function() {
+  assert_styles(element, {left: '100px'});
+
+  anim.player.currentTime += 1;
+  assert_styles(element, {left: '200px'});
+
+}, 'Updated style should be visible after player seek');
+
+var anim2 = element.animate({top: ['0px', '1000px']}, 10);
+test_at(1, function() {
+  assert_styles(element, {top: '100px'});
+
+  anim2.specified.startDelay = -1;
+  assert_styles(element, {top: '200px'});
+
+}, 'Updated style should be visible after change to specified timing');
+
+var group = new SeqGroup([
+  new Animation(element, {bottom: ['0px', '100px']}, 1),
+  new Animation(element, {right: ['0px', '1000px']}, 10),
+]);
+document.timeline.play(group);
+test_at(2, function() {
+  assert_styles(element, {right: '100px'});
+
+  group.children[0].specified.iterationDuration = 0.5;
+  assert_styles(element, {right: '150px'});
+
+  group.children[0].remove();
+  assert_styles(element, {right: '200px'});
+
+}, 'Updated style should be visible after change to animation tree');
+</script>
