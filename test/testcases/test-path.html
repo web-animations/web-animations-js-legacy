@@ -68,14 +68,13 @@ height: 500px;
 "use strict";
 
 var animFunc = new PathAnimationEffect(
-    document.querySelector('#path1'));
-animFunc.rotate = true;
+    document.querySelector('#path1').pathSegList, 'auto-rotate');
 
 document.timeline.play(new Animation(document.querySelector("#anim1"),
     animFunc, {iterationDuration: 2, iterationCount: 2}));
 
-var animFunc2 = new PathAnimationEffect(document.querySelector('#path2'));
-animFunc2.rotate = true;
+var animFunc2 = new PathAnimationEffect(
+    document.querySelector('#path2').pathSegList, 'auto-rotate');
 
 document.timeline.play(new Animation(document.querySelector("#anim2"),
     animFunc2, {iterationDuration: 2, iterationCount: 2}));
