@@ -3057,16 +3057,16 @@ window.Element.prototype.animate = function(effect, timing) {
 };
 window.Element.prototype.getCurrentPlayers = function() {
   return PLAYERS.filter((function(player) {
-      return player._isCurrent() && player._isTargetingElement(this);
-    }).bind(this));
+    return player._isCurrent() && player._isTargetingElement(this);
+  }).bind(this));
 };
 window.Element.prototype.getCurrentAnimations = function() {
   var animations = [];
   PLAYERS.forEach((function(player) {
-      if (player._isCurrent()) {
-        player._getAnimationsTargetingElement(this, animations);
-      }
-    }).bind(this));
+    if (player._isCurrent()) {
+      player._getAnimationsTargetingElement(this, animations);
+    }
+  }).bind(this));
   return animations;
 };
 
