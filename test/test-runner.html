@@ -207,7 +207,7 @@ function testStarted(test) {
  */
 function testFinished(test) {
   test.finished = now();
-  test.querySelector('.timing').innerText = (test.finished - test.start).toFixed(2) + 'ms';
+  test.querySelector('.timing').textContent = (test.finished - test.start).toFixed(2) + 'ms';
 }
 
 /* @type {?number} */ var intervalId = null;
@@ -342,20 +342,20 @@ function changeTestState(test, newState) {
  * Update the status dialog with information about the current status.
  */
 function updateStatus() {
-  loadingElement.innerText = loadingTests.length;
-  unstartedElement.innerText = unstartedTests.length;
-  runningElement.innerText = runningTests.length;
-  postingElement.innerText = postingTests.length;
-  finishedElement.innerText = finishedTests.length;
+  loadingElement.textContent = loadingTests.length;
+  unstartedElement.textContent = unstartedTests.length;
+  runningElement.textContent = runningTests.length;
+  postingElement.textContent = postingTests.length;
+  finishedElement.textContent = finishedTests.length;
 
   if (loadingElement.length > 0) {
-    statusElement.innerText = 'Loading';
+    statusElement.textContent = 'Loading';
   } else if (runningTests.length > 0) {
-    statusElement.innerText = 'Running';
+    statusElement.textContent = 'Running';
   } else if (postingTests.length > 0) {
-    statusElement.innerText = 'Posting results';
+    statusElement.textContent = 'Posting results';
   } else if (finishedTests.length == tests.length) {
-    statusElement.innerText = 'Finished';
+    statusElement.textContent = 'Finished';
     window.clearInterval(statusIntervalId);
   }
 }
@@ -532,7 +532,7 @@ function processResults(test, results) {
     }
 
     var count = test.querySelector('.count');
-    count.innerText = passed + ' of ' + results.length + ' passed';
+    count.textContent = passed + ' of ' + results.length + ' passed';
 
     var log = test.querySelector('.log');
     return testResult;
