@@ -76,9 +76,9 @@ tbody.no-tests {
 'use strict';
 var tests = [];
 function testCases(new_tests) { tests = new_tests; };
-function failingTestCases(failing_tests) {
+function disabledTestCases(disabled_tests) {
   // Remove failing tests from tests array, Javascript syle.
-  failing_tests.forEach(function(test) {
+  disabled_tests.forEach(function(test) {
     var index = tests.indexOf(test);
     if (index >= 0) {
       tests.splice(index, 1);
@@ -87,9 +87,7 @@ function failingTestCases(failing_tests) {
 };
 </script>
 <script src="testcases.jsonp?jsonp=testCases"></script>
-<script src="failing-testcases.jsonp?jsonp=failingTestCases"></script>
-<script>
-"use strict";
+<script src="disabled-testcases.jsonp?jsonp=disabledTestCases"></script>
 
 <div id=status-box>
 <h1 id=status>Pending</h1>
