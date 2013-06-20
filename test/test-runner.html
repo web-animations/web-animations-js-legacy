@@ -216,7 +216,7 @@ function testFinished(test) {
  * Checks all the tests are in the unstarted state and then kicks of running
  * the tests.
  */
-function haveAllTestsLoaded() {
+function runTestsIfLoaded() {
   if (loadingTests.length != 0)
     return;
 
@@ -296,7 +296,7 @@ function changeTestState(test, newState) {
   switch(newState) {
   case States.LOADING:
     loadingTests.unshift(test);
-    haveAllTestsLoaded();
+    runTestsIfLoaded();
     break;
   case States.UNSTARTED:
     unstartedTests.unshift(test);
@@ -386,7 +386,7 @@ window.onload = function createTestRunners() {
     document.querySelector('#results').appendChild(test);
     test.querySelector('iframe').contentWindow.onload = function() {
       changeTestState(this, States.UNSTARTED);
-      haveAllTestsLoaded();
+      runTestsIfLoaded();
     }.bind(test);
 
   }
