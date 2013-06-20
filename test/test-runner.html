@@ -1,7 +1,5 @@
 <!--
-@license Copyright 2012 Google Inc. All Rights Reserved.
-
-vim: set ts=2 sw=2 et sts=2 ai:
+Copyright 2012 Google Inc. All Rights Reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -32,7 +30,7 @@ h1 {
 }
 
 table {
-  border-collapse:collapse;
+  border-collapse: collapse;
 }
 
 td {
@@ -128,7 +126,7 @@ function now() {
  */
 function createTestRows(testName, testURL) {
   var tablegroup = document.createElement("tbody");
-  tablegroup.id = testName.replace('.', '-');
+  tablegroup.id = testName.replace(".", "-");
 
   var basicInfoRow = document.createElement("tr");
   basicInfoRow.className = "info-row";
@@ -167,7 +165,7 @@ function createTestRows(testName, testURL) {
 
   // iframe containing a preview of object
   var iframe = document.createElement("iframe");
-  iframe.src = testURL + '#start=message';
+  iframe.src = testURL + "#start=message";
 
   var iframeCell = document.createElement("td");
   iframeCell.colSpan = "4";
@@ -321,7 +319,7 @@ function changeTestState(test, newState) {
     return a.id.localeCompare(b.id);
   }
 
-  // Sort the lists just to be nice.
+  // Sort the lists just to be nice and provide a reliable execution order.
   loadingTests.sort(testSort);
   unstartedTests.sort(testSort);
   runningTests.sort(testSort);
@@ -429,19 +427,19 @@ function runTests() {
 window.addEventListener(
   "message",
   function(evt) {
-    var testname = evt.source.location.pathname.split('/').pop().replace('.', '-');
+    var testname = evt.source.location.pathname.split("/").pop().replace(".", "-");
     var test = document.getElementById(testname);
 
-    switch(evt.data['type']) {
-    case 'start':
+    switch(evt.data["type"]) {
+    case "start":
       testResults[testname] = [];
       break;
 
-    case 'result':
-      testResults[testname].push(evt.data['test']);
+    case "result":
+      testResults[testname].push(evt.data["test"]);
       break;
 
-    case 'complete':
+    case "complete":
       var result = processResults(test, testResults[testname]);
       if (result) {
         // Move from running to posting state
@@ -491,12 +489,12 @@ function processResults(test, results) {
 
   var logElement = test.querySelector(".log");
 
-  var newResultsDiv = document.createElement('ul');
+  var newResultsDiv = document.createElement("ul");
   for (var x in results) {
-    var output = document.createElement('li');
+    var output = document.createElement("li");
     output.innerHTML += results[x].name + " ";
 
-    var grade = 'fail';
+    var grade = "fail";
     if (results[x].status == 0) {
       grade = "pass";
     }
@@ -511,14 +509,15 @@ function processResults(test, results) {
   logElement.appendChild(newResultsDiv);
 
   if (results.length > 0) {
-    var testResult = {};
-    testResult["type"] = "result";
-    testResult["testName"] = test.id;
-    testResult["results"] = results;
+    var testResult = {
+      type: "result",
+      testName: test.id,
+      results: results,
+    };
 
     var passed = results.filter(function(result) {
-        return result.status == 0;
-      }).length;
+      return result.status == 0;
+    }).length;
     var failed = results.length - passed;
 
     if (!failed) {
@@ -527,9 +526,9 @@ function processResults(test, results) {
       test.className = "fail";
 
       // Open up the window of the failed result
-      test.querySelector('.info-row').click();
+      test.querySelector(".info-row").click();
       // Scroll to it.
-      window.scroll(0,trueOffsetTop(test));
+      window.scroll(0, trueOffsetTop(test));
     }
 
     var count = test.querySelector(".count");

@@ -1,7 +1,5 @@
 /**
- * @preserve Copyright 2013 Google Inc. All Rights Reserved.
- *
- * vim: set expandtab shiftwidth=4 tabstop=4:
+ * Copyright 2013 Google Inc. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -527,7 +525,6 @@
 
     function testharness_timeline_setup()
     {
-
         testharness_timeline.createGUI(document.getElementsByTagName("body")[0]);
         testharness_timeline.start();
         testharness_timeline.updateGUI();
@@ -577,5 +574,4 @@
     window.Date.now = testharness_timeline.now.bind(testharness_timeline);
 
 })();
-
-
+// vim: set expandtab shiftwidth=4 tabstop=4:

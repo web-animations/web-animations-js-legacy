@@ -323,3 +323,4 @@
 
     window.assert_styles = assert_styles;
 })();
+// vim: set expandtab shiftwidth=4 tabstop=4:
