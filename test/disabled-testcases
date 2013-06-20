@@ -1,0 +1,3 @@
+test-change-playback-rate.html # Lots of problems
+test-media.html # Scripts fail before adding tests, test file passes erroneously.
+test-iteration-start.html # Test fails visually.
