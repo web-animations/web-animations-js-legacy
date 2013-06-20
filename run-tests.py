@@ -4,6 +4,7 @@
 # vim: set ts=4 sw=4 et sts=4 ai:
 
 import atexit
+import cStringIO as StringIO
 import json as simplejson
 import os
 import platform
@@ -12,6 +13,8 @@ import re
 import socket
 import sys
 import time
+import urllib2
+import zipfile
 
 import argparse
 parser = argparse.ArgumentParser()
@@ -86,6 +89,7 @@ if args.auto_install:
     subprocess.check_call(["git", "submodule", "init"])
     subprocess.check_call(["git", "submodule", "update"])
 
+
 # Install the python modules
 def autoinstall(name, package=None):
     if not package:
@@ -119,14 +123,14 @@ Please try installing %s manually with:
 """ % (name, install.conflicts_with, name, package.replace(">", "\>")))
 
             ret = subprocess.call(["pip", "install", "--user", package])
-            if ret == 0: # UNKNOWN_ERROR
-                # Restart python is a nasty way, only method to get imports to refresh.
-                import sys, os
+            if ret == 0:  # UNKNOWN_ERROR
+                # Restart python is a nasty way, only method to get imports to
+                # refresh.
                 python = sys.executable
                 os.execl(python, python, *sys.argv)
             else:
                 raise SystemExit("""
-Unknown error occurred. 
+Unknown error occurred.
 
 Please install the Python %s module.
 # sudo pip install %s
@@ -153,16 +157,16 @@ if not args.sauce:
             chromedriver_bin = "chromedriver"
             if platform.processor() == "x86_64":
                 # 64 bit binary needed
-                chromedriver_url = "https://chromedriver.googlecode.com/files/chromedriver2_linux64_0.6.zip"
+                chromedriver_url = "https://chromedriver.googlecode.com/files/chromedriver2_linux64_0.6.zip"  # noqa
             else:
                 # 32 bit binary needed
-                chromedriver_url = "https://chromedriver.googlecode.com/files/chromedriver_linux32_26.0.1383.0.zip"
+                chromedriver_url = "https://chromedriver.googlecode.com/files/chromedriver_linux32_26.0.1383.0.zip"  # noqa
 
         elif platform.system() == "mac":
-            chromedriver_url = "https://chromedriver.googlecode.com/files/chromedriver2_mac32_0.7.zip"
+            chromedriver_url = "https://chromedriver.googlecode.com/files/chromedriver2_mac32_0.7.zip"  # noqa
             chromedriver_bin = "chromedriver"
         elif platform.system() == "win32":
-            chromedriver_bin = "https://chromedriver.googlecode.com/files/chromedriver2_win32_0.7.zip"
+            chromedriver_bin = "https://chromedriver.googlecode.com/files/chromedriver2_win32_0.7.zip"  # noqa
             chromedriver_url = "chromedriver.exe"
 
         try:
@@ -172,9 +176,8 @@ if not args.sauce:
             chromedriver_local = os.path.join("tools", chromedriver_bin)
 
             if not os.path.exists(chromedriver_local):
-                import urllib2, zipfile
-                import cStringIO as StringIO
-                datafile = StringIO.StringIO(urllib2.urlopen(chromedriver_url).read())
+                datafile = StringIO.StringIO(
+                    urllib2.urlopen(chromedriver_url).read())
                 contents = zipfile.ZipFile(datafile, 'r')
                 contents.extract(chromedriver_bin, "tools")
 
@@ -192,36 +195,36 @@ if not args.sauce:
             phantomjs_bin = "phantomjs"
             if platform.processor() == "x86_64":
                 # 64 bit binary needed
-                phantomjs_url = "https://phantomjs.googlecode.com/files/phantomjs-1.9.0-linux-x86_64.tar.bz2"
+                phantomjs_url = "https://phantomjs.googlecode.com/files/phantomjs-1.9.0-linux-x86_64.tar.bz2"  # noqa
             else:
                 # 32 bit binary needed
-                phantomjs_url = "https://phantomjs.googlecode.com/files/phantomjs-1.9.0-linux-i686.tar.bz2"
+                phantomjs_url = "https://phantomjs.googlecode.com/files/phantomjs-1.9.0-linux-i686.tar.bz2"  # noqa
 
             phantomjs_local = os.path.join("tools", phantomjs_bin)
             if not os.path.exists(phantomjs_local):
-                import urllib2, tarfile
-                import cStringIO as StringIO
-                datafile = StringIO.StringIO(urllib2.urlopen(phantomjs_url).read())
+                datafile = StringIO.StringIO(
+                    urllib2.urlopen(phantomjs_url).read())
                 contents = tarfile.TarFile.open(fileobj=datafile, mode='r:bz2')
                 file("tools/"+phantomjs_bin, "w").write(
-                    contents.extractfile("phantomjs-1.9.0-linux-x86_64/bin/"+phantomjs_bin).read())
+                    contents.extractfile(
+                        "phantomjs-1.9.0-linux-x86_64/bin/"+phantomjs_bin
+                    ).read())
 
             phantomjs = os.path.realpath(phantomjs_local)
             os.chmod(phantomjs, 0755)
         else:
             if platform.system() == "mac":
-                phantomjs_url = "https://phantomjs.googlecode.com/files/phantomjs-1.9.0-macosx.zip"
+                phantomjs_url = "https://phantomjs.googlecode.com/files/phantomjs-1.9.0-macosx.zip"  # noqa
                 phantomjs_bin = "phantomjs"
 
             elif platform.system() == "win32":
-                chromedriver_bin = "https://phantomjs.googlecode.com/files/phantomjs-1.9.0-windows.zip"
+                chromedriver_bin = "https://phantomjs.googlecode.com/files/phantomjs-1.9.0-windows.zip"  # noqa
                 phantomjs_url = "phantomjs.exe"
 
             phantomjs_local = os.path.join("tools", phantomjs_bin)
             if not os.path.exists(phantomjs_local):
-                import urllib2, zipfile
-                import cStringIO as StringIO
-                datafile = StringIO.StringIO(urllib2.urlopen(phantomjs_url).read())
+                datafile = StringIO.StringIO(
+                    urllib2.urlopen(phantomjs_url).read())
                 contents = zipfile.ZipFile(datafile, 'r')
                 contents.extract(phantomjs_bin, "tools")
 
@@ -234,12 +237,10 @@ else:
     key = os.environ['SAUCE_ACCESS_KEY']
 
     # Download the Sauce Connect script
-    sauce_connect_url = "http://saucelabs.com/downloads/Sauce-Connect-latest.zip"
+    sauce_connect_url = "http://saucelabs.com/downloads/Sauce-Connect-latest.zip"  # noqa
     sauce_connect_bin = "Sauce-Connect.jar"
     sauce_connect_local = os.path.join("tools", sauce_connect_bin)
     if not os.path.exists(sauce_connect_local):
-        import urllib2, zipfile
-        import cStringIO as StringIO
         datafile = StringIO.StringIO(urllib2.urlopen(sauce_connect_url).read())
         contents = zipfile.ZipFile(datafile, 'r')
         contents.extract(sauce_connect_bin, "tools")
@@ -266,14 +267,12 @@ else:
     sauce_tunnel = None
     try:
         sauce_log = file("sauce_tunnel.log", "w")
-        sauce_tunnel = subprocess.Popen([
-            "java", "-jar", sauce_connect_local,
-            "--readyfile", readyfile,
-            "--tunnel-identifier", tunnel_id,
-            username, key,
-            ], 
-            stdout=sauce_log, stderr=sauce_log,
-            )
+        sauce_tunnel = subprocess.Popen(
+            ["java", "-jar", sauce_connect_local,
+             "--readyfile", readyfile,
+             "--tunnel-identifier", tunnel_id,
+             username, key],
+            stdout=sauce_log, stderr=sauce_log)
 
         atexit.register(kill_tunnel, sauce_tunnel)
 
@@ -285,7 +284,8 @@ else:
         if sauce_tunnel:
             kill_tunnel(sauce_tunnel)
 
-    args.remote_executor = "http://%s:%s@localhost:4445/wd/hub" % (username, key)
+    args.remote_executor = "http://%s:%s@localhost:4445/wd/hub" % (
+        username, key)
 
     # Send travis information upstream
     if 'TRAVIS_BUILD_NUMBER' in os.environ:
@@ -293,7 +293,10 @@ else:
 
 # -----------------------------------------------------------------------------
 
-import subunit, testtools, unittest
+import subunit
+import testtools
+import unittest
+
 if args.list:
     data = file("test/testcases.jsonp").read()
     print repr(data[data.find('(')+1:data.rfind(')')])
@@ -302,7 +305,8 @@ if args.list:
     sys.exit(-1)
 
 if args.load_list:
-    tests = list(set(x.split(':')[0].strip()+'.html' for x in args.load_list.readlines()))
+    tests = list(set(x.split(':')[0].strip()+'.html'
+                 for x in args.load_list.readlines()))
 else:
     tests = []
 
@@ -319,7 +323,8 @@ if not args.subunit:
                 unittest.runner._WritelnDecorator(sys.stdout), False, 2),
             # End of run, summary of failures.
             testtools.TextTestResult(sys.stdout),
-            ))
+        )
+    )
 else:
     from subunit.v2 import StreamResultToBytes
     pertest = StreamResultToBytes(sys.stdout)
@@ -349,7 +354,7 @@ import re
 import itertools
 import mimetools
 import mimetypes
-import urllib, urllib2
+
 
 class MultiPartForm(object):
     """Accumulate the data to be used when posting a form."""
@@ -359,7 +364,7 @@ class MultiPartForm(object):
         self.files = []
         self.boundary = mimetools.choose_boundary()
         return
-    
+
     def get_content_type(self):
         return 'multipart/form-data; boundary=%s' % self.boundary
 
@@ -372,41 +377,39 @@ class MultiPartForm(object):
         """Add a file to be uploaded."""
         body = fileHandle.read()
         if mimetype is None:
-            mimetype = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
+            mimetype = (
+                mimetypes.guess_type(filename)[0] or
+                'application/octet-stream')
         self.files.append((fieldname, filename, mimetype, body))
         return
-    
+
     def __str__(self):
-        """Return a string representing the form data, including attached files."""
+        """Return a string representing the form data, with attached files."""
         # Build a list of lists, each containing "lines" of the
         # request.  Each part is separated by a boundary string.
         # Once the list is built, return a string where each
-        # line is separated by '\r\n'.  
+        # line is separated by '\r\n'.
         parts = []
         part_boundary = '--' + self.boundary
-        
+
         # Add the form fields
-        parts.extend(
-            [ part_boundary,
-              'Content-Disposition: form-data; name="%s"' % name,
-              '',
-              value,
-            ]
-            for name, value in self.form_fields
-            )
-        
+        parts.extend([
+            part_boundary,
+            'Content-Disposition: form-data; name="%s"' % name,
+            '',
+            value,
+        ] for name, value in self.form_fields)
+
         # Add the files to upload
-        parts.extend(
-            [ part_boundary,
-              'Content-Disposition: file; name="%s"; filename="%s"' % \
-                 (field_name, filename),
-              'Content-Type: %s' % content_type,
-              '',
-              body,
-            ]
-            for field_name, filename, content_type, body in self.files
-            )
-        
+        parts.extend([
+            part_boundary,
+            'Content-Disposition: file; name="%s"; filename="%s"' % (
+                field_name, filename),
+            'Content-Type: %s' % content_type,
+            '',
+            body,
+        ] for field_name, filename, content_type, body in self.files)
+
         # Flatten the list and add closing boundary marker,
         # then return CR+LF separated data
         flattened = list(str(b) for b in itertools.chain(*parts))
@@ -416,20 +419,22 @@ class MultiPartForm(object):
 
 
 class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
-    STATUS = {0:'success', 1:'fail', 2:'fail', 3:'skip'}
+    STATUS = {0: 'success', 1: 'fail', 2: 'fail', 3: 'skip'}
 
     # Make the HTTP requests be quiet
     def log_message(self, format, *a):
         if args.verbose:
-            SimpleHTTPServer.SimpleHTTPRequestHandler.log_message(self, format, *a)
+            SimpleHTTPServer.SimpleHTTPRequestHandler.log_message(
+                self, format, *a)
 
     def do_POST(self):
         form = cgi.FieldStorage(
             fp=self.rfile,
             headers=self.headers,
-            environ={'REQUEST_METHOD':'POST',
-                     'CONTENT_TYPE':self.headers['Content-Type'],
-                     })
+            environ={
+                'REQUEST_METHOD': 'POST',
+                'CONTENT_TYPE': self.headers['Content-Type'],
+            })
 
         data = simplejson.loads(form.getvalue('data'))
 
@@ -457,7 +462,8 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 form = MultiPartForm()
                 form.add_field('adult', 'no')
                 form.add_field('optsize', '0')
-                form.add_file('upload[]', screenshot, fileHandle=open(screenshot, 'rb'))
+                form.add_file(
+                    'upload[]', screenshot, fileHandle=open(screenshot, 'rb'))
 
                 request = urllib2.Request("http://postimage.org/")
                 body = str(form)
@@ -466,7 +472,7 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 request.add_data(body)
 
                 result = urllib2.urlopen(request).read()
-                print "Screenshot at:", re.findall("""<td><textarea wrap='off' onmouseover='this.focus\(\)' onfocus='this.select\(\)' id="code_1" scrolling="no">([^<]*)</textarea></td>""", result)
+                print "Screenshot at:", re.findall("""<td><textarea wrap='off' onmouseover='this.focus\(\)' onfocus='this.select\(\)' id="code_1" scrolling="no">([^<]*)</textarea></td>""", result)  # noqa
 
         response = "OK"
         self.send_response(200)
@@ -508,10 +514,11 @@ from selenium import webdriver
 
 driver_arguments = {}
 if args.browser == "Chrome":
-    import tempfile, shutil
+    import tempfile
+    import shutil
 
-    # We reference shutil to make sure it isn't garbaged collected before we use
-    # it.
+    # We reference shutil to make sure it isn't garbaged collected before we
+    # use it.
     def directory_cleanup(directory, shutil=shutil):
         try:
             shutil.rmtree(directory)
@@ -526,11 +533,15 @@ if args.browser == "Chrome":
         raise
 
     driver_arguments['chrome_options'] = webdriver.ChromeOptions()
-    webdriver.ChromeOptions.__repr__ = lambda self: str(self.__dict__)  # Make printable
-    driver_arguments['chrome_options'].add_argument('--user-data-dir=%s' % user_data_dir)
-    driver_arguments['chrome_options'].add_argument('--enable-logging')
+    # Make printable
+    webdriver.ChromeOptions.__repr__ = lambda self: str(self.__dict__)
+    driver_arguments['chrome_options'].add_argument(
+        '--user-data-dir=%s' % user_data_dir)
+    driver_arguments['chrome_options'].add_argument(
+        '--enable-logging')
 
-    driver_arguments['chrome_options'].binary_location = '/usr/bin/google-chrome'
+    driver_arguments['chrome_options'].binary_location = (
+        '/usr/bin/google-chrome')
     driver_arguments['executable_path'] = chromedriver
 
     # Travis-CI uses OpenVZ containers which are incompatible with the sandbox
@@ -556,7 +567,8 @@ elif args.browser == "Remote":
             continue
 
         if arg.find('=') < 0:
-            caps.update(getattr(webdriver.DesiredCapabilities, arg.strip().upper()))
+            caps.update(getattr(
+                webdriver.DesiredCapabilities, arg.strip().upper()))
         else:
             key, value = arg.split('=', 1)
             caps[key] = value
@@ -574,7 +586,8 @@ try:
             browser.close()
         raise
 
-    url = 'http://localhost:%i/test/test-runner.html?%s' % (port, "|".join(tests))
+    url = 'http://localhost:%i/test/test-runner.html?%s' % (
+        port, "|".join(tests))
     browser.get(url)
 
     def close_other_windows(browser, url):
