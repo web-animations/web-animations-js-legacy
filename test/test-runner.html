@@ -73,7 +73,7 @@ tbody.no-tests {
 
 </style>
 <script>
-"use strict";
+'use strict';
 var tests = [];
 function testCases(new_tests) { tests = new_tests; };
 </script>
@@ -91,7 +91,7 @@ Finished: <span id=finished></span>
 <table id="results"></table>
 
 <script>
-"use strict";
+'use strict';
 
 (function() {
 window.finished = false;
@@ -125,66 +125,66 @@ function now() {
  * @return {Element} tbody containing newly created table rows.
  */
 function createTestRows(testName, testURL) {
-  var tablegroup = document.createElement("tbody");
-  tablegroup.id = testName.replace(".", "-");
+  var tablegroup = document.createElement('tbody');
+  tablegroup.id = testName.replace('.', '-');
 
-  var basicInfoRow = document.createElement("tr");
-  basicInfoRow.className = "info-row";
+  var basicInfoRow = document.createElement('tr');
+  basicInfoRow.className = 'info-row';
   tablegroup.appendChild(basicInfoRow);
-  var iframeRow = document.createElement("tr");
+  var iframeRow = document.createElement('tr');
   tablegroup.appendChild(iframeRow);
-  var logRow = document.createElement("tr");
+  var logRow = document.createElement('tr');
   tablegroup.appendChild(logRow);
 
   // Name
-  var header = document.createElement("h1");
+  var header = document.createElement('h1');
   header.textContent = testName;
 
-  var headerCell = document.createElement("td");
+  var headerCell = document.createElement('td');
   headerCell.appendChild(header);
   basicInfoRow.appendChild(headerCell);
 
   // Link
-  var link = document.createElement("a");
+  var link = document.createElement('a');
   link.textContent = testName;
   link.href = testURL;
 
-  var linkCell = document.createElement("td");
+  var linkCell = document.createElement('td');
   linkCell.appendChild(link);
   basicInfoRow.appendChild(linkCell);
 
   // Test count
-  var countCell = document.createElement("td");
-  countCell.className = "count";
+  var countCell = document.createElement('td');
+  countCell.className = 'count';
   basicInfoRow.appendChild(countCell);
 
   // Timing info
-  var timingCell = document.createElement("td");
-  timingCell.className = "timing";
+  var timingCell = document.createElement('td');
+  timingCell.className = 'timing';
   basicInfoRow.appendChild(timingCell);
 
   // iframe containing a preview of object
-  var iframe = document.createElement("iframe");
-  iframe.src = testURL + "#start=message";
+  var iframe = document.createElement('iframe');
+  iframe.src = testURL + '#start=message';
 
-  var iframeCell = document.createElement("td");
-  iframeCell.colSpan = "4";
+  var iframeCell = document.createElement('td');
+  iframeCell.colSpan = '4';
   iframeCell.appendChild(iframe);
   iframeRow.appendChild(iframeCell);
 
   // table row containing the complete test log
-  var logCell = document.createElement("td");
-  logCell.className = "log";
-  logCell.colSpan = "4";
+  var logCell = document.createElement('td');
+  logCell.className = 'log';
+  logCell.colSpan = '4';
   logRow.appendChild(logCell);
 
   basicInfoRow.onclick = function() {
-    if (logRow.style.display == "none") {
-      logRow.style.display = "table-row";
-      iframeRow.style.display = "table-row";
+    if (logRow.style.display == 'none') {
+      logRow.style.display = 'table-row';
+      iframeRow.style.display = 'table-row';
     } else {
-      logRow.style.display = "none";
-      iframeRow.style.display = "none";
+      logRow.style.display = 'none';
+      iframeRow.style.display = 'none';
     }
   };
   basicInfoRow.click();
@@ -207,7 +207,7 @@ function testStarted(test) {
  */
 function testFinished(test) {
   test.finished = now();
-  test.querySelector(".timing").innerText = (test.finished - test.start).toFixed(2) + "ms";
+  test.querySelector('.timing').innerText = (test.finished - test.start).toFixed(2) + 'ms';
 }
 
 /* @type {?number} */ var intervalId = null;
@@ -329,12 +329,12 @@ function changeTestState(test, newState) {
 /**
  * Elements for reporting the overall status.
  */
-/* @type {Element} */ var statusElement = document.querySelector("#status");
-/* @type {Element} */ var loadingElement = document.querySelector("#loading");
-/* @type {Element} */ var unstartedElement = document.querySelector("#unstarted");
-/* @type {Element} */ var runningElement = document.querySelector("#running");
-/* @type {Element} */ var postingElement = document.querySelector("#posting");
-/* @type {Element} */ var finishedElement = document.querySelector("#finished");
+/* @type {Element} */ var statusElement = document.querySelector('#status');
+/* @type {Element} */ var loadingElement = document.querySelector('#loading');
+/* @type {Element} */ var unstartedElement = document.querySelector('#unstarted');
+/* @type {Element} */ var runningElement = document.querySelector('#running');
+/* @type {Element} */ var postingElement = document.querySelector('#posting');
+/* @type {Element} */ var finishedElement = document.querySelector('#finished');
 
 /* @type {?number} */ var statusIntervalId = null;
 
@@ -349,13 +349,13 @@ function updateStatus() {
   finishedElement.innerText = finishedTests.length;
 
   if (loadingElement.length > 0) {
-    statusElement.innerText = "Loading";
+    statusElement.innerText = 'Loading';
   } else if (runningTests.length > 0) {
-    statusElement.innerText = "Running";
+    statusElement.innerText = 'Running';
   } else if (postingTests.length > 0) {
-    statusElement.innerText = "Posting results";
+    statusElement.innerText = 'Posting results';
   } else if (finishedTests.length == tests.length) {
-    statusElement.innerText = "Finished";
+    statusElement.innerText = 'Finished';
     window.clearInterval(statusIntervalId);
   }
 }
@@ -368,7 +368,7 @@ window.onload = function createTestRunners() {
   statusIntervalId = window.setInterval(updateStatus, 10);
 
   // Filter the tests
-  var filter = window.location.href.split("?")[1];
+  var filter = window.location.href.split('?')[1];
   if (filter) {
     filter = new RegExp(filter);
     tests = tests.filter(function(v) {
@@ -378,13 +378,13 @@ window.onload = function createTestRunners() {
 
   for (var i = 0; i < tests.length; i++) {
     var testName = tests[i];
-    var testURL = "testcases/" + testName;
+    var testURL = 'testcases/' + testName;
 
     var test = createTestRows(testName, testURL);
     changeTestState(test, States.LOADING);
 
-    document.querySelector("#results").appendChild(test);
-    test.querySelector("iframe").contentWindow.onload = function() {
+    document.querySelector('#results').appendChild(test);
+    test.querySelector('iframe').contentWindow.onload = function() {
       changeTestState(this, States.UNSTARTED);
       haveAllTestsLoaded();
     }.bind(test);
@@ -405,9 +405,9 @@ function runTests() {
     var test = unstartedTests[0];
     changeTestState(test, States.RUNNING);
 
-    var testWindow = test.querySelector("iframe").contentWindow;
-    var msg = {"type": "start", "url": testWindow.location.href + ""};
-    testWindow.postMessage(msg, "*");
+    var testWindow = test.querySelector('iframe').contentWindow;
+    var msg = {'type': 'start', 'url': testWindow.location.href + ''};
+    testWindow.postMessage(msg, '*');
   }
 
   for (var i in runningTests) {
@@ -425,35 +425,35 @@ function runTests() {
  * Callback that occurs when the test has finished running.
  */
 window.addEventListener(
-  "message",
+  'message',
   function(evt) {
-    var testname = evt.source.location.pathname.split("/").pop().replace(".", "-");
+    var testname = evt.source.location.pathname.split('/').pop().replace('.', '-');
     var test = document.getElementById(testname);
 
-    switch(evt.data["type"]) {
-    case "start":
+    switch(evt.data['type']) {
+    case 'start':
       testResults[testname] = [];
       break;
 
-    case "result":
-      testResults[testname].push(evt.data["test"]);
+    case 'result':
+      testResults[testname].push(evt.data['test']);
       break;
 
-    case "complete":
+    case 'complete':
       var result = processResults(test, testResults[testname]);
       if (result) {
         // Move from running to posting state
         changeTestState(test, States.POSTING);
 
         var data = new FormData();
-        data.append("data", JSON.stringify(result));
+        data.append('data', JSON.stringify(result));
 
         var xhr = new XMLHttpRequest();
         xhr.onload = function () {
           // Move from running to finished state
           changeTestState(this, States.FINISHED);
         }.bind(test);
-        xhr.open("POST", "test-results-post.html", true);
+        xhr.open('POST', 'test-results-post.html', true);
         xhr.send(data);
       } else {
         // Move directly to finished state
@@ -487,20 +487,20 @@ function processResults(test, results) {
     }
   }
 
-  var logElement = test.querySelector(".log");
+  var logElement = test.querySelector('.log');
 
-  var newResultsDiv = document.createElement("ul");
+  var newResultsDiv = document.createElement('ul');
   for (var x in results) {
-    var output = document.createElement("li");
-    output.innerHTML += results[x].name + " ";
+    var output = document.createElement('li');
+    output.innerHTML += results[x].name + ' ';
 
-    var grade = "fail";
+    var grade = 'fail';
     if (results[x].status == 0) {
-      grade = "pass";
+      grade = 'pass';
     }
     output.className = grade;
 
-    output.innerHTML += grade + " ";
+    output.innerHTML += grade + ' ';
     if (results[x].message != null) {
       output.innerHTML += results[x].message;
     }
@@ -510,7 +510,7 @@ function processResults(test, results) {
 
   if (results.length > 0) {
     var testResult = {
-      type: "result",
+      type: 'result',
       testName: test.id,
       results: results,
     };
@@ -521,23 +521,23 @@ function processResults(test, results) {
     var failed = results.length - passed;
 
     if (!failed) {
-      test.className = "pass";
+      test.className = 'pass';
     } else {
-      test.className = "fail";
+      test.className = 'fail';
 
       // Open up the window of the failed result
-      test.querySelector(".info-row").click();
+      test.querySelector('.info-row').click();
       // Scroll to it.
       window.scroll(0, trueOffsetTop(test));
     }
 
-    var count = test.querySelector(".count");
-    count.innerText = passed + " of " + results.length + " passed";
+    var count = test.querySelector('.count');
+    count.innerText = passed + ' of ' + results.length + ' passed';
 
-    var log = test.querySelector(".log");
+    var log = test.querySelector('.log');
     return testResult;
   } else {
-    test.className = "no-tests";
+    test.className = 'no-tests';
   }
 }
 
