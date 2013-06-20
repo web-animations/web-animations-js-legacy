@@ -321,13 +321,11 @@ Player.prototype = {
     }
   },
   _isTargetingElement: function(element) {
-    if (this.source) {
-      return this.source._isTargetingElement(element);
-    }
+    return this.source && this.source._isTargetingElement(element);
   },
   _getAnimationsTargetingElement: function(element, animations) {
     if (this.source) {
-      return this.source._getAnimationsTargetingElement(element, animations);
+      this.source._getAnimationsTargetingElement(element, animations);
     }
   },
 };
@@ -605,7 +603,8 @@ TimedItem.prototype = {
         this._player : this.parent.player;
   },
   _isCurrent: function() {
-    return !this._isPastEndOfActiveInterval() || (this.parent !== null && this.parent._isCurrent());
+    return !this._isPastEndOfActiveInterval() ||
+           (this.parent !== null && this.parent._isCurrent());
   },
   _isTargetingElement: function(element) {
     throw new Error(
