@@ -49,17 +49,17 @@ var animationAClone = animationA.clone();
 var animationBClone = animationB.clone();
 
 var playerA;
-testharness_timeline.schedule(1000, function() {
+testharness_timeline.schedule(function() {
   playerA = document.timeline.play(animationA);
-});
+}, 1000);
 var playerB;
-testharness_timeline.schedule(2000, function() {
+testharness_timeline.schedule(function() {
   playerB = document.timeline.play(animationB);
-});
+}, 2000);
 var playerAB;
-testharness_timeline.schedule(3000, function() {
+testharness_timeline.schedule(function() {
   playerAB = document.timeline.play(new ParGroup([animationAClone, animationBClone]));
-});
+}, 3000);
 
 // These test_at calls are not in a *-checks.js file so they
 // can be declared after the calls to play() are scheduled.
