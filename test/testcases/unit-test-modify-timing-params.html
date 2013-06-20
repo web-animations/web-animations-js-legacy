@@ -76,8 +76,8 @@ test(function() {assert_equals(parGroup.endTime,  10.0)},
 
 // Test that updates to a TimedItem's startDelay and activeDuration cause
 // re-layout of a parent sequence group.
-anim.specified.iterationDuration = undefined;
-anim.activeDuration = undefined;
+anim.specified.activeDuration = 8.0;
+anim.specified.iterationDuration = "auto";
 var siblingAnim = new Animation(document.getElementById("anim"), {top: "100px"},
     1.0);
 var seqGroup = new SeqGroup([anim, siblingAnim]);
@@ -100,6 +100,7 @@ test(function() {assert_equals(seqGroup.iterationDuration,  20.0)},
 test(function() {assert_equals(seqGroup.endTime,  20.0)},
      "Sequence group end time should reflect updated child startDelay");
 // activeDuration via Timing.iterationDuration
+anim.specified.activeDuration = "auto";
 anim.specified.iterationDuration = 12.0;
 test(function() {assert_equals(siblingAnim.startTime,  23.0)},
      "Sequence group should update sibling after updated child Timing.iterationDuration");
@@ -107,22 +108,5 @@ test(function() {assert_equals(seqGroup.iterationDuration,  24.0)},
      "Sequence group iterationDuration should reflect updated child Timing.iterationDuration");
 test(function() {assert_equals(seqGroup.endTime,  24.0)},
      "Sequence group end time should reflect updated child Timing.iterationDuration");
-// activeDuration via iterationDuration
-anim.iterationDuration = 13.0;
-test(function() {assert_equals(siblingAnim.startTime,  24.0)},
-     "Sequence group should update sibling after updated child iterationDuration");
-test(function() {assert_equals(seqGroup.iterationDuration,  25.0)},
-     "Sequence group iterationDuration should reflect updated child iterationDuration");
-test(function() {assert_equals(seqGroup.endTime,  25.0)},
-     "Sequence group end time should reflect updated child iterationDuration");
-// activeDuration
-anim.activeDuration = 14.0;
-test(function() {assert_equals(siblingAnim.startTime,  25.0)},
-     "Sequence group should update sibling " +
-    "after updated child activeDuration");
-test(function() {assert_equals(seqGroup.iterationDuration,  26.0)},
-     "Sequence group iterationDuration should reflect updated child activeDuration");
-test(function() {assert_equals(seqGroup.endTime,  26.0)},
-     "Sequence group end time should reflect updated child activeDuration");
 
 </script>
