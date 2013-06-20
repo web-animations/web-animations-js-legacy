@@ -1059,7 +1059,7 @@ MediaReference.prototype = createObject(TimedItem.prototype, {
     }
   },
   _isTargetingElement: function(element) {
-    return this._media === element && this._isCurrent();
+    return this._media === element;
   },
   _getAnimationsTargetingElement: function(element, animations) { },
 });
