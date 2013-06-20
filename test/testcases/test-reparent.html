@@ -47,17 +47,15 @@ var anim = new Animation(document.getElementById("a"),
 document.timeline.play(anim);
 
 // After 3.0s, move it to a parallel group and run that.
-testharness_timeline.schedule(3000,
-  function() {
+testharness_timeline.schedule(function() {
     document.timeline.play(new ParGroup([anim],
         {iterationDuration: 1.0, iterationCount: 3.0}));
-  });
+  }, 3000);
 
 // After 3.0s, move it to a parallel group and run that.
-testharness_timeline.schedule(8000,
-  function() {
+testharness_timeline.schedule(function() {
     document.timeline.play(new ParGroup([anim],
         {iterationDuration: 1.5, iterationCount: 3.0}));
-  });
+  }, 8000);
 
 </script>

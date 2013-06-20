@@ -290,7 +290,7 @@ else:
     # Send travis information upstream
     if 'TRAVIS_BUILD_NUMBER' in os.environ:
         args.remote_caps.append('build=%s' % os.environ['TRAVIS_BUILD_NUMBER'])
-        
+
 # -----------------------------------------------------------------------------
 
 import subunit, testtools, unittest
@@ -326,7 +326,6 @@ else:
     if args.list:
         output = subunit.CopyStreamResult([summary, pertest])
         output.startTestRun()
-
         for test in simplejson.loads(
                 file("test/testcases.js").read()[len("var tests = "):-5]+']'):
             output.status(test_status='exists', test_id=test[:-5])
@@ -448,6 +447,7 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 mime_type='text/plain; charset=UTF-8',
                 eof=True)
 
+        # Take a screenshot of result if a failure occurred.
         if overall_status > 0 and args.virtual:
             screenshot = data['testName'] + '.png'
             disp.grab().save(screenshot)
@@ -467,7 +467,13 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 result = urllib2.urlopen(request).read()
                 print "Screenshot at:", re.findall("""<td><textarea wrap='off' onmouseover='this.focus\(\)' onfocus='this.select\(\)' id="code_1" scrolling="no">([^<]*)</textarea></td>""", result)
 
-        SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
+        response = "OK"
+        self.send_response(200)
+        self.send_header("Content-type", "text/plain")
+        self.send_header("Content-length", len(response))
+        self.end_headers()
+        self.wfile.write(response)
+        self.wfile.close()
 
 httpd = SocketServer.TCPServer(
     ("127.0.0.1", 0),  # Bind to any port on localhost
