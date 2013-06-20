@@ -1166,7 +1166,7 @@ var PathAnimationEffect = function(path, autoRotate, angle, composite) {
   AnimationEffect.call(this, constructorToken, composite);
   // TODO: path argument is not in the spec -- seems useful since
   // SVGPathSegList doesn't have a constructor.
-  this.autoRotate = autoRotate;
+  this.autoRotate = isDefined(autoRotate) ? autoRotate : 'none';
   this.angle = isDefined(angle) ? angle : 0;
   this._path = document.createElementNS('http://www.w3.org/2000/svg','path');
   if (path instanceof SVGPathSegList) {
