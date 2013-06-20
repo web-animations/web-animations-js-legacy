@@ -1162,11 +1162,18 @@ GroupedAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
 });
 
 /** @constructor */
-var PathAnimationEffect = function(path, operation, accumulateOperation) {
-  AnimationEffect.call(this, constructorToken, operation, accumulateOperation);
+var PathAnimationEffect = function(path, autoRotate, angle, composite) {
+  AnimationEffect.call(this, constructorToken, composite);
   // TODO: path argument is not in the spec -- seems useful since
   // SVGPathSegList doesn't have a constructor.
-  this._path = path;
+  this.autoRotate = autoRotate;
+  this.angle = isDefined(angle) ? angle : 0;
+  this._path = document.createElementNS('http://www.w3.org/2000/svg','path');
+  if (path instanceof SVGPathSegList) {
+    this.segments = path;
+  } else {
+    this._path.setAttribute('d', String(path));
+  }
 };
 
 PathAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
@@ -1177,28 +1184,44 @@ PathAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     var y = point.y - target.offsetHeight / 2;
     // TODO: calc(point.x - 50%) doesn't work?
     var value = [{t: 'translate', d: [{px: x}, {px: y}]}];
-    if (this.rotate) {
+    var angle = this.angle;
+    if (this._autoRotate == 'auto-rotate') {
       // Super hacks
       var lastPoint = this._path.getPointAtLength(timeFraction *
           length - 0.01);
       var dx = point.x - lastPoint.x;
       var dy = point.y - lastPoint.y;
       var rotation = Math.atan2(dy, dx);
-      value.push({t:'rotate', d: [rotation / 2 / Math.PI * 360]});
+      angle += rotation / 2 / Math.PI * 360;
     }
-    compositor.setAnimatedValue(target, "transform",
+    value.push({t:'rotate', d: [angle]});
+    compositor.setAnimatedValue(target, 'transform',
         new AnimatedResult(value, this.operation, timeFraction));
   },
   clone: function() {
     return new PathAnimationEffect(this._path.getAttribute('d'));
   },
+  set autoRotate(autoRotate) {
+    this._autoRotate = String(autoRotate);
+  },
+  get autoRotate() {
+    return this._autoRotate;
+  },
+  set angle(angle) {
+    // TODO: This should probably be a string with a unit, but the spec
+    //       says it's a double.
+    this._angle = Number(angle);
+  },
+  get angle() {
+    return this._angle;
+  },
   set segments(segments) {
-    // TODO: moving the path segments is not entirely correct, but we can't
-    // assign the list to the path.
-    var targetSegments = this._path.pathSegList;
+    var targetSegments = this.segments;
     targetSegments.clear();
-    for (var i = 0; i < segments.numberOfItems; i++) {
-      this._path.pathSegList.appendItem(segments.getItem(i));
+    // TODO: *moving* the path segments is not correct, but pathSegList
+    //       is read only
+    while (segments.numberOfItems) {
+      targetSegments.appendItem(segments.getItem(0));
     }
   },
   get segments() {
