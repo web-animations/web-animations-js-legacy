@@ -611,15 +611,8 @@ TimedItem.prototype = {
     return !this._isPastEndOfActiveInterval() ||
            (this.parent !== null && this.parent._isCurrent());
   },
-  _isTargetingElement: function(element) {
-    throw new Error(
-        "Derived classes must override TimedItem._isTargetingElement()");
-  },
-  _getAnimationsTargetingElement: function(element, animations) {
-    throw new Error(
-        "Derived classes must override " +
-        "TimedItem._getAnimationsTargetingElement()");
-  },
+  _isTargetingElement: abstractMethod,
+  _getAnimationsTargetingElement: abstractMethod,
   _netEffectivePlaybackRate: function() {
     var effectivePlaybackRate = this._isCurrentDirectionForwards() ?
         this.specified.playbackRate : -this.specified.playbackRate;
