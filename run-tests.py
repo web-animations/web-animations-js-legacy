@@ -298,9 +298,8 @@ import testtools
 import unittest
 
 if args.list:
-    data = file("test/testcases.jsonp").read()
-    print repr(data[data.find('(')+1:data.rfind(')')])
-    for test in simplejson.loads(data[data.find('(')+1:data.rfind(')')]):
+    data = file("test/testcases.js").read()
+    for test in re.compile("(?<=').+(?=')").findall(data):
         print test[:-5]
     sys.exit(-1)
 
@@ -332,8 +331,8 @@ else:
     if args.list:
         output = subunit.CopyStreamResult([summary, pertest])
         output.startTestRun()
-        for test in simplejson.loads(
-                file("test/testcases.js").read()[len("var tests = "):-5]+']'):
+        for test in re.compile("(?<=').+(?=')").findall(
+                file("test/testcases.js").read()):
             output.status(test_status='exists', test_id=test[:-5])
 
         output.stopTestRun()
