@@ -77,7 +77,6 @@ tbody.no-tests {
 var tests = [];
 function testCases(new_tests) { tests = new_tests; };
 function disabledTestCases(disabled_tests) {
-  // Remove failing tests from tests array, Javascript syle.
   disabled_tests.forEach(function(test) {
     var index = tests.indexOf(test);
     if (index >= 0) {
