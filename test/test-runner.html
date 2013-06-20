@@ -473,9 +473,8 @@ window.addEventListener(
  * Processes the test's results and put the information into the test object.
  *
  * @param {Element} test DOM object representing the test.
+ * @param {Array.<Object>} results List of testharness.js result objects.
  */
-
-
 function processResults(test, results) {
   function trueOffsetTop(element) {
     var t = 0;
