@@ -1,7 +1,5 @@
 /**
- * @preserve Copyright 2013 Google Inc. All Rights Reserved.
- *
- * vim: set expandtab shiftwidth=4 tabstop=4:
+ * Copyright 2013 Google Inc. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,8 +29,6 @@ var loadCSS = function(src)
             '<link rel="stylesheet" type="text/css" href="' + src + '">');
     };
 
-loadCSS('../test.css');
-
 loadScript('../testharness/testharness.js');
 loadCSS('../testharness/testharness.css');
 
@@ -47,3 +43,4 @@ document.write('<div id="log"></div>');
 loadScript('../testharness/testharnessreport.js');
 
 window.__coverage__ = parent.window.__coverage__;
+// vim: set expandtab shiftwidth=4 tabstop=4:
