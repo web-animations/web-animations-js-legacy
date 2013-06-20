@@ -69,14 +69,12 @@ height: 500px;
 
 var animFunc = new PathAnimationEffect(
     document.querySelector('#path1').pathSegList, 'auto-rotate');
-animFunc.rotate = true;
 
 document.timeline.play(new Animation(document.querySelector("#anim1"),
     animFunc, {iterationDuration: 2, iterationCount: 2}));
 
 var animFunc2 = new PathAnimationEffect(
     document.querySelector('#path2').pathSegList, 'auto-rotate');
-animFunc2.rotate = true;
 
 document.timeline.play(new Animation(document.querySelector("#anim2"),
     animFunc2, {iterationDuration: 2, iterationCount: 2}));
