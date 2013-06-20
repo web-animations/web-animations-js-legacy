@@ -43,6 +43,36 @@
 
     /* ********************************************************************* */
 
+    var pageerror_test = async_test("Page contains no errors");
+
+    function pageerror_onerror_callback(evt) {
+        var msg = "Error in " + evt.filename + "\n" +
+                  "Line " + evt.lineno + ": " + evt.message + "\n";
+
+        pageerror_test.is_done = true;
+        pageerror_test.step(function() { 
+            assert_true(false, msg);
+        });
+        pageerror_test.is_done = false;
+    };
+    addEventListener('error', pageerror_onerror_callback);
+
+    var pageerror_tests;
+    function pageerror_othertests_finished(test, harness) {
+        if (harness == null && pageerror_tests == null)
+            return;
+
+        if (pageerror_tests == null)
+            pageerror_tests = harness;
+
+        if (pageerror_tests.all_loaded && pageerror_tests.num_pending == 1) {
+            pageerror_test.done();
+        }
+    }
+    add_result_callback(pageerror_othertests_finished);
+    addEventListener('load', pageerror_othertests_finished);
+
+    /* ********************************************************************* */
     var svg_properties = {
         'cx': 1,
         'width': 1,
