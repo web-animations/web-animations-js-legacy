@@ -76,17 +76,8 @@ tbody.no-tests {
 'use strict';
 var tests = [];
 function testCases(new_tests) { tests = new_tests; };
-function disabledTestCases(disabled_tests) {
-  disabled_tests.forEach(function(test) {
-    var index = tests.indexOf(test);
-    if (index >= 0) {
-      tests.splice(index, 1);
-    }
-  });
-};
 </script>
 <script src="testcases.jsonp?jsonp=testCases"></script>
-<script src="disabled-testcases.jsonp?jsonp=disabledTestCases"></script>
 
 <div id=status-box>
 <h1 id=status>Pending</h1>

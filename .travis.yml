@@ -11,6 +11,7 @@ install:
   - ./.travis-setup.sh
 
 script:
+  - python ./test/update-testcases.py || (echo "Please run update-testcases!"; false)
   - python run-tests.py -a -u -x -b $(echo $BROWSER | sed -e's/-.*//')
 
 after_failure:
