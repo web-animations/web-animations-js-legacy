@@ -29,8 +29,6 @@ var loadCSS = function(src)
             '<link rel="stylesheet" type="text/css" href="' + src + '">');
     };
 
-loadCSS('../test.css');
-
 loadScript('../testharness/testharness.js');
 loadCSS('../testharness/testharness.css');
 
