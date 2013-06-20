@@ -313,8 +313,7 @@ Player.prototype = {
         this.source._isPastEndOfActiveInterval();
   },
   _isCurrent: function() {
-    return this.source === null ||
-        this.source._isCurrent();
+    return this.source && this.source._isCurrent();
   },
   _getLeafItemsInEffect: function(items) {
     if (this.source) {
