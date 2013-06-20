@@ -1,5 +1,0 @@
-disabledTestCases([
-  "test-change-playback-rate.html", // Hits a current bunch of bugs.
-  "test-media.html", // Scripts fail before adding tests, test file passes erroneously.
-  "test-iteration-start.html", // Test fails visually.
-]);

@@ -295,8 +295,9 @@ else:
 
 import subunit, testtools, unittest
 if args.list:
-    for test in simplejson.loads(
-            file("test/testcases.jsonp").read()[len("testCases("):-(len(");")+1)]):
+    data = file("test/testcases.jsonp").read()
+    print repr(data[data.find('(')+1:data.rfind(')')])
+    for test in simplejson.loads(data[data.find('(')+1:data.rfind(')')]):
         print test[:-5]
     sys.exit(-1)
 
