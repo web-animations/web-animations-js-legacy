@@ -525,6 +525,9 @@
 
     function testharness_timeline_setup()
     {
+        if (!testharness_timeline_tests)
+            return;
+
         testharness_timeline.createGUI(document.getElementsByTagName("body")[0]);
         testharness_timeline.start();
         testharness_timeline.updateGUI();
@@ -556,8 +559,11 @@
     }
     addEventListener('load', testharness_timeline_setup);
 
+    var testharness_timeline_tests = false;
     function test_at(time, f, desc)
     {
+        testharness_timeline_tests = true;
+
         var t = async_test(desc);
         t.f = f;
         window.testharness_timeline.schedule(t, time*1000);
