@@ -77,10 +77,9 @@ var pgroup2 = new ParGroup([a3, a4], {name: "p2"});
 var player = document.timeline.play(
     new SeqGroup([pgroup1, pgroup2], {name: "s"}));
 
-// FIXME: Tests!?
-test_at(1.0, function() { player.paused = true; });
-test_at(2.0, function() { player.paused = false; });
-test_at(4.0, function() { player.paused = true; });
-test_at(5.0, function() { player.paused = false; });
+at(1.0, function() { player.paused = true; });
+at(2.0, function() { player.paused = false; });
+at(4.0, function() { player.paused = true; });
+at(5.0, function() { player.paused = false; });
 
 </script>
