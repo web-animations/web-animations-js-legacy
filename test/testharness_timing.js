@@ -16,6 +16,28 @@
 "use strict";
 
 (function() {
+
+    /**
+     * These functions come from testharness.js but can't be access because
+     * testharness uses an anonymous function to hide them.
+     **************************************************************************
+     */
+    function expose(object, name)
+    {
+        var components = name.split(".");
+        var target = window;
+        for (var i=0; i<components.length - 1; i++)
+        {
+            if (!(components[i] in target))
+            {
+                target[components[i]] = {};
+            }
+            target = target[components[i]];
+        }
+        target[components[components.length - 1]] = object;
+    }
+    /* ********************************************************************* */
+
     setup(function() {}, {explicit_timeout: true});
 
     /**
@@ -519,13 +541,12 @@
     // FIXME
     if (/start=disable/.test(window.location.hash)) {
         window.testharness_timeline = {"schedule": function(f, t) { setTimeout(f, t) }};
-        window.test_at = function() {};
         return;
     }
 
     function testharness_timeline_setup()
     {
-        if (!testharness_timeline_tests)
+        if (!testharness_timeline_enabled)
             return;
 
         testharness_timeline.createGUI(document.getElementsByTagName("body")[0]);
@@ -559,19 +580,66 @@
     }
     addEventListener('load', testharness_timeline_setup);
 
-    var testharness_timeline_tests = false;
-    function test_at(time, f, desc)
-    {
-        testharness_timeline_tests = true;
+    // Capture testharness's test as we are about to screw with it.
+    var testharness_test = window.test;
 
-        var t = async_test(desc);
-        t.f = f;
-        window.testharness_timeline.schedule(t, time*1000);
+    function override_at(replacement_at, f, args) {
+        var orig_at = window.at;
+        window.at = replacement_at;
+        f.apply(args);
+        window.at = orig_at;
     }
 
+    var testharness_timeline_enabled = false;
+    function timing_test(f, desc) {
+        testharness_timeline_enabled = true;
+
+        /**
+         * at function inside a timing_test function allows testing things at a
+         * given time rather then onload.
+         * @param {number} seconds Seconds after page load to run the tests.
+         * @param {function()} f Closure containing the asserts to be run.
+         * @param {string} desc Description 
+         */
+        var at = function(seconds, f)
+        {
+            assert_true(typeof seconds == "number", "at's first argument shoud be a number.");
+            assert_true(typeof f == "function", "at's second argument should be a function.");
+
+            var t = async_test(desc + " at t=" + seconds + "s");
+            t.f = f;
+            window.testharness_timeline.schedule(t, seconds*1000.0);
+        };
+        override_at(at, f);
+    }
+    expose(timing_test, "timing_test");
+
+    function test_without_at(f, desc) {
+       // Make sure calling at inside a test() function is a failure.
+        override_at(function() { 
+                throw {"message": "Can not use at() inside a test, use a timing_test instead."};
+            }, function() { testharness_test(f, desc) });
+    }
+    expose(test_without_at, "test");
+
+    /**
+     * at function schedules a to be called at a given point.
+     * @param {number} seconds Seconds after page load to run the function.
+     * @param {function()} f Function to be called. Called with no arguments
+     */
+    function at(seconds, f)
+    {
+        testharness_timeline_enabled = true;
+
+        assert_true(typeof seconds == "number", "at's first argument shoud be a number.");
+        assert_true(typeof f == "function", "at's second argument should be a function.");
+
+        window.testharness_timeline.schedule(f, seconds*1000.0);
+    }
+    expose(at, "at");
+
     // Expose the extra API
-    window.test_at = test_at;
-    window.testharness_timeline = new TestTimeline();
+    expose(new TestTimeline(), "testharness_timeline");
 
     // Override existing timing functions
     window.requestAnimationFrame =
