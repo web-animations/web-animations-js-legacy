@@ -77,6 +77,12 @@ function instrument(src) {
   var inst = window.__resources__[src] = new Instrumenter().instrumentSync(js, src);
 }
 
+// Can't use the setting framework to get this information because we are not
+// going to load any testharness stuff!
+if (/testharness=disable/.test(window.location.href)) {
+  loadScript('../../web-animations.js');
+  return;
+}
 
 loadScript('../testharness/testharness.js');
 loadCSS('../testharness/testharness.css');
