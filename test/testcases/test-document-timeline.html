@@ -37,14 +37,15 @@ function sleep() {
 }
 
 // Test that document.timeline.currentTime is read-only.
-test_at(1.0, function() {assert_not_equals(document.timeline.currentTime,  1)},
-        "document.timeline.currentTime should be read-only");
+timing_test(function() {
+    at(1.0, function() {assert_not_equals(document.timeline.currentTime,  1)});
+  }, "document.timeline.currentTime should be read-only");
 
 // Test that document.timeline.currentTime is constant within a JavaScript
 // callstack.
-test_at(0.0, function() {assert_equals(document.timeline.currentTime, 0.0)},
-        "document.timeline.currentTime time should be constant in JavaScript " +
-        "callstack");
+timing_test(function() {
+    at(0.0, function() {assert_equals(document.timeline.currentTime, 0.0)});
+  }, "document.timeline.currentTime time should be constant in JavaScript callstack");
 
 // Test that document.timeline.currentTime is non-null in an onload handler
 // when using performance timing. Note that this assumes that web-animations.js

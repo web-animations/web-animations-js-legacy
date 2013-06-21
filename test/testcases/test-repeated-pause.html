@@ -33,23 +33,23 @@ var player = document.timeline.play(new Animation(
 
 // Test that repeatedly setting Player.paused to true does not affect the
 // Player's currentTime.
-test_at(
-  0.1,
-  function() {
-    player.paused = true;
-    assert_equals(player.currentTime, 0.1);
+timing_test(function() {
+    at(0.1, function() {
+      player.paused = true;
+      assert_equals(player.currentTime, 0.1);
+    });
   },
   "Player.currentTime should be " +
   "unaffected by repeatedly setting Player.paused to true");
 
 // Test that repeatedly setting Player.paused to false has no effect.
-test_at(
-   0.2,
-   function() {
-       player.paused = false;
-       assert_equals(player.currentTime, 0.1);
-   },
-   "Player.currentTime should be " +
-   "unaffected by repeatedly setting Player.paused to false");
+timing_test(function() {
+    at(0.2, function() {
+      player.paused = false;
+      assert_equals(player.currentTime, 0.1);
+    });
+  },
+  "Player.currentTime should be " +
+  "unaffected by repeatedly setting Player.paused to false");
 
 </script>
