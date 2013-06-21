@@ -56,6 +56,19 @@ test_at(2, function() {
 
 }, 'Updated style should be visible after change to animation tree');
 
+test_at(3, function() {
+  var anim = element.animate({color: ['red', 'green', 'red']}, 1);
+  // TODO: Really this should already be in effect, since the start
+  //       time == lastTick. But if that is fixed it's unclear how
+  //       to start an animation after the last tick (in this
+  //       harness).
+  assert_equals(anim.player.startTime, 3);
+  assert_styles(element, {color: 'inherit'});
+
+  anim.player.startTime -= 0.5;
+  assert_styles(element, {color: 'green'});
+}, 'Changing the start time of a new player to before the current time should cause it to take effect');
+
 var anim3 = element.animate({bottom: ['0px', '1000px']}, 10);
 // Run this last, since if it fails it's likely to corrupt the other tests.
 test_at(5, function() {

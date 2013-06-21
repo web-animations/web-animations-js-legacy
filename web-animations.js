@@ -259,7 +259,7 @@ Player.prototype = {
       this._currentTime = currentTime;
     } finally {
       exitModifyCurrentAnimationState(
-          this._hasTicked || this._currentTime < lastTickTime);
+          this._hasTicked || this.startTime + this._timeDrift <= lastTickTime);
     }
   },
   get currentTime() {
@@ -294,7 +294,8 @@ Player.prototype = {
       this._update();
       maybeRestartAnimation();
     } finally {
-      exitModifyCurrentAnimationState(this._hasTicked);
+      exitModifyCurrentAnimationState(
+          this._hasTicked || this.startTime + this._timeDrift <= lastTickTime);
     }
   },
   get startTime() {
