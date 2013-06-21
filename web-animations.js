@@ -3040,10 +3040,6 @@ var ticker = function(rafTime) {
   // Composite animated values into element styles
   compositor.applyAnimatedValues();
 
-  if (window.webAnimVisUpdateAnims) {
-    webAnimVisUpdateAnims();
-  }
-
   if (finished || paused) {
     rafScheduled = false;
   } else {
