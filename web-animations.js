@@ -244,7 +244,7 @@ Player.prototype = {
       this._update();
       maybeRestartAnimation();
     }
-    exitModifyCurrentAnimationState(this._hasTicked ? this : null);
+    exitModifyCurrentAnimationState(this._hasTicked);
   },
   get source() {
     return this._source;
@@ -253,7 +253,8 @@ Player.prototype = {
   set currentTime(currentTime) {
     enterModifyCurrentAnimationState();
     this._currentTime = currentTime;
-    exitModifyCurrentAnimationState(this._hasTicked ? this : null);
+    exitModifyCurrentAnimationState(
+        this._hasTicked || this._currentTime < lastTickTime);
   },
   get currentTime() {
     return this._currentTime === null ? 0 : this._currentTime;
@@ -285,7 +286,7 @@ Player.prototype = {
     this._startTime = startTime;
     this._update();
     maybeRestartAnimation();
-    exitModifyCurrentAnimationState(this._hasTicked ? this : null);
+    exitModifyCurrentAnimationState(this._hasTicked);
   },
   get startTime() {
     return this._startTime;
@@ -312,7 +313,7 @@ Player.prototype = {
     // This will impact currentTime, so perform a compensatory seek.
     this._playbackRate = playbackRate;
     this.currentTime = cachedCurrentTime;
-    exitModifyCurrentAnimationState(this._hasTicked ? this : null);
+    exitModifyCurrentAnimationState(this._hasTicked);
   },
   get playbackRate() {
     return this._playbackRate;
@@ -443,7 +444,7 @@ TimedItem.prototype = {
   _specifiedTimingModified: function() {
     enterModifyCurrentAnimationState();
     this._updateInternalState();
-    exitModifyCurrentAnimationState(this.player);
+    exitModifyCurrentAnimationState(this.player && this.player._hasTicked);
   },
   // We push time down to children. We could instead have children pull from
   // above, but this is tricky because a TimedItem may use either a parent
@@ -676,17 +677,19 @@ var cloneAnimationEffect = function(animationEffect) {
 
 /** @constructor */
 var Animation = function(target, animationEffect, timingInput) {
+  enterModifyCurrentAnimationState();
   TimedItem.call(this, constructorToken, timingInput);
 
-  this.animationEffect = interpretAnimationEffect(animationEffect);
+  this.effect = interpretAnimationEffect(animationEffect);
   this.targetElement = target;
-  this.name = this.animationEffect instanceof KeyframeAnimationEffect ?
-      this.animationEffect.property : '<anon>';
+  this.name = this.effect instanceof KeyframeAnimationEffect ?
+      this.effect.property : '<anon>';
+  exitModifyCurrentAnimationState(false);
 };
 
 Animation.prototype = createObject(TimedItem.prototype, {
   _sample: function() {
-    this.animationEffect.sample(this._timeFraction,
+    this.effect.sample(this._timeFraction,
         this.currentIteration, this.targetElement,
         this.underlyingValue);
   },
@@ -701,13 +704,21 @@ Animation.prototype = createObject(TimedItem.prototype, {
       animations.push(this);
     }
   },
+  set effect(effect) {
+    enterModifyCurrentAnimationState();
+    this._effect = effect;
+    exitModifyCurrentAnimationState(this.player && this.player._hasTicked);
+  },
+  get effect() {
+    return this._effect;
+  },
   clone: function() {
     return new Animation(this.targetElement,
-        cloneAnimationEffect(this.animationEffect), this.specified._dict);
+        cloneAnimationEffect(this.effect), this.specified._dict);
   },
   toString: function() {
-    var funcDescr = this.animationEffect instanceof AnimationEffect ?
-        this.animationEffect.toString() : 'Custom scripted function';
+    var funcDescr = this.effect instanceof AnimationEffect ?
+        this.effect.toString() : 'Custom scripted function';
     return 'Animation ' + this.startTime + '-' + this.endTime + ' (' +
         this.localTime + ') ' + funcDescr;
   },
@@ -889,7 +900,7 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
     }
     this._lengthChanged();
     this._childrenStateModified();
-    exitModifyCurrentAnimationState(this.player);
+    exitModifyCurrentAnimationState(this.player && this.player._hasTicked);
     return result;
   },
   _isInclusiveAncestor: function(item) {
@@ -1181,6 +1192,7 @@ GroupedAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
 
 /** @constructor */
 var PathAnimationEffect = function(path, autoRotate, angle, composite) {
+  enterModifyCurrentAnimationState();
   AnimationEffect.call(this, constructorToken, composite);
   // TODO: path argument is not in the spec -- seems useful since
   // SVGPathSegList doesn't have a constructor.
@@ -1192,6 +1204,7 @@ var PathAnimationEffect = function(path, autoRotate, angle, composite) {
   } else {
     this._path.setAttribute('d', String(path));
   }
+  exitModifyCurrentAnimationState(false);
 };
 
 PathAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
@@ -1220,20 +1233,25 @@ PathAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     return new PathAnimationEffect(this._path.getAttribute('d'));
   },
   set autoRotate(autoRotate) {
+    enterModifyCurrentAnimationState();
     this._autoRotate = String(autoRotate);
+    exitModifyCurrentAnimationState(true);
   },
   get autoRotate() {
     return this._autoRotate;
   },
   set angle(angle) {
+    enterModifyCurrentAnimationState();
     // TODO: This should probably be a string with a unit, but the spec
     //       says it's a double.
     this._angle = Number(angle);
+    exitModifyCurrentAnimationState(true);
   },
   get angle() {
     return this._angle;
   },
   set segments(segments) {
+    enterModifyCurrentAnimationState();
     var targetSegments = this.segments;
     targetSegments.clear();
     // TODO: *moving* the path segments is not correct, but pathSegList
@@ -1241,6 +1259,7 @@ PathAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     while (segments.numberOfItems) {
       targetSegments.appendItem(segments.getItem(0));
     }
+    exitModifyCurrentAnimationState(true);
   },
   get segments() {
     return this._path.pathSegList;
@@ -3030,9 +3049,9 @@ var modifyCurrentAnimationStateDepth = 0;
 var enterModifyCurrentAnimationState = function() {
   modifyCurrentAnimationStateDepth++;
 };
-var exitModifyCurrentAnimationState = function(associatedPlayer) {
+var exitModifyCurrentAnimationState = function(shouldRepeat) {
   modifyCurrentAnimationStateDepth--;
-  if (modifyCurrentAnimationStateDepth == 0 && associatedPlayer) {
+  if (modifyCurrentAnimationStateDepth == 0 && shouldRepeat) {
     repeatLastTick();
   }
 };
