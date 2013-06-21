@@ -112,13 +112,15 @@ for (var i = 0; i < directions.length; i++) {
   var group2 = groupWithFixedDuration(direction);
   document.timeline.play(group2);
 
-  test_at(0.75, (function(container, group1, group2) {
-    return function() {
-      group1.append(new Animation(container.getElementsByClassName("a")[0],
-          animation, {iterationDuration: 1.0}));
-      group2.append(new Animation(container.getElementsByClassName("b")[0],
-          animation, {iterationDuration: 1.0}));
-    };
-  }(container, group1, group2)));
+  timing_test(function() {
+      at(0.75, function(container, group1, group2) {
+        return function() {
+          group1.append(new Animation(container.getElementsByClassName("a")[0],
+              animation, {iterationDuration: 1.0}));
+          group2.append(new Animation(container.getElementsByClassName("b")[0],
+              animation, {iterationDuration: 1.0}));
+        };
+      }(container, group1, group2))
+    });
 }
 </script>

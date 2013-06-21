@@ -42,22 +42,24 @@ limitations under the License.
 
 <script src="../testharness_bootstrap.js"></script>
 <script>
-  "use strict";
+"use strict";
 
-  test_at(0.00, function() { assert_styles(".anim", {"left": "0px"}) }, "Left 0px at t=0");
-  test_at(0.25, function() { assert_styles(".anim", {"left": "100px"}) }, "Left 100px at t=0.25");
-  test_at(0.50, function() { assert_styles(".anim", {"left": "200px"}) }, "Left 200px at t=0.5");
+timing_test(function() {
+    at(0.00, function() { assert_styles(".anim", {"left": "0px"}) });
+    at(0.25, function() { assert_styles(".anim", {"left": "100px"}) });
+    at(0.50, function() { assert_styles(".anim", {"left": "200px"}) });
+  }, "Check left position");
 
-  window.addEventListener('load', function() {
-    var s = document.createElement('script');
-    s.src = "../../web-animations.js";
-    s.addEventListener('load', function() {
-      document.timeline.play(new Animation(a,
-        {"left": ["0px", "200px"]},
-        0.5
-      ));
+window.addEventListener('load', function() {
+  var s = document.createElement('script');
+  s.src = "../../web-animations.js";
+  s.addEventListener('load', function() {
+    document.timeline.play(new Animation(a,
+      {"left": ["0px", "200px"]},
+      0.5
+    ));
 
-    })
-    document.head.appendChild(s);
-  });
+  })
+  document.head.appendChild(s);
+});
 </script>
