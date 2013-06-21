@@ -232,19 +232,22 @@ var Player = function(token, source, timeline) {
 Player.prototype = {
   set source(source) {
     enterModifyCurrentAnimationState();
-    if (isDefinedAndNotNull(this.source)) {
-      // To prevent infinite recursion.
-      var oldTimedItem = this.source;
-      this._source = null;
-      oldTimedItem._attach(null);
+    try {
+      if (isDefinedAndNotNull(this.source)) {
+        // To prevent infinite recursion.
+        var oldTimedItem = this.source;
+        this._source = null;
+        oldTimedItem._attach(null);
+      }
+      this._source = source;
+      if (isDefinedAndNotNull(this.source)) {
+        this.source._attach(this);
+        this._update();
+        maybeRestartAnimation();
+      }
+    } finally {
+      exitModifyCurrentAnimationState(this._hasTicked);
     }
-    this._source = source;
-    if (isDefinedAndNotNull(this.source)) {
-      this.source._attach(this);
-      this._update();
-      maybeRestartAnimation();
-    }
-    exitModifyCurrentAnimationState(this._hasTicked);
   },
   get source() {
     return this._source;
@@ -252,9 +255,12 @@ Player.prototype = {
   // This is the effective current time.
   set currentTime(currentTime) {
     enterModifyCurrentAnimationState();
-    this._currentTime = currentTime;
-    exitModifyCurrentAnimationState(
-        this._hasTicked || this._currentTime < lastTickTime);
+    try {
+      this._currentTime = currentTime;
+    } finally {
+      exitModifyCurrentAnimationState(
+          this._hasTicked || this._currentTime < lastTickTime);
+    }
   },
   get currentTime() {
     return this._currentTime === null ? 0 : this._currentTime;
@@ -281,12 +287,15 @@ Player.prototype = {
   },
   set startTime(startTime) {
     enterModifyCurrentAnimationState();
-    // This seeks by updating _startTime and hence the currentTime. It does not
-    // affect _drift.
-    this._startTime = startTime;
-    this._update();
-    maybeRestartAnimation();
-    exitModifyCurrentAnimationState(this._hasTicked);
+    try {
+      // This seeks by updating _startTime and hence the currentTime. It does not
+      // affect _drift.
+      this._startTime = startTime;
+      this._update();
+      maybeRestartAnimation();
+    } finally {
+      exitModifyCurrentAnimationState(this._hasTicked);
+    }
   },
   get startTime() {
     return this._startTime;
@@ -309,11 +318,14 @@ Player.prototype = {
   },
   set playbackRate(playbackRate) {
     enterModifyCurrentAnimationState();
-    var cachedCurrentTime = this.currentTime;
-    // This will impact currentTime, so perform a compensatory seek.
-    this._playbackRate = playbackRate;
-    this.currentTime = cachedCurrentTime;
-    exitModifyCurrentAnimationState(this._hasTicked);
+    try {
+      var cachedCurrentTime = this.currentTime;
+      // This will impact currentTime, so perform a compensatory seek.
+      this._playbackRate = playbackRate;
+      this.currentTime = cachedCurrentTime;
+    } finally {
+      exitModifyCurrentAnimationState(this._hasTicked);
+    }
   },
   get playbackRate() {
     return this._playbackRate;
@@ -411,26 +423,29 @@ TimedItem.prototype = {
       throw new Error('parent can not be set to self!');
     }
     enterModifyCurrentAnimationState();
-    if (this._player !== null) {
-      this._player.source = null;
-      this._player = null;
+    try {
+      if (this._player !== null) {
+        this._player.source = null;
+        this._player = null;
+      }
+      if (this.parent !== null) {
+        this.remove();
+      }
+      this._parent = parent;
+      // In the case of a SeqGroup parent, _startTime will be updated by
+      // TimingGroup.splice().
+      if (this.parent === null || this.parent.type !== 'seq') {
+        this._startTime =
+            this._stashedStartTime === undefined ? 0.0 : this._stashedStartTime;
+        this._stashedStartTime = undefined;
+      }
+      // In the case of the parent being non-null, _childrenStateModified() will
+      // call this via _updateChildInheritedTimes().
+      // TODO: Consider optimising this case by skipping this call.
+      this._updateTimeMarkers();
+    } finally {
+      exitModifyCurrentAnimationState();
     }
-    if (this.parent !== null) {
-      this.remove();
-    }
-    this._parent = parent;
-    // In the case of a SeqGroup parent, _startTime will be updated by
-    // TimingGroup.splice().
-    if (this.parent === null || this.parent.type !== 'seq') {
-      this._startTime =
-          this._stashedStartTime === undefined ? 0.0 : this._stashedStartTime;
-      this._stashedStartTime = undefined;
-    }
-    // In the case of the parent being non-null, _childrenStateModified() will
-    // call this via _updateChildInheritedTimes().
-    // TODO: Consider optimising this case by skipping this call.
-    this._updateTimeMarkers();
-    exitModifyCurrentAnimationState();
   },
   _intrinsicDuration: function() {
     return 0.0;
@@ -443,8 +458,11 @@ TimedItem.prototype = {
   },
   _specifiedTimingModified: function() {
     enterModifyCurrentAnimationState();
-    this._updateInternalState();
-    exitModifyCurrentAnimationState(this.player && this.player._hasTicked);
+    try {
+      this._updateInternalState();
+    } finally {
+      exitModifyCurrentAnimationState(this.player && this.player._hasTicked);
+    }
   },
   // We push time down to children. We could instead have children pull from
   // above, but this is tricky because a TimedItem may use either a parent
@@ -678,13 +696,15 @@ var cloneAnimationEffect = function(animationEffect) {
 /** @constructor */
 var Animation = function(target, animationEffect, timingInput) {
   enterModifyCurrentAnimationState();
-  TimedItem.call(this, constructorToken, timingInput);
-
-  this.effect = interpretAnimationEffect(animationEffect);
-  this.targetElement = target;
-  this.name = this.effect instanceof KeyframeAnimationEffect ?
-      this.effect.property : '<anon>';
-  exitModifyCurrentAnimationState(false);
+  try {
+    TimedItem.call(this, constructorToken, timingInput);
+    this.effect = interpretAnimationEffect(animationEffect);
+    this.targetElement = target;
+    this.name = this.effect instanceof KeyframeAnimationEffect ?
+        this.effect.property : '<anon>';
+  } finally {
+    exitModifyCurrentAnimationState(false);
+  }
 };
 
 Animation.prototype = createObject(TimedItem.prototype, {
@@ -706,8 +726,11 @@ Animation.prototype = createObject(TimedItem.prototype, {
   },
   set effect(effect) {
     enterModifyCurrentAnimationState();
-    this._effect = effect;
-    exitModifyCurrentAnimationState(this.player && this.player._hasTicked);
+    try {
+      this._effect = effect;
+    } finally {
+      exitModifyCurrentAnimationState(this.player && this.player._hasTicked);
+    }
   },
   get effect() {
     return this._effect;
@@ -883,25 +906,28 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
   },
   _splice: function(start, deleteCount, newItems) {
     enterModifyCurrentAnimationState();
-    var args = arguments;
-    if (args.length == 3) {
-      args = [start, deleteCount].concat(newItems);
-    }
-    for (var i = 2; i < args.length; i++) {
-      var newChild = args[i];
-      if (this._isInclusiveAncestor(newChild)) {
-        throwNewHierarchyRequestError();
+    try {
+      var args = arguments;
+      if (args.length == 3) {
+        args = [start, deleteCount].concat(newItems);
       }
-      newChild._reparent(this);
+      for (var i = 2; i < args.length; i++) {
+        var newChild = args[i];
+        if (this._isInclusiveAncestor(newChild)) {
+          throwNewHierarchyRequestError();
+        }
+        newChild._reparent(this);
+      }
+      var result = Array.prototype['splice'].apply(this.children, args);
+      for (var i = 0; i < result.length; i++) {
+        result[i]._parent = null;
+      }
+      this._lengthChanged();
+      this._childrenStateModified();
+      return result;
+    } finally {
+      exitModifyCurrentAnimationState(this.player && this.player._hasTicked);
     }
-    var result = Array.prototype['splice'].apply(this.children, args);
-    for (var i = 0; i < result.length; i++) {
-      result[i]._parent = null;
-    }
-    this._lengthChanged();
-    this._childrenStateModified();
-    exitModifyCurrentAnimationState(this.player && this.player._hasTicked);
-    return result;
   },
   _isInclusiveAncestor: function(item) {
     for (var ancestor = this; ancestor != null;
@@ -1193,18 +1219,21 @@ GroupedAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
 /** @constructor */
 var PathAnimationEffect = function(path, autoRotate, angle, composite) {
   enterModifyCurrentAnimationState();
-  AnimationEffect.call(this, constructorToken, composite);
-  // TODO: path argument is not in the spec -- seems useful since
-  // SVGPathSegList doesn't have a constructor.
-  this.autoRotate = isDefined(autoRotate) ? autoRotate : 'none';
-  this.angle = isDefined(angle) ? angle : 0;
-  this._path = document.createElementNS('http://www.w3.org/2000/svg','path');
-  if (path instanceof SVGPathSegList) {
-    this.segments = path;
-  } else {
-    this._path.setAttribute('d', String(path));
+  try {
+    AnimationEffect.call(this, constructorToken, composite);
+    // TODO: path argument is not in the spec -- seems useful since
+    // SVGPathSegList doesn't have a constructor.
+    this.autoRotate = isDefined(autoRotate) ? autoRotate : 'none';
+    this.angle = isDefined(angle) ? angle : 0;
+    this._path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    if (path instanceof SVGPathSegList) {
+      this.segments = path;
+    } else {
+      this._path.setAttribute('d', String(path));
+    }
+  } finally {
+    exitModifyCurrentAnimationState(false);
   }
-  exitModifyCurrentAnimationState(false);
 };
 
 PathAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
@@ -1234,32 +1263,41 @@ PathAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
   },
   set autoRotate(autoRotate) {
     enterModifyCurrentAnimationState();
-    this._autoRotate = String(autoRotate);
-    exitModifyCurrentAnimationState(true);
+    try {
+      this._autoRotate = String(autoRotate);
+    } finally {
+      exitModifyCurrentAnimationState(true);
+    }
   },
   get autoRotate() {
     return this._autoRotate;
   },
   set angle(angle) {
     enterModifyCurrentAnimationState();
-    // TODO: This should probably be a string with a unit, but the spec
-    //       says it's a double.
-    this._angle = Number(angle);
-    exitModifyCurrentAnimationState(true);
+    try {
+      // TODO: This should probably be a string with a unit, but the spec
+      //       says it's a double.
+      this._angle = Number(angle);
+    } finally {
+      exitModifyCurrentAnimationState(true);
+    }
   },
   get angle() {
     return this._angle;
   },
   set segments(segments) {
     enterModifyCurrentAnimationState();
-    var targetSegments = this.segments;
-    targetSegments.clear();
-    // TODO: *moving* the path segments is not correct, but pathSegList
-    //       is read only
-    while (segments.numberOfItems) {
-      targetSegments.appendItem(segments.getItem(0));
+    try {
+      var targetSegments = this.segments;
+      targetSegments.clear();
+      // TODO: *moving* the path segments is not correct, but pathSegList
+      //       is read only
+      while (segments.numberOfItems) {
+        targetSegments.appendItem(segments.getItem(0));
+      }
+    } finally {
+      exitModifyCurrentAnimationState(true);
     }
-    exitModifyCurrentAnimationState(true);
   },
   get segments() {
     return this._path.pathSegList;
