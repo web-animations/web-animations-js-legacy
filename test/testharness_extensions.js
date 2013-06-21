@@ -220,6 +220,15 @@
     }
     window.testharness_setting_register = setting_register;
 
+    (function() {
+        var b = document.createElement('button');
+        b.innerText = "Disable";
+        b.onclick = function() {
+            testharness_setting_set('testharness', 'disabled');
+        }
+        testharness_setting_register("Test Harness", b);
+    })();
+
     /* ********************************************************************* */
     var svg_properties = {
         'cx': 1,
