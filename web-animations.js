@@ -445,7 +445,7 @@ TimedItem.prototype = {
       // TODO: Consider optimising this case by skipping this call.
       this._updateTimeMarkers();
     } finally {
-      exitModifyCurrentAnimationState();
+      exitModifyCurrentAnimationState(Boolean(this.player) && this.player._hasTicked);
     }
   },
   _intrinsicDuration: function() {
@@ -462,7 +462,7 @@ TimedItem.prototype = {
     try {
       this._updateInternalState();
     } finally {
-      exitModifyCurrentAnimationState(this.player && this.player._hasTicked);
+      exitModifyCurrentAnimationState(Boolean(this.player) && this.player._hasTicked);
     }
   },
   // We push time down to children. We could instead have children pull from
@@ -730,7 +730,7 @@ Animation.prototype = createObject(TimedItem.prototype, {
     try {
       this._effect = effect;
     } finally {
-      exitModifyCurrentAnimationState(this.player && this.player._hasTicked);
+      exitModifyCurrentAnimationState(Boolean(this.player) && this.player._hasTicked);
     }
   },
   get effect() {
@@ -927,7 +927,7 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
       this._childrenStateModified();
       return result;
     } finally {
-      exitModifyCurrentAnimationState(this.player && this.player._hasTicked);
+      exitModifyCurrentAnimationState(Boolean(this.player) && this.player._hasTicked);
     }
   },
   _isInclusiveAncestor: function(item) {
@@ -3082,14 +3082,20 @@ var cachedClockTime = function() {
 };
 
 
-// These functions should be called in every stack that could possibly cause a
-// subsequent tick with the last tick time to apply different effect results.
+// These functions should be called in every stack that could possibly modify
+// the effect results that have already been calculated for the current tick.
 var modifyCurrentAnimationStateDepth = 0;
 var enterModifyCurrentAnimationState = function() {
   modifyCurrentAnimationStateDepth++;
 };
 var exitModifyCurrentAnimationState = function(shouldRepeat) {
   modifyCurrentAnimationStateDepth--;
+  // shouldRepeat is set false when we know we can't possibly affect the current
+  // state (eg. a TimedItem which is not attached to a player). We track the
+  // depth of recursive calls trigger just one repeat per entry. Only the value
+  // of shouldRepeat from the outermost call is considered, this allows certain
+  // locatations (eg. constructors) to override nested calls that would
+  // otherwise set shouldRepeat unconditionally.
   if (modifyCurrentAnimationStateDepth == 0 && shouldRepeat) {
     repeatLastTick();
   }
