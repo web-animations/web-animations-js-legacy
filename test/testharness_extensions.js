@@ -172,84 +172,91 @@
             document.createElementNS(svg_namespace_uri, object.nodeName) :
             document.createElement(object.nodeName);
         reference_element.style.position = "absolute";
-        object.parentNode.appendChild(reference_element);
-
-        // Apply the style
-        for (var prop_name in style)
-        {
-            // If the passed in value is an element then grab its current style for
-            // that property
-            if (style[prop_name] instanceof HTMLElement ||
-                    style[prop_name] instanceof SVGElement) {
-
-                var prop_value = getComputedStyle(style[prop_name], null)[prop_name];
-            } else {
-                var prop_value = style[prop_name];
-            }
-
-            if (prop_name == 'transform') {
-                var output_prop_name = features.transformProperty;
-            } else {
-                var output_prop_name = prop_name;
-            }
-
-            var is_svg = is_svg_attrib(prop_name, object);
-            if (is_svg) {
-                reference_element.setAttribute(prop_name, prop_value);
-
-                var current_style = object.attributes;
-                var target_style = reference_element.attributes;
-            } else {
-                reference_element.style[output_prop_name] = prop_value;
-
-                var current_style = getComputedStyle(object, null);
-                var target_style = getComputedStyle(reference_element, null);
-            }
-
-            if (prop_name == 'ctm') {
-                var ctm = object.getCTM();
-                var curr = '{' + ctm.a + ', ' + 
-                    ctm.b + ', ' + ctm.c + ', ' + ctm.d + ', ' + 
-                    ctm.e + ', ' + ctm.f + '}';
-
-                var target = prop_value;
-
-            } else if (is_svg) {
-                var target = target_style[prop_name].value;
-                var curr = current_style[prop_name].value;
-            } else {
-                var target = target_style[output_prop_name];
-                var curr = current_style[output_prop_name];
-            }
-
-            if (target) {
-                var t = target.replace(/[^0-9.\s]/g, "");
-            } else {
-                var t = "";
-            }
-
-            if (curr) {
-                var c = curr.replace(/[^0-9.\s]/g, "");
-            } else {
-                var c = "";
-            }
-
-            if (t.length == 0) {
-                // Assume it's a word property so do an exact assert
-                assert_equals(
-                    curr, target, 
-                    prop_name + " is not " + target + ", actually " + curr);
-            } else {
-                t = t.split(" ");
-                c = c.split(" ");
-                for (var x in t) {
-                    assert_equals(
-                        Number(c[x]), Number(t[x]), 
-                        prop_name + " is not " + target + ", actually " + curr);
-                }
-            }
+        if (object.parentNode) {
+            object.parentNode.appendChild(reference_element);
         }
-        reference_element.parentNode.removeChild(reference_element);
+
+        try {
+          // Apply the style
+          for (var prop_name in style)
+          {
+              // If the passed in value is an element then grab its current style for
+              // that property
+              if (style[prop_name] instanceof HTMLElement ||
+                      style[prop_name] instanceof SVGElement) {
+
+                  var prop_value = getComputedStyle(style[prop_name], null)[prop_name];
+              } else {
+                  var prop_value = style[prop_name];
+              }
+
+              if (prop_name == 'transform') {
+                  var output_prop_name = features.transformProperty;
+              } else {
+                  var output_prop_name = prop_name;
+              }
+
+              var is_svg = is_svg_attrib(prop_name, object);
+              if (is_svg) {
+                  reference_element.setAttribute(prop_name, prop_value);
+
+                  var current_style = object.attributes;
+                  var target_style = reference_element.attributes;
+              } else {
+                  reference_element.style[output_prop_name] = prop_value;
+
+                  var current_style = getComputedStyle(object, null);
+                  var target_style = getComputedStyle(reference_element, null);
+              }
+
+              if (prop_name == 'ctm') {
+                  var ctm = object.getCTM();
+                  var curr = '{' + ctm.a + ', ' + 
+                      ctm.b + ', ' + ctm.c + ', ' + ctm.d + ', ' + 
+                      ctm.e + ', ' + ctm.f + '}';
+
+                  var target = prop_value;
+
+              } else if (is_svg) {
+                  var target = target_style[prop_name].value;
+                  var curr = current_style[prop_name].value;
+              } else {
+                  var target = target_style[output_prop_name];
+                  var curr = current_style[output_prop_name];
+              }
+
+              if (target) {
+                  var t = target.replace(/[^0-9.\s]/g, "");
+              } else {
+                  var t = "";
+              }
+
+              if (curr) {
+                  var c = curr.replace(/[^0-9.\s]/g, "");
+              } else {
+                  var c = "";
+              }
+
+              if (t.length == 0) {
+                  // Assume it's a word property so do an exact assert
+                  assert_equals(
+                      curr, target, 
+                      prop_name + " is not " + target + ", actually " + curr);
+              } else {
+                  t = t.split(" ");
+                  c = c.split(" ");
+                  for (var x in t) {
+                      assert_equals(
+                          Number(c[x]), Number(t[x]), 
+                          prop_name + " is not " + target + ", actually " + curr);
+                  }
+              }
+          }
+        } finally {
+          if (reference_element.parentNode) {
+              reference_element.parentNode.removeChild(reference_element);
+          }
+        }
     }
 
     /**
