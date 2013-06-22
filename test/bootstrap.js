@@ -27,6 +27,14 @@ function loadCSS(src) {
   document.write('<link rel="stylesheet" type="text/css" href="' + src + '">');
 }
 
+function hasFlag(flag) {
+  return thisScript && thisScript.getAttribute(flag) !== null;
+}
+
+function isUnitTest() {
+  return /unit-test[^\\\/]*\.html$/.exec(location.pathname);
+}
+
 loadScript('../testharness/testharness.js');
 loadCSS('../testharness/testharness.css');
 
@@ -35,12 +43,14 @@ loadScript('../testharness_extensions.js');
 loadScript('../testharness_timing.js');
 loadCSS('../testharness_timing.css');
 
-loadScript(location.pathname.replace('.html', '-checks.js'));
+if (!isUnitTest() && !hasFlag('nochecks')) {
+  loadScript(location.pathname.replace('.html', '-checks.js'));
+}
 
 document.write('<div id="log"></div>');
 loadScript('../testharness/testharnessreport.js');
 
-if (thisScript && thisScript.getAttribute('nopolyfill') === null) {
+if (!hasFlag('nopolyfill')) {
   loadScript('../../web-animations.js');
 }
 
