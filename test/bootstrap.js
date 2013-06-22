@@ -13,21 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-"use strict";
+'use strict';
 
-// Load the dependencies in order
-var loadScript = function(src)
-    {
-        document.write(
-            '<script type="text/javascript" src="'+ src + '"></script>');
-    };
+(function() {
 
-// Load the required CSS
-var loadCSS = function(src)
-    {
-        document.write(
-            '<link rel="stylesheet" type="text/css" href="' + src + '">');
-    };
+function loadScript(src) {
+  document.write('<script type="text/javascript" src="'+ src + '"></script>');
+}
+
+function loadCSS(src) {
+  document.write('<link rel="stylesheet" type="text/css" href="' + src + '">');
+}
 
 loadScript('../testharness/testharness.js');
 loadCSS('../testharness/testharness.css');
@@ -43,4 +39,5 @@ document.write('<div id="log"></div>');
 loadScript('../testharness/testharnessreport.js');
 
 window.__coverage__ = parent.window.__coverage__;
-// vim: set expandtab shiftwidth=4 tabstop=4:
+
+})();
