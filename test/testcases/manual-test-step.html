@@ -27,7 +27,7 @@ span {
 </style>
 <body>
 
-<script src="../bootstrap.js"></script>
+<script src="../../web-animations.js"></script>
 <script>
 "use strict";
 function testStep(numSteps, position) {
@@ -77,8 +77,4 @@ document.body.appendChild(document.createElement('br'));
 testStep(10, 'start');
 testStep(10, 'middle');
 testStep(10, 'end');
-
-// FIXME! - Make this actually test something...
-test(function() { assert_true(true); }, "Dummy test");
-
 </script>
