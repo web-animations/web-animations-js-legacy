@@ -1,3 +1,12 @@
 [submodule "test/testharness"]
 	path = test/testharness
 	url = https://github.com/jgraham/testharness.js.git
+[submodule "test/coverage/istanbul"]
+	path = test/coverage/istanbul
+	url = https://github.com/gotwarlost/istanbul
+[submodule "test/coverage/escodegen"]
+	path = test/coverage/escodegen
+	url = https://github.com/Constellation/escodegen
+[submodule "test/coverage/esprima"]
+	path = test/coverage/esprima
+	url = https://github.com/ariya/esprima
