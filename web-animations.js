@@ -221,6 +221,7 @@ var Player = function(token, source, timeline) {
   this._timeDrift = 0.0;
   this._pauseTime = undefined;
   this._playbackRate = 1.0;
+  this._hasTicked = false;
 
   this.source = source;
 
@@ -230,17 +231,22 @@ var Player = function(token, source, timeline) {
 
 Player.prototype = {
   set source(source) {
-    if (isDefinedAndNotNull(this.source)) {
-      // To prevent infinite recursion.
-      var oldTimedItem = this.source;
-      this._source = null;
-      oldTimedItem._attach(null);
-    }
-    this._source = source;
-    if (isDefinedAndNotNull(this.source)) {
-      this.source._attach(this);
-      this._update();
-      maybeRestartAnimation();
+    enterModifyCurrentAnimationState();
+    try {
+      if (isDefinedAndNotNull(this.source)) {
+        // To prevent infinite recursion.
+        var oldTimedItem = this.source;
+        this._source = null;
+        oldTimedItem._attach(null);
+      }
+      this._source = source;
+      if (isDefinedAndNotNull(this.source)) {
+        this.source._attach(this);
+        this._update();
+        maybeRestartAnimation();
+      }
+    } finally {
+      exitModifyCurrentAnimationState(this._hasTicked);
     }
   },
   get source() {
@@ -248,7 +254,13 @@ Player.prototype = {
   },
   // This is the effective current time.
   set currentTime(currentTime) {
-    this._currentTime = currentTime;
+    enterModifyCurrentAnimationState();
+    try {
+      this._currentTime = currentTime;
+    } finally {
+      exitModifyCurrentAnimationState(
+          this._hasTicked || this.startTime + this._timeDrift <= lastTickTime);
+    }
   },
   get currentTime() {
     return this._currentTime === null ? 0 : this._currentTime;
@@ -274,11 +286,17 @@ Player.prototype = {
         this._timeDrift;
   },
   set startTime(startTime) {
-    // This seeks by updating _startTime and hence the currentTime. It does not
-    // affect _drift.
-    this._startTime = startTime;
-    this._update();
-    maybeRestartAnimation();
+    enterModifyCurrentAnimationState();
+    try {
+      // This seeks by updating _startTime and hence the currentTime. It does not
+      // affect _drift.
+      this._startTime = startTime;
+      this._update();
+      maybeRestartAnimation();
+    } finally {
+      exitModifyCurrentAnimationState(
+          this._hasTicked || this.startTime + this._timeDrift <= lastTickTime);
+    }
   },
   get startTime() {
     return this._startTime;
@@ -300,10 +318,15 @@ Player.prototype = {
     return this._timeline;
   },
   set playbackRate(playbackRate) {
-    var cachedCurrentTime = this.currentTime;
-    // This will impact currentTime, so perform a compensatory seek.
-    this._playbackRate = playbackRate;
-    this.currentTime = cachedCurrentTime;
+    enterModifyCurrentAnimationState();
+    try {
+      var cachedCurrentTime = this.currentTime;
+      // This will impact currentTime, so perform a compensatory seek.
+      this._playbackRate = playbackRate;
+      this.currentTime = cachedCurrentTime;
+    } finally {
+      exitModifyCurrentAnimationState(this._hasTicked);
+    }
   },
   get playbackRate() {
     return this._playbackRate;
@@ -341,7 +364,7 @@ var TimedItem = function(token, timingInput) {
   if (token !== constructorToken) {
     throw new TypeError('Illegal constructor');
   }
-  this.specified = new Timing(constructorToken, timingInput, this._updateInternalState.bind(this));
+  this.specified = new Timing(constructorToken, timingInput, this._specifiedTimingModified.bind(this));
   this._inheritedTime = null;
   this.currentIteration = null;
   this._iterationTime = null;
@@ -400,25 +423,30 @@ TimedItem.prototype = {
     if (parent === this) {
       throw new Error('parent can not be set to self!');
     }
-    if (this._player !== null) {
-      this._player.source = null;
-      this._player = null;
+    enterModifyCurrentAnimationState();
+    try {
+      if (this._player !== null) {
+        this._player.source = null;
+        this._player = null;
+      }
+      if (this.parent !== null) {
+        this.remove();
+      }
+      this._parent = parent;
+      // In the case of a SeqGroup parent, _startTime will be updated by
+      // TimingGroup.splice().
+      if (this.parent === null || this.parent.type !== 'seq') {
+        this._startTime =
+            this._stashedStartTime === undefined ? 0.0 : this._stashedStartTime;
+        this._stashedStartTime = undefined;
+      }
+      // In the case of the parent being non-null, _childrenStateModified() will
+      // call this via _updateChildInheritedTimes().
+      // TODO: Consider optimising this case by skipping this call.
+      this._updateTimeMarkers();
+    } finally {
+      exitModifyCurrentAnimationState(Boolean(this.player) && this.player._hasTicked);
     }
-    if (this.parent !== null) {
-      this.remove();
-    }
-    this._parent = parent;
-    // In the case of a SeqGroup parent, _startTime will be updated by
-    // TimingGroup.splice().
-    if (this.parent === null || this.parent.type !== 'seq') {
-      this._startTime =
-          this._stashedStartTime === undefined ? 0.0 : this._stashedStartTime;
-      this._stashedStartTime = undefined;
-    }
-    // In the case of the parent being non-null, _childrenStateModified() will
-    // call this via _updateChildInheritedTimes().
-    // TODO: Consider optimising this case by skipping this call.
-    this._updateTimeMarkers();
   },
   _intrinsicDuration: function() {
     return 0.0;
@@ -428,6 +456,14 @@ TimedItem.prototype = {
       this.parent._childrenStateModified();
     }
     this._updateTimeMarkers();
+  },
+  _specifiedTimingModified: function() {
+    enterModifyCurrentAnimationState();
+    try {
+      this._updateInternalState();
+    } finally {
+      exitModifyCurrentAnimationState(Boolean(this.player) && this.player._hasTicked);
+    }
   },
   // We push time down to children. We could instead have children pull from
   // above, but this is tricky because a TimedItem may use either a parent
@@ -660,17 +696,21 @@ var cloneAnimationEffect = function(animationEffect) {
 
 /** @constructor */
 var Animation = function(target, animationEffect, timingInput) {
-  TimedItem.call(this, constructorToken, timingInput);
-
-  this.animationEffect = interpretAnimationEffect(animationEffect);
-  this.targetElement = target;
-  this.name = this.animationEffect instanceof KeyframeAnimationEffect ?
-      this.animationEffect.property : '<anon>';
+  enterModifyCurrentAnimationState();
+  try {
+    TimedItem.call(this, constructorToken, timingInput);
+    this.effect = interpretAnimationEffect(animationEffect);
+    this.targetElement = target;
+    this.name = this.effect instanceof KeyframeAnimationEffect ?
+        this.effect.property : '<anon>';
+  } finally {
+    exitModifyCurrentAnimationState(false);
+  }
 };
 
 Animation.prototype = createObject(TimedItem.prototype, {
   _sample: function() {
-    this.animationEffect.sample(this._timeFraction,
+    this.effect.sample(this._timeFraction,
         this.currentIteration, this.targetElement,
         this.underlyingValue);
   },
@@ -685,13 +725,24 @@ Animation.prototype = createObject(TimedItem.prototype, {
       animations.push(this);
     }
   },
+  set effect(effect) {
+    enterModifyCurrentAnimationState();
+    try {
+      this._effect = effect;
+    } finally {
+      exitModifyCurrentAnimationState(Boolean(this.player) && this.player._hasTicked);
+    }
+  },
+  get effect() {
+    return this._effect;
+  },
   clone: function() {
     return new Animation(this.targetElement,
-        cloneAnimationEffect(this.animationEffect), this.specified._dict);
+        cloneAnimationEffect(this.effect), this.specified._dict);
   },
   toString: function() {
-    var funcDescr = this.animationEffect instanceof AnimationEffect ?
-        this.animationEffect.toString() : 'Custom scripted function';
+    var funcDescr = this.effect instanceof AnimationEffect ?
+        this.effect.toString() : 'Custom scripted function';
     return 'Animation ' + this.startTime + '-' + this.endTime + ' (' +
         this.localTime + ') ' + funcDescr;
   },
@@ -855,24 +906,29 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
     return this.children.indexOf(item);
   },
   _splice: function(start, deleteCount, newItems) {
-    var args = arguments;
-    if (args.length == 3) {
-      args = [start, deleteCount].concat(newItems);
-    }
-    for (var i = 2; i < args.length; i++) {
-      var newChild = args[i];
-      if (this._isInclusiveAncestor(newChild)) {
-        throwNewHierarchyRequestError();
+    enterModifyCurrentAnimationState();
+    try {
+      var args = arguments;
+      if (args.length == 3) {
+        args = [start, deleteCount].concat(newItems);
       }
-      newChild._reparent(this);
+      for (var i = 2; i < args.length; i++) {
+        var newChild = args[i];
+        if (this._isInclusiveAncestor(newChild)) {
+          throwNewHierarchyRequestError();
+        }
+        newChild._reparent(this);
+      }
+      var result = Array.prototype['splice'].apply(this.children, args);
+      for (var i = 0; i < result.length; i++) {
+        result[i]._parent = null;
+      }
+      this._lengthChanged();
+      this._childrenStateModified();
+      return result;
+    } finally {
+      exitModifyCurrentAnimationState(Boolean(this.player) && this.player._hasTicked);
     }
-    var result = Array.prototype['splice'].apply(this.children, args);
-    for (var i = 0; i < result.length; i++) {
-      result[i]._parent = null;
-    }
-    this._lengthChanged();
-    this._childrenStateModified();
-    return result;
   },
   _isInclusiveAncestor: function(item) {
     for (var ancestor = this; ancestor != null;
@@ -1163,16 +1219,21 @@ GroupedAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
 
 /** @constructor */
 var PathAnimationEffect = function(path, autoRotate, angle, composite) {
-  AnimationEffect.call(this, constructorToken, composite);
-  // TODO: path argument is not in the spec -- seems useful since
-  // SVGPathSegList doesn't have a constructor.
-  this.autoRotate = isDefined(autoRotate) ? autoRotate : 'none';
-  this.angle = isDefined(angle) ? angle : 0;
-  this._path = document.createElementNS('http://www.w3.org/2000/svg','path');
-  if (path instanceof SVGPathSegList) {
-    this.segments = path;
-  } else {
-    this._path.setAttribute('d', String(path));
+  enterModifyCurrentAnimationState();
+  try {
+    AnimationEffect.call(this, constructorToken, composite);
+    // TODO: path argument is not in the spec -- seems useful since
+    // SVGPathSegList doesn't have a constructor.
+    this.autoRotate = isDefined(autoRotate) ? autoRotate : 'none';
+    this.angle = isDefined(angle) ? angle : 0;
+    this._path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    if (path instanceof SVGPathSegList) {
+      this.segments = path;
+    } else {
+      this._path.setAttribute('d', String(path));
+    }
+  } finally {
+    exitModifyCurrentAnimationState(false);
   }
 };
 
@@ -1202,26 +1263,41 @@ PathAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     return new PathAnimationEffect(this._path.getAttribute('d'));
   },
   set autoRotate(autoRotate) {
-    this._autoRotate = String(autoRotate);
+    enterModifyCurrentAnimationState();
+    try {
+      this._autoRotate = String(autoRotate);
+    } finally {
+      exitModifyCurrentAnimationState(true);
+    }
   },
   get autoRotate() {
     return this._autoRotate;
   },
   set angle(angle) {
-    // TODO: This should probably be a string with a unit, but the spec
-    //       says it's a double.
-    this._angle = Number(angle);
+    enterModifyCurrentAnimationState();
+    try {
+      // TODO: This should probably be a string with a unit, but the spec
+      //       says it's a double.
+      this._angle = Number(angle);
+    } finally {
+      exitModifyCurrentAnimationState(true);
+    }
   },
   get angle() {
     return this._angle;
   },
   set segments(segments) {
-    var targetSegments = this.segments;
-    targetSegments.clear();
-    // TODO: *moving* the path segments is not correct, but pathSegList
-    //       is read only
-    while (segments.numberOfItems) {
-      targetSegments.appendItem(segments.getItem(0));
+    enterModifyCurrentAnimationState();
+    try {
+      var targetSegments = this.segments;
+      targetSegments.clear();
+      // TODO: *moving* the path segments is not correct, but pathSegList
+      //       is read only
+      while (segments.numberOfItems) {
+        targetSegments.appendItem(segments.getItem(0));
+      }
+    } finally {
+      exitModifyCurrentAnimationState(true);
     }
   },
   get segments() {
@@ -3005,14 +3081,44 @@ var cachedClockTime = function() {
   return cachedClockTimeMillis / 1000;
 };
 
-var ticker = function(rafTime) {
+
+// These functions should be called in every stack that could possibly modify
+// the effect results that have already been calculated for the current tick.
+var modifyCurrentAnimationStateDepth = 0;
+var enterModifyCurrentAnimationState = function() {
+  modifyCurrentAnimationStateDepth++;
+};
+var exitModifyCurrentAnimationState = function(shouldRepeat) {
+  modifyCurrentAnimationStateDepth--;
+  // shouldRepeat is set false when we know we can't possibly affect the current
+  // state (eg. a TimedItem which is not attached to a player). We track the
+  // depth of recursive calls trigger just one repeat per entry. Only the value
+  // of shouldRepeat from the outermost call is considered, this allows certain
+  // locatations (eg. constructors) to override nested calls that would
+  // otherwise set shouldRepeat unconditionally.
+  if (modifyCurrentAnimationStateDepth == 0 && shouldRepeat) {
+    repeatLastTick();
+  }
+};
+
+var repeatLastTick = function() {
+  if (isDefined(lastTickTime)) {
+    ticker(lastTickTime, true);
+  }
+};
+
+var lastTickTime;
+var ticker = function(rafTime, isRepeat) {
   // Don't tick till the page is loaded....
   if (!isDefined(documentTimeZeroAsRafTime)) {
     raf(ticker);
     return;
   }
 
-  cachedClockTimeMillis = rafTime;
+  if (!isRepeat) {
+    lastTickTime = rafTime;
+    cachedClockTimeMillis = rafTime;
+  }
 
   // Get animations for this sample. We order first by Player start time, and
   // second by DFS order within each Player's tree.
@@ -3024,6 +3130,7 @@ var ticker = function(rafTime) {
   var paused = true;
   var animations = [];
   sortedPlayers.forEach(function(player) {
+    player._hasTicked = true;
     player._update();
     finished = finished && player._isPastEndOfActiveInterval();
     paused = paused && player.paused;
@@ -3040,13 +3147,14 @@ var ticker = function(rafTime) {
   // Composite animated values into element styles
   compositor.applyAnimatedValues();
 
-  if (finished || paused) {
-    rafScheduled = false;
-  } else {
-    raf(ticker);
+  if (!isRepeat) {
+    if (finished || paused) {
+      rafScheduled = false;
+    } else {
+      raf(ticker);
+    }
+    cachedClockTimeMillis = undefined;
   }
-
-  cachedClockTimeMillis = undefined;
 };
 
 // Multiplication where zero multiplied by any value (including infinity)
