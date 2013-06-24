@@ -659,25 +659,21 @@ TimedItem.prototype = {
 
 var isCustomAnimationEffect = function(animationEffect) {
   // TODO: How does WebIDL actually differentiate different callback interfaces?
-  return typeof animationEffect === "object" &&
+  return isDefinedAndNotNull(animationEffect) &&
+      typeof animationEffect === "object" &&
       animationEffect.hasOwnProperty("sample") &&
       typeof animationEffect.sample === "function";
 };
 
 var interpretAnimationEffect = function(animationEffect) {
-  if (animationEffect instanceof AnimationEffect) {
+  if (animationEffect instanceof AnimationEffect ||
+      isCustomAnimationEffect(animationEffect)) {
     return animationEffect;
-  } else if (typeof animationEffect === 'object') {
-    if (isCustomAnimationEffect(animationEffect)) {
-      return animationEffect;
-    } else {
-      return AnimationEffect.createFromProperties(animationEffect);
-    }
-  } else {
-    try {
-      throw new Error('TypeError');
-    } catch (e) { console.log(e.stack); throw e; }
+  } else if (isDefinedAndNotNull(animationEffect) &&
+      typeof animationEffect === 'object') {
+    return AnimationEffect.createFromProperties(animationEffect);
   }
+  return null;
 };
 
 var cloneAnimationEffect = function(animationEffect) {
@@ -701,8 +697,6 @@ var Animation = function(target, animationEffect, timingInput) {
     TimedItem.call(this, constructorToken, timingInput);
     this.effect = interpretAnimationEffect(animationEffect);
     this.targetElement = target;
-    this.name = this.effect instanceof KeyframeAnimationEffect ?
-        this.effect.property : '<anon>';
   } finally {
     exitModifyCurrentAnimationState(false);
   }
@@ -710,9 +704,11 @@ var Animation = function(target, animationEffect, timingInput) {
 
 Animation.prototype = createObject(TimedItem.prototype, {
   _sample: function() {
-    this.effect.sample(this._timeFraction,
-        this.currentIteration, this.targetElement,
-        this.underlyingValue);
+    if (isDefinedAndNotNull(this.effect)) {
+      this.effect.sample(this._timeFraction,
+          this.currentIteration, this.targetElement,
+          this.underlyingValue);
+    }
   },
   _getLeafItemsInEffectImpl: function(items) {
     items.push(this);
@@ -741,10 +737,14 @@ Animation.prototype = createObject(TimedItem.prototype, {
         cloneAnimationEffect(this.effect), this.specified._dict);
   },
   toString: function() {
-    var funcDescr = this.effect instanceof AnimationEffect ?
-        this.effect.toString() : 'Custom scripted function';
+    var effectString = '<none>';
+    if (this.effect instanceof AnimationEffect) {
+      effectString = this.effect.toString();
+    } else if (isCustomAnimationEffect(this.effect)) {
+      effectString = 'Custom effect';
+    }
     return 'Animation ' + this.startTime + '-' + this.endTime + ' (' +
-        this.localTime + ') ' + funcDescr;
+        this.localTime + ') ' + effectString;
   },
 });
 
@@ -773,8 +773,6 @@ var TimingGroup = function(token, type, children, timing) {
   // (including the parent) is specified as a child, it will be removed from our
   // ancestors and used as a child,
   this.append.apply(this, childrenCopy);
-  // TODO: Work out where to expose name in the API
-  // this.name = properties.name || '<anon>';
 };
 
 TimingGroup.prototype = createObject(TimedItem.prototype, {
@@ -1132,7 +1130,8 @@ var AnimationEffect = function(token, operation, accumulateOperation) {
 AnimationEffect.prototype = {
   sample: abstractMethod,
   getValue: abstractMethod,
-  clone: abstractMethod
+  clone: abstractMethod,
+  toString: abstractMethod,
 };
 
 AnimationEffect.createFromProperties = function(properties) {
@@ -1261,6 +1260,9 @@ PathAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
   },
   clone: function() {
     return new PathAnimationEffect(this._path.getAttribute('d'));
+  },
+  toString: function() {
+    return '<path>';
   },
   set autoRotate(autoRotate) {
     enterModifyCurrentAnimationState();
