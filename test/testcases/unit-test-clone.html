@@ -32,8 +32,8 @@ test(function() {assert_true(clone instanceof Animation)},
      "Clone should be an Animation");
 test(function() {assert_equals(clone.specified.iterationDuration, 1.0)},
      "Clone should take Timing.iterationDuration");
-test(function() {assert_equals(clone.targetElement, elem)},
-     "Clone should take targetElement");
+test(function() {assert_equals(clone.target, elem)},
+     "Clone should take target");
 
 // ParGroup
 var parGroup = new ParGroup([anim, clone], 4.0);
