@@ -352,7 +352,7 @@
             } else if (objects instanceof Element) {
                 _assert_style_element(objects, style, description);
             } else {
-                throw "Error";
+                throw new Error("Expected Array, NodeList or Element but got " + objects);
             }
             break;
         }
