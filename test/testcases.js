@@ -29,6 +29,7 @@ var tests = [
   'test-pause.html',
   'test-playback-rate.html',
   'test-player.html',
+  'test-pseudo-element-reference.html',
   'test-rectangle.html',
   'test-reparent.html',
   'test-repeated-pause.html',
