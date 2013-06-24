@@ -93,6 +93,13 @@ window.finished = false;
 
 var results = [];
 
+if (/coverage/.test(window.location.hash)) {
+  // Trigger coverage runs for child tests.
+  window.__coverage__ = {};
+  // Share resources loaded by child tests to avoid instrumenting the same
+  // source file multiple times.
+  window.__resources__ = {original: {}};
+}
 
 
 /**
@@ -228,6 +235,27 @@ function haveAllTestsFinished() {
 
   window.clearInterval(intervalId);
   window.finished = true;
+  if (window.__coverage__) {
+    generateCoverageReport();
+  }
+}
+
+function generateCoverageReport() {
+  // TODO: generate a pretty report, prompt to save the JSON, post it somewhere
+  for (var file in window.__coverage__) {
+    var results = window.__coverage__[file];
+    var hits = 0;
+    var statements = 0;
+    for (var stmt in results.s) {
+      statements++;
+      if (results.s[stmt] > 0) {
+        hits++;
+      }
+    }
+    var percent = (100 * hits / statements).toFixed(2);
+    console.log(file + ' statement coverage ' +
+        percent + '% (' + hits + '/' + statements + ')');
+  }
 }
 
 
