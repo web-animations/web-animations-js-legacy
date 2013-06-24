@@ -247,10 +247,10 @@ Player.prototype = {
         this._update();
         maybeRestartAnimation();
       }
+      this._checkForHandlers();
     } finally {
       exitModifyCurrentAnimationState(this._hasTicked);
     }
-    this._checkForHandlers();
   },
   get source() {
     return this._source;
@@ -365,7 +365,7 @@ Player.prototype = {
   _checkForHandlers: function() {
     this._needsHandlerPass = this.source !== null && this.source._hasHandler();
   },
-  _generateEvents: function(eventList) {
+  _generateEvents: function() {
     if (this._needsHandlerPass) {
       var timeDelta = this._currentTime - this._lastCurrentTime;
       if (timeDelta > 0) {
@@ -719,17 +719,20 @@ TimedItem.prototype = {
   _toSubRanges: function(fromTime, toTime, iterationTimes) {
     if (fromTime > toTime) {
       var revRanges = this._toSubRanges(toTime, fromTime, iterationTimes);
-      revRanges.ranges = revRanges.ranges.map(function(a) { return [a[1], a[0]]; }).reverse();
+      revRanges.ranges.forEach(function(a) { a.reverse(); })
+      revRanges.ranges.reverse();
       revRanges.start = iterationTimes.length - revRanges.start - 1;
       revRanges.delta = -1;
       return revRanges;
     }
-    var currentStart = fromTime;
-    var ranges = [];
     var skipped = 0;
+    // TODO: this should be calculatable. This would be more efficient
+    // than searching through the list.
     while (iterationTimes[skipped] < fromTime) {
       skipped++;
     }
+    var currentStart = fromTime;
+    var ranges = [];
     for (var i = skipped; i < iterationTimes.length; i++) {
       if (iterationTimes[i] < toTime) {
         ranges.push([currentStart, iterationTimes[i]]);
@@ -746,7 +749,6 @@ TimedItem.prototype = {
     function toGlobal(time) {
       return (globalTime - (toTime - (time / deltaScale)));
     }
-    toGlobal = toGlobal.bind(this);
     var localScale = this.specified.playbackRate;
     var firstIteration = Math.floor(this.specified.iterationStart);
     var lastIteration = Math.floor(this.specified.iterationStart +
@@ -979,6 +981,10 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
     // Update child start times before walking down.
     this._updateChildStartTimes();
 
+    if (this.player) {
+      this.player._checkForHandlers();
+    }
+
     this._isInChildrenStateModified = false;
   },
   _updateInheritedTime: function(inheritedTime) {
@@ -1139,19 +1145,13 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
         this.children.map(function(a) { return a.toString(); }) + ']'
   },
   _hasHandler: function() {
-    return TimedItem.prototype._hasHandler.bind(this)() ||
+    return TimedItem.prototype._hasHandler.call(this) ||
       (this.children.length > 0 &&
-        this.children.map(function(a) { return a._hasHandler(); }).reduce(
-          function(a, b) { return a || b }));
+        this.children.reduce(function(a, b) { return a || b._hasHandler() },
+          false));
   },
   _generateChildEventsForRange: function(localStart, localEnd, rangeStart,
-    rangeEnd, iteration, globalTime, deltaScale) {
-    // If our range is not going in the same direction as the delta then
-    // ignore.
-    if ((localStart < localEnd) === (rangeStart > rangeEnd)) {
-      return;
-    }
-
+      rangeEnd, iteration, globalTime, deltaScale) {
     var start;
     var end;
 
@@ -3477,10 +3477,9 @@ var ticker = function(rafTime, isRepeat) {
     }
   }
 
-  var eventList = [];
   // Generate events
   sortedPlayers.forEach(function(player) {
-    player._generateEvents(eventList);
+    player._generateEvents();
   });
 
   // Composite animated values into element styles
@@ -3546,7 +3545,7 @@ window.TimedItem = TimedItem;
 window.TimedItemList = null; // TODO
 window.Timing = Timing;
 window.Timeline = Timeline;
-window.TimingEvent = null; // TODO
+window.TimingEvent = TimingEvent;
 window.TimingGroup = TimingGroup;
 
 window._WebAnimationsTestingUtilities = { _constructorToken : constructorToken }

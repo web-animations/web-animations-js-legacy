@@ -16,10 +16,9 @@ limitations under the License.
 
 <!DOCTYPE html>
 <body></body>
-<script src="../testharness_bootstrap.js"></script>
-<script src="../../web-animations.js"></script>
+<script src="../bootstrap.js"></script>
 <script>
-"use script";
+"use strict";
 
 var body = document.querySelector("body");
 
@@ -84,4 +83,31 @@ test(function() {
   aTree.oniteration = null;
   assert_false(player._needsHandlerPass);
 }, 'needsHandlerPass correctly calculated for non-trivial trees');
+
+test(function() {
+  var anAnimation = new Animation(body, {left: '100px'}, 1);
+  anAnimation.onstart = new function() { };
+  var aGroup = new ParGroup([anAnimation]);
+  var player = document.timeline.play(aGroup);
+  assert_true(player._needsHandlerPass);
+}, 'needsHandlerPass correctly passed from child to parent on construction');
+
+test(function() {
+  var anAnimation = new Animation(body, {left: '100px'}, 1);
+  anAnimation.onstart = new function() { };
+  var aGroup = new ParGroup([]);
+  aGroup.append(anAnimation);
+  var player = document.timeline.play(aGroup);
+  assert_true(player._needsHandlerPass);
+}, 'needsHandlerPass correctly passed from child to parent on addition');
+
+test(function() {
+  var anAnimation = new Animation(body, {left: '100px'}, 1);
+  anAnimation.onstart = new function() { };
+  var aGroup = new ParGroup([]);
+  var player = document.timeline.play(aGroup);
+  aGroup.append(anAnimation);
+  assert_true(player._needsHandlerPass);
+}, 'needsHandlerPass correctly passed from child to parent on ' +
+   'addition after player creation');
 </script>
