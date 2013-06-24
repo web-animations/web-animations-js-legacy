@@ -1264,7 +1264,7 @@ var KeyframeAnimationEffect = function(oneOrMoreKeyframesDictionaries,
   if (!Array.isArray(oneOrMoreKeyframesDictionaries)) {
     oneOrMoreKeyframesDictionaries = [oneOrMoreKeyframesDictionaries];
   }
-  this.keyframeDictionaries =
+  this._keyframeDictionaries =
       oneOrMoreKeyframesDictionaries.map(normalizeKeyframeDictionary);
   // Set lazily
   this._cachedProperties = null;
@@ -1297,7 +1297,7 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     if (frames[0].offset !== 0.0) {
       var keyframe = new KeyframeInternal(0.0, 'add');
       keyframe.addPropertyValuePair(property, cssNeutralValue);
-      frames.splice(0, 0, keyframe);
+      frames.unshift(keyframe);
     }
     if (frames[frames.length - 1].offset !== 1.0) {
       var keyframe = new KeyframeInternal(1.0, 'add');
@@ -1353,7 +1353,7 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
   clone: function() {
     var result = new KeyframeAnimationEffect([], this.composite,
         this.accumulate);
-    result.keyframeDictionaries = this.keyframeDictionaries.slice(0);
+    result._keyframeDictionaries = this._keyframeDictionaries.slice(0);
     return result;
   },
   toString: function() {
@@ -1365,12 +1365,12 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
   },
   _areKeyframeDictionariesLooselySorted: function() {
     var previousOffset = -Infinity;
-    for (var i = 0; i < this.keyframeDictionaries.length; i++) {
-      if (isDefinedAndNotNull(this.keyframeDictionaries[i].offset)) {
-        if (this.keyframeDictionaries[i].offset < previousOffset) {
+    for (var i = 0; i < this._keyframeDictionaries.length; i++) {
+      if (isDefinedAndNotNull(this._keyframeDictionaries[i].offset)) {
+        if (this._keyframeDictionaries[i].offset < previousOffset) {
           return false;
         }
-        previousOffset = this.keyframeDictionaries[i].offset;
+        previousOffset = this._keyframeDictionaries[i].offset;
       }
     }
     return true;
@@ -1388,7 +1388,7 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
       return this._cachedDistributedKeyframes;
     }
 
-    this._cachedDistributedKeyframes = this.keyframeDictionaries.map(
+    this._cachedDistributedKeyframes = this._keyframeDictionaries.map(
         KeyframeInternal.createFromNormalizedProperties);
 
     // Remove keyframes with offsets out of bounds.
