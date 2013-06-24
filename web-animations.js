@@ -701,8 +701,6 @@ var Animation = function(target, animationEffect, timingInput) {
     TimedItem.call(this, constructorToken, timingInput);
     this.effect = interpretAnimationEffect(animationEffect);
     this.targetElement = target;
-    this.name = this.effect instanceof KeyframeAnimationEffect ?
-        this.effect.property : '<anon>';
   } finally {
     exitModifyCurrentAnimationState(false);
   }
@@ -773,8 +771,6 @@ var TimingGroup = function(token, type, children, timing) {
   // (including the parent) is specified as a child, it will be removed from our
   // ancestors and used as a child,
   this.append.apply(this, childrenCopy);
-  // TODO: Work out where to expose name in the API
-  // this.name = properties.name || '<anon>';
 };
 
 TimingGroup.prototype = createObject(TimedItem.prototype, {
