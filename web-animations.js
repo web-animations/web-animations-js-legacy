@@ -1186,7 +1186,7 @@ PathAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     }
     value.push({t:'rotate', d: [angle]});
     compositor.setAnimatedValue(target, "transform",
-        new AddReplaceCompositableValue(value, this.operation, timeFraction));
+        new AddReplaceCompositableValue(value, this.composite));
   },
   clone: function() {
     return new PathAnimationEffect(this._path.getAttribute('d'));
