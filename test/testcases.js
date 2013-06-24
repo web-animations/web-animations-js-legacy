@@ -43,6 +43,7 @@ var tests = [
   'test-transform-3d.html',
   'test-transform-primitives.html',
   'test-transform-units.html',
+  'test-update-state.html',
   'test-visibility.html',
   'test-wrapping-bug.html',
   'unit-test-clone.html',
