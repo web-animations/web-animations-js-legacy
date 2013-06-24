@@ -283,6 +283,7 @@ else:
     except:
         if sauce_tunnel:
             kill_tunnel(sauce_tunnel)
+        raise
 
     args.remote_executor = "http://%s:%s@localhost:4445/wd/hub" % (
         username, key)
@@ -504,6 +505,7 @@ if args.virtual and args.browser != "PhantomJS":
     except:
         if disp:
             disp.stop()
+        raise
 
 
 # Start up the web browser and run the tests.
