@@ -13,21 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-"use strict";
+'use strict';
 
-// Load the dependencies in order
-var loadScript = function(src)
-    {
-        document.write(
-            '<script type="text/javascript" src="'+ src + '"></script>');
-    };
+(function() {
 
-// Load the required CSS
-var loadCSS = function(src)
-    {
-        document.write(
-            '<link rel="stylesheet" type="text/css" href="' + src + '">');
-    };
+var thisScript = document.querySelector("script[src$='bootstrap.js']");
+
+function loadScript(src) {
+  document.write('<script type="text/javascript" src="'+ src + '"></script>');
+}
+
+function loadCSS(src) {
+  document.write('<link rel="stylesheet" type="text/css" href="' + src + '">');
+}
+
+function hasFlag(flag) {
+  return thisScript && thisScript.getAttribute(flag) !== null;
+}
+
+function isUnitTest() {
+  return /unit-test[^\\\/]*\.html$/.exec(location.pathname);
+}
 
 loadScript('../testharness/testharness.js');
 loadCSS('../testharness/testharness.css');
@@ -37,10 +43,17 @@ loadScript('../testharness_extensions.js');
 loadScript('../testharness_timing.js');
 loadCSS('../testharness_timing.css');
 
-loadScript(location.pathname.replace('.html', '-checks.js'));
+if (!isUnitTest() && !hasFlag('nochecks')) {
+  loadScript(location.pathname.replace('.html', '-checks.js'));
+}
 
 document.write('<div id="log"></div>');
 loadScript('../testharness/testharnessreport.js');
 
+if (!hasFlag('nopolyfill')) {
+  loadScript('../../web-animations.js');
+}
+
 window.__coverage__ = parent.window.__coverage__;
-// vim: set expandtab shiftwidth=4 tabstop=4:
+
+})();
