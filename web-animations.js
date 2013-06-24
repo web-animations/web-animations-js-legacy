@@ -704,7 +704,8 @@ var Animation = function(target, animationEffect, timingInput) {
 
 Animation.prototype = createObject(TimedItem.prototype, {
   _sample: function() {
-    if (isDefinedAndNotNull(this.effect)) {
+    if (isDefinedAndNotNull(this.effect) &&
+        !(this.targetElement instanceof PseudoElementReference)) {
       this.effect.sample(this._timeFraction,
           this.currentIteration, this.targetElement,
           this.underlyingValue);
@@ -968,6 +969,12 @@ var SeqGroup = function(children, timing, parent) {
 
 SeqGroup.prototype = Object.create(TimingGroup.prototype);
 
+/** @constructor */
+var PseudoElementReference = function(element, pseudoElement) {
+    this.element = element;
+    this.pseudoElement = pseudoElement;
+    console.warn("PseudoElementReference is not supported.");
+};
 
 /** @constructor */
 var MediaReference = function(mediaElement, timing, parent) {
@@ -3206,7 +3213,7 @@ window.MediaReference = MediaReference;
 window.ParGroup = ParGroup;
 window.PathAnimationEffect = PathAnimationEffect;
 window.Player = Player;
-window.PseudoElementReference = null; // TODO
+window.PseudoElementReference = PseudoElementReference;
 window.SeqGroup = SeqGroup;
 window.TimedItem = TimedItem;
 window.TimedItemList = null; // TODO
