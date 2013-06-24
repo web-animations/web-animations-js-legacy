@@ -369,7 +369,7 @@ Player.prototype = {
     if (this._needsHandlerPass) {
       var timeDelta = this._currentTime - this._lastCurrentTime;
       if (timeDelta > 0) {
-        this.source._generateEvents(timeDelta, this.timeline.currentTime, 1);
+        this.source._generateEvents(this._lastCurrentTime, this._currentTime, this.timeline.currentTime, 1);
       }
     }
     this._lastCurrentTime = this._currentTime;
@@ -716,13 +716,38 @@ TimedItem.prototype = {
       isDefinedAndNotNull(this._cancelHandler);
   },
   _generateChildEventsForRange: function() { },
-  _generateEvents: function(timeDelta, globalTime, deltaScale) {
+  _toSubRanges: function(fromTime, toTime, iterationTimes) {
+    if (fromTime > toTime) {
+      var revRanges = this._toSubRanges(toTime, fromTime, iterationTimes);
+      revRanges.ranges = revRanges.ranges.map(function(a) { return [a[1], a[0]]; }).reverse();
+      revRanges.start = iterationTimes.length - revRanges.start - 1;
+      revRanges.delta = -1;
+      return revRanges;
+    }
+    var currentStart = fromTime;
+    var ranges = [];
+    var skipped = 0;
+    while (iterationTimes[skipped] < fromTime) {
+      skipped++;
+    }
+    for (var i = skipped; i < iterationTimes.length; i++) {
+      if (iterationTimes[i] < toTime) {
+        ranges.push([currentStart, iterationTimes[i]]);
+        currentStart = iterationTimes[i];
+      } else {
+        ranges.push([currentStart, toTime]);
+        return {start: skipped, delta: 1, ranges: ranges};
+      }
+    }
+    ranges.push([currentStart, toTime]);
+    return {start: skipped, delta: 1, ranges: ranges};
+  },
+  _generateEvents: function(fromTime, toTime, globalTime, deltaScale) {
     function toGlobal(time) {
-      return (globalTime - (this._inheritedTime - time) / deltaScale);
+      return (globalTime - (toTime - time) / deltaScale);
     }
     toGlobal = toGlobal.bind(this);
-    var fromTime = this._inheritedTime - timeDelta;
-    var toTime = this._inheritedTime;
+    console.log('local range', fromTime, toTime, globalTime);
     var firstIteration = Math.floor(this.specified.iterationStart);
     var lastIteration = Math.floor(this.specified.iterationStart +
         this.specified.iterationCount);
@@ -733,9 +758,11 @@ TimedItem.prototype = {
     var startTime = this.startTime + this.specified.startDelay;
 
     if (isDefinedAndNotNull(this.onstart)) {
+      // Did we pass the start of this animation in the forward direction?
       if (fromTime <= startTime && toTime > startTime) {
         this.onstart(new TimingEvent(constructorToken, this, 
             this.specified.startDelay, toGlobal(startTime), firstIteration));
+      // Did we pass the end of this animation in the reverse direction?
       } else if (fromTime > this.endTime && toTime <= this.endTime) {
         this.onstart(new TimingEvent(constructorToken, this,
             this.endTime - this.startTime, toGlobal(this.endTime),
@@ -743,71 +770,60 @@ TimedItem.prototype = {
       }
     }
 
-    if (isDefinedAndNotNull(this.onend)) {
-      if (fromTime <= this.endTime && toTime > this.endTime) {
-        this.onend(new TimingEvent(constructorToken, this, 
-            this.endTime - this.startTime, toGlobal(this.endTime),
-            lastIteration));
-      } else if (fromTime > startTime && toTime <= startTime) {
-        this.onend(new TimingEvent(constructorToken, this, 
-            this.specified.startDelay, toGlobal(startTime), firstIteration));
-      }
-    }
-
+    // Calculate a list of uneased iteration times.
     var iterationTimes = [];
     for (var i = firstIteration + 1; i <= lastIteration; i++) {
       iterationTimes.push(i - this.specified.iterationStart);
     }
     iterationTimes = iterationTimes.map(function(i) {
-      return i * this.duration + startTime;
+      return i * this.iterationDuration + startTime;
     }.bind(this));
-    if (iterationTimes.length > 0 && iterationTimes[0] > startTime) {
-      this._generateChildEventsForRange(startTime, iterationTimes[0], timeDelta,
-        globalTime, deltaScale);
-    }
-    for (var i = 0; i < iterationTimes.length; i++) {
-      if (fromTime <= iterationTimes[i] && toTime > iterationTimes[i] &&
-        isDefinedAndNotNull(this.oniteration)) {
-        this.oniteration(new TimingEvent(constructorToken, this, 
-          iterationTimes[i] - this.startTime, toGlobal(iterationTimes[i]),
-          i + firstIteration + 1));
-      }
-      if (i + 1 < iterationTimes.length) {
-        this._generateChildEventsForRange(iterationTimes[i], iterationTimes[i + 1],
-          timeDelta, globalTime, deltaScale);
-      }
-    }
-    if (iterationTimes.length > 0 && iterationTimes[i - 1] < this.endTime) {
-      this._generateChildEventsForRange(iterationTimes[i - 1], this.endTime,
-        timeDelta, globalTime, deltaScale);
-    } else if (iterationTimes.length == 0) {
-      this._generateChildEventsForRange(startTime, this.endTime, timeDelta,
-        globalTime, deltaScale);
-    }
 
-    if (iterationTimes.length > 0 && iterationTimes[i - 1] < this.endTime) {
-      this._generateChildEventsForRange(this.endTime, iterationTimes[i - 1],
-        timeDelta, globalTime, deltaScale);
+    // Determine the impacted subranges.
+    var clippedFromTime;
+    var clippedToTime;
+    if (fromTime < toTime) {
+      clippedFromTime = Math.max(fromTime, startTime);
+      clippedToTime = Math.min(toTime, this.endTime);
+    } else {
+      clippedFromTime = Math.min(fromTime, this.endTime);
+      clippedToTime = Math.max(toTime, startTime);
     }
-    for (var i = iterationTimes.length - 1; i >= 0; i--) {
-      if (fromTime > iterationTimes[i] && toTime <= iterationTimes[i] &&
-        isDefinedAndNotNull(this.oniteration)) {
+    var subranges = this._toSubRanges(clippedFromTime, clippedToTime,
+      iterationTimes);
+    console.log(JSON.stringify(subranges));
+    for (var i = 0; i < subranges.ranges.length; i++) {
+      var currentIter = subranges.start + i * subranges.delta;
+      if (isDefinedAndNotNull(this.oniteration) && i > 0) {
+        var iterTime = subranges.ranges[i][0];
         this.oniteration(new TimingEvent(constructorToken, this,
-          iterationTimes[i] - this.startTime, toGlobal(iterationTimes[i]),
-          i + firstIteration));
+          iterTime - this.startTime, toGlobal(iterTime), currentIter));
       }
-      if (i > 0) {
-        this._generateChildEventsForRange(iterationTimes[i], iterationTimes[i - 1],
-          timeDelta, globalTime, deltaScale);
+      if (subranges.delta > 0) {
+        var iterFraction = this.specified.iterationStart % 1;
+      } else {
+        var iterFraction = 1 - 
+          (this.specified.iterationStart + this.specified.iterationCount) % 1;
       }
+      this._generateChildEventsForRange(
+        subranges.ranges[i][0] * this.specified.playbackRate,
+        subranges.ranges[i][1] * this.specified.playbackRate, 
+        fromTime * this.specified.playbackRate, 
+        toTime * this.specified.playbackRate, currentIter - iterFraction,
+        globalTime, deltaScale * this.specified.playbackRate);
     }
 
-    if (iterationTimes.length > 0 && iterationTimes[0] > startTime) {
-      this._generateChildEventsForRange(iterationTimes[0], startTime, timeDelta,
-        globalTime, deltaScale);
-    } else if (iterationTimes.length == 0) {
-      this._generateChildEventsForRange(this.endTime, startTime, timeDelta,
-        globalTime, deltaScale);
+    if (isDefinedAndNotNull(this.onend)) {
+      // Did we pass the end of this animation in the forward direction?
+      if (fromTime < this.endTime && toTime >= this.endTime) {
+        this.onend(new TimingEvent(constructorToken, this, 
+            this.endTime - this.startTime, toGlobal(this.endTime),
+            lastIteration));
+      // Did we pass the start of this animation in the reverse direction?
+      } else if (fromTime >= startTime && toTime < startTime) {
+        this.onend(new TimingEvent(constructorToken, this, 
+            this.specified.startDelay, toGlobal(startTime), firstIteration));
+      }
     }
   },
 };
@@ -1131,35 +1147,38 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
         this.children.map(function(a) { return a._hasHandler(); }).reduce(
           function(a, b) { return a || b }));
   },
-  _generateChildEventsForRange: function(rangeStart, rangeEnd, timeDelta,
-    globalTime, deltaScale) {
+  _generateChildEventsForRange: function(localStart, localEnd, rangeStart,
+    rangeEnd, iteration, globalTime, deltaScale) {
     // If our range is not going in the same direction as the delta then
     // ignore.
-    if ((timeDelta > 0) === (rangeStart > rangeEnd)) {
+    if ((localStart < localEnd) === (rangeStart > rangeEnd)) {
       return;
     }
 
-    var start = this.currentTime - timeDelta;
-    var end = this.currentTime;
+    var start;
+    var end;
 
-    if (timeDelta < 0) {
-      start = Math.max(rangeStart, start);
-      end = Math.min(rangeEnd, end);
+    if (localEnd - localStart > 0) {
+      start = Math.max(rangeStart, localStart);
+      end = Math.min(rangeEnd, localEnd);
       if (start >= end) {
         return;
       }
     } else {
-      start = Math.min(rangeStart, start);
-      end = Math.max(rangeEnd, end);
+      start = Math.min(rangeStart, localStart);
+      end = Math.max(rangeEnd, localEnd);
       if (start <= end) {
         return;
       }
     }
 
-    var newDelta = end - start;
+    var endDelta = rangeEnd - end;
+    start -= iteration * this.iterationDuration;
+    end -= iteration * this.iterationDuration;
 
     for (var i = 0; i < this.children.length; i++) {
-      _generateEvents(newDelta, globalTime + (end - this.currentTime) / deltaScale, deltaScale);
+      console.log(start, end, globalTime, endDelta, iteration, deltaScale);
+      this.children[i]._generateEvents(start, end, globalTime - endDelta / deltaScale, deltaScale);
     }
   },
 });
