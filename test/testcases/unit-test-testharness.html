@@ -26,11 +26,18 @@ test(function() {
 
   document.body.appendChild(element);
   var childCount = document.body.children.length;
-  try {
-    assert_styles(element, {left: '100px'});
-  } catch (e) {
-    assert_equals(childCount, document.body.children.length,
-        'assert_styles should not leave additional elements in the dom');
-  }
+  assert_styles(element, {left: 'auto'});
+  assert_equals(childCount, document.body.children.length,
+      'assert_styles should not leave additional elements in the dom');
 }, 'assert_styles reference_element');
+
+test(function() {
+  try {
+    assert_styles(null, {});
+  } catch (e) {
+    assert_equals(e.message, "Expected Array, NodeList or Element but got null");
+    return;
+  }
+  assert_unreached();
+}, 'assert_styles invalid arguments');
 </script>
