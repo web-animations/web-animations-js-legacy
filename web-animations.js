@@ -747,7 +747,8 @@ TimedItem.prototype = {
       return (globalTime - (toTime - time) / deltaScale);
     }
     toGlobal = toGlobal.bind(this);
-    console.log('local range', fromTime, toTime, globalTime);
+    var localScale = this.specified.playbackRate;
+    console.log('local range', fromTime, "-", toTime, "global", globalTime);
     var firstIteration = Math.floor(this.specified.iterationStart);
     var lastIteration = Math.floor(this.specified.iterationStart +
         this.specified.iterationCount);
@@ -756,6 +757,8 @@ TimedItem.prototype = {
         lastIteration -= 1;
     }
     var startTime = this.startTime + this.specified.startDelay;
+
+    console.log('startTime', startTime, 'endTime', this.endTime);
 
     if (isDefinedAndNotNull(this.onstart)) {
       // Did we pass the start of this animation in the forward direction?
@@ -776,7 +779,7 @@ TimedItem.prototype = {
       iterationTimes.push(i - this.specified.iterationStart);
     }
     iterationTimes = iterationTimes.map(function(i) {
-      return i * this.iterationDuration + startTime;
+      return i * this.iterationDuration / this.specified.playbackRate + startTime;
     }.bind(this));
 
     // Determine the impacted subranges.
@@ -806,10 +809,8 @@ TimedItem.prototype = {
           (this.specified.iterationStart + this.specified.iterationCount) % 1;
       }
       this._generateChildEventsForRange(
-        subranges.ranges[i][0] * this.specified.playbackRate,
-        subranges.ranges[i][1] * this.specified.playbackRate, 
-        fromTime * this.specified.playbackRate, 
-        toTime * this.specified.playbackRate, currentIter - iterFraction,
+        subranges.ranges[i][0], subranges.ranges[i][1],
+        fromTime, toTime, currentIter - iterFraction,
         globalTime, deltaScale * this.specified.playbackRate);
     }
 
@@ -1151,6 +1152,7 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
     rangeEnd, iteration, globalTime, deltaScale) {
     // If our range is not going in the same direction as the delta then
     // ignore.
+    console.log('local: ' + localStart + '-' + localEnd + '. range: ' + rangeStart + '-' + rangeEnd);
     if ((localStart < localEnd) === (rangeStart > rangeEnd)) {
       return;
     }
@@ -1177,8 +1179,8 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
     end -= iteration * this.iterationDuration;
 
     for (var i = 0; i < this.children.length; i++) {
-      console.log(start, end, globalTime, endDelta, iteration, deltaScale);
-      this.children[i]._generateEvents(start, end, globalTime - endDelta / deltaScale, deltaScale);
+      console.log('start:', start, 'end:', end, 'global:', globalTime, 'delta:', endDelta, 'iteration:', iteration, 'scale:', deltaScale);
+      this.children[i]._generateEvents(start, end, globalTime - endDelta, deltaScale);
     }
   },
 });
