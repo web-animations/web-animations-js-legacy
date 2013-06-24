@@ -334,7 +334,6 @@ function changeTestState(test, newState) {
   case States.FINISHED:
   case States.TIMEOUT:
     finishedTests.unshift(test);
-    haveAllTestsFinished();
     break;
   }
 
@@ -381,6 +380,8 @@ function updateStatus() {
     statusElement.textContent = 'Finished';
     window.clearInterval(statusIntervalId);
   }
+
+  haveAllTestsFinished();
 }
 
 
