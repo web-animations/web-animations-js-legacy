@@ -5,3 +5,4 @@ test-iteration-start.html # Test fails visually.
 test-path.html
 test-pseudo-element-reference.html
 test-update-state.html
+test-partial-keyframes.html
