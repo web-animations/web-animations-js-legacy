@@ -28,7 +28,7 @@ div.anim {
 <script>
 "use strict";
 var player = document.timeline.play(new Animation(
-    document.getElementById("anim"), {left: ["100px", "200px"]}, 1.0));
+    document.getElementById("anim"), [{left: "100px"}, {left: "200px"}], 1.0));
 
 // Test that repeatedly setting Player.paused to true does not affect the
 // Player's currentTime.

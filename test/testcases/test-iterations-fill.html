@@ -144,7 +144,7 @@ function sampleFunc(timeFraction, iteration, target) {
 for (var i = 0; i < fillModes.length; i++) {
   var divs = document.querySelectorAll(categories[i]);
   for (var j = 0; j < divs.length; j++) {
-    groups[j].append(new Animation(divs[j], {left: ["100px", "200px"]}, {
+    groups[j].append(new Animation(divs[j], [{left: "100px"}, {left: "200px"}], {
       startDelay: 1,
       iterationDuration: 1,
       iterationCount: 2,

@@ -28,6 +28,8 @@ div.anim {
 <script>
 "use strict";
 
+var effect = [{left: "100px"}, {left: "200px"}];
+
 var testPauseUnpause = function(name, player) {
   player.currentTime = 5.0;
   player.paused = true;
@@ -42,7 +44,7 @@ var testPauseUnpause = function(name, player) {
 // with a zero startTime.
 addEventListener("load", function() {
   testPauseUnpause("zero starttime,", document.timeline.play(new Animation(
-      document.getElementById("anim"), {left: ["100px", "200px"]}, 1.0)));
+      document.getElementById("anim"), effect, 1.0)));
 
 });
 
@@ -50,7 +52,7 @@ addEventListener("load", function() {
 // a non-zero startTime.
 addEventListener("load", function() {
   var player = document.timeline.play(new Animation(
-      document.getElementById("anim"), {left: ["100px", "200px"]}, 1.0));
+      document.getElementById("anim"), effect, 1.0));
   test(function() {assert_equals(player.startTime > 0,  true)},
        "Player has started");
   testPauseUnpause("non-zero starttime,", player);

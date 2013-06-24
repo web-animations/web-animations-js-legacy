@@ -32,12 +32,14 @@ limitations under the License.
 <script>
 "use strict";
 
+var effect = [{left: "100px"}, {left: "500px"}];
+
 var anim1 = new Animation(
-    document.getElementById("a"), {left: ["100px", "500px"]},
+    document.getElementById("a"), effect,
     {iterationDuration: 1.0, iterationCount: 3.0, direction: "alternate"});
 
 var anim2 = new Animation(
-    document.getElementById("b"), {left: ["100px", "500px"]},
+    document.getElementById("b"), effect,
     {iterationDuration: 1.0});
 var parGroup = new ParGroup(
     [anim2],

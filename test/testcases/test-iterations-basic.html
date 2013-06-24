@@ -101,13 +101,16 @@ for (var i = 0; i < directions.length; i++) {
       new ParGroup([
           // Test basic use.
           new Animation(container.getElementsByClassName("a")[0],
-              {left: ["100px", "300px"]}, {iterationDuration: 1, iterationCount: 3.4}),
+              [{left: "100px"}, {left: "300px"}],
+              {iterationDuration: 1, iterationCount: 3.4}),
           // Test integer iterationCount.
           new Animation(container.getElementsByClassName("b")[0],
-              {left: ["100px", "180px"]}, {iterationDuration: 1, iterationCount: 3.0}),
+              [{left: "100px"}, {left: "180px"}],
+              {iterationDuration: 1, iterationCount: 3.0}),
           // Test zero iterationCount.
           new Animation(container.getElementsByClassName("c")[0],
-              {left: ["180px", "300px"]}, {iterationDuration: 1, iterationCount: 0.0}),
+              [{left: "180px"}, {left: "300px"}],
+              {iterationDuration: 1, iterationCount: 0.0}),
           ], {iterationCount: 2, direction: dir, iterationDuration: 4}));
 }
 </script>

@@ -75,7 +75,7 @@ for (var j = 0; j < to.length; j++) {
     table +=
         "<td><div class='container'><div class='expectation' style='width: " +
         toVal + "'</div><div id="+id+" class='anim'></div></div></td>";
-    anims['#' + id] = [to[i], fromVal, toVal];
+    anims['#' + id] = [{width: to[i]}, {width: fromVal}, {width: toVal}];
   }
   table += "</tr>"
 }
@@ -86,6 +86,6 @@ document.querySelector("table").innerHTML = table;
 "use strict";
 for (var id in anims) {
   document.timeline.play(
-      new Animation(document.querySelector(id), {width: anims[id]}, 2));
+      new Animation(document.querySelector(id), anims[id], 2));
 }
 </script>
