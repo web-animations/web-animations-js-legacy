@@ -619,7 +619,11 @@ finally:
 while args.dontexit and browser.window_handles:
     time.sleep(1)
 
-if summary.wasSuccessful():
+if summary.testsRun == 0:
+   print
+   print "FAIL: No tests run!"
+
+if summary.wasSuccessful() and summary.testsRun > 0:
     sys.exit(0)
 else:
     sys.exit(1)
