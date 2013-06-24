@@ -33,4 +33,15 @@ test(function() {
         'assert_styles should not leave additional elements in the dom');
   }
 }, 'assert_styles reference_element');
+
+test(function() {
+  try {
+    assert_styles(null, {},
+        'assert_styles should support an element with no parent');
+  } catch (e) {
+    assert_equals(e.message, "Expected Array, NodeList or Element but got null");
+    return;
+  }
+  assert_unreached();
+}, 'assert_styles invalid arguments');
 </script>
