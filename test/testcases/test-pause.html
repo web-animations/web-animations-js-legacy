@@ -63,14 +63,12 @@ limitations under the License.
 <script>
 "use strict";
 
-var a1 = new Animation(document.querySelector("#a"), {left: ["100px", "200px"]},
-    2.6);
-var a2 = new Animation(document.querySelector("#b"), {left: ["100px", "200px"]},
-    2.5);
-var a3 = new Animation(document.querySelector("#c"), {left: ["100px", "200px"]},
-    2.5);
-var a4 = new Animation(document.querySelector("#d"), {left: ["100px", "200px"]},
-    2.3);
+var effect = [{left: "100px"}, {left: "200px"}];
+
+var a1 = new Animation(document.querySelector("#a"), effect, 2.6);
+var a2 = new Animation(document.querySelector("#b"), effect, 2.5);
+var a3 = new Animation(document.querySelector("#c"), effect, 2.5);
+var a4 = new Animation(document.querySelector("#d"), effect, 2.3);
 var pgroup1 = new ParGroup([a1, a2], {name: "p1"});
 var pgroup2 = new ParGroup([a3, a4], {name: "p2"});
 var player = document.timeline.play(

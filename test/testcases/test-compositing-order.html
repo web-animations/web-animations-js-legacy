@@ -31,8 +31,9 @@ div.anim {
 <script>
 "use strict";
 
-var leftToRight = {left: ["100px", "200px"]};
-var rightToLeft = {left: ["200px", "100px"]};
+var leftToRight = [{left: "100px"}, {left: "200px"}];
+var leftToRightLarge = [{left: "100px"}, {left: "1000px"}];
+var rightToLeft = [{left: "200px"}, {left: "100px"}];
 var noop = {color: "red"};
 
 // Test that an animation uses the correct compositing order when it has a
@@ -78,10 +79,10 @@ timing_test(function() {
 // Test compositing order follows Player start time order.
 var target3 = document.getElementById("target3");
 var player1 = document.timeline.play(
-  new Animation(target3, {left: ["100px", "200px"]}, 1.0));
+  new Animation(target3, leftToRight, 1.0));
 player1.startTime += 1.0;
 var player2 = document.timeline.play(
-  new Animation(target3, {left: ["100px", "1000px"]}, 2.0));
+  new Animation(target3, leftToRightLarge, 2.0));
 
 timing_test(function() {
     at(2.0, function() {assert_equals(getComputedStyle(target3).getPropertyValue("left"), "200px")});
@@ -90,17 +91,17 @@ timing_test(function() {
 // Test compositing order follows tree order.
 var target4 = document.getElementById("target4");
 var player = document.timeline.play(new ParGroup([
-  new Animation(target4, {left: ["100px", "1000px"]}, 1.0),
+  new Animation(target4, leftToRightLarge, 1.0),
   new SeqGroup([
-    new Animation(target4, {left: ["100px", "1000px"]}, 1.0),
+    new Animation(target4, leftToRightLarge, 1.0),
     new ParGroup([
-      new Animation(target4, {left: ["100px", "1000px"]}, 1.0),
-      new Animation(target4, {left: ["100px", "1000px"]}, 1.0),
+      new Animation(target4, leftToRightLarge, 1.0),
+      new Animation(target4, leftToRightLarge, 1.0),
     ]),
   ]),
   new ParGroup([
-    new Animation(target4, {left: ["100px", "1000px"]}, 1.0),
-    new Animation(target4, {left: ["100px", "200px"]}, 1.0),
+    new Animation(target4, leftToRightLarge, 1.0),
+    new Animation(target4, leftToRight, 1.0),
   ]),
 ]));
 
