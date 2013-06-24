@@ -696,7 +696,7 @@ var Animation = function(target, animationEffect, timingInput) {
   try {
     TimedItem.call(this, constructorToken, timingInput);
     this.effect = interpretAnimationEffect(animationEffect);
-    this.targetElement = target;
+    this._target = target;
   } finally {
     exitModifyCurrentAnimationState(false);
   }
@@ -706,7 +706,7 @@ Animation.prototype = createObject(TimedItem.prototype, {
   _sample: function() {
     if (isDefinedAndNotNull(this.effect)) {
       this.effect.sample(this._timeFraction,
-          this.currentIteration, this.targetElement,
+          this.currentIteration, this.target,
           this.underlyingValue);
     }
   },
@@ -714,12 +714,15 @@ Animation.prototype = createObject(TimedItem.prototype, {
     items.push(this);
   },
   _isTargetingElement: function(element) {
-    return element === this.targetElement;
+    return element === this.target;
   },
   _getAnimationsTargetingElement: function(element, animations) {
     if (this._isTargetingElement(element)) {
       animations.push(this);
     }
+  },
+  get target() {
+    return this._target;
   },
   set effect(effect) {
     enterModifyCurrentAnimationState();
@@ -733,7 +736,7 @@ Animation.prototype = createObject(TimedItem.prototype, {
     return this._effect;
   },
   clone: function() {
-    return new Animation(this.targetElement,
+    return new Animation(this.target,
         cloneAnimationEffect(this.effect), this.specified._dict);
   },
   toString: function() {
