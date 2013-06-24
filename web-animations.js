@@ -705,7 +705,7 @@ var Animation = function(target, animationEffect, timingInput) {
 Animation.prototype = createObject(TimedItem.prototype, {
   _sample: function() {
     if (isDefinedAndNotNull(this.effect) &&
-        !(this.targetElement instanceof PseudoElementReference)) {
+        !(this.target instanceof PseudoElementReference)) {
       this.effect.sample(this._timeFraction,
           this.currentIteration, this.target,
           this.underlyingValue);
