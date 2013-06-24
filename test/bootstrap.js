@@ -20,11 +20,9 @@
 var thisScript = document.querySelector("script[src$='bootstrap.js']");
 var coverageMode = Boolean(parent.window.__coverage__) || /coverage/.test(window.location.hash);
 
-if (coverageMode) {
-  // Inherit these properties from the parent test-runner if any.
-  window.__resources__ = parent.window.__resources__ || {original: {}};
-  window.__coverage__ = parent.window.__coverage__;
-}
+// Inherit these properties from the parent test-runner if any.
+window.__resources__ = parent.window.__resources__ || {original: {}};
+window.__coverage__ = parent.window.__coverage__;
 
 function getSync(src) {
   var xhr = new XMLHttpRequest();
