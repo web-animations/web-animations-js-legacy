@@ -51,6 +51,7 @@ var tests = [
   'unit-test-dom-operations.html',
   'unit-test-duration.html',
   'unit-test-modify-timing-params.html',
+  'unit-test-null-effect.html',
   'unit-test-set-parent.html',
   'unit-test-testharness.html',
   'unit-test-unpause.html',
