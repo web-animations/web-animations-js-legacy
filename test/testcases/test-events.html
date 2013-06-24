@@ -52,7 +52,7 @@ function testTiming(animation, expectedEvents, testName) {
 }
 
 for (var i = 0; i < 13; i += 3) {
-  at(i, function() { console.log(document.timeline.currentTime)});
+  at(i, function() { });
 }
 
 function assertEventsMatch(anim, events, expectations) {
@@ -109,7 +109,7 @@ function iterList(localStart, globalStart, iterStart, delta, count, targetFun) {
 function simple(timing) {
   return new Animation(target, {left: '100px'}, timing);
 }
-/*
+
 testTiming(simple(10),
   [event('start', 0, 0, 0), event('end', 10, 10, 0)],
   "simple animation");
@@ -185,7 +185,6 @@ testTiming(new ParGroup([simple({iterationDuration: 10, playbackRate: 4})],
   [event('start', 0, 0, 0), event('start', 0, 0, 0, child(0)),
    event('end', 2.5, 5, 0, child(0)), event('end', 5, 5, 0)],
    "nested non-unit playbackRates");
-*/
 
 testTiming(new ParGroup([simple({iterationCount: 2, iterationDuration: 2.5, 
                                  playbackRate: 4})],

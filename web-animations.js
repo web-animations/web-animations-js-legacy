@@ -744,11 +744,10 @@ TimedItem.prototype = {
   },
   _generateEvents: function(fromTime, toTime, globalTime, deltaScale) {
     function toGlobal(time) {
-      return (globalTime - (toTime - time) / deltaScale);
+      return (globalTime - (toTime - (time / deltaScale)));
     }
     toGlobal = toGlobal.bind(this);
     var localScale = this.specified.playbackRate;
-    console.log('local range', fromTime, "-", toTime, "global", globalTime);
     var firstIteration = Math.floor(this.specified.iterationStart);
     var lastIteration = Math.floor(this.specified.iterationStart +
         this.specified.iterationCount);
@@ -757,8 +756,6 @@ TimedItem.prototype = {
         lastIteration -= 1;
     }
     var startTime = this.startTime + this.specified.startDelay;
-
-    console.log('startTime', startTime, 'endTime', this.endTime);
 
     if (isDefinedAndNotNull(this.onstart)) {
       // Did we pass the start of this animation in the forward direction?
@@ -794,7 +791,6 @@ TimedItem.prototype = {
     }
     var subranges = this._toSubRanges(clippedFromTime, clippedToTime,
       iterationTimes);
-    console.log(JSON.stringify(subranges));
     for (var i = 0; i < subranges.ranges.length; i++) {
       var currentIter = subranges.start + i * subranges.delta;
       if (isDefinedAndNotNull(this.oniteration) && i > 0) {
@@ -1152,7 +1148,6 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
     rangeEnd, iteration, globalTime, deltaScale) {
     // If our range is not going in the same direction as the delta then
     // ignore.
-    console.log('local: ' + localStart + '-' + localEnd + '. range: ' + rangeStart + '-' + rangeEnd);
     if ((localStart < localEnd) === (rangeStart > rangeEnd)) {
       return;
     }
@@ -1175,11 +1170,10 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
     }
 
     var endDelta = rangeEnd - end;
-    start -= iteration * this.iterationDuration;
-    end -= iteration * this.iterationDuration;
+    start -= iteration * this.iterationDuration / deltaScale;
+    end -= iteration * this.iterationDuration / deltaScale;
 
     for (var i = 0; i < this.children.length; i++) {
-      console.log('start:', start, 'end:', end, 'global:', globalTime, 'delta:', endDelta, 'iteration:', iteration, 'scale:', deltaScale);
       this.children[i]._generateEvents(start, end, globalTime - endDelta, deltaScale);
     }
   },
