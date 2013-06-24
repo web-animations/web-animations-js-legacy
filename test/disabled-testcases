@@ -3,5 +3,4 @@ test-media.html # Scripts fail before adding tests, test file passes erroneously
 test-iteration-start.html # Test fails visually.
 # failures after 86be93b26577ce27b20f1d3768fe5a77cf25aa85 (new KeyframeAnimationEffect)
 test-pseudo-element-reference.html
-test-update-state.html
 test-partial-keyframes.html

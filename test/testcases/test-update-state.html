@@ -14,14 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <!DOCTYPE html>
-<script src="../bootstrap.js"></script>
+<script src="../bootstrap.js" nochecks></script>
 <script>
 "use strict";
 
 var element = document.createElement('span');
 document.body.appendChild(element);
 
-var anim = element.animate({left: ['0px', '1000px']}, 10);
+var anim = element.animate([{left: '0px'}, {left: '1000px'}], 10);
 timing_test(function() {
   at(1, function() {
     assert_styles(element, {left: '100px'});
@@ -31,7 +31,7 @@ timing_test(function() {
   });
 }, 'Updated style should be visible after player seek');
 
-var anim2 = element.animate({top: ['0px', '1000px']}, 10);
+var anim2 = element.animate([{top: '0px'}, {top: '1000px'}], 10);
 timing_test(function() {
   at(1, function() {
     assert_styles(element, {top: '100px'});
@@ -42,8 +42,8 @@ timing_test(function() {
 }, 'Updated style should be visible after change to specified timing');
 
 var group = new SeqGroup([
-  new Animation(element, {foo: []}, 1),
-  new Animation(element, {right: ['0px', '1000px']}, 10),
+  new Animation(element, {}, 1),
+  new Animation(element, [{right: '0px'}, {right: '1000px'}], 10),
 ]);
 document.timeline.play(group);
 timing_test(function() {
@@ -60,7 +60,7 @@ timing_test(function() {
 
 timing_test(function() {
   at(3, function() {
-    var anim = element.animate({color: ['red', 'green', 'red']}, 1);
+    var anim = element.animate([{color: 'red'}, {color: 'green'}, {color: 'red'}], 1);
     // TODO: Really this should already be in effect, since the start
     //       time == lastTick. But if that is fixed it's unclear how
     //       to start an animation after the last tick (in this
@@ -73,7 +73,7 @@ timing_test(function() {
   });
 }, 'Changing the start time of a new player to before the current time should cause it to take effect');
 
-var anim3 = element.animate({bottom: ['0px', '1000px']}, 10);
+var anim3 = element.animate([{bottom: '0px'}, {bottom: '1000px'}], 10);
 // Run this last, since if it fails it's likely to corrupt the other tests.
 timing_test(function() {
   at(5, function() {
