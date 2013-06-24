@@ -414,6 +414,7 @@ function runTests() {
   }
 }
 
+var shouldPostResults = true;
 
 /* @type {Object.<string, Object>} */ var testResults = {};
 /**
@@ -436,7 +437,7 @@ window.addEventListener(
 
     case 'complete':
       var result = processResults(test, testResults[testname]);
-      if (result) {
+      if (result && shouldPostResults) {
         // Move from running to posting state
         changeTestState(test, States.POSTING);
 
@@ -444,7 +445,10 @@ window.addEventListener(
         data.append('data', JSON.stringify(result));
 
         var xhr = new XMLHttpRequest();
-        xhr.onload = function () {
+        xhr.onload = function (e) {
+          if (e.target.status >= 400) {
+            shouldPostResults = false;
+          }
           // Move from running to finished state
           changeTestState(this, States.FINISHED);
         }.bind(test);
@@ -453,12 +457,8 @@ window.addEventListener(
       } else {
         // Move directly to finished state
         changeTestState(test, States.FINISHED);
-        i--;
       }
       break;
-
-    default:
-      console.log(evt.data);
     }
   },
   false);

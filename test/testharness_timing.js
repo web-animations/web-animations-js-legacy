@@ -148,7 +148,6 @@
         while (callbacks.length > 0)
         {
             var callback = callbacks.pop();
-            console.log(callback);
 
             var status_ = statuses[statuses.length - callbacks.length-1];
 
@@ -395,7 +394,6 @@
             }
 
             if (event_) {
-                console.log(this.currentTime_);
                 event_.call();
             }
         }
