@@ -44,9 +44,9 @@ def main():
 
     current_testcases_lines = file(testcase_file).readlines()
 
-    lines = difflib.unified_diff(
+    lines = list(difflib.unified_diff(
         current_testcases_lines, new_testcases_lines,
-        fromfile=testcase_file, tofile=testcase_file)
+        fromfile=testcase_file, tofile=testcase_file))
 
     if "--update" in sys.argv:
         file(testcase_file, "w").write("".join(new_testcases_lines))
@@ -54,7 +54,8 @@ def main():
     for line in lines:
         sys.stdout.write(line)
 
-    sys.exit(not lines)
+    sys.exit(int(len(list(lines)) > 0))
+
 
 if __name__ == '__main__':
     main()
