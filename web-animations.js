@@ -582,7 +582,10 @@ TimedItem.prototype = {
     this._iterationTime = this._scaleIterationTime(unscaledIterationTime);
     this._timeFraction = this._iterationTime / this.iterationDuration;
     console.assert(this._timeFraction >= 0.0 && this._timeFraction <= 1.0,
-        'Time fraction should be in the range [0, 1]');
+        'Time fraction should be in the range [0, 1], got ' +
+        this._timeFraction + ' ' + this._iterationTime + ' ' +
+        this.iterationDuration + ' ' + isAtEndOfIterations + ' ' +
+        unscaledIterationTime);
     var timingFunction = this.specified._timingFunction(this);
     if (timingFunction) {
       this._timeFraction = timingFunction.scaleTime(this._timeFraction);
@@ -1259,7 +1262,7 @@ var PseudoElementReference = function(element, pseudoElement) {
 };
 
 /** @constructor */
-var MediaReference = function(mediaElement, timing, parent) {
+var MediaReference = function(mediaElement, timing, parent, delta) {
   TimedItem.call(this, constructorToken, timing, parent);
   this._media = mediaElement;
 
@@ -1268,7 +1271,8 @@ var MediaReference = function(mediaElement, timing, parent) {
   // element's currentTime may drift from our iterationTime. So if a media
   // element has loop set, we can't be sure that we'll stop it before it wraps.
   // For this reason, we simply disable looping.
-  // TODO: Maybe we should let it loop if our iterationDuration exceeds it's length?
+  // TODO: Maybe we should let it loop if our iterationDuration exceeds it's
+  // length?
   this._media.loop = false;
 
   // If the media element has a media controller, we detach it. This mirrors the
@@ -1276,6 +1280,8 @@ var MediaReference = function(mediaElement, timing, parent) {
   // TODO: It would be neater to assign to MediaElement.controller, but this was
   // broken in Chrome until recently. See crbug.com/226270.
   this._media.mediaGroup = '';
+
+  this._delta = delta;
 };
 
 MediaReference.prototype = createObject(TimedItem.prototype, {
@@ -1286,8 +1292,8 @@ MediaReference.prototype = createObject(TimedItem.prototype, {
     // _updateInheritedTime(). One way around this would be to modify
     // TimedItem._isPastEndOfActiveInterval() to recurse down the tree, then we
     // could override it here.
-    return isNaN(this._media.iterationDuration) ?
-        Infinity : this._media.iterationDuration / this._media.defaultPlaybackRate;
+    return isNaN(this._media.duration) ?
+        Infinity : this._media.duration / this._media.defaultPlaybackRate;
   },
   _unscaledMediaCurrentTime: function() {
     return this._media.currentTime / this._media.defaultPlaybackRate;
@@ -1316,12 +1322,12 @@ MediaReference.prototype = createObject(TimedItem.prototype, {
     }
     return false;
   },
-  // Note that a media element's timeline may not start at zero, although it's
-  // iterationDuration is always the timeline time at the end point. This means that an
-  // element's iterationDuration isn't always it's length and not all values of the
+  // Note that a media element's timeline may not start at zero, although its
+  // duration is always the timeline time at the end point. This means that an
+  // element's duration isn't always it's length and not all values of the
   // timline are seekable. Furthermore, some types of media further limit the
   // range of seekable timeline times. For this reason, we always map an
-  // iteration to the range [0, iterationDuration] and simply seek to the nearest
+  // iteration to the range [0, duration] and simply seek to the nearest
   // seekable time.
   _ensureIsAtUnscaledTime: function(time) {
     if (this._unscaledMediaCurrentTime() !== time) {
@@ -1346,7 +1352,7 @@ MediaReference.prototype = createObject(TimedItem.prototype, {
     }
 
     if (this._iterationTime >= this._intrinsicDuration()) {
-      // Our iteration time exceeds the media element's iterationDuration, so just make
+      // Our iteration time exceeds the media element's duration, so just make
       // sure the media element is at the end. It will stop automatically, but
       // that could take some time if the seek below is significant, so force
       // it.
@@ -1393,7 +1399,8 @@ MediaReference.prototype = createObject(TimedItem.prototype, {
     // exactly the right speed. There's also a variable delay when the video is
     // first played.
     // TODO: What's the right value for this delta?
-    var delta = 0.2 * Math.abs(this._media.playbackRate);
+    var delta = isDefinedAndNotNull(this._delta) ? this._delta :
+        0.2 * Math.abs(this._media.playbackRate);
     if (Math.abs(this._iterationTime - this._unscaledMediaCurrentTime()) >
         delta) {
       this._ensureIsAtUnscaledTime(this._iterationTime);
