@@ -2870,11 +2870,13 @@ var Compositor = function() {
 
 Compositor.prototype = {
   setAnimatedValue: function(target, property, animValue) {
-    if (target._anim_properties === undefined) {
-      target._anim_properties = new CompositedPropertyMap(target);
-      this.targets.push(target);
+    if (target !== null) {
+      if (target._anim_properties === undefined) {
+        target._anim_properties = new CompositedPropertyMap(target);
+        this.targets.push(target);
+      }
+      target._anim_properties.addValue(property, animValue);
     }
-    target._anim_properties.addValue(property, animValue);
   },
   applyAnimatedValues: function() {
     for (var i = 0; i < this.targets.length; i++) {
@@ -3140,6 +3142,7 @@ var ticker = function(rafTime, isRepeat) {
   });
 
   // Apply animations in order
+  // Renee: this might be the place to fix the null target issue.
   for (var i = 0; i < animations.length; i++) {
     if (animations[i] instanceof Animation) {
       animations[i]._sample();
