@@ -3142,7 +3142,6 @@ var ticker = function(rafTime, isRepeat) {
   });
 
   // Apply animations in order
-  // Renee: this might be the place to fix the null target issue.
   for (var i = 0; i < animations.length; i++) {
     if (animations[i] instanceof Animation) {
       animations[i]._sample();
