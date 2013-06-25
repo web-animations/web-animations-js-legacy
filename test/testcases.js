@@ -18,6 +18,7 @@ var tests = [
   'test-font-weight.html',
   'test-getcurrent.html',
   'test-integer.html',
+  'test-iteration-start.html',
   'test-iterations-alternate.html',
   'test-iterations-alternate-holes.html',
   'test-iterations-basic.html',
