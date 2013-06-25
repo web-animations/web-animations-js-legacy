@@ -34,9 +34,9 @@ function testTiming(animation, expectedEvents, testName) {
   var eventList = [];
 
   function registerAnimationEvents(a) {
-    a.onstart = function(e) { e.type = 'start'; eventList.push(e); }
-    a.oniteration = function(e) { e.type = 'iteration'; eventList.push(e); }
-    a.onend = function(e) { e.type = 'end'; eventList.push(e); }
+    a.onstart = function(e) { eventList.push(e); }
+    a.oniteration = function(e) { eventList.push(e); }
+    a.onend = function(e) { eventList.push(e); }
     if (a.children) {
       a.children.forEach(registerAnimationEvents);
     }

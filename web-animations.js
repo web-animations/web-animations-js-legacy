@@ -225,7 +225,7 @@ var Player = function(token, source, timeline) {
 
   this.source = source;
   this._checkForHandlers();
-  this._lastCurrentTime = this._startTime;
+  this._lastCurrentTime = undefined;
 
   PLAYERS.push(this);
   maybeRestartAnimation();
@@ -366,12 +366,17 @@ Player.prototype = {
     this._needsHandlerPass = this.source !== null && this.source._hasHandler();
   },
   _generateEvents: function() {
+    if (!isDefinedAndNotNull(this._lastCurrentTime)) {
+      this._lastCurrentTime = this._startTime;
+    }
+
     if (this._needsHandlerPass) {
       var timeDelta = this._currentTime - this._lastCurrentTime;
       if (timeDelta > 0) {
         this.source._generateEvents(this._lastCurrentTime, this._currentTime, this.timeline.currentTime, 1);
       }
     }
+
     this._lastCurrentTime = this._currentTime;
   },
 };
@@ -762,11 +767,11 @@ TimedItem.prototype = {
     if (isDefinedAndNotNull(this.onstart)) {
       // Did we pass the start of this animation in the forward direction?
       if (fromTime <= startTime && toTime > startTime) {
-        this.onstart(new TimingEvent(constructorToken, this, 
+        this.onstart(new TimingEvent(constructorToken, this, 'start',
             this.specified.startDelay, toGlobal(startTime), firstIteration));
       // Did we pass the end of this animation in the reverse direction?
       } else if (fromTime > this.endTime && toTime <= this.endTime) {
-        this.onstart(new TimingEvent(constructorToken, this,
+        this.onstart(new TimingEvent(constructorToken, this, 'start',
             this.endTime - this.startTime, toGlobal(this.endTime),
             lastIteration));
       }
@@ -797,46 +802,56 @@ TimedItem.prototype = {
       var currentIter = subranges.start + i * subranges.delta;
       if (isDefinedAndNotNull(this.oniteration) && i > 0) {
         var iterTime = subranges.ranges[i][0];
-        this.oniteration(new TimingEvent(constructorToken, this,
-          iterTime - this.startTime, toGlobal(iterTime), currentIter));
+        this.oniteration(new TimingEvent(constructorToken, this, 'iteration',
+            iterTime - this.startTime, toGlobal(iterTime), currentIter));
       }
+
+      var iterFraction;
       if (subranges.delta > 0) {
-        var iterFraction = this.specified.iterationStart % 1;
+        iterFraction = this.specified.iterationStart % 1;
       } else {
-        var iterFraction = 1 - 
-          (this.specified.iterationStart + this.specified.iterationCount) % 1;
+        iterFraction = 1 - 
+            (this.specified.iterationStart + this.specified.iterationCount) % 1;
       }
       this._generateChildEventsForRange(
-        subranges.ranges[i][0], subranges.ranges[i][1],
-        fromTime, toTime, currentIter - iterFraction,
-        globalTime, deltaScale * this.specified.playbackRate);
+          subranges.ranges[i][0], subranges.ranges[i][1],
+          fromTime, toTime, currentIter - iterFraction,
+          globalTime, deltaScale * this.specified.playbackRate);
     }
 
     if (isDefinedAndNotNull(this.onend)) {
       // Did we pass the end of this animation in the forward direction?
       if (fromTime < this.endTime && toTime >= this.endTime) {
-        this.onend(new TimingEvent(constructorToken, this, 
+        this.onend(new TimingEvent(constructorToken, this, 'end',
             this.endTime - this.startTime, toGlobal(this.endTime),
             lastIteration));
       // Did we pass the start of this animation in the reverse direction?
       } else if (fromTime >= startTime && toTime < startTime) {
-        this.onend(new TimingEvent(constructorToken, this, 
+        this.onend(new TimingEvent(constructorToken, this, 'end',
             this.specified.startDelay, toGlobal(startTime), firstIteration));
       }
     }
   },
 };
 
-var TimingEvent = function(token, target, localTime, timelineTime, iterationIndex, seeked) {
+var TimingEvent = function(token, target, type, localTime, timelineTime, iterationIndex, seeked) {
   if (token !== constructorToken) {
     throw new TypeError('Illegal constructor');
   }
   this.target = target;
+  this.type = type;
+  this.cancelBubble = false;
+  this.cancelable = false;
+  this.defaultPrevented = false;
+  this.eventPhase = 0;
+  this.returnValue = true;
   this.localTime = localTime;
   this.timelineTime = timelineTime;
   this.iterationIndex = iterationIndex;
   this.seeked = seeked ? true : false;
 }
+
+TimingEvent.prototype = Object.create(Event.prototype);
 
 var isCustomAnimationEffect = function(animationEffect) {
   // TODO: How does WebIDL actually differentiate different callback interfaces?
