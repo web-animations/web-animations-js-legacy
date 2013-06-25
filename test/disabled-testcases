@@ -1,4 +1,2 @@
 test-change-playback-rate.html # Lots of problems
 test-media.html # Scripts fail before adding tests, test file passes erroneously.
-# failures after 86be93b26577ce27b20f1d3768fe5a77cf25aa85 (new KeyframeAnimationEffect)
-test-partial-keyframes.html

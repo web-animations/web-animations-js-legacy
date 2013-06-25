@@ -1498,6 +1498,7 @@ var normalizeKeyframeDictionary = function(properties) {
   animationProperties = animationProperties.sort();
   for (var i = 0; i < animationProperties.length; i++) {
     // TODO: Apply the IDL attribute to CSS property algorithm.
+    var property = animationProperties[i];
     result[property] = properties[property].toString();
   }
   return result;
