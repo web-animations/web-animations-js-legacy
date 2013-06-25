@@ -1364,12 +1364,11 @@ MediaReference.prototype = createObject(TimedItem.prototype, {
 
 
 /** @constructor */
-var AnimationEffect = function(token, composite, accumulate) {
+var AnimationEffect = function(token, accumulate) {
   if (token !== constructorToken) {
     throw new TypeError('Illegal constructor');
   }
   // Use the default value if an invalid string is specified.
-  this.composite = composite === 'add' ? 'add' : 'replace';
   this.accumulate = accumulate == 'sum' ? 'sum' : 'none';
 };
 
@@ -1386,7 +1385,11 @@ var PathAnimationEffect = function(path, autoRotate, angle, composite,
     accumulate) {
   enterModifyCurrentAnimationState();
   try {
-    AnimationEffect.call(this, constructorToken, composite, accumulate);
+    AnimationEffect.call(this, constructorToken, accumulate);
+
+    // Use the default value if an invalid string is specified.
+    this.composite = composite === 'add' ? 'add' : 'replace';
+
     // TODO: path argument is not in the spec -- seems useful since
     // SVGPathSegList doesn't have a constructor.
     this.autoRotate = isDefined(autoRotate) ? autoRotate : 'none';
@@ -1508,7 +1511,11 @@ var normalizeKeyframeDictionary = function(properties) {
 /** @constructor */
 var KeyframeAnimationEffect = function(oneOrMoreKeyframesDictionaries,
     composite, accumulate) {
-  AnimationEffect.call(this, constructorToken, composite, accumulate);
+  AnimationEffect.call(this, constructorToken, accumulate);
+
+  // Use the default value if an invalid string is specified.
+  this.composite = composite === 'add' ? 'add' : 'replace';
+
   if (!Array.isArray(oneOrMoreKeyframesDictionaries)) {
     oneOrMoreKeyframesDictionaries = [oneOrMoreKeyframesDictionaries];
   }
@@ -3123,8 +3130,6 @@ AddReplaceCompositableValue.prototype =
   compositeOnto: function(property, underlyingValue) {
     switch (this.composite) {
       case 'replace':
-        // TODO: Is it correct that replace-compositing the neutral value yields
-        // the neutral value?
         return this.value;
       case 'add':
         return add(property, underlyingValue, this.value);
