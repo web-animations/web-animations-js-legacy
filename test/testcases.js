@@ -27,6 +27,7 @@ var tests = [
   'test-length-units.html',
   'test-matrix-transforms.html',
   'test-non-numeric.html',
+  'test-null-target.html',
   'test-parent.html',
   'test-partial-keyframes.html',
   'test-path.html',
