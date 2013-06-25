@@ -1382,10 +1382,11 @@ AnimationEffect.prototype = {
 
 
 /** @constructor */
-var PathAnimationEffect = function(path, autoRotate, angle, composite) {
+var PathAnimationEffect = function(path, autoRotate, angle, composite,
+    accumulate) {
   enterModifyCurrentAnimationState();
   try {
-    AnimationEffect.call(this, constructorToken, composite);
+    AnimationEffect.call(this, constructorToken, composite, accumulate);
     // TODO: path argument is not in the spec -- seems useful since
     // SVGPathSegList doesn't have a constructor.
     this.autoRotate = isDefined(autoRotate) ? autoRotate : 'none';
