@@ -224,6 +224,8 @@ var Player = function(token, source, timeline) {
   this._hasTicked = false;
 
   this.source = source;
+  this._checkForHandlers();
+  this._lastCurrentTime = undefined;
 
   PLAYERS.push(this);
   maybeRestartAnimation();
@@ -245,6 +247,7 @@ Player.prototype = {
         this._update();
         maybeRestartAnimation();
       }
+      this._checkForHandlers();
     } finally {
       exitModifyCurrentAnimationState(this._hasTicked);
     }
@@ -355,6 +358,26 @@ Player.prototype = {
     if (this.source) {
       this.source._getAnimationsTargetingElement(element, animations);
     }
+  },
+  _handlerAdded: function() {
+    this._needsHandlerPass = true;
+  },
+  _checkForHandlers: function() {
+    this._needsHandlerPass = this.source !== null && this.source._hasHandler();
+  },
+  _generateEvents: function() {
+    if (!isDefinedAndNotNull(this._lastCurrentTime)) {
+      this._lastCurrentTime = this._startTime;
+    }
+
+    if (this._needsHandlerPass) {
+      var timeDelta = this._currentTime - this._lastCurrentTime;
+      if (timeDelta > 0) {
+        this.source._generateEvents(this._lastCurrentTime, this._currentTime, this.timeline.currentTime, 1);
+      }
+    }
+
+    this._lastCurrentTime = this._currentTime;
   },
 };
 
@@ -652,7 +675,183 @@ TimedItem.prototype = {
     return this.parent === null ? effectivePlaybackRate :
         effectivePlaybackRate * this.parent._netEffectivePlaybackRate();
   },
+  set onstart(fun) {
+    this._startHandler = fun;
+    this._newHandler(fun);
+  },
+  get onstart() {
+    return this._startHandler;
+  },
+  set oniteration(fun) {
+    this._iterationHandler = fun;
+    this._newHandler(fun);
+  },
+  get oniteration() {
+    return this._iterationHandler;
+  },
+  set onend(fun) {
+    this._endHandler = fun;
+    this._newHandler(fun);
+  },
+  get onend() {
+    return this._endHandler;
+  },
+  set oncancel(fun) {
+    this._cancelHandler = fun;
+    this._newHandler(fun);
+  },
+  get oncancel() {
+    return this._cancelHander;
+  },
+  _newHandler: function(fun) {
+    if (isDefinedAndNotNull(fun)) {
+      if (this.player) {
+        this.player._handlerAdded();
+      }
+    } else {
+      if (this.player) {
+        this.player._checkForHandlers();
+      }
+    }
+  },
+  _hasHandler: function() {
+    return isDefinedAndNotNull(this._startHandler) ||
+      isDefinedAndNotNull(this._iterationHandler) ||
+      isDefinedAndNotNull(this._endHandler) ||
+      isDefinedAndNotNull(this._cancelHandler);
+  },
+  _generateChildEventsForRange: function() { },
+  _toSubRanges: function(fromTime, toTime, iterationTimes) {
+    if (fromTime > toTime) {
+      var revRanges = this._toSubRanges(toTime, fromTime, iterationTimes);
+      revRanges.ranges.forEach(function(a) { a.reverse(); })
+      revRanges.ranges.reverse();
+      revRanges.start = iterationTimes.length - revRanges.start - 1;
+      revRanges.delta = -1;
+      return revRanges;
+    }
+    var skipped = 0;
+    // TODO: this should be calculatable. This would be more efficient
+    // than searching through the list.
+    while (iterationTimes[skipped] < fromTime) {
+      skipped++;
+    }
+    var currentStart = fromTime;
+    var ranges = [];
+    for (var i = skipped; i < iterationTimes.length; i++) {
+      if (iterationTimes[i] < toTime) {
+        ranges.push([currentStart, iterationTimes[i]]);
+        currentStart = iterationTimes[i];
+      } else {
+        ranges.push([currentStart, toTime]);
+        return {start: skipped, delta: 1, ranges: ranges};
+      }
+    }
+    ranges.push([currentStart, toTime]);
+    return {start: skipped, delta: 1, ranges: ranges};
+  },
+  _generateEvents: function(fromTime, toTime, globalTime, deltaScale) {
+    function toGlobal(time) {
+      return (globalTime - (toTime - (time / deltaScale)));
+    }
+    var localScale = this.specified.playbackRate;
+    var firstIteration = Math.floor(this.specified.iterationStart);
+    var lastIteration = Math.floor(this.specified.iterationStart +
+        this.specified.iterationCount);
+    if (lastIteration == this.specified.iterationStart + 
+      this.specified.iterationCount) {
+        lastIteration -= 1;
+    }
+    var startTime = this.startTime + this.specified.startDelay;
+
+    if (isDefinedAndNotNull(this.onstart)) {
+      // Did we pass the start of this animation in the forward direction?
+      if (fromTime <= startTime && toTime > startTime) {
+        this.onstart(new TimingEvent(constructorToken, this, 'start',
+            this.specified.startDelay, toGlobal(startTime), firstIteration));
+      // Did we pass the end of this animation in the reverse direction?
+      } else if (fromTime > this.endTime && toTime <= this.endTime) {
+        this.onstart(new TimingEvent(constructorToken, this, 'start',
+            this.endTime - this.startTime, toGlobal(this.endTime),
+            lastIteration));
+      }
+    }
+
+    // Calculate a list of uneased iteration times.
+    var iterationTimes = [];
+    for (var i = firstIteration + 1; i <= lastIteration; i++) {
+      iterationTimes.push(i - this.specified.iterationStart);
+    }
+    iterationTimes = iterationTimes.map(function(i) {
+      return i * this.iterationDuration / this.specified.playbackRate + startTime;
+    }.bind(this));
+
+    // Determine the impacted subranges.
+    var clippedFromTime;
+    var clippedToTime;
+    if (fromTime < toTime) {
+      clippedFromTime = Math.max(fromTime, startTime);
+      clippedToTime = Math.min(toTime, this.endTime);
+    } else {
+      clippedFromTime = Math.min(fromTime, this.endTime);
+      clippedToTime = Math.max(toTime, startTime);
+    }
+    var subranges = this._toSubRanges(clippedFromTime, clippedToTime,
+      iterationTimes);
+    for (var i = 0; i < subranges.ranges.length; i++) {
+      var currentIter = subranges.start + i * subranges.delta;
+      if (isDefinedAndNotNull(this.oniteration) && i > 0) {
+        var iterTime = subranges.ranges[i][0];
+        this.oniteration(new TimingEvent(constructorToken, this, 'iteration',
+            iterTime - this.startTime, toGlobal(iterTime), currentIter));
+      }
+
+      var iterFraction;
+      if (subranges.delta > 0) {
+        iterFraction = this.specified.iterationStart % 1;
+      } else {
+        iterFraction = 1 - 
+            (this.specified.iterationStart + this.specified.iterationCount) % 1;
+      }
+      this._generateChildEventsForRange(
+          subranges.ranges[i][0], subranges.ranges[i][1],
+          fromTime, toTime, currentIter - iterFraction,
+          globalTime, deltaScale * this.specified.playbackRate);
+    }
+
+    if (isDefinedAndNotNull(this.onend)) {
+      // Did we pass the end of this animation in the forward direction?
+      if (fromTime < this.endTime && toTime >= this.endTime) {
+        this.onend(new TimingEvent(constructorToken, this, 'end',
+            this.endTime - this.startTime, toGlobal(this.endTime),
+            lastIteration));
+      // Did we pass the start of this animation in the reverse direction?
+      } else if (fromTime >= startTime && toTime < startTime) {
+        this.onend(new TimingEvent(constructorToken, this, 'end',
+            this.specified.startDelay, toGlobal(startTime), firstIteration));
+      }
+    }
+  },
 };
+
+var TimingEvent = function(token, target, type, localTime, timelineTime, iterationIndex, seeked) {
+  if (token !== constructorToken) {
+    throw new TypeError('Illegal constructor');
+  }
+  this.target = target;
+  this.type = type;
+  this.cancelBubble = false;
+  this.cancelable = false;
+  this.defaultPrevented = false;
+  this.eventPhase = 0;
+  this.returnValue = true;
+  this.localTime = localTime;
+  this.timelineTime = timelineTime;
+  this.iterationIndex = iterationIndex;
+  this.seeked = seeked ? true : false;
+}
+
+TimingEvent.prototype = Object.create(Event.prototype);
 
 var isCustomAnimationEffect = function(animationEffect) {
   // TODO: How does WebIDL actually differentiate different callback interfaces?
@@ -796,6 +995,10 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
 
     // Update child start times before walking down.
     this._updateChildStartTimes();
+
+    if (this.player) {
+      this.player._checkForHandlers();
+    }
 
     this._isInChildrenStateModified = false;
   },
@@ -955,6 +1158,39 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
     return this.type + ' ' + this.startTime + '-' + this.endTime + ' (' +
         this.localTime + ') ' + ' [' +
         this.children.map(function(a) { return a.toString(); }) + ']'
+  },
+  _hasHandler: function() {
+    return TimedItem.prototype._hasHandler.call(this) ||
+      (this.children.length > 0 &&
+        this.children.reduce(function(a, b) { return a || b._hasHandler() },
+          false));
+  },
+  _generateChildEventsForRange: function(localStart, localEnd, rangeStart,
+      rangeEnd, iteration, globalTime, deltaScale) {
+    var start;
+    var end;
+
+    if (localEnd - localStart > 0) {
+      start = Math.max(rangeStart, localStart);
+      end = Math.min(rangeEnd, localEnd);
+      if (start >= end) {
+        return;
+      }
+    } else {
+      start = Math.min(rangeStart, localStart);
+      end = Math.max(rangeEnd, localEnd);
+      if (start <= end) {
+        return;
+      }
+    }
+
+    var endDelta = rangeEnd - end;
+    start -= iteration * this.iterationDuration / deltaScale;
+    end -= iteration * this.iterationDuration / deltaScale;
+
+    for (var i = 0; i < this.children.length; i++) {
+      this.children[i]._generateEvents(start, end, globalTime - endDelta, deltaScale);
+    }
   },
 });
 
@@ -3256,6 +3492,11 @@ var ticker = function(rafTime, isRepeat) {
     }
   }
 
+  // Generate events
+  sortedPlayers.forEach(function(player) {
+    player._generateEvents();
+  });
+
   // Composite animated values into element styles
   compositor.applyAnimatedValues();
 
@@ -3319,7 +3560,7 @@ window.TimedItem = TimedItem;
 window.TimedItemList = null; // TODO
 window.Timing = Timing;
 window.Timeline = Timeline;
-window.TimingEvent = null; // TODO
+window.TimingEvent = TimingEvent;
 window.TimingGroup = TimingGroup;
 
 window._WebAnimationsTestingUtilities = { _constructorToken : constructorToken }
