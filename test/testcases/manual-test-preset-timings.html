@@ -31,30 +31,42 @@ span {
 <script>
 "use strict";
 
+var size = 100;
+var duration = 3.0;
+
 function testTiming(name) {
-  var timingFun = TimingFunction.createFromString(name);
   var canvas = document.createElement('canvas');
-  var s = 100;
-  canvas.width = canvas.height = s;
+  canvas.width = canvas.height = size;
   var ctx = canvas.getContext('2d');
   ctx.strokeStyle = 'blue';
   ctx.beginPath();
-  ctx.moveTo(0, s);
-  for (var i = 0; i < s; i++) {
-    var result = timingFun.scaleTime((i+1) / s);
-    ctx.lineTo(i, s - s * result);
-  }
-  ctx.stroke();
+  ctx.moveTo(0, size);
   var span = document.createElement('span');
   span.appendChild(canvas);
   span.appendChild(document.createElement('br'));
   span.appendChild(document.createTextNode(name));
   document.body.appendChild(span);
+  return new Animation(ctx, {
+    sample: function(timeFraction, iteration, target) {
+      var inputTimeFraction = player.currentTime / duration;
+      target.lineTo(inputTimeFraction * size, size - timeFraction * size);
+      target.stroke();
+    },
+  }, {
+    iterationDuration: duration,
+    timingFunction: name,
+  });
 }
 
-testTiming('ease');
-testTiming('linear');
-testTiming('ease-in');
-testTiming('ease-out');
-testTiming('ease-in-out');
+// TODO: Making player global like this is is rather ugly. It would be nice if
+// the animation or player were passed to the custom animation effect's sample
+// function.
+var player = document.timeline.play(new ParGroup([
+  testTiming('ease'),
+  testTiming('linear'),
+  testTiming('ease-in'),
+  testTiming('ease-out'),
+  testTiming('ease-in-out'),
+]));
+
 </script>
