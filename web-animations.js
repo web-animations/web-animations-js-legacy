@@ -3122,8 +3122,6 @@ AddReplaceCompositableValue.prototype =
   compositeOnto: function(property, underlyingValue) {
     switch (this.composite) {
       case 'replace':
-        // TODO: Is it correct that replace-compositing the neutral value yields
-        // the neutral value?
         return this.value;
       case 'add':
         return add(property, underlyingValue, this.value);
