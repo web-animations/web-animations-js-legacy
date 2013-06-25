@@ -27,6 +27,7 @@ var tests = [
   'test-matrix-transforms.html',
   'test-non-numeric.html',
   'test-parent.html',
+  'test-partial-keyframes.html',
   'test-path.html',
   'test-pause.html',
   'test-playback-rate.html',
