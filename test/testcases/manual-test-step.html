@@ -30,33 +30,15 @@ span {
 <script src="../../web-animations.js"></script>
 <script>
 "use strict";
+
+var size = 100;
+var duration = 3.0;
+
 function testStep(numSteps, position) {
-  var stepFun = new StepTimingFunction(numSteps, position);
   var canvas = document.createElement('canvas');
-  var s = 100;
-  canvas.width = canvas.height = s;
+  canvas.width = canvas.height = size;
   var ctx = canvas.getContext('2d');
-  ctx.strokeStyle = 'blue';
   ctx.beginPath();
-  ctx.moveTo(0, s);
-  var last = 0;
-  for (var i = 0; i < s; i++) {
-    var result = stepFun.scaleTime((i+1) / s);
-    if (result != last) {
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(i, s - s * last);
-      ctx.lineTo(i, s - s * result);
-      ctx.strokeStyle = 'silver';
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.strokeStyle = 'blue';
-    } else {
-      ctx.lineTo(i, s - s * result);
-    }
-    last = result;
-  }
-  ctx.stroke();
   var span = document.createElement('span');
   span.appendChild(canvas);
   span.appendChild(document.createElement('br'));
@@ -64,17 +46,43 @@ function testStep(numSteps, position) {
   span.appendChild(document.createElement('br'));
   span.appendChild(document.createTextNode('position: ' + position));
   document.body.appendChild(span);
+  return new Animation(ctx, {
+    sample: function(timeFraction, iteration, target) {
+      var inputTimeFraction = player.currentTime / duration;
+      if (target.lastTimeFraction !== timeFraction) {
+        target.beginPath();
+        target.moveTo(inputTimeFraction * size,
+            size - target.lastTimeFraction * size);
+        target.lineTo(inputTimeFraction * size, size - timeFraction * size);
+        target.strokeStyle = 'silver';
+        target.stroke();
+        target.beginPath();
+        target.strokeStyle = 'blue';
+      } else {
+        target.lineTo(inputTimeFraction * size, size - timeFraction * size);
+      }
+      target.lastTimeFraction = timeFraction;
+      target.stroke();
+    },
+  }, {
+    iterationDuration: duration,
+    timingFunction: 'steps(' + numSteps + ', ' + position + ')',
+  });
 }
 
-testStep(1, 'start');
-testStep(1, 'middle');
-testStep(1, 'end');
-document.body.appendChild(document.createElement('br'));
-testStep(3, 'start');
-testStep(3, 'middle');
-testStep(3, 'end');
-document.body.appendChild(document.createElement('br'));
-testStep(10, 'start');
-testStep(10, 'middle');
-testStep(10, 'end');
+// TODO: Making player global like this is is rather ugly. It would be nice if
+// the animation or player were passed to the custom animation effect's sample
+// function.
+var player = document.timeline.play(new ParGroup([
+  testStep(1, 'start'),
+  testStep(1, 'middle'),
+  testStep(1, 'end'),
+  testStep(3, 'start'),
+  testStep(3, 'middle'),
+  testStep(3, 'end'),
+  testStep(10, 'start'),
+  testStep(10, 'middle'),
+  testStep(10, 'end'),
+]));
+
 </script>
