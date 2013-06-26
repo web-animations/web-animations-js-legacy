@@ -1260,6 +1260,9 @@ AnimationEffect.prototype = {
   toString: abstractMethod,
 };
 
+var clamp = function(x, a, b) {
+  return Math.max(Math.min(x, b), a);
+}
 
 /** @constructor */
 var PathAnimationEffect = function(path, autoRotate, angle, composite,
@@ -1275,11 +1278,13 @@ var PathAnimationEffect = function(path, autoRotate, angle, composite,
     // SVGPathSegList doesn't have a constructor.
     this.autoRotate = isDefined(autoRotate) ? autoRotate : 'none';
     this.angle = isDefined(angle) ? angle : 0;
-    this._path = document.createElementNS('http://www.w3.org/2000/svg','path');
     if (path instanceof SVGPathSegList) {
       this.segments = path;
     } else {
-      this._path.setAttribute('d', String(path));
+      var tempPath = document.createElementNS(
+          'http://www.w3.org/2000/svg','path');
+      tempPath.setAttribute('d', String(path));
+      this.segments = tempPath.pathSegList;
     }
   } finally {
     exitModifyCurrentAnimationState(false);
@@ -1301,8 +1306,8 @@ PathAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
   },
   sample: function(timeFraction, currentIteration, target) {
     // TODO: Handle accumulation.
-    var length = this._path.getTotalLength();
-    var point = this._path.getPointAtLength(timeFraction * length);
+    var lengthAtTimeFraction = this._lengthAtTimeFraction(timeFraction);
+    var point = this._path.getPointAtLength(lengthAtTimeFraction);
     var x = point.x - target.offsetWidth / 2;
     var y = point.y - target.offsetHeight / 2;
     // TODO: calc(point.x - 50%) doesn't work?
@@ -1310,8 +1315,7 @@ PathAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     var angle = this.angle;
     if (this._autoRotate == 'auto-rotate') {
       // Super hacks
-      var lastPoint = this._path.getPointAtLength(timeFraction *
-          length - 0.01);
+      var lastPoint = this._path.getPointAtLength(lengthAtTimeFraction - 0.01);
       var dx = point.x - lastPoint.x;
       var dy = point.y - lastPoint.y;
       var rotation = Math.atan2(dy, dx);
@@ -1320,6 +1324,16 @@ PathAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     value.push({t:'rotate', d: [angle]});
     compositor.setAnimatedValue(target, "transform",
         new AddReplaceCompositableValue(value, this.composite));
+  },
+  _lengthAtTimeFraction: function(timeFraction) {
+    var segmentCount = this._cumulativeLengths.length - 1;
+    if (!segmentCount) {
+      return 0;
+    }
+    var scaledFraction = timeFraction * segmentCount;
+    var index = clamp(parseInt(scaledFraction), 0, segmentCount)
+    return this._cumulativeLengths[index] + ((scaledFraction % 1) * (
+        this._cumulativeLengths[index + 1] - this._cumulativeLengths[index]));
   },
   clone: function() {
     return new PathAnimationEffect(this._path.getAttribute('d'));
@@ -1354,12 +1368,20 @@ PathAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
   set segments(segments) {
     enterModifyCurrentAnimationState();
     try {
+      this._path = document.createElementNS(
+          'http://www.w3.org/2000/svg','path');
       var targetSegments = this.segments;
       targetSegments.clear();
+      this._cumulativeLengths = [0];
       // TODO: *moving* the path segments is not correct, but pathSegList
       //       is read only
       while (segments.numberOfItems) {
-        targetSegments.appendItem(segments.getItem(0));
+        var pathSeg = segments.getItem(0);
+        targetSegments.appendItem(pathSeg);
+        if (pathSeg.pathSegType !== SVGPathSeg.PATHSEG_MOVETO_REL &&
+            pathSeg.pathSegType !== SVGPathSeg.PATHSEG_MOVETO_ABS) {
+          this._cumulativeLengths.push(this._path.getTotalLength());
+        }
       }
     } finally {
       exitModifyCurrentAnimationState(true);
