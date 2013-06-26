@@ -30,7 +30,6 @@ test(function() {
   var timelineOneTime = timelineOne.toTimelineTime(otherTime, timelineTwo);
   var timelineOneTimeExpected = otherTime + startTimeTwo - startTimeOne;
   
-  console.log(timelineOneTime, timelineOneTimeExpected);
   assert_approx_equals(timelineOneTime, timelineOneTimeExpected, 0.00001, 'Unexpected result with fake start times.');
 }, 'toTimelineTime with fake start times');
 

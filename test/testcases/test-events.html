@@ -25,7 +25,7 @@ div.anim {
 }
 </style>
 <div class='anim'></div>
-<script src="../bootstrap.js"></script>
+<script src="../bootstrap.js" nochecks></script>
 <script>
 "use strict";
 var target = document.querySelector('.anim');
@@ -55,12 +55,10 @@ for (var i = 0; i < 13; i += 3) {
 }
 
 function assertEventsMatch(anim, events, expectations) {
-  console.log(events);
   if (!expectations) {
     return;
   }
   for (var i = 0; i < expectations.length; i++) {
-    console.log(expectations[i]);
     expectations[i].target = expectations[i].target(anim);
     for (var key in expectations[i]) {
       assert_equals(events[i][key], expectations[i][key], i + ': ' + key);
