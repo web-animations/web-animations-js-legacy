@@ -999,7 +999,6 @@ var TimingGroup = function(token, type, children, timing) {
   this.type = type || 'par';
   this._children = [];
   this._cachedTimedItemList = null;
-  this.length = 0;
   TimedItem.call(this, constructorToken, timing);
   // We add children after setting the parent. This means that if an ancestor
   // (including the parent) is specified as a child, it will be removed from our
@@ -1107,19 +1106,6 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
         new ParGroup(children, this.specified._dict):
         new SeqGroup(children, this.specified._dict);
   },
-  _lengthChanged: function() {
-    while (this.length < this._children.length) {
-      var i = this.length++;
-      Object.defineProperty(this, i, configureDescriptor({
-        set: function(x) { this._children[i] = x; },
-        get: function() { return this._children[i]; },
-      }));
-    }
-    while (this.length > this._children.length) {
-      var i = --this.length;
-      delete this[i];
-    }
-  },
   clear: function() {
     this._splice(0, this._children.length);
   },
@@ -1128,7 +1114,7 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
     for (var i = 0; i < arguments.length; i++) {
       newItems.push(arguments[i]);
     }
-    this._splice(this.length, 0, newItems);
+    this._splice(this._children.length, 0, newItems);
   },
   prepend: function() {
     var newItems = [];
@@ -1139,7 +1125,6 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
   },
   _addInternal: function(child) {
     this._children.push(child);
-    this._lengthChanged();
     this._childrenStateModified();
   },
   indexOf: function(item) {
@@ -1163,7 +1148,6 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
       for (var i = 0; i < result.length; i++) {
         result[i]._parent = null;
       }
-      this._lengthChanged();
       this._childrenStateModified();
       return result;
     } finally {
