@@ -1368,11 +1368,27 @@ var AnimationEffect = function(token, accumulate) {
   if (token !== constructorToken) {
     throw new TypeError('Illegal constructor');
   }
-  // Use the default value if an invalid string is specified.
-  this.accumulate = accumulate == 'sum' ? 'sum' : 'none';
+  enterModifyCurrentAnimationState();
+  try {
+    this.accumulate = accumulate;
+  } finally {
+    exitModifyCurrentAnimationState(false);
+  }
 };
 
 AnimationEffect.prototype = {
+  get accumulate() {
+    return this._accumulate;
+  },
+  set accumulate(value) {
+    enterModifyCurrentAnimationState();
+    try {
+      // Use the default value if an invalid string is specified.
+      this._accumulate = value === 'add' ? 'add' : 'replace';
+    } finally {
+      exitModifyCurrentAnimationState(true);
+    }
+  },
   sample: abstractMethod,
   getValue: abstractMethod,
   clone: abstractMethod,
@@ -1388,7 +1404,7 @@ var PathAnimationEffect = function(path, autoRotate, angle, composite,
     AnimationEffect.call(this, constructorToken, accumulate);
 
     // Use the default value if an invalid string is specified.
-    this.composite = composite === 'add' ? 'add' : 'replace';
+    this.composite = composite;
 
     // TODO: path argument is not in the spec -- seems useful since
     // SVGPathSegList doesn't have a constructor.
@@ -1406,6 +1422,18 @@ var PathAnimationEffect = function(path, autoRotate, angle, composite,
 };
 
 PathAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
+  get composite() {
+    return this._composite;
+  },
+  set composite(value) {
+    enterModifyCurrentAnimationState();
+    try {
+      // Use the default value if an invalid string is specified.
+      this._composite = value === 'add' ? 'add' : 'replace';
+    } finally {
+      exitModifyCurrentAnimationState();
+    }
+  },
   sample: function(timeFraction, currentIteration, target) {
     // TODO: Handle accumulation.
     var length = this._path.getTotalLength();
@@ -1511,22 +1539,38 @@ var normalizeKeyframeDictionary = function(properties) {
 /** @constructor */
 var KeyframeAnimationEffect = function(oneOrMoreKeyframesDictionaries,
     composite, accumulate) {
-  AnimationEffect.call(this, constructorToken, accumulate);
+  enterModifyCurrentAnimationState();
+  try {
+    AnimationEffect.call(this, constructorToken, accumulate);
 
-  // Use the default value if an invalid string is specified.
-  this.composite = composite === 'add' ? 'add' : 'replace';
+    this.composite = composite;
 
-  if (!Array.isArray(oneOrMoreKeyframesDictionaries)) {
-    oneOrMoreKeyframesDictionaries = [oneOrMoreKeyframesDictionaries];
+    if (!Array.isArray(oneOrMoreKeyframesDictionaries)) {
+      oneOrMoreKeyframesDictionaries = [oneOrMoreKeyframesDictionaries];
+    }
+    this._keyframeDictionaries =
+        oneOrMoreKeyframesDictionaries.map(normalizeKeyframeDictionary);
+    // Set lazily
+    this._cachedProperties = null;
+    this._cachedDistributedKeyframes = null;
+  } finally {
+    exitModifyCurrentAnimationState(false);
   }
-  this._keyframeDictionaries =
-      oneOrMoreKeyframesDictionaries.map(normalizeKeyframeDictionary);
-  // Set lazily
-  this._cachedProperties = null;
-  this._cachedDistributedKeyframes = null;
 };
 
 KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
+  get composite() {
+    return this._composite;
+  },
+  set composite(value) {
+    enterModifyCurrentAnimationState();
+    try {
+      // Use the default value if an invalid string is specified.
+      this._composite = value === 'add' ? 'add' : 'replace';
+    } finally {
+      exitModifyCurrentAnimationState();
+    }
+  },
   sample: function(timeFraction, currentIteration, target) {
     var properties = this._getProperties();
     for (var i = 0; i < properties.length; i++) {
