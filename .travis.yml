@@ -8,7 +8,7 @@ env:
 #  - BROWSER=Firefox
 
 notifications:
-  irc: "irc.w3.org#webanimations"
+  irc: "irc.freenode.org#webanimations"
 
 install:
   - ./.travis-setup.sh
