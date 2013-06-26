@@ -1410,6 +1410,10 @@ MediaReference.prototype = createObject(TimedItem.prototype, {
     return this._media === element;
   },
   _getAnimationsTargetingElement: function(element, animations) { },
+  _attach: function(player) {
+    this._ensurePaused();
+    TimedItem.prototype._attach.call(this, player);
+  },
 });
 
 
