@@ -599,7 +599,7 @@
          * @param {function()} f Closure containing the asserts to be run.
          * @param {string} desc Description 
          */
-        var at = function(seconds, f)
+        var at = function(seconds, f, desc)
         {
             assert_true(typeof seconds == "number", "at's first argument shoud be a number.");
             assert_true(typeof f == "function", "at's second argument should be a function.");
