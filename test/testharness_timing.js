@@ -432,6 +432,9 @@
                 this.animationFrame(this.currentTime_);
             }
 
+            // Notify other windows we have process to a given time period.
+            window.parent.postMessage({type: 'at', t: this.currentTime_}, "*");
+
             if (event_) {
                 event_.call();
             }
@@ -577,8 +580,8 @@
 
     function testharness_timeline_setup()
     {
-        if (!testharness_timeline_enabled)
-            return;
+//        if (!testharness_timeline_enabled)
+//            return;
 
         testharness_timeline.createGUI(document.getElementsByTagName("body")[0]);
         testharness_setting_register("Timing", testharness_timeline.createSettings());
@@ -591,11 +594,18 @@
 
             window.addEventListener("message", function(evt)
                 {
+                    console.log("message", evt.data);
+                    // Ignore messages not for us...
+                    if (evt.data['url'] != window.location.href)
+                        return;
+
                     switch(evt.data['type']) {
                     case 'start':
-                        if (evt.data['url'] == window.location.href) {
-                            testharness_timeline.autorun();
-                        }
+                        testharness_timeline.autorun();
+                        break;
+
+                    case 'settime':
+                        testharness_timeline.setTime(evt.data['t']);
                         break;
                     }
                 });

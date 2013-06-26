@@ -27,17 +27,18 @@ input#iframeSrc {
 }
 </style>
 
-<input type="text" id="iframeSrc">
+<input type="text" id="iframeSrc" value="testcases/test-calc.html">
 <button id="load-button" onclick="loadFile()">Load</button><br>
-<iframe id = "frame"></iframe>
+<iframe id="frame" src=""></iframe>
 <div id="userOptions">
-  <input type="text" id="interval"> Interval <br>
+  <input type="number" id="interval" value=1> Interval <br>
+  <input type="number" id="end" value=10> Finish <br>
   Objects and properties
-  <button id="generate-button" onclick="getSettings()">Generate</button><br>
+  <button id="generate-button" onclick="go()">Generate</button><br>
   <textarea id = "obProp" class = textBox></textarea> <br>
 </div>
 <div> Outputted Checks </div>
-<div id = "checks"></div>
+<pre id = "checks"></pre>
 
 <script>
 "use strict";
@@ -76,7 +77,7 @@ var interval;
 
 document.getElementById("interval").value = "1";
 document.getElementById("obProp").value = ".anim, top";
-document.getElementById("iframeSrc").value = "testcases/test-run-fast.html";
+
 
 function ToCheck(object, initSelctor, properties){
   this.object = object;
@@ -84,29 +85,48 @@ function ToCheck(object, initSelctor, properties){
   this.properties = properties;
 }
 
-function loadFile(){
+function loadFile() {
   var file = document.getElementById("iframeSrc").value;
-  document.getElementById("frame").src = file;
+  document.getElementById("frame").src = file + '?start=message&nochecks';
 }
 
-function getSettings(){
-  // Delete previous checks
-  lastRun = false;
-  document.getElementById("checks").innerHTML = "";
-  document.getElementById("frame").src = document.getElementById("iframeSrc").value;
-  interval = Number(document.getElementById("interval").value);
+function go(){
+  var obProp = document.getElementById("obProp").value;
+  process(obProp);
 
-  setTimeout(function(){
-    var obProp = document.getElementById("obProp").value;
-    process(obProp);
-    testLength = 0;
-    window.frames[0].animTestRunner.players.forEach(function(player) {
-      testLength = Math.max(testLength, player.source.animationDuration + player.source.specified.startDelay);
-    });
-    pause();
-    setTestCurrentTime(0);
-    setTimeout(generate, frameTime);
-  }, 100);
+  document.getElementById("checks").innerHTML = "";
+  setTime(0);
+}
+
+window.addEventListener("message", function(evt) {
+  console.log("generator", evt.data);
+
+  var interval = parseFloat(document.getElementById("interval").value)*1000;
+  var end = parseFloat(document.getElementById("end").value)*1000;
+
+  switch(evt.data['type']) {
+  case 'at':
+    console.log("Inner window is now at ", evt.data['t']);
+
+    // Move us to the next internal
+    var pastInterval = evt.data['t'] % interval;
+    var nextPos = evt.data['t'] - pastInterval + interval;
+
+    if (pastInterval == 0) // FIXME: Allow checks at other non-interval periods via a setting
+      generate(evt.data['t']);
+
+    if (nextPos <= end) {
+      setTime(nextPos);
+    }
+    break;
+  }
+});
+
+function setTime(t) {
+  var testWindow = document.getElementById("frame").contentWindow;
+  var msg = {type: 'settime', url: testWindow.location.href + '', t: t};
+  console.log("setTime", t, msg);
+  testWindow.postMessage(msg, '*');
 }
 
 function process(rawString){
@@ -138,10 +158,12 @@ var propertyIsSVGAttrib = function(property, target) {
       property in svgProperties;
 };
 
-function generate(){
+function generate(time){
+  console.log("Generate!");
+
   // Produce checks at this time
-  var time = testCurrentTime;
   for (var x in checks){
+    var propslist = [];
     for(var i = 0; i < checks[x].object.length; i++){
       var propsPrint = "{";
       for(var j in checks[x].properties){
@@ -165,42 +187,33 @@ function generate(){
         if (j < checks[x].properties.length -1) propsPrint += ",";
       }
       propsPrint += "}";
-      printCheck(checks[x].initSelctor, i, propsPrint, time);
+      propslist.push(propsPrint);
     }
-  }
-  // Move the animations to the next point in time
-  setTestCurrentTime(testCurrentTime + interval);
-
-  // Schedule this function to be called on the next frame refresh
-  // We actually want to run one extra test if the last one aligns
-  // exactly with testLength, as fillMode: none can change an
-  // animation value immediately after the animation finishes.
-  if(testCurrentTime <= testLength){
-    setTimeout(generate, frameTime);
-  } else if(!lastRun){
-    lastRun = true;
-    setTimeout(generate, frameTime);
+    printCheck(checks[x].initSelctor, i, propslist, time);
   }
 }
 
 function printCheck(object, number, properties, time){
-  var newCheck = "check(document.querySelectorAll('" + object + "')[" + number +
-      "]," + properties + "," + time + ");";
+
+  var newCheck = "  at(" + (time/1000.0) + ", function() {\n" +
+     '    assert_styles("' + object + '", [\n'
+
+  // If all the properties are the same for every object, just pass the list.
+  var allsame = properties.every(function(x) { return x === properties[0] });
+  if (allsame) {
+    newCheck = newCheck.substring(0, newCheck.length-2);
+    newCheck += properties[0] + ");\n";
+
+  // Otherwise give a list with each
+  } else {
+    for(var j in properties) {
+       newCheck += '      ' + properties[j] + ",\n";
+    }
+    newCheck += "    ]);\n";
+  }
+
+  newCheck += '  });';
   var ouput = document.getElementById("checks");
   ouput.innerHTML += newCheck + "<br>";
 }
-
-function pause(){
-  window.frames[0].animTestRunner.players.forEach(function(player) {
-    player.paused = true;
-  });
-}
-
-function setTestCurrentTime(time){
-  window.frames[0].animTestRunner.players.forEach(function(player) {
-    player.currentTime = time;
-  });
-  testCurrentTime = time;
-}
-
 </script>
