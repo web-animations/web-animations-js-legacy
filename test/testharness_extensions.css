@@ -1,0 +1,19 @@
+#settings {
+  position: fixed;
+  top: 0;
+  right: 0;
+  border: 1px solid black;
+  background: white;
+  min-width: 10px;
+  min-height: 10px;
+  padding: 2px;
+}
+
+#settings h6 {
+  display: inline;
+  font-size: 10pt;
+}
+
+#settings div {
+  font-size: 8pt;
+}
