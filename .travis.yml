@@ -7,6 +7,9 @@ env:
 #  - BROWSER=PhantomJS
 #  - BROWSER=Firefox
 
+notifications:
+  irc: "irc.w3.org#webanimations"
+
 install:
   - ./.travis-setup.sh
 
