@@ -967,6 +967,13 @@ var SeqGroup = function(children, timing, parent) {
 SeqGroup.prototype = Object.create(TimingGroup.prototype);
 
 /** @constructor */
+var PseudoElementReference = function(element, pseudoElement) {
+    this.element = element;
+    this.pseudoElement = pseudoElement;
+    console.warn("PseudoElementReference is not supported.");
+};
+
+/** @constructor */
 var AnimationEffect = function(token, composite, accumulate) {
   if (token !== constructorToken) {
     throw new TypeError('Illegal constructor');
