@@ -957,6 +957,34 @@ function throwNewHierarchyRequestError() {
 }
 
 /** @constructor */
+var TimedItemList = function(token, children) {
+  if (token !== constructorToken) {
+    throw new TypeError('Illegal constructor');
+  }
+  this._children = children;
+  this._getters = 0;
+  this._ensureGetters();
+};
+
+TimedItemList.prototype = {
+  get length() {
+    return this._children.length;
+  },
+  _ensureGetters: function() {
+    while (this._getters < this._children.length) {
+      this._ensureGetter(this._getters++);
+    }
+  },
+  _ensureGetter: function(i) {
+    Object.defineProperty(this, i, {
+      get: function() {
+        return this._children[i];
+      }
+    });
+  }
+};
+
+/** @constructor */
 var TimingGroup = function(token, type, children, timing) {
   if (token !== constructorToken) {
     throw new TypeError('Illegal constructor');
@@ -970,6 +998,7 @@ var TimingGroup = function(token, type, children, timing) {
   // initializing super.
   this.type = type || 'par';
   this._children = [];
+  this._cachedTimedItemList = null;
   this.length = 0;
   TimedItem.call(this, constructorToken, timing);
   // We add children after setting the parent. This means that if an ancestor
@@ -982,6 +1011,9 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
   _childrenStateModified: function() {
     // See _updateChildStartTimes().
     this._isInChildrenStateModified = true;
+    if (this._cachedTimedItemList) {
+      this._cachedTimedItemList._ensureGetters();
+    }
 
     // We need to walk up and down the tree to re-layout. endTime and the
     // various iterationDurations (which are all calculated lazily) are the only
@@ -1008,16 +1040,16 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
     this._updateChildInheritedTimes();
   },
   _updateChildInheritedTimes: function() {
-    for (var i = 0; i < this.children.length; i++) {
-      var child = this.children[i];
+    for (var i = 0; i < this._children.length; i++) {
+      var child = this._children[i];
       child._updateInheritedTime(this._iterationTime);
     }
   },
   _updateChildStartTimes: function() {
     if (this.type == 'seq') {
       var cumulativeStartTime = 0;
-      for (var i = 0; i < this.children.length; i++) {
-        var child = this.children[i];
+      for (var i = 0; i < this._children.length; i++) {
+        var child = this._children[i];
         if (child._stashedStartTime === undefined) {
           child._stashedStartTime = child._startTime;
         }
@@ -1034,23 +1066,26 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
     }
   },
   get children() {
-    return this._children;
+    if (!this._cachedTimedItemList) {
+      this._cachedTimedItemList = new TimedItemList(constructorToken, this._children);
+    }
+    return this._cachedTimedItemList;
   },
   get firstChild() {
-    return this.children[0];
+    return this._children[0];
   },
   get lastChild() {
-    return this.children[this.children.length - 1];
+    return this._children[this.children.length - 1];
   },
   _intrinsicDuration: function() {
     if (this.type == 'par') {
-      var dur = Math.max.apply(undefined, this.children.map(function(a) {
+      var dur = Math.max.apply(undefined, this._children.map(function(a) {
         return a.endTime;
       }));
       return Math.max(0, dur);
     } else if (this.type == 'seq') {
       var result = 0;
-      this.children.forEach(function(a) {
+      this._children.forEach(function(a) {
         result += a.activeDuration + a.specified.startDelay;
       });
       return result;
@@ -1059,13 +1094,13 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
     }
   },
   _getLeafItemsInEffectImpl: function(items) {
-    for (var i = 0; i < this.children.length; i++) {
-      this.children[i]._getLeafItemsInEffect(items);
+    for (var i = 0; i < this._children.length; i++) {
+      this._children[i]._getLeafItemsInEffect(items);
     }
   },
   clone: function() {
     var children = [];
-    this.children.forEach(function(child) {
+    this._children.forEach(function(child) {
       children.push(child.clone());
     });
     return this.type === "par" ?
@@ -1073,20 +1108,20 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
         new SeqGroup(children, this.specified._dict);
   },
   _lengthChanged: function() {
-    while (this.length < this.children.length) {
+    while (this.length < this._children.length) {
       var i = this.length++;
       Object.defineProperty(this, i, configureDescriptor({
-        set: function(x) { this.children[i] = x; },
-        get: function() { return this.children[i]; },
+        set: function(x) { this._children[i] = x; },
+        get: function() { return this._children[i]; },
       }));
     }
-    while (this.length > this.children.length) {
+    while (this.length > this._children.length) {
       var i = --this.length;
       delete this[i];
     }
   },
   clear: function() {
-    this._splice(0, this.children.length);
+    this._splice(0, this._children.length);
   },
   append: function() {
     var newItems = [];
@@ -1103,12 +1138,12 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
     this._splice(0, 0, newItems);
   },
   _addInternal: function(child) {
-    this.children.push(child);
+    this._children.push(child);
     this._lengthChanged();
     this._childrenStateModified();
   },
   indexOf: function(item) {
-    return this.children.indexOf(item);
+    return this._children.indexOf(item);
   },
   _splice: function(start, deleteCount, newItems) {
     enterModifyCurrentAnimationState();
@@ -1124,7 +1159,7 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
         }
         newChild._reparent(this);
       }
-      var result = Array.prototype['splice'].apply(this.children, args);
+      var result = Array.prototype['splice'].apply(this._children, args);
       for (var i = 0; i < result.length; i++) {
         result[i]._parent = null;
       }
@@ -1145,24 +1180,24 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
     return false;
   },
   _isTargetingElement: function(element) {
-    return this.children.some(function(child) {
+    return this._children.some(function(child) {
       return child._isTargetingElement(element);
     });
   },
   _getAnimationsTargetingElement: function(element, animations) {
-    this.children.map(function(child) {
+    this._children.map(function(child) {
       return child._getAnimationsTargetingElement(element, animations);
     });
   },
   toString: function() {
     return this.type + ' ' + this.startTime + '-' + this.endTime + ' (' +
         this.localTime + ') ' + ' [' +
-        this.children.map(function(a) { return a.toString(); }) + ']'
+        this._children.map(function(a) { return a.toString(); }) + ']'
   },
   _hasHandler: function() {
     return TimedItem.prototype._hasHandler.call(this) ||
-      (this.children.length > 0 &&
-        this.children.reduce(function(a, b) { return a || b._hasHandler() },
+      (this._children.length > 0 &&
+        this._children.reduce(function(a, b) { return a || b._hasHandler() },
           false));
   },
   _generateChildEventsForRange: function(localStart, localEnd, rangeStart,
@@ -1188,8 +1223,8 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
     start -= iteration * this.iterationDuration / deltaScale;
     end -= iteration * this.iterationDuration / deltaScale;
 
-    for (var i = 0; i < this.children.length; i++) {
-      this.children[i]._generateEvents(start, end, globalTime - endDelta, deltaScale);
+    for (var i = 0; i < this._children.length; i++) {
+      this._children[i]._generateEvents(start, end, globalTime - endDelta, deltaScale);
     }
   },
 });
@@ -3610,7 +3645,7 @@ window.Player = Player;
 window.PseudoElementReference = PseudoElementReference;
 window.SeqGroup = SeqGroup;
 window.TimedItem = TimedItem;
-window.TimedItemList = null; // TODO
+window.TimedItemList = TimedItemList;
 window.Timing = Timing;
 window.Timeline = Timeline;
 window.TimingEvent = TimingEvent;
