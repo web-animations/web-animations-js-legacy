@@ -37,7 +37,7 @@ input#iframeSrc {
   <textarea id = "obProp" class = textBox></textarea> <br>
 </div>
 <div> Outputted Checks </div>
-<div id = "checks"></div>
+<pre id = "checks"></pre>
 
 <script>
 "use strict";
@@ -76,7 +76,7 @@ var interval;
 
 document.getElementById("interval").value = "1";
 document.getElementById("obProp").value = ".anim, top";
-document.getElementById("iframeSrc").value = "testcases/test-run-fast.html";
+document.getElementById("iframeSrc").value = "testcases/test-calc.html";
 
 function ToCheck(object, initSelctor, properties){
   this.object = object;
@@ -86,23 +86,29 @@ function ToCheck(object, initSelctor, properties){
 
 function loadFile(){
   var file = document.getElementById("iframeSrc").value;
-  document.getElementById("frame").src = file;
+  document.getElementById("frame").src = file + "?testharness=disable";
+}
+
+function players() {
+  return window.frames[0].document.timeline.getCurrentPlayers();
 }
 
 function getSettings(){
   // Delete previous checks
   lastRun = false;
   document.getElementById("checks").innerHTML = "";
-  document.getElementById("frame").src = document.getElementById("iframeSrc").value;
+  document.getElementById("frame").src = document.getElementById("iframeSrc").value + "?testharness=disable";
   interval = Number(document.getElementById("interval").value);
 
   setTimeout(function(){
     var obProp = document.getElementById("obProp").value;
     process(obProp);
     testLength = 0;
-    window.frames[0].animTestRunner.players.forEach(function(player) {
-      testLength = Math.max(testLength, player.source.animationDuration + player.source.specified.startDelay);
+
+    players().forEach(function(player) {
+      testLength = Math.max(testLength, player.source.iterationDuration + player.source.specified.startDelay);
     });
+
     pause();
     setTestCurrentTime(0);
     setTimeout(generate, frameTime);
@@ -142,6 +148,7 @@ function generate(){
   // Produce checks at this time
   var time = testCurrentTime;
   for (var x in checks){
+    var propslist = [];
     for(var i = 0; i < checks[x].object.length; i++){
       var propsPrint = "{";
       for(var j in checks[x].properties){
@@ -165,8 +172,9 @@ function generate(){
         if (j < checks[x].properties.length -1) propsPrint += ",";
       }
       propsPrint += "}";
-      printCheck(checks[x].initSelctor, i, propsPrint, time);
+      propslist.push(propsPrint);
     }
+    printCheck(checks[x].initSelctor, i, propslist, time);
   }
   // Move the animations to the next point in time
   setTestCurrentTime(testCurrentTime + interval);
@@ -184,20 +192,37 @@ function generate(){
 }
 
 function printCheck(object, number, properties, time){
-  var newCheck = "check(document.querySelectorAll('" + object + "')[" + number +
-      "]," + properties + "," + time + ");";
+  var newCheck = "  at(" + time + ", function() {\n" +
+     '    assert_styles("' + object + '", ';
+
+  // If all the properties are the same for every object, just pass the list.
+  var allsame = properties.every(function(x) { return x === properties[0] });
+  if (allsame) {
+    newCheck = newCheck.substring(0, newCheck.length-2);
+    newCheck += properties[0] + ");\n";
+
+  // Otherwise give a list with each
+  } else {
+    newChecks += "[\n'
+    for(var j in properties) {
+       newCheck += '      ' + properties[j] + ",\n";
+    }
+    newCheck += "    ]);\n";
+  }
+
+  newCheck += '  });';
   var ouput = document.getElementById("checks");
   ouput.innerHTML += newCheck + "<br>";
 }
 
 function pause(){
-  window.frames[0].animTestRunner.players.forEach(function(player) {
+  players().forEach(function(player) {
     player.paused = true;
   });
 }
 
 function setTestCurrentTime(time){
-  window.frames[0].animTestRunner.players.forEach(function(player) {
+  players().forEach(function(player) {
     player.currentTime = time;
   });
   testCurrentTime = time;
