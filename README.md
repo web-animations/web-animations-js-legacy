@@ -85,7 +85,7 @@ A `PathAnimationEffect` allows elements to be animated along SVG-style paths. Fo
       </defs>
     </svg>
     <script>
-      var animFunc = new PathAnimationEffect(document.querySelector('#path'));
+      var animFunc = new PathAnimationEffect(document.querySelector('#path').pathSegList);
       var animation = new Animation(targetElement, animFunc, 2);
     </script>
 
