@@ -99,8 +99,9 @@ var Timing = function(token, timingInput, changeHandler) {
 };
 
 Timing.prototype = {
-  _timingFunction: function() {
-    var timingFunction = TimingFunction.createFromString(this.timingFunction);
+  _timingFunction: function(timedItem) {
+    var timingFunction = TimingFunction.createFromString(
+        this.timingFunction, timedItem);
     this._timingFunction = function() {
       return timingFunction;
     };
@@ -530,12 +531,12 @@ TimedItem.prototype = {
         this._modulusWithOpenClosedRange(this.specified.iterationStart +
             this.specified._iterationCount(), 1.0) :
         this._modulusWithClosedOpenRange(this.specified.iterationStart, 1.0);
-    var timingFunction = this.specified._timingFunction();
+    var timingFunction = this.specified._timingFunction(this);
     this._timeFraction = this._isCurrentDirectionForwards() ?
             unscaledFraction :
             1.0 - unscaledFraction;
     if (timingFunction) {
-      this._timeFraction = timingFunction.scaleTime(this._timeFraction, this);
+      this._timeFraction = timingFunction.scaleTime(this._timeFraction);
     }
   },
   _getAdjustedAnimationTime: function(animationTime) {
@@ -569,9 +570,9 @@ TimedItem.prototype = {
             adjustedAnimationTime, this.iterationDuration);
     this._iterationTime = this._scaleIterationTime(unscaledIterationTime);
     this._timeFraction = this._iterationTime / this.iterationDuration;
-    var timingFunction = this.specified._timingFunction();
+    var timingFunction = this.specified._timingFunction(this);
     if (timingFunction) {
-      this._timeFraction = timingFunction.scaleTime(this._timeFraction, this);
+      this._timeFraction = timingFunction.scaleTime(this._timeFraction);
     }
     this._iterationTime = this._timeFraction * this.iterationDuration;
   },
@@ -1880,13 +1881,17 @@ var TimingFunction = function() {
 
 TimingFunction.prototype.scaleTime = abstractMethod;
 
-TimingFunction.createFromString = function(spec) {
+TimingFunction.createFromString = function(spec, timedItem) {
   var preset = presetTimingFunctions[spec];
   if (preset) {
     return preset;
   }
   if (spec === "paced") {
-    return new PacedTimingFunction();
+    if (timedItem instanceof Animation &&
+        timedItem.effect instanceof PathAnimationEffect) {
+      return new PacedTimingFunction(timedItem);
+    }
+    return presetTimingFunctions.linear;
   }
   var stepMatch = /steps\(\s*(\d+)\s*,\s*(start|end|middle)\s*\)/.exec(spec);
   if (stepMatch) {
@@ -1963,11 +1968,13 @@ StepTimingFunction.prototype = createObject(TimingFunction.prototype, {
 });
 
 /** @constructor */
-var PacedTimingFunction = function() { };
+var PacedTimingFunction = function(timedItem) {
+  this._timedItem = timedItem;
+};
 
 PacedTimingFunction.prototype = createObject(TimingFunction.prototype, {
   scaleTime: function(fraction, timedItem) {
-    var cumulativeLengths = this._cumulativeLengths(timedItem);
+    var cumulativeLengths = this._timedItem.effect._cumulativeLengths;
     var totalLength = cumulativeLengths[cumulativeLengths.length - 1];
     if (!totalLength) {
       return 0;
@@ -1987,19 +1994,6 @@ PacedTimingFunction.prototype = createObject(TimingFunction.prototype, {
           (cumulativeLengths.length - 1));
     }
     return leftLength / cumulativeLengths.length;
-  },
-  _cumulativeLengths: function(timedItem) {
-    if (timedItem instanceof Animation &&
-        timedItem.effect instanceof PathAnimationEffect) {
-      this._cumulativeLengths = function () {
-        return timedItem.effect._cumulativeLengths;
-      };
-    } else {
-      this._cumulativeLengths = function () {
-        return [0, 1];
-      };
-    }
-    return this._cumulativeLengths();
   },
   _findLeftIndex: function(array, value) {
     var leftIndex = 0;
