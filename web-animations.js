@@ -535,7 +535,7 @@ TimedItem.prototype = {
             unscaledFraction :
             1.0 - unscaledFraction;
     if (timingFunction) {
-      this._timeFraction = timingFunction.scaleTime(this._timeFraction);
+      this._timeFraction = timingFunction.scaleTime(this._timeFraction, this);
     }
   },
   _getAdjustedAnimationTime: function(animationTime) {
@@ -571,7 +571,7 @@ TimedItem.prototype = {
     this._timeFraction = this._iterationTime / this.iterationDuration;
     var timingFunction = this.specified._timingFunction();
     if (timingFunction) {
-      this._timeFraction = timingFunction.scaleTime(this._timeFraction);
+      this._timeFraction = timingFunction.scaleTime(this._timeFraction, this);
     }
     this._iterationTime = this._timeFraction * this.iterationDuration;
   },
@@ -1414,8 +1414,8 @@ AnimationEffect.prototype = {
   toString: abstractMethod,
 };
 
-var clamp = function(x, a, b) {
-  return Math.max(Math.min(x, b), a);
+var clamp = function(x, min, max) {
+  return Math.max(Math.min(x, max), min);
 }
 
 /** @constructor */
@@ -1432,6 +1432,7 @@ var PathAnimationEffect = function(path, autoRotate, angle, composite,
     // SVGPathSegList doesn't have a constructor.
     this.autoRotate = isDefined(autoRotate) ? autoRotate : 'none';
     this.angle = isDefined(angle) ? angle : 0;
+    this._path = document.createElementNS('http://www.w3.org/2000/svg','path');
     if (path instanceof SVGPathSegList) {
       this.segments = path;
     } else {
@@ -1485,7 +1486,7 @@ PathAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
       return 0;
     }
     var scaledFraction = timeFraction * segmentCount;
-    var index = clamp(parseInt(scaledFraction), 0, segmentCount)
+    var index = clamp(Math.floor(scaledFraction), 0, segmentCount)
     return this._cumulativeLengths[index] + ((scaledFraction % 1) * (
         this._cumulativeLengths[index + 1] - this._cumulativeLengths[index]));
   },
@@ -1522,21 +1523,20 @@ PathAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
   set segments(segments) {
     enterModifyCurrentAnimationState();
     try {
-      this._path = document.createElementNS(
-          'http://www.w3.org/2000/svg','path');
       var targetSegments = this.segments;
       targetSegments.clear();
-      this._cumulativeLengths = [0];
+      var cumulativeLengths = [0];
       // TODO: *moving* the path segments is not correct, but pathSegList
       //       is read only
       while (segments.numberOfItems) {
-        var pathSeg = segments.getItem(0);
-        targetSegments.appendItem(pathSeg);
-        if (pathSeg.pathSegType !== SVGPathSeg.PATHSEG_MOVETO_REL &&
-            pathSeg.pathSegType !== SVGPathSeg.PATHSEG_MOVETO_ABS) {
-          this._cumulativeLengths.push(this._path.getTotalLength());
+        var segment = segments.getItem(0);
+        targetSegments.appendItem(segment);
+        if (segment.pathSegType !== SVGPathSeg.PATHSEG_MOVETO_REL &&
+            segment.pathSegType !== SVGPathSeg.PATHSEG_MOVETO_ABS) {
+          cumulativeLengths.push(this._path.getTotalLength());
         }
       }
+      this._cumulativeLengths = cumulativeLengths;
     } finally {
       exitModifyCurrentAnimationState(true);
     }
@@ -1878,10 +1878,15 @@ var TimingFunction = function() {
   throw new TypeError('Illegal constructor');
 };
 
+TimingFunction.prototype.scaleTime = abstractMethod;
+
 TimingFunction.createFromString = function(spec) {
   var preset = presetTimingFunctions[spec];
   if (preset) {
     return preset;
+  }
+  if (spec === "paced") {
+    return new PacedTimingFunction();
   }
   var stepMatch = /steps\(\s*(\d+)\s*,\s*(start|end|middle)\s*\)/.exec(spec);
   if (stepMatch) {
@@ -1954,7 +1959,61 @@ StepTimingFunction.prototype = createObject(TimingFunction.prototype, {
       fraction += stepSize / 2;
     }
     return fraction - fraction % stepSize;
-  }
+  },
+});
+
+/** @constructor */
+var PacedTimingFunction = function() { };
+
+PacedTimingFunction.prototype = createObject(TimingFunction.prototype, {
+  scaleTime: function(fraction, timedItem) {
+    var cumulativeLengths = this._cumulativeLengths(timedItem);
+    var totalLength = cumulativeLengths[cumulativeLengths.length - 1];
+    if (!totalLength) {
+      return 0;
+    }
+    var length = fraction * totalLength;
+    if (length <= 0) {
+      return 0;
+    }
+    var leftIndex = this._findLeftIndex(cumulativeLengths, length);
+    if (leftIndex >= cumulativeLengths.length - 1) {
+      return 1;
+    }
+    var leftLength = cumulativeLengths[leftIndex];
+    var segmentLength = cumulativeLengths[leftIndex + 1] - leftLength;
+    if (segmentLength > 0) {
+      return ((leftIndex + ((length - leftLength) / segmentLength)) /
+          (cumulativeLengths.length - 1));
+    }
+    return leftLength / cumulativeLengths.length;
+  },
+  _cumulativeLengths: function(timedItem) {
+    if (timedItem instanceof Animation &&
+        timedItem.effect instanceof PathAnimationEffect) {
+      this._cumulativeLengths = function () {
+        return timedItem.effect._cumulativeLengths;
+      };
+    } else {
+      this._cumulativeLengths = function () {
+        return [0, 1];
+      };
+    }
+    return this._cumulativeLengths();
+  },
+  _findLeftIndex: function(array, value) {
+    var leftIndex = 0;
+    var rightIndex = array.length - 1;
+    while (rightIndex - leftIndex > 1) {
+      var midIndex = parseInt((leftIndex + rightIndex)/2);
+      if (array[midIndex] <= value) {
+        leftIndex = midIndex;
+      } else {
+        rightIndex = midIndex;
+      }
+    }
+    return array[rightIndex] <= value ? rightIndex : leftIndex;
+  },
 });
 
 var interp = function(from, to, f, type) {
@@ -2004,7 +2063,7 @@ var fontWeightType = {
   },
   toCssValue: function(value) {
       value = Math.round(value / 100) * 100
-      value = Math.min(900, Math.max(100, value));
+      value = clamp(value, 100, 900);
       return String(value);
   },
   fromCssValue: function(value) {
@@ -2882,7 +2941,7 @@ function interpolateTransformsWithMatrices(from, to, f) {
   var toM = decomposeMatrix(convertToMatrix(to));
 
   var product = dot(fromM.quaternion, toM.quaternion);
-  product = Math.max(Math.min(product, 1.0), -1.0);
+  product = clamp(product, -1.0, 1.0);
   if (product == 1.0) {
     var quat = fromM.quaternion;
   } else {
