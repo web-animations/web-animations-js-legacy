@@ -121,7 +121,7 @@ var a = undefined;
 
 function first() {
   a = new Animation(document.querySelector(".doorSpacer"),
-    { '-webkit-transform': [ 'rotateY(0deg)', 'rotateY(100deg)' ] }, 2);
+      [{'transform': 'rotateY(0deg)'}, {'transform': 'rotateY(100deg)'}], 2);
 }
 
 function second() {
@@ -148,13 +148,17 @@ var pictureTilting = undefined;
 function fifth() {
   var picture = document.querySelector(".picture");
   pictureTilting = new Animation(picture,
-      { '-webkit-transform': [ 'rotate(0deg)', 'rotate(-30deg)' ] }, 0.5);
+      [{'transform': 'rotate(0deg)'}, {'transform': 'rotate(-30deg)'}], 0.5);
   group = new SeqGroup([a, pictureTilting]);
 }
 
 function sixth() {
   var dust = document.querySelector(".dust");
-  var dustPuff = new Animation(dust, { opacity: ["0", "0.4", "0"] }, 0.3);
+  var dustPuff = new Animation(dust, [
+    {opacity: "0"},
+    {opacity: "0.4"},
+    {opacity: "0"}
+  ], 0.3);
   group.add(new ParGroup([ pictureTilting, dustPuff ]));
   document.timeline.play(group);
 }
