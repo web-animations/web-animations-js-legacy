@@ -1886,7 +1886,7 @@ TimingFunction.createFromString = function(spec, timedItem) {
   if (preset) {
     return preset;
   }
-  if (spec === "paced") {
+  if (spec === 'paced') {
     if (timedItem instanceof Animation &&
         timedItem.effect instanceof PathAnimationEffect) {
       return new PacedTimingFunction(timedItem);
@@ -1973,16 +1973,13 @@ var PacedTimingFunction = function(timedItem) {
 };
 
 PacedTimingFunction.prototype = createObject(TimingFunction.prototype, {
-  scaleTime: function(fraction, timedItem) {
+  scaleTime: function(fraction) {
     var cumulativeLengths = this._timedItem.effect._cumulativeLengths;
     var totalLength = cumulativeLengths[cumulativeLengths.length - 1];
-    if (!totalLength) {
+    if (!totalLength || fraction <= 0) {
       return 0;
     }
     var length = fraction * totalLength;
-    if (length <= 0) {
-      return 0;
-    }
     var leftIndex = this._findLeftIndex(cumulativeLengths, length);
     if (leftIndex >= cumulativeLengths.length - 1) {
       return 1;
@@ -1990,14 +1987,14 @@ PacedTimingFunction.prototype = createObject(TimingFunction.prototype, {
     var leftLength = cumulativeLengths[leftIndex];
     var segmentLength = cumulativeLengths[leftIndex + 1] - leftLength;
     if (segmentLength > 0) {
-      return ((leftIndex + ((length - leftLength) / segmentLength)) /
-          (cumulativeLengths.length - 1));
+      return (leftIndex + ((length - leftLength) / segmentLength)) /
+          (cumulativeLengths.length - 1);
     }
     return leftLength / cumulativeLengths.length;
   },
   _findLeftIndex: function(array, value) {
     var leftIndex = 0;
-    var rightIndex = array.length - 1;
+    var rightIndex = array.length;
     while (rightIndex - leftIndex > 1) {
       var midIndex = (leftIndex + rightIndex) >> 1;
       if (array[midIndex] <= value) {
@@ -2006,7 +2003,7 @@ PacedTimingFunction.prototype = createObject(TimingFunction.prototype, {
         rightIndex = midIndex;
       }
     }
-    return array[rightIndex] <= value ? rightIndex : leftIndex;
+    return leftIndex;
   },
 });
 
