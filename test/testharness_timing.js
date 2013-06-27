@@ -273,6 +273,45 @@
         body.appendChild(this.div);
     }
 
+    TestTimeline.prototype.createSettings = function()
+    {
+        var settings = document.createElement('div');
+
+        // Start mode
+        var startmode = document.createElement('select');
+        startmode.add(new Option("Auto", "auto"), null);
+        startmode.add(new Option("Manual", "manual"), null);
+        startmode.value = testharness_setting_get('start', 'auto');
+        startmode.onchange = function() {
+            testharness_setting_set('start', startmode.options[startmode.selectedIndex].value);
+        };
+        settings.appendChild(document.createTextNode("Start mode:"));
+        settings.appendChild(startmode);
+
+        // Start delay
+        var startdelay = document.createElement('input');
+        startdelay.type = 'number';
+        startdelay.min = 1;
+        startdelay.max = 1000;
+        startdelay.value = testharness_setting_get('delay', 1);
+
+        var startdelay_timeoutid = null;
+        startdelay.onchange = function() {
+            if (startdelay_timeoutid != null) {
+                clearTimeout(startdelay_timeoutid);
+            }
+
+            startdelay_timeoutid = setTimeout(function() {
+                startdelay_timeoutid = null;
+                testharness_setting_set('delay', startdelay.value);
+            }, 1000);
+        };
+        settings.appendChild(document.createTextNode("Start delay:"));
+        settings.appendChild(startdelay);
+
+        return settings;
+    }
+
     /**
      * Update GUI elements.
      *
@@ -392,6 +431,9 @@
                 this.currentTime_ = moveTo;
                 this.animationFrame(this.currentTime_);
             }
+
+            // Notify other windows we have process to a given time period.
+            window.parent.postMessage({type: 'at', t: this.currentTime_}, "*");
 
             if (event_) {
                 event_.call();
@@ -536,44 +578,52 @@
         this.toNextEvent();
     };
 
-    // FIXME
-    if (/start=disable/.test(window.location.hash)) {
-        window.testharness_timeline = {"schedule": function(f, t) { setTimeout(f, t) }};
-        return;
-    }
-
     function testharness_timeline_setup()
     {
-        if (!testharness_timeline_enabled)
-            return;
+//        if (!testharness_timeline_enabled)
+//            return;
 
         testharness_timeline.createGUI(document.getElementsByTagName("body")[0]);
+        testharness_setting_register("Timing", testharness_timeline.createSettings());
         testharness_timeline.start();
         testharness_timeline.updateGUI();
 
-        // Start running the test on #start=message
-        if (/start=message/.test(window.location.hash)) {
+        switch(testharness_setting_get('start', "auto")) {
+        case "message":
+            // Start running the test on #start=message
+
             window.addEventListener("message", function(evt)
                 {
+                    console.log("message", evt.data);
+                    // Ignore messages not for us...
+                    if (evt.data['url'] != window.location.href)
+                        return;
+
                     switch(evt.data['type']) {
                     case 'start':
-                        if (evt.data['url'] == window.location.href) {
-                            testharness_timeline.autorun();
-                        }
+                        testharness_timeline.autorun();
+                        break;
+
+                    case 'settime':
+                        testharness_timeline.setTime(evt.data['t']);
                         break;
                     }
                 });
-        // Start running the test on #start=message or no #start= is given.
-        } else if (/start=auto/.test(window.location.hash)
-                  || !(/start=/.test(window.location.hash))) {
 
-            var delay = 1;
-            if (/delay=/.test(window.location.hash)) {
-                delay = Number(/delay=([0-9]+)/.exec(window.location.hash)[1]);
-            }
+            break;
 
+        case "manual":
+            // Do nothing, just here for documentation.
+            break;
+
+        case "auto":
             // Need non-zero timeout to allow chrome to run other code.
-            setTimeout(testharness_timeline.autorun.bind(testharness_timeline), delay);
+            setTimeout(testharness_timeline.autorun.bind(testharness_timeline),
+                       testharness_setting_get('delay', 1));
+            break;
+
+        default:
+            //FIXME: Throw an error.
         }
     }
     addEventListener('load', testharness_timeline_setup);
