@@ -616,7 +616,7 @@
        // Make sure calling at inside a test() function is a failure.
         override_at(function() { 
                 throw {"message": "Can not use at() inside a test, use a timing_test instead."};
-            }, function(atDesc) { testharness_test(f, atDesc ? atDesc : (desc + " at t=" + seconds + "s")) });
+            }, function() { testharness_test(f, desc); });
     }
     expose(test_without_at, "test");
 
