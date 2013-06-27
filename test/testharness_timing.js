@@ -599,12 +599,12 @@
          * @param {function()} f Closure containing the asserts to be run.
          * @param {string} desc Description 
          */
-        var at = function(seconds, f, desc)
+        var at = function(seconds, f, atDesc)
         {
             assert_true(typeof seconds == "number", "at's first argument shoud be a number.");
             assert_true(typeof f == "function", "at's second argument should be a function.");
 
-            var t = async_test(desc + " at t=" + seconds + "s");
+            var t = async_test(atDesc ? atDesc : (desc + " at t=" + seconds + "s"));
             t.f = f;
             window.testharness_timeline.schedule(t, seconds*1000.0);
         };
@@ -616,7 +616,7 @@
        // Make sure calling at inside a test() function is a failure.
         override_at(function() { 
                 throw {"message": "Can not use at() inside a test, use a timing_test instead."};
-            }, function(desc) { testharness_test(f, desc) });
+            }, function(atDesc) { testharness_test(f, atDesc ? atDesc : (desc + " at t=" + seconds + "s")) });
     }
     expose(test_without_at, "test");
 
