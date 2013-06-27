@@ -455,40 +455,34 @@ window.addEventListener(
     var testname = evt.source.location.pathname.split('/').pop().replace('.', '-');
     var test = document.getElementById(testname);
 
-    switch(evt.data['type']) {
-    case 'start':
-      testResults[testname] = [];
-      break;
+    // We only respond to complete as postMessage doesn't guarantee order so
+    // result messages can come in after the complete message.
+    if (evt.data['type'] != 'complete')
+       return;
 
-    case 'result':
-      testResults[testname].push(evt.data['test']);
-      break;
+    var result = processResults(test, evt.data['tests']);
+    if (result && shouldPostResults) {
+      // Move from running to posting state
+      changeTestState(test, States.POSTING);
 
-    case 'complete':
-      var result = processResults(test, testResults[testname]);
-      if (result && shouldPostResults) {
-        // Move from running to posting state
-        changeTestState(test, States.POSTING);
+      var data = new FormData();
+      data.append('data', JSON.stringify(result));
 
-        var data = new FormData();
-        data.append('data', JSON.stringify(result));
-
-        var xhr = new XMLHttpRequest();
-        xhr.onload = function (e) {
-          if (e.target.status >= 400) {
-            shouldPostResults = false;
-          }
-          // Move from running to finished state
-          changeTestState(this, States.FINISHED);
-        }.bind(test);
-        xhr.open('POST', 'test-results-post.html', true);
-        xhr.send(data);
-      } else {
-        // Move directly to finished state
-        changeTestState(test, States.FINISHED);
-      }
-      break;
+      var xhr = new XMLHttpRequest();
+      xhr.onload = function (e) {
+        if (e.target.status >= 400) {
+          shouldPostResults = false;
+        }
+        // Move from running to finished state
+        changeTestState(this, States.FINISHED);
+      }.bind(test);
+      xhr.open('POST', 'test-results-post.html', true);
+      xhr.send(data);
+    } else {
+      // Move directly to finished state
+      changeTestState(test, States.FINISHED);
     }
+
   },
   false);
 
