@@ -584,7 +584,7 @@
     function override_at(replacement_at, f, args) {
         var orig_at = window.at;
         window.at = replacement_at;
-        f.apply(args);
+        f.apply(null, args);
         window.at = orig_at;
     }
 
@@ -599,12 +599,20 @@
          * @param {function()} f Closure containing the asserts to be run.
          * @param {string} desc Description 
          */
-        var at = function(seconds, f, atDesc)
+        var at = function(seconds, f, desc_at)
         {
             assert_true(typeof seconds == "number", "at's first argument shoud be a number.");
             assert_true(typeof f == "function", "at's second argument should be a function.");
 
-            var t = async_test(atDesc ? atDesc : (desc + " at t=" + seconds + "s"));
+            // Deliberately hoist the desc if we where not given one.
+            if (typeof desc_at == "undefined" || desc_at == null || desc_at.length == 0)
+                desc_at = desc;
+
+            // And then provide "Unnamed" as a default
+            if (typeof desc_at == "undefined" || desc_at == null || desc_at.length == 0)
+                desc_at = "Unnamed assert";
+
+            var t = async_test(desc_at + " at t=" + seconds + "s");
             t.f = f;
             window.testharness_timeline.schedule(t, seconds*1000.0);
         };
