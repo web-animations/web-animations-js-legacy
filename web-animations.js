@@ -1845,7 +1845,7 @@ PacedTimingFunction.prototype = createObject(TimingFunction.prototype, {
     var leftIndex = 0;
     var rightIndex = array.length - 1;
     while (rightIndex - leftIndex > 1) {
-      var midIndex = parseInt((leftIndex + rightIndex)/2);
+      var midIndex = (leftIndex + rightIndex) >> 1;
       if (array[midIndex] <= value) {
         leftIndex = midIndex;
       } else {
