@@ -61,14 +61,14 @@ height: 600px;
   <path id=path1 d="M 100,100 a 75,75 0 1,0 150,0 a 75,75 0 1,0 -150,0 " />
   <path d="M 100,100 a 75,75 0 1,0 150,0 a 75,75 0 1,0 -150,0 "
       stroke="black" stroke-width="1" fill="none" />
-  <path id=path2 d="M400,100l0,-50l100,0l86.3325,122.665z" />
-  <path d="M400,100l0,-50l100,0l86.3325,122.665z" stroke="black"
+  <path id=path2 d="M400,100l0,0l0,-50l100,0l86.3325,122.665z" />
+  <path d="M400,100l0,0l0,-50l100,0l86.3325,122.665z" stroke="black"
       stroke-width="1" fill="none" />
-  <path id=path3 d="M100,300l0,-50l100,0l86.3325,122.665z" />
-  <path d="M100,300l0,-50l100,0l86.3325,122.665z" stroke="black"
+  <path id=path3 d="M100,300l0,0l0,-50l100,0l86.3325,122.665z" />
+  <path d="M100,300l0,0l0,-50l100,0l86.3325,122.665z" stroke="black"
       stroke-width="1" fill="none" />
-  <path id=path4 d="M400,300l0,-50l100,0l86.3325,122.665z" />
-  <path d="M400,300l0,-50l100,0l86.3325,122.665z" stroke="black"
+  <path id=path4 d="M400,300l0,0l0,-50l100,0l86.3325,122.665z" />
+  <path d="M400,300l0,0l0,-50l100,0l86.3325,122.665z" stroke="black"
       stroke-width="1" fill="none" />
 </svg>
 
@@ -82,8 +82,8 @@ height: 600px;
 <div id="anim4" class="animation">&rarr;</div>
 
 
-<script src="../../web-animations.js"></script>
-<!-- <script src="../bootstrap.js"></script> -->
+<script src="../bootstrap.js"></script>
+<!-- <script src="../../web-animations.js"></script> -->
 <script>
 "use strict";
 
@@ -110,13 +110,13 @@ var animFunc4Path = new PathAnimationEffect(
 var anim4 = new Animation(document.querySelector("#anim4"), animFunc4Path,
     {iterationDuration: 10, iterationCount: 2, timingFunction: "paced"});
 document.timeline.play(anim4);
-function timing_test(f) {f();}
-function at(t,f) {setTimeout(f,t*1000);}
+// window.timing_test = function(f) {f();}
+// window.at = function(t,f) {setTimeout(f,t*1000);}
 timing_test(function() {
-  at(10, function() {
+  at(3, function() {
     anim4.effect = animFunc4KeyFrames;
   });
-  at(15, function() {
+  at(6, function() {
     anim4.effect = animFunc4Path;
   });
 }, "Modify effect on paced animation");
