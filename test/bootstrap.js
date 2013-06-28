@@ -49,16 +49,10 @@ function loadScript(src, options) {
   }
 }
 
+window.bootstrap_loadScript = loadScript;
+
 function loadCSS(src) {
   document.write('<link rel="stylesheet" type="text/css" href="' + src + '">');
-}
-
-function hasFlag(flag) {
-  return thisScript && thisScript.getAttribute(flag) !== null;
-}
-
-function isUnitTest() {
-  return /unit-test[^\\\/]*\.html$/.exec(location.pathname);
 }
 
 var instrumentationDepsLoaded = false;
@@ -83,22 +77,27 @@ function instrument(src) {
   var inst = window.__resources__[src] = new Instrumenter().instrumentSync(js, src);
 }
 
+// Can't use the setting framework to get this information because we are not
+// going to load any testharness stuff!
+if (/testharness=disable/.test(window.location.href)) {
+  loadScript('../testharness_stub.js');
+  loadScript('../../web-animations.js');
+  return;
+}
+
 loadScript('../testharness/testharness.js');
 loadCSS('../testharness/testharness.css');
 
+document.write('<div id="settings"></div>');
 loadScript('../testharness_extensions.js');
+loadCSS('../testharness_extensions.css');
 
 loadScript('../testharness_timing.js');
 loadCSS('../testharness_timing.css');
 
-if (!isUnitTest() && !hasFlag('nochecks')) {
-  loadScript(location.pathname.replace('.html', '-checks.js'), {coverage: false});
-}
-
 document.write('<div id="log"></div>');
 loadScript('../testharness/testharnessreport.js');
 
-if (!hasFlag('nopolyfill')) {
-  loadScript('../../web-animations.js');
-}
+loadScript('../bootstrap-post.js');
+
 })();

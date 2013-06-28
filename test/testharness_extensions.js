@@ -43,6 +43,9 @@
 
     /* ********************************************************************* */
 
+    /**
+     * Code for dealing with javascript and other parsing errors.
+     */
     var pageerror_test = async_test("Page contains no errors");
 
     function pageerror_onerror_callback(evt) {
@@ -71,6 +74,160 @@
     }
     add_result_callback(pageerror_othertests_finished);
     addEventListener('load', pageerror_othertests_finished);
+
+    /* ********************************************************************* */
+
+    /**
+     * Helper code for dealing with settings / options parsed in via the URL.
+     */
+
+    //addEventListener('hashchange', '');
+
+    // FIXME: Javascript must have this functionality?
+    function _setting_convert(value)
+    {
+        if (value == "true")
+            return true;
+        if (value == "false")
+            return false;
+
+        if (/^[0-9]+$/.test(value))
+            return parseInt(value);
+
+        if (/^[0-9.]+$/.test(value))
+            return parseFloat(value);
+
+        return value;
+    }
+
+    var testharness_uri_settings = null;
+    function setting_get(name, default_)
+    {
+        if (testharness_uri_settings === null) {
+            testharness_uri_settings = {};
+
+            // Support both the query string and the hash part
+            var setting_string = window.location.search.substring(1) + '&' + window.location.hash.substring(1);
+
+            var vars = setting_string.split('&');
+            for (var i = 0; i < vars.length; i++) {
+                if (vars[i].length <= 0)
+                    continue;
+
+                var key = null;
+                var value = null;
+
+                // Support the "blah=true" and "blah=testing" formats
+                if (vars[i].indexOf('=') > 0) {
+                    var pair = vars[i].split('=');
+                    key = decodeURIComponent(pair[0]);
+                    value = _setting_convert(decodeURIComponent(pair[1]));
+
+                // Support the "blah" and "noblah" formats
+                } else {
+                    key = vars[i];
+                    value = true;
+                    if (key.substring(0, 2) == 'no') {
+                        key = key.substring(2);
+                        value = false;
+                    }
+                }
+                testharness_uri_settings[key] = value;
+            }
+        }
+
+        // URI always overrides any other settings
+        if (testharness_uri_settings.hasOwnProperty(name)) {
+            return testharness_uri_settings[name];
+        }
+
+        // Check flags on the script element
+        // IE <script src="../bootstrap.js" nochecks>
+        // IE <script src="../bootstrap.js" checks="false" delay="5.0">
+
+        // FIXME: This is specific to our setup, make it generic
+        var script_tag = document.querySelector("script[src$='bootstrap.js']");
+
+        var possible_value = script_tag.getAttribute(name);
+        if (possible_value !== null) {
+            if (possible_value.length > 0) {
+                return _setting_convert(possible_value);
+            } else {
+                return true;
+            }
+        }
+
+        var novalue = script_tag.getAttribute('no'+name);
+        if (novalue !== null) {
+            if (novalue.length > 0) {
+                //FIXME: Do something sensible here?
+            }
+            return false;
+        }
+
+        return default_;
+    }
+    window.testharness_setting_get = setting_get;
+
+    function setting_set(key, value, go)
+    {
+        if (typeof go === 'undefined' || go === null)
+            go = true;
+
+        // Remove setting if it is already set
+        var replace_regex = new RegExp('(^|[&?#])(no'+key+'|'+key+'|'+key+'=[^&]+)(&|$)');
+        var newhref =  window.location.href.replace(replace_regex, "$1");
+
+        console.log(window.location.href, replace_regex, newhref);
+
+        // FIXME: Should we use the hash or the query string?
+        if (newhref.indexOf('?') < 0) {
+            newhref += '?';
+        }
+
+        // Append the setting
+        if (value === true) {
+            newhref += "&"+key;
+        } else if (value === false) {
+            newhref += "&no"+key;
+        } else {
+            newhref += "&"+key+"="+value;
+        }
+
+        if (go)
+            window.location.href = newhref;
+        else
+            return newhref;
+    }
+    window.testharness_setting_set = setting_set;
+
+    function setting_register(group, node) {
+        var settingnode = document.getElementById('settings');
+
+        var groupname = group.replace(/[^a-zA-Z]*/g, '_');
+
+        var groupnode = settingnode.querySelector('#settings_'+groupname);
+        if (groupnode == null) {
+            groupnode = document.createElement('div');
+            groupnode.id = '#settings_' + group;
+            settingnode.appendChild(groupnode);
+
+            var title = document.createElement('h6');
+            title.innerText = group + ":";
+            groupnode.appendChild(title);
+        }
+        groupnode.appendChild(node);
+    }
+    window.testharness_setting_register = setting_register;
+
+    (function() {
+        var b = document.createElement('button');
+        b.innerText = "Disable";
+        b.onclick = function() {
+            testharness_setting_set('testharness', 'disabled');
+        }
+        testharness_setting_register("Test Harness", b);
+    })();
 
     /* ********************************************************************* */
     var svg_properties = {
