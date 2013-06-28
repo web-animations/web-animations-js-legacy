@@ -602,6 +602,10 @@
         var at = function(seconds, f, desc_at)
         {
             assert_true(typeof seconds == "number", "at's first argument shoud be a number.");
+            assert_true(!isNaN(seconds), "at's first argument should be a number not NaN!");
+            assert_true(seconds >= 0, "at's first argument should be greater then 0.");
+            assert_true(isFinite(seconds), "at's first argument should be finite.");
+
             assert_true(typeof f == "function", "at's second argument should be a function.");
 
             // Deliberately hoist the desc if we where not given one.
