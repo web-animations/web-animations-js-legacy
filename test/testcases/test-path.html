@@ -83,7 +83,6 @@ height: 600px;
 
 
 <script src="../bootstrap.js"></script>
-<!-- <script src="../../web-animations.js"></script> -->
 <script>
 "use strict";
 
@@ -110,14 +109,11 @@ var animFunc4Path = new PathAnimationEffect(
 var anim4 = new Animation(document.querySelector("#anim4"), animFunc4Path,
     {iterationDuration: 10, iterationCount: 2, timingFunction: "paced"});
 document.timeline.play(anim4);
-// window.timing_test = function(f) {f();}
-// window.at = function(t,f) {setTimeout(f,t*1000);}
-timing_test(function() {
-  at(3, function() {
+
+testharness_timeline.schedule(function() {
     anim4.effect = animFunc4KeyFrames;
-  });
-  at(6, function() {
+}, 3000);
+testharness_timeline.schedule(function() {
     anim4.effect = animFunc4Path;
-  });
-}, "Modify effect on paced animation");
+}, 6000);
 </script>
