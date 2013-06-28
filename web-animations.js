@@ -107,6 +107,9 @@ Timing.prototype = {
     };
     return timingFunction;
   },
+  _invalidateTimingFunction: function() {
+    delete this._timingFunction;
+  },
   _iterationCount: function() {
     var value = this._dict.iterationCount;
     return value < 0 ? 1 : value;
@@ -929,6 +932,7 @@ Animation.prototype = createObject(TimedItem.prototype, {
     enterModifyCurrentAnimationState();
     try {
       this._effect = effect;
+      this.specified._invalidateTimingFunction();
     } finally {
       exitModifyCurrentAnimationState(Boolean(this.player) && this.player._hasTicked);
     }
