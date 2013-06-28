@@ -536,12 +536,6 @@
         this.toNextEvent();
     };
 
-    // FIXME
-    if (/start=disable/.test(window.location.hash)) {
-        window.testharness_timeline = {"schedule": function(f, t) { setTimeout(f, t) }};
-        return;
-    }
-
     function testharness_timeline_setup()
     {
         if (!testharness_timeline_enabled)
@@ -551,8 +545,8 @@
         testharness_timeline.start();
         testharness_timeline.updateGUI();
 
-        // Start running the test on #start=message
-        if (/start=message/.test(window.location.hash)) {
+        // Start running the test on message
+        if ("#message" == window.location.hash) {
             window.addEventListener("message", function(evt)
                 {
                     switch(evt.data['type']) {
@@ -563,17 +557,17 @@
                         break;
                     }
                 });
-        // Start running the test on #start=message or no #start= is given.
-        } else if (/start=auto/.test(window.location.hash)
-                  || !(/start=/.test(window.location.hash))) {
-
-            var delay = 1;
-            if (/delay=/.test(window.location.hash)) {
-                delay = Number(/delay=([0-9]+)/.exec(window.location.hash)[1]);
-            }
+        // Run the test as fast as possible, skipping time.
+        } else if ("#auto" == window.location.hash) {
 
             // Need non-zero timeout to allow chrome to run other code.
-            setTimeout(testharness_timeline.autorun.bind(testharness_timeline), delay);
+            setTimeout(testharness_timeline.autorun.bind(testharness_timeline), 1);
+
+        // Don't do anything until the user interacts with the GUI
+        } else if("#explore" == window.location.hash ||
+                  window.location.hash.length == 0) {
+        } else {
+            alert("Unknown start mode.");
         }
     }
     addEventListener('load', testharness_timeline_setup);
