@@ -88,8 +88,11 @@ loadCSS('../testharness/testharness.css');
 
 loadScript('../testharness_extensions.js');
 
-loadScript('../testharness_timing.js');
-loadCSS('../testharness_timing.css');
+// Don't load the timing functions in unittests.
+if (!isUnitTest()) {
+  loadScript('../testharness_timing.js');
+  loadCSS('../testharness_timing.css');
+}
 
 if (!isUnitTest() && !hasFlag('nochecks')) {
   loadScript(location.pathname.replace('.html', '-checks.js'), {coverage: false});
