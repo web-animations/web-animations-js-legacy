@@ -9,6 +9,9 @@ env:
 
 notifications:
   irc: "irc.freenode.org#webanimations"
+  skip_join: true
+  template:
+    - "%{repository}#%{build_number} %{branch}: %{message}"
 
 install:
   - ./.travis-setup.sh
