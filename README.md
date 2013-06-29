@@ -223,4 +223,4 @@ then the polyfill will provide a console warning in browsers where these feature
 ## Tools & testing
 
 For running tests or building minified files, consult the
-[tooling information](http://toolkitchen.github.com/tooling-strategy.html).
+[tooling information](http://www.polymer-project.org/tooling-strategy.html).
