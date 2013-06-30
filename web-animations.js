@@ -1414,7 +1414,6 @@ AnimationEffect.prototype = {
     }
   },
   sample: abstractMethod,
-  getValue: abstractMethod,
   clone: abstractMethod,
   toString: abstractMethod,
 };
@@ -1691,9 +1690,6 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
             endKeyframe.rawValueForProperty(property),
             this._compositeForKeyframe(endKeyframe)),
         intervalDistance);
-  },
-  getValue: function(target) {
-    return getValue(target, this.property);
   },
   clone: function() {
     var result = new KeyframeAnimationEffect([], this.composite,
