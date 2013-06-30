@@ -1432,7 +1432,7 @@ var normalizeKeyframeDictionary = function(properties) {
 
 
 /** @constructor */
-var KeyframeAnimationEffect = function(oneOrMoreKeyframesDictionaries,
+var KeyframeAnimationEffect = function(oneOrMoreKeyframeDictionaries,
     composite, accumulate) {
   enterModifyCurrentAnimationState();
   try {
@@ -1440,14 +1440,7 @@ var KeyframeAnimationEffect = function(oneOrMoreKeyframesDictionaries,
 
     this.composite = composite;
 
-    if (!Array.isArray(oneOrMoreKeyframesDictionaries)) {
-      oneOrMoreKeyframesDictionaries = [oneOrMoreKeyframesDictionaries];
-    }
-    this._keyframeDictionaries =
-        oneOrMoreKeyframesDictionaries.map(normalizeKeyframeDictionary);
-    // Set lazily
-    this._cachedProperties = null;
-    this._cachedDistributedKeyframes = null;
+    this.setFrames(oneOrMoreKeyframeDictionaries);
   } finally {
     exitModifyCurrentAnimationState(false);
   }
@@ -1462,6 +1455,24 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     try {
       // Use the default value if an invalid string is specified.
       this._composite = value === 'add' ? 'add' : 'replace';
+    } finally {
+      exitModifyCurrentAnimationState(true);
+    }
+  },
+  getFrames: function() {
+    return this._keyframeDictionaries.slice(0);
+  },
+  setFrames: function(oneOrMoreKeyframeDictionaries) {
+    enterModifyCurrentAnimationState();
+    try {
+      if (!Array.isArray(oneOrMoreKeyframeDictionaries)) {
+        oneOrMoreKeyframeDictionaries = [oneOrMoreKeyframeDictionaries];
+      }
+      this._keyframeDictionaries =
+          oneOrMoreKeyframeDictionaries.map(normalizeKeyframeDictionary);
+      // Set lazily
+      this._cachedProperties = null;
+      this._cachedDistributedKeyframes = null;
     } finally {
       exitModifyCurrentAnimationState(true);
     }
