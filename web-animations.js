@@ -1560,11 +1560,14 @@ var normalizeKeyframeDictionary = function(properties) {
   var animationProperties = [];
   for (var property in properties) {
     // TODO: Apply the CSS property to IDL attribute algorithm.
-    if (property === 'offset' && typeof properties.offset === 'number') {
-      result.offset = properties.offset;
-    } else if (property === 'composite' &&
-        (properties.composite === 'add' || properties.composite === 'replace')) {
-      result.composite = properties.composite;
+    if (property === 'offset') {
+      if (typeof properties.offset === 'number') {
+        result.offset = properties.offset;
+      }
+    } else if (property === 'composite') {
+      if (properties.composite === 'add' || properties.composite === 'replace') {
+        result.composite = properties.composite;
+      }
     } else {
       // TODO: Check whether this is a supported property.
       animationProperties.push(property);
