@@ -1345,7 +1345,7 @@ PathAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     return new PathAnimationEffect(this._path.getAttribute('d'));
   },
   toString: function() {
-    return '<path>';
+    return '<PathAnimationEffect>';
   },
   set autoRotate(autoRotate) {
     enterModifyCurrentAnimationState();
@@ -1548,7 +1548,7 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     return result;
   },
   toString: function() {
-    return this.property;
+    return '<KeyframeAnimationEffect>';
   },
   _compositeForKeyframe: function(keyframe) {
     return isDefinedAndNotNull(keyframe.composite) ?
