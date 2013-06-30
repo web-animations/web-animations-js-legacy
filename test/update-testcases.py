@@ -48,13 +48,19 @@ def main():
         current_testcases_lines, new_testcases_lines,
         fromfile=testcase_file, tofile=testcase_file))
 
-    if "--update" in sys.argv:
+    if len(lines) == 0:
+        sys.stdout.write('Nothing to do\n')
+        sys.exit(0)
+
+    if not "--dry-run" in sys.argv:
         file(testcase_file, "w").write("".join(new_testcases_lines))
+        sys.stdout.write(
+            'Updating %s with the following diff.\n' % testcase_file)
 
     for line in lines:
         sys.stdout.write(line)
 
-    sys.exit(int(len(list(lines)) > 0))
+    sys.exit(1)
 
 
 if __name__ == '__main__':
