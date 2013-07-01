@@ -1560,11 +1560,14 @@ var normalizeKeyframeDictionary = function(properties) {
   var animationProperties = [];
   for (var property in properties) {
     // TODO: Apply the CSS property to IDL attribute algorithm.
-    if (property === 'offset' && typeof properties.offset === 'number') {
-      result.offset = properties.offset;
-    } else if (property === 'composite' &&
-        (properties.composite === 'add' || properties.composite === 'replace')) {
-      result.composite = properties.composite;
+    if (property === 'offset') {
+      if (typeof properties.offset === 'number') {
+        result.offset = properties.offset;
+      }
+    } else if (property === 'composite') {
+      if (properties.composite === 'add' || properties.composite === 'replace') {
+        result.composite = properties.composite;
+      }
     } else {
       // TODO: Check whether this is a supported property.
       animationProperties.push(property);
@@ -1583,7 +1586,7 @@ var normalizeKeyframeDictionary = function(properties) {
 
 
 /** @constructor */
-var KeyframeAnimationEffect = function(oneOrMoreKeyframesDictionaries,
+var KeyframeAnimationEffect = function(oneOrMoreKeyframeDictionaries,
     composite, accumulate) {
   enterModifyCurrentAnimationState();
   try {
@@ -1591,14 +1594,7 @@ var KeyframeAnimationEffect = function(oneOrMoreKeyframesDictionaries,
 
     this.composite = composite;
 
-    if (!Array.isArray(oneOrMoreKeyframesDictionaries)) {
-      oneOrMoreKeyframesDictionaries = [oneOrMoreKeyframesDictionaries];
-    }
-    this._keyframeDictionaries =
-        oneOrMoreKeyframesDictionaries.map(normalizeKeyframeDictionary);
-    // Set lazily
-    this._cachedProperties = null;
-    this._cachedDistributedKeyframes = null;
+    this.setFrames(oneOrMoreKeyframeDictionaries);
   } finally {
     exitModifyCurrentAnimationState(false);
   }
@@ -1613,6 +1609,24 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     try {
       // Use the default value if an invalid string is specified.
       this._composite = value === 'add' ? 'add' : 'replace';
+    } finally {
+      exitModifyCurrentAnimationState(true);
+    }
+  },
+  getFrames: function() {
+    return this._keyframeDictionaries.slice(0);
+  },
+  setFrames: function(oneOrMoreKeyframeDictionaries) {
+    enterModifyCurrentAnimationState();
+    try {
+      if (!Array.isArray(oneOrMoreKeyframeDictionaries)) {
+        oneOrMoreKeyframeDictionaries = [oneOrMoreKeyframeDictionaries];
+      }
+      this._keyframeDictionaries =
+          oneOrMoreKeyframeDictionaries.map(normalizeKeyframeDictionary);
+      // Set lazily
+      this._cachedProperties = null;
+      this._cachedDistributedKeyframes = null;
     } finally {
       exitModifyCurrentAnimationState(true);
     }

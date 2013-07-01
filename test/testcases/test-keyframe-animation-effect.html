@@ -22,6 +22,7 @@ limitations under the License.
 </style>
 
 <div id="anim1" class="anim"></div>
+<div id="anim2" class="anim"></div>
 
 <script src="../bootstrap.js" nochecks></script>
 <script>
@@ -69,5 +70,103 @@ timing_test(function() {
     assert_styles("#anim1", {left: "350px"});
   });
 }, "Setting KeyframeAnimationEffect.composite should cause immediate update");
+
+test(function() {
+  var frames = new KeyframeAnimationEffect(
+      [{left: "100px"}, {top: "200px"}]).getFrames();
+  assert_equals(frames.length, 2);
+  assert_equals(frames[0].left, "100px");
+  assert_equals(frames[1].top, "200px");
+}, "KeyframeAnimationEffect.getFrames() should return the specified keyframes");
+
+test(function() {
+  var frames = new KeyframeAnimationEffect({left: "100px"}).getFrames();
+  assert_equals(frames.length, 1);
+  assert_equals(frames[0].left, "100px");
+}, "KeyframeAnimationEffect.getFrames() should handle a single keyframe");
+
+test(function() {
+  var frames = new KeyframeAnimationEffect({}).getFrames();
+  assert_equals(frames.length, 1);
+  assert_equals(typeof frames[0], "object");
+}, "KeyframeAnimationEffect.getFrames() should handle an empty keyframe");
+
+test(function() {
+  var frames = new KeyframeAnimationEffect().getFrames();
+  assert_equals(frames.length, 1);
+  assert_equals(typeof frames[0], "object");
+}, "KeyframeAnimationEffect.getFrames() should handle no input");
+
+test(function() {
+  var frames = new KeyframeAnimationEffect(42).getFrames();
+  assert_equals(frames.length, 1);
+  assert_equals(typeof frames[0], "object");
+}, "KeyframeAnimationEffect.getFrames() should handle non-objects");
+
+test(function() {
+  assert_false(
+      new KeyframeAnimationEffect(keyframes).getFrames() === keyframes);
+}, "KeyframeAnimationEffect.getFrames() should not return the original " +
+    "keyframe dictionary");
+
+test(function() {
+  var effect = new KeyframeAnimationEffect({left: "100px"});
+  effect.getFrames().push({top: "200px"});
+  var frames = effect.getFrames();
+  assert_equals(frames.length, 1);
+  assert_equals(frames[0].left, "100px");
+  assert_equals(frames[0].top, undefined);
+}, "KeyframeAnimationEffect.getFrames() should not allow internal state to " +
+    "be modified");
+
+test(function() {
+  assert_equals(new KeyframeAnimationEffect(keyframes).getFrames()[0].offset,
+      null);
+}, "Default keyframe offset should be null");
+
+test(function() {
+  assert_equals(
+      new KeyframeAnimationEffect({offset: "foo"}).getFrames()[0].offset, null);
+  assert_equals(new KeyframeAnimationEffect({offset: 42}).getFrames()[0].offset,
+      42);
+}, "Keyframes should only accept valid values for offset");
+
+test(function() {
+  assert_equals(new KeyframeAnimationEffect(keyframes).getFrames()[0].composite,
+      null);
+}, "Default keyframe composite should be null");
+
+test(function() {
+  assert_equals(
+      new KeyframeAnimationEffect({composite: "foo"}).getFrames()[0].composite,
+      null);
+  assert_equals(
+      new KeyframeAnimationEffect({composite: 42}).getFrames()[0].composite,
+      null);
+  assert_equals(
+      new KeyframeAnimationEffect({composite: "add"}).getFrames()[0].composite,
+      "add");
+  assert_equals(new KeyframeAnimationEffect(
+      {composite: "replace"}).getFrames()[0].composite,
+      "replace");
+}, "Keyframes should only accept valid values for composite");
+
+test(function() {
+  var effect = new KeyframeAnimationEffect(keyframes);
+  effect.setFrames({top: "200px"});
+  var frames = effect.getFrames();
+  assert_equals(frames[0].left, undefined);
+  assert_equals(frames[0].top, "200px");
+}, "KeyframeAnimationEffect.setFrames() should replace exisiting keyframes");
+
+timing_test(function() {
+  var animation = new Animation(document.getElementById("anim2"), keyframes, 1);
+  document.timeline.play(animation);
+  at(0.5, function() {
+    assert_styles("#anim2", {left: "250px"});
+    animation.effect.setFrames([{left: "300px"}, {left: "400px"}]);
+    assert_styles("#anim2", {left: "350px"});
+  });
+}, "KeyframeAnimationEffect.setFrames() should immediately update its target");
 
 </script>
