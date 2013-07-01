@@ -538,6 +538,8 @@ TimedItem.prototype = {
     this._timeFraction = this._isCurrentDirectionForwards() ?
             unscaledFraction :
             1.0 - unscaledFraction;
+    console.assert(this._timeFraction >= 0.0 && this._timeFraction <= 1.0,
+        'Time fraction should be in the range [0, 1]');
     if (timingFunction) {
       this._timeFraction = timingFunction.scaleTime(this._timeFraction);
     }
@@ -573,6 +575,8 @@ TimedItem.prototype = {
             adjustedAnimationTime, this.iterationDuration);
     this._iterationTime = this._scaleIterationTime(unscaledIterationTime);
     this._timeFraction = this._iterationTime / this.iterationDuration;
+    console.assert(this._timeFraction >= 0.0 && this._timeFraction <= 1.0,
+        'Time fraction should be in the range [0, 1]');
     var timingFunction = this.specified._timingFunction(this);
     if (timingFunction) {
       this._timeFraction = timingFunction.scaleTime(this._timeFraction);
@@ -606,11 +610,19 @@ TimedItem.prototype = {
     return Math.ceil(x / range) - 1;
   },
   _modulusWithClosedOpenRange: function(x, range) {
-    return x % range;
+    console.assert(range > 0, 'Range must be strictly positive');
+    var modulus = x % range;
+    var result = modulus < 0 ? modulus + range : modulus;
+    console.assert(result >= 0.0 && result < range,
+        'Result should be in the range [0, range)');
+    return result;
   },
   _modulusWithOpenClosedRange: function(x, range) {
-    var ret = this._modulusWithClosedOpenRange(x, range);
-    return ret == 0 ? range : ret;
+    var modulus = this._modulusWithClosedOpenRange(x, range);
+    var result = modulus == 0 ? range : modulus;
+    console.assert(result > 0.0 && result <= range,
+        'Result should be in the range (0, range]');
+    return result;
   },
   _isCurrentDirectionForwards: function() {
     if (this.specified.direction == 'normal') {
