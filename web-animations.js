@@ -1409,7 +1409,7 @@ AnimationEffect.prototype = {
     enterModifyCurrentAnimationState();
     try {
       // Use the default value if an invalid string is specified.
-      this._accumulate = value === 'add' ? 'add' : 'replace';
+      this._accumulate = value === 'sum' ? 'sum' : 'none';
     } finally {
       exitModifyCurrentAnimationState(true);
     }
