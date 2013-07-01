@@ -27,6 +27,12 @@ limitations under the License.
 <div id="anim1" class="anim"></div>
 <div id="anim2" class="anim"></div>
 <div id="anim3" class="anim"></div>
+<div id="anim4" class="anim"></div>
+<div id="anim5" class="anim"></div>
+<div id="anim6" class="anim"></div>
+<div id="anim7" class="anim"></div>
+<div id="anim8" class="anim"></div>
+<div id="anim9" class="anim"></div>
 
 <script src="../bootstrap.js" nochecks></script>
 <script>
@@ -203,5 +209,98 @@ timing_test(function() {
     assert_styles("#anim3", {left: "350px"});
   });
 }, "KeyframeAnimationEffect.setFrames() should immediately update its target");
+
+timing_test(function() {
+  document.timeline.play(new Animation(document.getElementById("anim4"),
+      new KeyframeAnimationEffect(keyframes, 'replace', 'sum'),
+      {iterationDuration: 1.0, iterationCount: 3.0}));
+  at(0.5, function() {
+    assert_styles("#anim4", {left: "250px"});
+  });
+  at(1.5, function() {
+    assert_styles("#anim4", {left: "550px"});
+  });
+  at(2.5, function() {
+    assert_styles("#anim4", {left: "850px"});
+  });
+}, "Accumulate should work with 'replace' composite keyframes");
+
+timing_test(function() {
+  document.timeline.play(new Animation(document.getElementById("anim5"),
+      new KeyframeAnimationEffect(keyframes, 'add', 'sum'),
+      {iterationDuration: 1.0, iterationCount: 3.0}));
+  at(0.5, function() {
+    assert_styles("#anim5", {left: "350px"});
+  });
+  at(1.5, function() {
+    assert_styles("#anim5", {left: "650px"});
+  });
+  at(2.5, function() {
+    assert_styles("#anim5", {left: "950px"});
+  });
+}, "Accumulate should work with 'add' composite keyframes");
+
+timing_test(function() {
+  document.timeline.play(new Animation(document.getElementById("anim6"),
+      new KeyframeAnimationEffect(keyframes, 'add', 'sum'),
+      {iterationDuration: 1.0, iterationStart: 1.0, iterationCount: 3.0}));
+  at(0.5, function() {
+    assert_styles("#anim6", {left: "650px"});
+  });
+  at(1.5, function() {
+    assert_styles("#anim6", {left: "950px"});
+  });
+  at(2.5, function() {
+    assert_styles("#anim6", {left: "1250px"});
+  });
+}, "Accumulate should be from zero iteration: non-zero iterationStart");
+
+timing_test(function() {
+  document.timeline.play(new Animation(document.getElementById("anim7"),
+      new KeyframeAnimationEffect(keyframes, 'add', 'sum'),
+      {iterationDuration: 1.0, iterationStart: 1.1, iterationCount: 3.0}));
+  at(0.4, function() {
+    assert_styles("#anim7", {left: "650px"});
+  });
+  at(1.4, function() {
+    assert_styles("#anim7", {left: "950px"});
+  });
+  at(2.4, function() {
+    assert_styles("#anim7", {left: "1250px"});
+  });
+}, "Accumulate should be from zero iteration: non-integer iterationStart");
+
+timing_test(function() {
+  document.timeline.play(new Animation(document.getElementById("anim8"),
+      new KeyframeAnimationEffect([
+        {left: "200px", composite: "add"},
+        {left: "300px", composite: "replace"}
+      ], 'replace', 'sum'),
+      {iterationDuration: 1.0, iterationCount: 3.0}));
+  at(0.5, function() {
+    assert_styles("#anim8", {left: "300px"});
+  });
+  at(1.5, function() {
+    assert_styles("#anim8", {left: "300px"});
+  });
+}, "Accumulate should not be used if composite is mixed");
+
+timing_test(function() {
+  document.timeline.play(new Animation(document.getElementById("anim9"),
+      new KeyframeAnimationEffect(keyframes, 'add', 'sum'),
+      {iterationDuration: 1.0, iterationStart: -2.0, iterationCount: 4.0}));
+  at(0.5, function() {
+    assert_styles("#anim9", {left: "350px"});
+  });
+  at(1.5, function() {
+    assert_styles("#anim9", {left: "350px"});
+  });
+  at(2.5, function() {
+    assert_styles("#anim9", {left: "350px"});
+  });
+  at(3.5, function() {
+    assert_styles("#anim9", {left: "650px"});
+  });
+}, "Accumulate should not be used on non-positive iterations");
 
 </script>
