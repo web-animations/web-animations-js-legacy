@@ -21,6 +21,8 @@ limitations under the License.
   }
 </style>
 
+<div id="elem"></div>
+
 <div id="anim1" class="anim"></div>
 <div id="anim2" class="anim"></div>
 
@@ -29,6 +31,12 @@ limitations under the License.
 "use strict";
 
 var keyframes = [{left: "200px"}, {left: "300px"}];
+
+test(function() {
+  assert_true(new Animation(document.getElementById("elem"), keyframes).effect
+      instanceof KeyframeAnimationEffect);
+}, "Animation.effect should be an instance of KeyframeAnimationEffect when " +
+    "created with a keyframe dictionary");
 
 test(function() {
   assert_equals(new KeyframeAnimationEffect(keyframes).accumulate, "none");
