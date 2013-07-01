@@ -23,6 +23,7 @@ var tests = [
   'test-iterations-alternate-holes.html',
   'test-iterations-basic.html',
   'test-iterations-fill.html',
+  'test-keyframe-animation-effect.html',
   'test-keyframe-creation.html',
   'test-length-units.html',
   'test-matrix-transforms.html',
