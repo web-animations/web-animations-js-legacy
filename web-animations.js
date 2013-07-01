@@ -1665,10 +1665,8 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
         frames.splice(i, 1);
       }
     }
-
-    if (frames.length === 0) {
-      return new AddReplaceCompositableValue(rawNeutralValue, 'add');
-    }
+    console.assert(frames.length > 0,
+        'There should always be keyframes for each property');
 
     // Add 0 and 1 keyframes if required.
     if (frames[0].offset !== 0.0) {
@@ -1681,6 +1679,8 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
       keyframe.addPropertyValuePair(property, cssNeutralValue);
       frames.push(keyframe);
     }
+    console.assert(frames.length >= 2,
+        'There should be at least two keyframes including synthetic keyframes');
 
     var startKeyframeIndex;
     var length = frames.length;
