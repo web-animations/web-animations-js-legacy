@@ -909,9 +909,10 @@ Animation.prototype = createObject(TimedItem.prototype, {
   _sample: function() {
     if (isDefinedAndNotNull(this.effect) &&
         !(this.target instanceof PseudoElementReference)) {
-      this.effect.sample(this._timeFraction,
-          this.currentIteration, this.target,
-          this.underlyingValue);
+      var sampleMethod = isCustomAnimationEffect(this.effect) ?
+          this.effect.sample : this.effect._sample;
+      sampleMethod.apply(this.effect, [this._timeFraction,
+          this.currentIteration, this.target, this.underlyingValue]);
     }
   },
   _getLeafItemsInEffectImpl: function(items) {
@@ -1413,8 +1414,7 @@ AnimationEffect.prototype = {
       exitModifyCurrentAnimationState(true);
     }
   },
-  sample: abstractMethod,
-  getValue: abstractMethod,
+  _sample: abstractMethod,
   clone: abstractMethod,
   toString: abstractMethod,
 };
@@ -1464,7 +1464,7 @@ PathAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
       exitModifyCurrentAnimationState();
     }
   },
-  sample: function(timeFraction, currentIteration, target) {
+  _sample: function(timeFraction, currentIteration, target) {
     // TODO: Handle accumulation.
     var lengthAtTimeFraction = this._lengthAtTimeFraction(timeFraction);
     var point = this._path.getPointAtLength(lengthAtTimeFraction);
@@ -1499,7 +1499,7 @@ PathAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     return new PathAnimationEffect(this._path.getAttribute('d'));
   },
   toString: function() {
-    return '<path>';
+    return '<PathAnimationEffect>';
   },
   set autoRotate(autoRotate) {
     enterModifyCurrentAnimationState();
@@ -1617,7 +1617,7 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
       exitModifyCurrentAnimationState();
     }
   },
-  sample: function(timeFraction, currentIteration, target) {
+  _sample: function(timeFraction, currentIteration, target) {
     var properties = this._getProperties();
     for (var i = 0; i < properties.length; i++) {
       // TODO: Handle accumulation.
@@ -1692,9 +1692,6 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
             this._compositeForKeyframe(endKeyframe)),
         intervalDistance);
   },
-  getValue: function(target) {
-    return getValue(target, this.property);
-  },
   clone: function() {
     var result = new KeyframeAnimationEffect([], this.composite,
         this.accumulate);
@@ -1702,7 +1699,7 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     return result;
   },
   toString: function() {
-    return this.property;
+    return '<KeyframeAnimationEffect>';
   },
   _compositeForKeyframe: function(keyframe) {
     return isDefinedAndNotNull(keyframe.composite) ?
