@@ -1307,7 +1307,7 @@ PathAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
       // Use the default value if an invalid string is specified.
       this._composite = value === 'add' ? 'add' : 'replace';
     } finally {
-      exitModifyCurrentAnimationState();
+      exitModifyCurrentAnimationState(true);
     }
   },
   _sample: function(timeFraction, currentIteration, target) {
@@ -1460,7 +1460,7 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
       // Use the default value if an invalid string is specified.
       this._composite = value === 'add' ? 'add' : 'replace';
     } finally {
-      exitModifyCurrentAnimationState();
+      exitModifyCurrentAnimationState(true);
     }
   },
   _sample: function(timeFraction, currentIteration, target) {
