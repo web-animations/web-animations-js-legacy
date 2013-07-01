@@ -15,6 +15,14 @@ limitations under the License.
 -->
 
 <!DOCTYPE html>
+<style>
+  div.anim {
+    left: 100px;
+  }
+</style>
+
+<div id="anim1" class="anim"></div>
+
 <script src="../bootstrap.js" nochecks></script>
 <script>
 "use strict";
@@ -35,6 +43,9 @@ test(function() {
   assert_equals(effect.accumulate, "sum");
 }, "KeyframeAnimationEffect.accumulate should only accept valid values");
 
+// TODO: Test that setting setting KeyframeAnimationEffect.accumulate causes
+// an immediate update to its target. Need to implement accumulation first!
+
 test(function() {
   assert_equals(new KeyframeAnimationEffect(keyframes).composite, "replace");
 }, "KeyframeAnimationEffect.composite should default to 'replace'");
@@ -48,5 +59,15 @@ test(function() {
   effect.composite = "add";
   assert_equals(effect.composite, "add");
 }, "KeyframeAnimationEffect.composite should only accept valid values");
+
+timing_test(function() {
+  var animation = new Animation(document.getElementById("anim1"), keyframes, 1);
+  document.timeline.play(animation);
+  at(0.5, function() {
+    assert_styles("#anim1", {left: "250px"});
+    animation.effect.composite = "add";
+    assert_styles("#anim1", {left: "350px"});
+  });
+}, "Setting KeyframeAnimationEffect.composite should cause immediate update");
 
 </script>
