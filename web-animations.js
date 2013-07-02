@@ -1262,7 +1262,8 @@ var MediaReference = function(mediaElement, timing, parent) {
   // element's currentTime may drift from our iterationTime. So if a media
   // element has loop set, we can't be sure that we'll stop it before it wraps.
   // For this reason, we simply disable looping.
-  // TODO: Maybe we should let it loop if our iterationDuration exceeds it's length?
+  // TODO: Maybe we should let it loop if our iterationDuration exceeds it's
+  // length?
   this._media.loop = false;
 
   // If the media element has a media controller, we detach it. This mirrors the
@@ -1280,8 +1281,8 @@ MediaReference.prototype = createObject(TimedItem.prototype, {
     // _updateInheritedTime(). One way around this would be to modify
     // TimedItem._isPastEndOfActiveInterval() to recurse down the tree, then we
     // could override it here.
-    return isNaN(this._media.iterationDuration) ?
-        Infinity : this._media.iterationDuration / this._media.defaultPlaybackRate;
+    return isNaN(this._media.duration) ?
+        Infinity : this._media.duration / this._media.defaultPlaybackRate;
   },
   _unscaledMediaCurrentTime: function() {
     return this._media.currentTime / this._media.defaultPlaybackRate;
@@ -1311,11 +1312,11 @@ MediaReference.prototype = createObject(TimedItem.prototype, {
     return false;
   },
   // Note that a media element's timeline may not start at zero, although it's
-  // iterationDuration is always the timeline time at the end point. This means that an
-  // element's iterationDuration isn't always it's length and not all values of the
+  // duration is always the timeline time at the end point. This means that an
+  // element's duration isn't always it's length and not all values of the
   // timline are seekable. Furthermore, some types of media further limit the
   // range of seekable timeline times. For this reason, we always map an
-  // iteration to the range [0, iterationDuration] and simply seek to the nearest
+  // iteration to the range [0, duration] and simply seek to the nearest
   // seekable time.
   _ensureIsAtUnscaledTime: function(time) {
     if (this._unscaledMediaCurrentTime() !== time) {
@@ -1340,7 +1341,7 @@ MediaReference.prototype = createObject(TimedItem.prototype, {
     }
 
     if (this._iterationTime >= this._intrinsicDuration()) {
-      // Our iteration time exceeds the media element's iterationDuration, so just make
+      // Our iteration time exceeds the media element's duration, so just make
       // sure the media element is at the end. It will stop automatically, but
       // that could take some time if the seek below is significant, so force
       // it.
@@ -1397,6 +1398,10 @@ MediaReference.prototype = createObject(TimedItem.prototype, {
     return this._media === element;
   },
   _getAnimationsTargetingElement: function(element, animations) { },
+  _attach: function(player) {
+    this._ensurePaused();
+    TimedItem.prototype._attach.call(this, player);
+  },
 });
 
 
