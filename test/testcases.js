@@ -33,6 +33,7 @@ var tests = [
   'test-partial-keyframes.html',
   'test-path.html',
   'test-pause.html',
+  'test-pause-for-testing.html',
   'test-playback-rate.html',
   'test-player.html',
   'test-pseudo-element-reference.html',
