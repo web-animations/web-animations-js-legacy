@@ -83,25 +83,25 @@ test(function() {
   var frames = new KeyframeAnimationEffect({left: "100px"}).getFrames();
   assert_equals(frames.length, 1);
   assert_equals(frames[0].left, "100px");
-}, "KeyframeAnimationEffect.getFrames() should handle a single keyframe");
+}, "KeyframeAnimationEffect should handle a single keyframe");
 
 test(function() {
   var frames = new KeyframeAnimationEffect({}).getFrames();
   assert_equals(frames.length, 1);
   assert_equals(typeof frames[0], "object");
-}, "KeyframeAnimationEffect.getFrames() should handle an empty keyframe");
+}, "KeyframeAnimationEffect should handle an empty keyframe");
 
 test(function() {
   var frames = new KeyframeAnimationEffect().getFrames();
   assert_equals(frames.length, 1);
   assert_equals(typeof frames[0], "object");
-}, "KeyframeAnimationEffect.getFrames() should handle no input");
+}, "KeyframeAnimationEffect should handle no input for keyframe dictionary");
 
 test(function() {
   var frames = new KeyframeAnimationEffect(42).getFrames();
   assert_equals(frames.length, 1);
   assert_equals(typeof frames[0], "object");
-}, "KeyframeAnimationEffect.getFrames() should handle non-objects");
+}, "KeyframeAnimationEffect should handle non-objects for keyframe dictionary");
 
 test(function() {
   assert_false(
@@ -150,6 +150,17 @@ test(function() {
       {composite: "replace"}).getFrames()[0].composite,
       "replace");
 }, "Keyframes should only accept valid values for composite");
+
+test(function() {
+  assert_equals(
+      typeof new KeyframeAnimationEffect({left: 42}).getFrames()[0].left,
+      "string");
+  assert_equals(new KeyframeAnimationEffect({left: 42}).getFrames()[0].left,
+      "42");
+  var obj = { toString: function() { return "toString() called"; } };
+  assert_equals(new KeyframeAnimationEffect({left: obj}).getFrames()[0].left,
+      obj.toString());
+}, "Keyframe property values should be stringified");
 
 test(function() {
   var effect = new KeyframeAnimationEffect(keyframes);
