@@ -1906,7 +1906,9 @@ KeyframeInternal.createFromNormalizedProperties = function(properties) {
       'Properties must be an object');
   var keyframe = new KeyframeInternal(properties.offset, properties.composite);
   for (var candidate in properties) {
-    keyframe.addPropertyValuePair(candidate, properties[candidate]);
+    if (candidate !== 'offset' && candidate !== 'composite') {
+      keyframe.addPropertyValuePair(candidate, properties[candidate]);
+    }
   }
   return keyframe;
 };
@@ -3375,11 +3377,17 @@ CompositedPropertyMap.prototype = {
       if (i === -1) {
         clearValue(this.target, property);
         baseValue = fromCssValue(property, getValue(this.target, property));
+        // TODO: Decide what to do with elements not in the DOM.
+        console.assert(isDefinedAndNotNull(baseValue) && baseValue !== '',
+            'Base value should always be set. ' +
+            'Is the target element in the DOM?');
         i = 0;
       }
       for ( ; i < valuesToComposite.length; i++) {
         baseValue = valuesToComposite[i].compositeOnto(property, baseValue);
       }
+      console.assert(isDefinedAndNotNull(baseValue) && baseValue !== '',
+          'Value should always be set after compositing');
       var isSvgMode = propertyIsSVGAttrib(property, this.target);
       setValue(this.target, property, toCssValue(property, baseValue,
           isSvgMode));
