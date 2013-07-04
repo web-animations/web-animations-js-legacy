@@ -536,6 +536,32 @@
         this.toNextEvent();
     };
 
+    // Capture the real requestAnimationFrame so we can run in "real time" mode
+    // rather than as fast as possible.
+    var raf = window.requestAnimationFrame;
+    var raf_t0 = null;
+    function testharness_raf(ts)
+    {
+        if (raf_t0 === null) {
+            raf_t0 = ts;
+        }
+
+        var t = ts - raf_t0;
+
+        // Do we still have time to go?
+        if (t < testharness_timeline.endTime_) {
+            testharness_timeline.setTime(t);
+            raf(testharness_raf);
+
+        // Have we gone past endTime_? Force the harness to its endTime_.
+        } else {
+            testharness_timeline.setTime(testharness_timeline.endTime_);
+            // Don't continue to raf
+        }
+
+        // FIXME: When reset is called, we need to clear raf_t0
+    }
+
     function testharness_timeline_setup()
     {
         if (!testharness_timeline_enabled)
@@ -559,13 +585,12 @@
                 });
         // Run the test as fast as possible, skipping time.
         } else if ("#auto" == window.location.hash) {
-
             // Need non-zero timeout to allow chrome to run other code.
             setTimeout(testharness_timeline.autorun.bind(testharness_timeline), 1);
 
-        // Don't do anything until the user interacts with the GUI
         } else if("#explore" == window.location.hash ||
                   window.location.hash.length == 0) {
+            raf(testharness_raf);
         } else {
             alert("Unknown start mode.");
         }
