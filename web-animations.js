@@ -209,6 +209,12 @@ Timeline.prototype = {
     }
     else return (otherTime + other._startTime - this._startTime);
   },
+  _pauseAnimationsForTesting: function(pauseAt) {
+    PLAYERS.forEach(function(player) {
+      player.paused = true;
+      player.currentTime = pauseAt;
+    });
+  },
 };
 
 // TODO: Remove dead Players from here?
