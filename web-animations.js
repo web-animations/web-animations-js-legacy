@@ -2153,7 +2153,10 @@ var numberType = {
   add: function(base, delta) { return base + delta; },
   interpolate: interp,
   toCssValue: function(value) { return value + ''; },
-  fromCssValue: function(value) { return value !== '' ? Number(value): null; }
+  fromCssValue: function(value) {
+    var result = Number(value);
+    return isNaN(result) ? undefined : result;
+  },
 };
 
 var integerType = createObject(numberType, {
@@ -2243,7 +2246,7 @@ var percentLengthType = {
         out[singleValue[2]] = Number(singleValue[1]);
         return out;
       }
-      return {};
+      return undefined;
     }
     innards = innards[1];
     var first_time = true;
@@ -2254,7 +2257,7 @@ var percentLengthType = {
       } else {
         var op = operatorRE.exec(innards);
         if (!op) {
-          return {};
+          return undefined;
         }
         if (op[1] == '-') {
           reversed = true;
@@ -2263,7 +2266,7 @@ var percentLengthType = {
       }
       value = valueRE.exec(innards);
       if (!value) {
-        return {};
+        return undefined;
       }
       if (!isDefinedAndNotNull(out[value[2]])) {
         out[value[2]] = 0;
@@ -2316,6 +2319,9 @@ var rectangleType = {
   },
   fromCssValue: function(value) {
     var match = rectangleRE.exec(value);
+    if (!match) {
+      return undefined;
+    }
     return {
       top: percentLengthType.fromCssValue(match[1]),
       right: percentLengthType.fromCssValue(match[2]),
@@ -2429,8 +2435,6 @@ var shadowType = {
       var lengths = [];
       while (parts.length) {
         var part = parts.shift();
-        // TODO: what's the contract for fromCssValue, assuming it returns
-        // undefined if it cannot parse the value (colorType behaves this way)
         color = colorType.fromCssValue(part);
         if (color) {
           result.color = color;
@@ -2458,7 +2462,7 @@ var shadowType = {
       }
       return result;
     });
-    return result.every(isDefined) ? result : [];
+    return result.every(isDefined) ? result : undefined;
   }
 };
 
@@ -3221,7 +3225,7 @@ var transformType = {
   fromCssValue: function(value) {
     // TODO: fix this :)
     if (value === undefined) {
-      return "";
+      return undefined;
     }
     var result = []
     while (value.length > 0) {
@@ -3348,7 +3352,13 @@ var fromCssValue = function(property, value) {
   if (value === cssNeutralValue) {
     return rawNeutralValue;
   }
-  return getType(property).fromCssValue(value);
+  // Currently we'll hit this assert if input to the API is bad. To avoid this,
+  // we should eliminate invalid values when normalizing the list of keyframes.
+  // See the TODO in isSupportedPropertyValue().
+  var result = getType(property).fromCssValue(value);
+  console.assert(isDefinedAndNotNull(result),
+      'Invalid property value "' + value + '" for property "' + property + '"');
+  return result;
 }
 
 // Sentinel values
