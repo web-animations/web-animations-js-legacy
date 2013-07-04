@@ -1597,7 +1597,10 @@ var normalizeKeyframeDictionary = function(properties) {
   for (var i = 0; i < animationProperties.length; i++) {
     // TODO: Apply the IDL attribute to CSS property algorithm.
     var property = animationProperties[i];
-    result[property] = properties[property].toString();
+    // TODO: The spec does not specify how to handle null values.
+    // See https://www.w3.org/Bugs/Public/show_bug.cgi?id=22572
+    result[property] = isDefinedAndNotNull(properties[property]) ?
+        properties[property].toString() : '';
   }
   return result;
 };
@@ -1665,10 +1668,8 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
         frames.splice(i, 1);
       }
     }
-
-    if (frames.length === 0) {
-      return new AddReplaceCompositableValue(rawNeutralValue, 'add');
-    }
+    console.assert(frames.length > 0,
+        'There should always be keyframes for each property');
 
     // Add 0 and 1 keyframes if required.
     if (frames[0].offset !== 0.0) {
@@ -1681,6 +1682,8 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
       keyframe.addPropertyValuePair(property, cssNeutralValue);
       frames.push(keyframe);
     }
+    console.assert(frames.length >= 2,
+        'There should be at least two keyframes including synthetic keyframes');
 
     var startKeyframeIndex;
     var length = frames.length;
@@ -1892,8 +1895,9 @@ KeyframeInternal.prototype = {
 };
 
 KeyframeInternal.isSupportedPropertyValue = function(value) {
-  // TODO: Check against a specific list of values.
-  return typeof value === 'string' || value === cssNeutralValue;
+  console.assert(typeof value === 'string' || value === cssNeutralValue);
+  // TODO: Check this properly!
+  return value !== '';
 };
 
 KeyframeInternal.createFromNormalizedProperties = function(properties) {
@@ -1902,7 +1906,9 @@ KeyframeInternal.createFromNormalizedProperties = function(properties) {
       'Properties must be an object');
   var keyframe = new KeyframeInternal(properties.offset, properties.composite);
   for (var candidate in properties) {
-    keyframe.addPropertyValuePair(candidate, properties[candidate]);
+    if (candidate !== 'offset' && candidate !== 'composite') {
+      keyframe.addPropertyValuePair(candidate, properties[candidate]);
+    }
   }
   return keyframe;
 };
@@ -3371,11 +3377,17 @@ CompositedPropertyMap.prototype = {
       if (i === -1) {
         clearValue(this.target, property);
         baseValue = fromCssValue(property, getValue(this.target, property));
+        // TODO: Decide what to do with elements not in the DOM.
+        console.assert(isDefinedAndNotNull(baseValue) && baseValue !== '',
+            'Base value should always be set. ' +
+            'Is the target element in the DOM?');
         i = 0;
       }
       for ( ; i < valuesToComposite.length; i++) {
         baseValue = valuesToComposite[i].compositeOnto(property, baseValue);
       }
+      console.assert(isDefinedAndNotNull(baseValue) && baseValue !== '',
+          'Value should always be set after compositing');
       var isSvgMode = propertyIsSVGAttrib(property, this.target);
       setValue(this.target, property, toCssValue(property, baseValue,
           isSvgMode));

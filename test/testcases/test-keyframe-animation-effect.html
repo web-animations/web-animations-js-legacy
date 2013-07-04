@@ -18,17 +18,27 @@ limitations under the License.
 <style>
   div.anim {
     left: 100px;
+    top: 200px;
   }
 </style>
 
+<div id="elem"></div>
+
 <div id="anim1" class="anim"></div>
 <div id="anim2" class="anim"></div>
+<div id="anim3" class="anim"></div>
 
 <script src="../bootstrap.js" nochecks></script>
 <script>
 "use strict";
 
 var keyframes = [{left: "200px"}, {left: "300px"}];
+
+test(function() {
+  assert_true(new Animation(document.getElementById("elem"), keyframes).effect
+      instanceof KeyframeAnimationEffect);
+}, "Animation.effect should be an instance of KeyframeAnimationEffect when " +
+    "created with a keyframe dictionary");
 
 test(function() {
   assert_equals(new KeyframeAnimationEffect(keyframes).accumulate, "none");
@@ -152,6 +162,11 @@ test(function() {
 }, "Keyframes should only accept valid values for composite");
 
 test(function() {
+  assert_equals(new KeyframeAnimationEffect({left: null}).getFrames()[0].left,
+      "");
+}, "Keyframe should handle null property values");
+
+test(function() {
   assert_equals(
       typeof new KeyframeAnimationEffect({left: 42}).getFrames()[0].left,
       "string");
@@ -162,6 +177,15 @@ test(function() {
       obj.toString());
 }, "Keyframe property values should be stringified");
 
+timing_test(function() {
+  document.timeline.play(new Animation(
+      document.getElementById("anim2"), {left: null, top: ''}, 1));
+  at(1.0, function() {
+    assert_styles("#anim2", {left: "100px"});
+    assert_styles("#anim2", {top: "200px"});
+  });
+}, "Invalid keyframe property values should be ignored");
+
 test(function() {
   var effect = new KeyframeAnimationEffect(keyframes);
   effect.setFrames({top: "200px"});
@@ -171,12 +195,12 @@ test(function() {
 }, "KeyframeAnimationEffect.setFrames() should replace exisiting keyframes");
 
 timing_test(function() {
-  var animation = new Animation(document.getElementById("anim2"), keyframes, 1);
+  var animation = new Animation(document.getElementById("anim3"), keyframes, 1);
   document.timeline.play(animation);
   at(0.5, function() {
-    assert_styles("#anim2", {left: "250px"});
+    assert_styles("#anim3", {left: "250px"});
     animation.effect.setFrames([{left: "300px"}, {left: "400px"}]);
-    assert_styles("#anim2", {left: "350px"});
+    assert_styles("#anim3", {left: "350px"});
   });
 }, "KeyframeAnimationEffect.setFrames() should immediately update its target");
 
