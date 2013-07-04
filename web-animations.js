@@ -2148,37 +2148,64 @@ var interpArray = function(from, to, f, type) {
   return result;
 };
 
+// TODO: This type does not handle 'inherit'.
 var numberType = {
-  zero: function() { return 0; },
-  add: function(base, delta) { return base + delta; },
-  interpolate: interp,
+  add: function(base, delta) {
+    // If base or delta are 'auto', we fall back to replacement.
+    if (base === 'auto' || delta === 'auto') {
+      return nonNumericType.add(base, delta);
+    }
+    return base + delta;
+  },
+  interpolate: function(from, to, f) {
+    // If from or to are 'auto', we fall back to step interpolation.
+    if (from === 'auto' || to === 'auto') {
+      return nonNumericType.interpolate(from, to);
+    }
+    return interp(from, to, f);
+  },
   toCssValue: function(value) { return value + ''; },
   fromCssValue: function(value) {
+    if (value === 'auto') {
+      return 'auto';
+    }
     var result = Number(value);
     return isNaN(result) ? undefined : result;
   },
 };
 
+// TODO: This type does not handle 'inherit'.
 var integerType = createObject(numberType, {
-  interpolate: function(from, to, f) { return Math.floor(interp(from, to, f)); }
+  interpolate: function(from, to, f) {
+    // If from or to are 'auto', we fall back to step interpolation.
+    if (from === 'auto' || to === 'auto') {
+      return nonNumericType.interpolate(from, to);
+    }
+    return Math.floor(interp(from, to, f));
+  }
 });
 
 var fontWeightType = {
-  zero: function() { return 0; },
   add: function(base, delta) { return base + delta; },
   interpolate: function(from, to, f) {
     return interp(from, to, f);
   },
   toCssValue: function(value) {
-      value = Math.round(value / 100) * 100
-      value = clamp(value, 100, 900);
-      return String(value);
+    value = Math.round(value / 100) * 100
+    value = clamp(value, 100, 900);
+    if (value === 400) {
+      return 'normal';
+    }
+    if (value === 700) {
+      return 'bold';
+    }
+    return String(value);
   },
   fromCssValue: function(value) {
-    if (value == 'normal') {
+    if (value === 'normal') {
       return 400;
     }
-    if (value == 'bold') {
+    if (value === 'bold') {
       return 700;
     }
     // TODO: support lighter / darker ?
@@ -2195,8 +2222,20 @@ var outerCalcRE = /calc\s*\(\s*([^)]*)\)/;
 var valueRE = /\s*(-?[0-9.]*)([a-zA-Z%]*)/;
 var operatorRE = /\s*([+-])/;
 var percentLengthType = {
+  isAuto: function(x) {
+    if ('auto' in x) {
+      console.assert(Object.keys(x).length === 1,
+          'percentLengthType should not contain auto with other values');
+      return true;
+    }
+    return false;
+  },
   zero: function() { return {}; },
   add: function(base, delta) {
+    // If base or delta are 'auto', we fall back to replacement.
+    if (percentLengthType.isAuto(base) || percentLengthType.isAuto(delta)) {
+      return nonNumericType.add(base, delta);
+    }
     var out = {};
     for (var value in base) {
       out[value] = base[value] + (delta[value] || 0);
@@ -2210,6 +2249,10 @@ var percentLengthType = {
     return out;
   },
   interpolate: function(from, to, f) {
+    // If from or to are 'auto', we fall back to step interpolation.
+    if (percentLengthType.isAuto(from) || percentLengthType.isAuto(to)) {
+      return nonNumericType.interpolate(from, to);
+    }
     var out = {};
     for (var value in from) {
       out[value] = interp(from[value], to[value], f);
@@ -2286,14 +2329,6 @@ var percentLengthType = {
 
 var rectangleRE = /rect\(([^,]+),([^,]+),([^,]+),([^)]+)\)/;
 var rectangleType = {
-  zero: function() {
-    return {
-      top: percentLengthType.zero(),
-      right: percentLengthType.zero(),
-      bottom: percentLengthType.zero(),
-      left: percentLengthType.zero()
-    };
-  },
   add: function(base, delta) {
     return {
       top: percentLengthType.add(base.top, delta.top),
@@ -2311,6 +2346,12 @@ var rectangleType = {
     };
   },
   toCssValue: function(value) {
+    if (percentLengthType.isAuto(value.top) &&
+        percentLengthType.isAuto(value.right) &&
+        percentLengthType.isAuto(value.bottom) &&
+        percentLengthType.isAuto(value.left)) {
+      return 'auto';
+    }
     return 'rect(' +
         percentLengthType.toCssValue(value.top) + ',' +
         percentLengthType.toCssValue(value.right) + ',' +
@@ -2318,6 +2359,14 @@ var rectangleType = {
         percentLengthType.toCssValue(value.left) + ')';
   },
   fromCssValue: function(value) {
+    if (value === 'auto') {
+      return {
+        top: percentLengthType.fromCssValue('auto'),
+        right: percentLengthType.fromCssValue('auto'),
+        bottom: percentLengthType.fromCssValue('auto'),
+        left: percentLengthType.fromCssValue('auto'),
+      };
+    }
     var match = rectangleRE.exec(value);
     if (!match) {
       return undefined;
@@ -2333,7 +2382,10 @@ var rectangleType = {
 
 var shadowType = {
   zero: function() {
-      return [];
+    return {
+      hOffset: lengthType.zero(),
+      vOffset: lengthType.zero(),
+    };
   },
   _addSingle: function(base, delta) {
     if (base && delta && base.inset != delta.inset) {
@@ -2416,9 +2468,14 @@ var shadowType = {
   toCssValue: function(value) {
     return value.map(this._toCssValueSingle).join(', ');
   },
+  // TODO: This should handle the case where the color comes before the
+  // lengths.
   fromCssValue: function(value) {
     var shadows = value.split(/\s*,\s*/);
     var result = shadows.map(function(value) {
+      if (value === 'none') {
+        return shadowType.zero();
+      }
       value = value.replace(/^\s+|\s+$/g, '');
       var parts = value.split(/\s+/);
       if (parts.length < 2 || parts.length > 6) {
@@ -2467,9 +2524,6 @@ var shadowType = {
 };
 
 var nonNumericType = {
-  zero: function() {
-    return undefined;
-  },
   add: function(base, delta) {
     return isDefined(delta) ? delta : base;
   },
@@ -3118,7 +3172,6 @@ function n(num) {
 }
 
 var transformType = {
-  zero: function(t) { throw 'UNIMPLEMENTED'; },
   add: function(base, delta) { return base.concat(delta); },
   interpolate: function(from, to, f) {
     var out = []
@@ -3327,15 +3380,18 @@ var add = function(property, base, delta) {
 
 /**
  * Interpolate the given property name (f*100)% of the way from 'from' to 'to'.
- * 'from' and 'to' are both CSS value strings. Requires the target element to
- * be able to determine whether the given property is an SVG attribute or not,
- * as this impacts the conversion of the interpolated value back into a CSS
- * value string for transform translations.
+ * 'from' and 'to' are both raw values already converted from CSS value
+ * strings. Requires the target element to be able to determine whether the
+ * given property is an SVG attribute or not, as this impacts the conversion of
+ * the interpolated value back into a CSS value string for transform
+ * translations.
  *
  * e.g. interpolate('transform', elem, 'rotate(40deg)', 'rotate(50deg)', 0.3);
  *   will return 'rotate(43deg)'.
  */
 var interpolate = function(property, from, to, f) {
+  console.assert(isDefinedAndNotNull(from) && isDefinedAndNotNull(to),
+      'Both to and from values should be specified for interpolation');
   return getType(property).interpolate(from, to, f);
 }
 
@@ -3382,6 +3438,9 @@ CompositableValue.prototype = {
 var AddReplaceCompositableValue = function(value, composite) {
   this.value = value;
   this.composite = composite;
+  console.assert(
+      !(this.value === cssNeutralValue && this.composite === 'replace'),
+      'Should never replace-composite the neutral value');
 };
 
 AddReplaceCompositableValue.prototype =
