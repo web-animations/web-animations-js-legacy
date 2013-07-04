@@ -1597,7 +1597,10 @@ var normalizeKeyframeDictionary = function(properties) {
   for (var i = 0; i < animationProperties.length; i++) {
     // TODO: Apply the IDL attribute to CSS property algorithm.
     var property = animationProperties[i];
-    result[property] = properties[property].toString();
+    // TODO: The spec does not specify how to handle null values.
+    // See https://www.w3.org/Bugs/Public/show_bug.cgi?id=22572
+    result[property] = isDefinedAndNotNull(properties[property]) ?
+        properties[property].toString() : '';
   }
   return result;
 };
@@ -1892,8 +1895,9 @@ KeyframeInternal.prototype = {
 };
 
 KeyframeInternal.isSupportedPropertyValue = function(value) {
-  // TODO: Check against a specific list of values.
-  return typeof value === 'string' || value === cssNeutralValue;
+  console.assert(typeof value === 'string' || value === cssNeutralValue);
+  // TODO: Check this properly!
+  return value !== '';
 };
 
 KeyframeInternal.createFromNormalizedProperties = function(properties) {
