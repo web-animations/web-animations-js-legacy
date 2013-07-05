@@ -21,12 +21,6 @@ Written by Steph McArthur
 
 <script src="../bootstrap.js" nochecks></script>
 <script>
-
-// Don't use a local named requestAnimationFrame, to avoid potential problems
-// with hoisting.
-var raf = window.requestAnimationFrame || window.webkitRequestAnimationFrame ||
-    window.mozRequestAnimationFrame || window.msRequestAnimationFrame;
-
 var animation = new Animation(document.getElementById("anim"), {left: "100px"});
 var dt = document.timeline;
 

@@ -57,13 +57,13 @@ var duration = 2.0;
 video.addEventListener("loadeddata", function() {
   document.timeline.play(new SeqGroup([
     new ParGroup([
-      new Animation(leftCurtain, {width: "0px"}, {duration: duration}),
-      new Animation(rightCurtain, {width: "0px"}, {duration: duration}),
+      new Animation(leftCurtain, {width: "0px"}, {iterationDuration: duration}),
+      new Animation(rightCurtain, {width: "0px"}, {iterationDuration: duration}),
     ]),
     new MediaReference(video, {startDelay: -duration}),
     new ParGroup([
-      new Animation(leftCurtain, {width: "50%"}, {duration: duration}),
-      new Animation(rightCurtain, {width: "50%"}, {duration: duration}),
+      new Animation(leftCurtain, {width: "50%"}, {iterationDuration: duration}),
+      new Animation(rightCurtain, {width: "50%"}, {iterationDuration: duration}),
     ], {startDelay: -duration}),
   ]));
 });
