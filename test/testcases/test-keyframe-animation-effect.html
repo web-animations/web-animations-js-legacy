@@ -34,6 +34,8 @@ limitations under the License.
 <div id="anim7" class="anim"></div>
 <div id="anim8" class="anim"></div>
 <div id="anim9" class="anim"></div>
+<div id="anim10" class="anim"></div>
+<div id="anim11" class="anim"></div>
 
 <script src="../bootstrap.js" nochecks></script>
 <script>
@@ -311,5 +313,55 @@ timing_test(function() {
     assert_styles("#anim9", {left: "650px"});
   });
 }, "Accumulate should not be used on non-positive iterations");
+
+timing_test(function() {
+  document.timeline.play(new Animation(document.getElementById("anim10"), [
+    {left: "100px"},
+    {left: "200px"},
+    {left: "100px"},
+    {left: "300px"},
+    {left: "100px"},
+  ], 1));
+  at(0.0, function() {
+    assert_styles("#anim10", {left: "100px"});
+  });
+  at(0.25, function() {
+    assert_styles("#anim10", {left: "200px"});
+  });
+  at(0.5, function() {
+    assert_styles("#anim10", {left: "100px"});
+  });
+  at(0.75, function() {
+    assert_styles("#anim10", {left: "300px"});
+  });
+  at(1.0, function() {
+    assert_styles("#anim10", {left: "100px"});
+  });
+}, "Keyframes should be distributed evenly between offsets 0 and 1");
+
+timing_test(function() {
+  document.timeline.play(new Animation(document.getElementById("anim11"), [
+    {left: "100px", offset: 0.0},
+    {left: "200px", offset: 0.7},
+    {left: "100px"},
+    {left: "300px"},
+    {left: "100px", offset: 1.0},
+  ], 1));
+  at(0.0, function() {
+    assert_styles("#anim11", {left: "100px"});
+  });
+  at(0.7, function() {
+    assert_styles("#anim11", {left: "200px"});
+  });
+  at(0.8, function() {
+    assert_styles("#anim11", {left: "100px"});
+  });
+  at(0.9, function() {
+    assert_styles("#anim11", {left: "300px"});
+  });
+  at(1.0, function() {
+    assert_styles("#anim11", {left: "100px"});
+  });
+}, "Keyframes should be distributed evenly between keyframes with offsets");
 
 </script>
