@@ -24,6 +24,7 @@ limitations under the License.
 
 <div id="elem"></div>
 
+<div id="anim0" class="anim"></div>
 <div id="anim1" class="anim"></div>
 <div id="anim2" class="anim"></div>
 <div id="anim3" class="anim"></div>
@@ -60,8 +61,16 @@ test(function() {
   assert_equals(effect.accumulate, "sum");
 }, "KeyframeAnimationEffect.accumulate should only accept valid values");
 
-// TODO: Test that setting setting KeyframeAnimationEffect.accumulate causes
-// an immediate update to its target. Need to implement accumulation first!
+timing_test(function() {
+  var animation = new Animation(document.getElementById("anim0"), keyframes,
+      {iterationDuration: 1.0, iterationCount: 2.0});
+  document.timeline.play(animation);
+  at(1.5, function() {
+    assert_styles("#anim0", {left: "250px"});
+    animation.effect.accumulate = "sum";
+    assert_styles("#anim0", {left: "550px"});
+  });
+}, "Setting KeyframeAnimationEffect.accumulate should cause immediate update");
 
 test(function() {
   assert_equals(new KeyframeAnimationEffect(keyframes).composite, "replace");
