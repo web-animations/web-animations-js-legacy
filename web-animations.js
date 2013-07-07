@@ -1666,35 +1666,57 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
   _sample: function(timeFraction, currentIteration, target) {
     var properties = this._getProperties();
     for (var i = 0; i < properties.length; i++) {
-      // TODO: Handle accumulation.
       compositor.setAnimatedValue(target, properties[i],
-          this._sampleForProperty(timeFraction, properties[i]));
+          this._sampleForProperty(timeFraction, currentIteration,
+              properties[i]));
     }
   },
-  _sampleForProperty: function(timeFraction, property) {
-    // Extract the property-specific keyframes.
-    var frames = this._getDistributedKeyframes().slice(0);
-    for (var i = frames.length - 1; i >= 0; i--) {
-      if (!frames[i].hasValueForProperty(property)) {
-        frames.splice(i, 1);
-      }
-    }
-    console.assert(frames.length > 0,
-        'There should always be keyframes for each property');
+  _sampleForProperty: function(timeFraction, currentIteration, property) {
+    var frames = this._propertySpecificKeyframes(property);
+    var unaccumulatedValue =
+        this._unaccumulatedValueForProperty(frames, timeFraction, property);
 
-    // Add 0 and 1 keyframes if required.
-    if (frames[0].offset !== 0.0) {
-      var keyframe = new KeyframeInternal(0.0, 'add');
-      keyframe.addPropertyValuePair(property, cssNeutralValue);
-      frames.unshift(keyframe);
+    // We can only accumulate if this iteration is strictly positive and if all
+    // keyframes use the same composite operation.
+    if (this.accumulate === 'sum' &&
+        currentIteration > 0 &&
+        this._allKeyframesUseSameCompositeOperation(frames)) {
+      // TODO: The spec is vague about the order of addition here when using add
+      // composition.
+      return new AccumulatedCompositableValue(unaccumulatedValue,
+          this._getAccumulatingValue(frames, property), currentIteration);
     }
-    if (frames[frames.length - 1].offset !== 1.0) {
-      var keyframe = new KeyframeInternal(1.0, 'add');
-      keyframe.addPropertyValuePair(property, cssNeutralValue);
-      frames.push(keyframe);
+
+    return unaccumulatedValue;
+  },
+  _getAccumulatingValue: function(frames, property) {
+    console.assert(this._allKeyframesUseSameCompositeOperation(frames),
+        'Accumulation only valid if all frames use same composite operation');
+
+    // This is a BlendedCompositableValue, though because the offset is 1.0, we
+    // could simplify it to an AddReplaceCompositableValue representing the
+    // keyframe at offset 1.0. We don't do this because the spec is likely to
+    // change such that there is no guarantee that a keyframe with offset 1.0 is
+    // present.
+    // TODO: Consider caching this.
+    var unaccumulatedValueAtOffsetOne =
+        this._unaccumulatedValueForProperty(frames, 1.0, property);
+
+    if (this._compositeForKeyframe(frames[0]) === 'add') {
+      return unaccumulatedValueAtOffsetOne;
     }
+
+    // For replace composition, we must evaluate the BlendedCompositableValue
+    // to get a concrete value (note that the choice of underlying value is
+    // irrelevant since it uses replace composition). We then form a new
+    // AddReplaceCompositable value to add-composite this concrete value.
+    console.assert(!unaccumulatedValueAtOffsetOne.dependsOnUnderlyingValue());
+    return new AddReplaceCompositableValue(
+        unaccumulatedValueAtOffsetOne.compositeOnto(property, null), 'add');
+  },
+  _unaccumulatedValueForProperty: function(frames, timeFraction, property) {
     console.assert(frames.length >= 2,
-        'There should be at least two keyframes including synthetic keyframes');
+        'Interpolation requires at least two keyframes');
 
     var startKeyframeIndex;
     var length = frames.length;
@@ -1738,6 +1760,34 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
             this._compositeForKeyframe(endKeyframe)),
         intervalDistance);
   },
+  _propertySpecificKeyframes: function(property) {
+    // TODO: Consider caching these.
+    var distributedFrames = this._getDistributedKeyframes();
+    var frames = [];
+    for (var i = 0; i < distributedFrames.length; i++) {
+      if (distributedFrames[i].hasValueForProperty(property)) {
+        frames.push(distributedFrames[i]);
+      }
+    }
+    console.assert(frames.length > 0,
+        'There should always be keyframes for each property');
+
+    // Add 0 and 1 keyframes if required.
+    if (frames[0].offset !== 0.0) {
+      var keyframe = new KeyframeInternal(0.0, 'add');
+      keyframe.addPropertyValuePair(property, cssNeutralValue);
+      frames.unshift(keyframe);
+    }
+    if (frames[frames.length - 1].offset !== 1.0) {
+      var keyframe = new KeyframeInternal(1.0, 'add');
+      keyframe.addPropertyValuePair(property, cssNeutralValue);
+      frames.push(keyframe);
+    }
+    console.assert(frames.length >= 2,
+        'There should be at least two keyframes including synthetic keyframes');
+
+    return frames;
+  },
   clone: function() {
     var result = new KeyframeAnimationEffect([], this.composite,
         this.accumulate);
@@ -1750,6 +1800,16 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
   _compositeForKeyframe: function(keyframe) {
     return isDefinedAndNotNull(keyframe.composite) ?
         keyframe.composite : this.composite;
+  },
+  _allKeyframesUseSameCompositeOperation: function(keyframes) {
+    console.assert(keyframes.length >= 1, 'This requires at least one keyframe');
+    var composite = this._compositeForKeyframe(keyframes[0]);
+    for (var i = 1; i < keyframes.length; i++) {
+      if (this._compositeForKeyframe(keyframes[i]) !== composite) {
+        return false;
+      }
+    }
+    return true;
   },
   _areKeyframeDictionariesLooselySorted: function() {
     var previousOffset = -Infinity;
@@ -3346,6 +3406,34 @@ BlendedCompositableValue.prototype =
   dependsOnUnderlyingValue: function() {
     return this.beforeValue.dependsOnUnderlyingValue() ||
         this.afterValue.dependsOnUnderlyingValue();
+  },
+});
+
+
+/** @constructor */
+var AccumulatedCompositableValue = function(bottomValue, accumulatingValue,
+    accumulationCount) {
+  this.bottomValue = bottomValue;
+  this.accumulatingValue = accumulatingValue;
+  this.accumulationCount = accumulationCount;
+  console.assert(this.accumulationCount > 0,
+      'Accumumlation count should be strictly positive');
+};
+
+AccumulatedCompositableValue.prototype =
+    createObject(CompositableValue.prototype, {
+  compositeOnto: function(property, underlyingValue) {
+    // The spec defines accumulation recursively, but we do it iteratively to
+    // better handle large numbers of iterations.
+    var result = this.bottomValue.compositeOnto(property, underlyingValue);
+    for (var i = 0; i < this.accumulationCount; i++) {
+      result = this.accumulatingValue.compositeOnto(property, result);
+    }
+    return result;
+  },
+  dependsOnUnderlyingValue: function() {
+    return this.bottomValue.dependsOnUnderlyingValue() &&
+        this.accumulatingValue.dependsOnUnderlyingValue();
   },
 });
 
