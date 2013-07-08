@@ -39,4 +39,36 @@ test(function() {
   }
   assert_unreached();
 }, 'assert_styles invalid arguments');
+
+test(function() {
+  var element = document.createElement('span');
+  document.body.appendChild(element);
+  element.style.left = '-100px';
+  try {
+    assert_styles(element, {left: '100px'});
+  } catch(e) {
+    return;
+  }
+  assert_true(false);
+}, 'assert_styles should handle negative specified values');
+
+test(function() {
+  var element = document.createElement('span');
+  document.body.appendChild(element);
+  element.style.left = '100px';
+  try {
+    assert_styles(element, {left: '-100px'});
+  } catch(e) {
+    return;
+  }
+  assert_true(false);
+}, 'assert_styles should handle negative expected values');
+
+test(function() {
+  var element = document.createElement('span');
+  document.body.appendChild(element);
+  element.style.left = '-100px';
+  assert_styles(element, {left: '-100px'});
+}, 'assert_styles should handle negative values');
+
 </script>

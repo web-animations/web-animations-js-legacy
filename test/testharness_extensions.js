@@ -226,13 +226,13 @@
               }
 
               if (target) {
-                  var t = target.replace(/[^0-9.\s]/g, "");
+                  var t = target.replace(/[^0-9.\s-]/g, "");
               } else {
                   var t = "";
               }
 
               if (curr) {
-                  var c = curr.replace(/[^0-9.\s]/g, "");
+                  var c = curr.replace(/[^0-9.\s-]/g, "");
               } else {
                   var c = "";
               }
