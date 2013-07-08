@@ -15,7 +15,7 @@ limitations under the License.
 -->
 <style>
 iframe {
-  width: 800px;
+  width: 100%;
   height: 600px;
 }
 .textBox {
@@ -27,17 +27,17 @@ input#iframeSrc {
 }
 </style>
 
-<input type="text" id="iframeSrc">
+<input type="text" id="iframeSrc" value="testcases/test-calc.html">
 <button id="load-button" onclick="loadFile()">Load</button><br>
-<iframe id = "frame"></iframe>
+<iframe id="frame" src=""></iframe>
 <div id="userOptions">
-  <input type="text" id="interval"> Interval <br>
+  <input type="number" id="interval" value=1> Interval <br>
   Objects and properties
-  <button id="generate-button" onclick="getSettings()">Generate</button><br>
+  <button id="generate-button" onclick="startGeneratingExpectations()">Generate</button><br>
   <textarea id = "obProp" class = textBox></textarea> <br>
 </div>
 <div> Outputted Checks </div>
-<div id = "checks"></div>
+<pre id = "checks"></pre>
 
 <script>
 "use strict";
@@ -75,8 +75,8 @@ var checks = [];
 var interval;
 
 document.getElementById("interval").value = "1";
-document.getElementById("obProp").value = ".anim, top";
-document.getElementById("iframeSrc").value = "testcases/test-run-fast.html";
+document.getElementById("obProp").value = ".anim, width";
+
 
 function ToCheck(object, initSelctor, properties){
   this.object = object;
@@ -84,32 +84,64 @@ function ToCheck(object, initSelctor, properties){
   this.properties = properties;
 }
 
-function loadFile(){
+function getEndTime(timeline) {
+  var players = timeline.getCurrentPlayers();
+
+  var endTime = 0;
+  players.forEach(function(player) {
+    endTime = Math.max(endTime, player.source.endTime);
+  });
+  return endTime;
+}
+
+function loadFile(mode, callback) {
+  if (typeof mode == 'undefined') {
+    mode = '';
+  }
+
   var file = document.getElementById("iframeSrc").value;
-  document.getElementById("frame").src = file;
+
+  var iframe = document.getElementById("frame");
+  // We want the frame to always reload even if the src is the same, hence we
+  // force it to null and then to the value we want.
+  iframe.onload = function() {
+    iframe.onload = callback;
+    iframe.src = file + '#' + mode;
+  };
+  iframe.src = ''; 
 }
 
-function getSettings(){
-  // Delete previous checks
-  lastRun = false;
-  document.getElementById("checks").innerHTML = "";
-  document.getElementById("frame").src = document.getElementById("iframeSrc").value;
-  interval = Number(document.getElementById("interval").value);
+function startGeneratingExpectations() {
+  var obProp = document.getElementById("obProp").value;
 
-  setTimeout(function(){
-    var obProp = document.getElementById("obProp").value;
-    process(obProp);
-    testLength = 0;
-    window.frames[0].animTestRunner.players.forEach(function(player) {
-      testLength = Math.max(testLength, player.source.animationDuration + player.source.specified.startDelay);
-    });
-    pause();
-    setTestCurrentTime(0);
-    setTimeout(generate, frameTime);
-  }, 100);
+  var output = document.getElementById("checks");
+
+  loadFile("message", function () {
+    findElementsToCheck(obProp);
+
+    output.innerHTML += "timing_test(function() {\n";
+    var testWindow = document.getElementById("frame").contentWindow;
+    var interval = parseFloat(document.getElementById("interval").value);
+
+    var endTime = Infinity;
+
+    var t = 0;
+    while(t <= endTime) {
+      testWindow.testharness_timeline.setTime(t * 1000.0);
+
+      // Update the endTime as it can change dependent on the running animations
+      // and modifications to them.
+      endTime = getEndTime(testWindow.window.document.timeline);
+
+      generate(t);
+      t += interval;
+    }
+
+    output.innerHTML += '}, "Auto generated tests");\n';
+  });
 }
 
-function process(rawString){
+function findElementsToCheck(rawString){
   // Put all checks into checkStack
   checks = [];
   rawString = rawString.split("\n");
@@ -138,13 +170,15 @@ var propertyIsSVGAttrib = function(property, target) {
       property in svgProperties;
 };
 
-function generate(){
+function generate(time){
+  console.log("Generating checks for t=", time);
+
   // Produce checks at this time
-  var time = testCurrentTime;
   for (var x in checks){
-    for(var i = 0; i < checks[x].object.length; i++){
+    var propslist = [];
+    for (var i = 0; i < checks[x].object.length; i++){
       var propsPrint = "{";
-      for(var j in checks[x].properties){
+      for (var j in checks[x].properties){
         var p = checks[x].properties[j];
         var isSVG = propertyIsSVGAttrib(p, checks[x].object[i]);
 
@@ -160,47 +194,40 @@ function generate(){
         } else {
           var value = isSVG ? props[p].value : props[p];
         }
+        console.log("Node:", checks[x].object[i].cloneNode(), "Property:", checks[x].properties[j], "Value:", value);
 
         propsPrint += "'"+ p + "':'" + value + "'";
         if (j < checks[x].properties.length -1) propsPrint += ",";
       }
       propsPrint += "}";
-      printCheck(checks[x].initSelctor, i, propsPrint, time);
+      propslist.push(propsPrint);
     }
-  }
-  // Move the animations to the next point in time
-  setTestCurrentTime(testCurrentTime + interval);
-
-  // Schedule this function to be called on the next frame refresh
-  // We actually want to run one extra test if the last one aligns
-  // exactly with testLength, as fillMode: none can change an
-  // animation value immediately after the animation finishes.
-  if(testCurrentTime <= testLength){
-    setTimeout(generate, frameTime);
-  } else if(!lastRun){
-    lastRun = true;
-    setTimeout(generate, frameTime);
+    printCheck(checks[x].initSelctor, i, propslist, time);
   }
 }
 
 function printCheck(object, number, properties, time){
-  var newCheck = "check(document.querySelectorAll('" + object + "')[" + number +
-      "]," + properties + "," + time + ");";
-  var ouput = document.getElementById("checks");
-  ouput.innerHTML += newCheck + "<br>";
-}
 
-function pause(){
-  window.frames[0].animTestRunner.players.forEach(function(player) {
-    player.paused = true;
-  });
-}
+  var newCheck = "  at(" + time + ", function() {\n" +
+     '    assert_styles("' + object + '",'
 
-function setTestCurrentTime(time){
-  window.frames[0].animTestRunner.players.forEach(function(player) {
-    player.currentTime = time;
-  });
-  testCurrentTime = time;
-}
+  // If all the properties are the same for every object, just pass the list.
+  var allsame = properties.every(function(x) { return x === properties[0] });
+  if (allsame) {
+    newCheck += properties[0] + ");\n";
 
+  } else {
+    // Otherwise give a list with each
+
+    newCheck += " [\n";
+    for (var j in properties) {
+       newCheck += '      ' + properties[j] + ",\n";
+    }
+    newCheck += "    ]);\n";
+  }
+
+  newCheck += '  });';
+  var output = document.getElementById("checks");
+  output.innerHTML += newCheck + "<br>";
+}
 </script>
