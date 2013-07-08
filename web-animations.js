@@ -1891,10 +1891,14 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
           nextOffsetIndex++;
         }
       }
-      var a = this._cachedDistributedKeyframes[lastOffsetIndex].offset;
-      var b = this._cachedDistributedKeyframes[nextOffsetIndex].offset;
-      var n = nextOffsetIndex - lastOffsetIndex - 1;
-      this._cachedDistributedKeyframes[i].offset = a + (b - a) * i / (n + 1);
+      var lastOffset = this._cachedDistributedKeyframes[lastOffsetIndex].offset;
+      var nextOffset = this._cachedDistributedKeyframes[nextOffsetIndex].offset;
+      var unspecifiedKeyframes = nextOffsetIndex - lastOffsetIndex - 1;
+      console.assert(unspecifiedKeyframes > 0);
+      var localIndex = i - lastOffsetIndex;
+      console.assert(localIndex > 0);
+      this._cachedDistributedKeyframes[i].offset = lastOffset +
+          (nextOffset - lastOffset) * localIndex / (unspecifiedKeyframes + 1);
     }
 
     // Remove invalid property values.
