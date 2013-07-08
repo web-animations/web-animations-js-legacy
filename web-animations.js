@@ -2572,10 +2572,10 @@ var namedColors = {
   springgreen: [0, 255, 127, 1], steelblue: [70, 130, 180, 1],
   tan: [210, 180, 140, 1], teal: [0, 128, 128, 1],
   thistle: [216, 191, 216, 1], tomato: [255, 99, 71, 1],
-  turquoise: [64, 224, 208, 1], violet: [238, 130, 238, 1],
-  wheat: [245, 222, 179, 1], white: [255, 255, 255, 1],
-  whitesmoke: [245, 245, 245, 1], yellow: [255, 255, 0, 1],
-  yellowgreen: [154, 205, 50, 1]
+  transparent: [0, 0, 0, 0], turquoise: [64, 224, 208, 1],
+  violet: [238, 130, 238, 1], wheat: [245, 222, 179, 1],
+  white: [255, 255, 255, 1], whitesmoke: [245, 245, 245, 1],
+  yellow: [255, 255, 0, 1], yellowgreen: [154, 205, 50, 1],
 };
 
 var colorType = {
@@ -3249,6 +3249,8 @@ var propertyTypes = {
   'backgroundColor': colorType,
   'backgroundPosition': percentLengthType,
   'borderBottomColor': colorType,
+  'borderBottomLeftRadius': percentLengthType,
+  'borderBottomRightRadius': percentLengthType,
   'borderBottomWidth': lengthType,
   'borderLeftColor': colorType,
   'borderLeftWidth': lengthType,
@@ -3256,11 +3258,12 @@ var propertyTypes = {
   'borderRightWidth': lengthType,
   'borderSpacing': lengthType,
   'borderTopColor': colorType,
+  'borderTopLeftRadius': percentLengthType,
+  'borderTopRightRadius': percentLengthType,
   'borderTopWidth': lengthType,
   'bottom': percentLengthType,
   'clip': rectangleType,
   'color': colorType,
-  'crop': rectangleType,
   'cx': lengthType,
   'fontSize': percentLengthType,
   'fontWeight': fontWeightType,
@@ -3280,7 +3283,7 @@ var propertyTypes = {
   'opacity': numberType,
   'outlineColor': colorType,
   // TODO: not clear why this is an integer in the transitions spec
-  'outlineOffset': integerType,
+  'outlineOffset': lengthType,
   'outlineWidth': lengthType,
   'paddingBottom': lengthType,
   'paddingLeft': lengthType,
@@ -3351,8 +3354,64 @@ var fromCssValue = function(property, value) {
   if (value === cssNeutralValue) {
     return rawNeutralValue;
   }
+  if (value === 'initial') {
+    value = initialValues[property];
+  }
   return getType(property).fromCssValue(value);
 }
+
+var initialValues = {
+  'backgroundColor': 'transparent',
+  'backgroundPosition': '0% 0%',
+  'borderBottomColor': 'black', // FIXME: Should be 'currentColor'.
+  'borderBottomLeftRadius': '0px',
+  'borderBottomRightRadius': '0px',
+  'borderBottomWidth': '3px', // FIXME: Should be 'medium'.
+  'borderLeftColor': 'black', // FIXME: Should be 'currentColor'.
+  'borderLeftWidth': '3px', // FIXME: Should be 'medium'.
+  'borderRightColor': 'black', // FIXME: Should be 'currentColor'.
+  'borderRightWidth': '3px', // FIXME: Should be 'medium'.
+  'borderSpacing': '0px',
+  'borderTopColor': 'black', // FIXME: Should be 'currentColor'.
+  'borderTopLeftRadius': '0px',
+  'borderTopRightRadius': '0px',
+  'borderTopWidth': '3px', // FIXME: Should be 'medium'.
+  'bottom': 'auto',
+  'clip': 'rect(0px, 0px, 0px, 0px)',
+  'color': 'black', // Depends on user agent.
+  'fontSize': '12pt', // FIXME: Should be 'medium'.
+  'fontWeight': 'normal',
+  'height': 'auto',
+  'left': 'auto',
+  'letterSpacing': '0px', // FIXME: Should be 'normal'.
+  'lineHeight': '130%', // FIXME: Should be 'normal'.
+  'marginBottom': '0px',
+  'marginLeft': '0px',
+  'marginRight': '0px',
+  'marginTop': '0px',
+  'maxHeight': '100%', // FIXME: Should be 'none'.
+  'maxWidth': '100%', // FIXME: Should be 'none'.
+  'minHeight': '0px',
+  'minWidth': '0px',
+  'opacity': '1.0',
+  'outlineColor': 'black', // FIXME: Should be 'currentColor'.
+  'outlineOffset': '0px',
+  'outlineWidth': '3px', // FIXME: Should be 'medium'.
+  'paddingBottom': '0px',
+  'paddingLeft': '0px',
+  'paddingRight': '0px',
+  'paddingTop': '0px',
+  'right': 'auto',
+  'textIndent': '0px',
+  'textShadow': '0px 0px 0px transparent', // FIXME: Should be 'none'.
+  'top': 'auto',
+  'transform': '', // FIXME: Should be 'none'.
+  'verticalAlign': '0px', // FIXME: Should be 'baseline'.
+  'visibility': 'visible',
+  'width': 'auto',
+  'wordSpacing': '0px', // FIXME: Should be 'normal'.
+  'zIndex': '0',  // FIXME: Should be 'auto'.
+};
 
 // Sentinel values
 var cssNeutralValue = {};
