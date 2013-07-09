@@ -3366,7 +3366,6 @@ var propertyTypes = {
   'minWidth': percentLengthType,
   'opacity': numberType,
   'outlineColor': colorType,
-  // TODO: not clear why this is an integer in the transitions spec
   'outlineOffset': lengthType,
   'outlineWidth': lengthType,
   'paddingBottom': lengthType,
