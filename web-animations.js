@@ -3360,56 +3360,56 @@ var fromCssValue = function(property, value) {
 }
 
 var initialValues = {
-  'backgroundColor': 'transparent',
-  'backgroundPosition': '0% 0%',
-  'borderBottomColor': 'black', // TODO: Should be 'currentColor'.
-  'borderBottomLeftRadius': '0px',
-  'borderBottomRightRadius': '0px',
-  'borderBottomWidth': '3px', // TODO: Should be 'medium'.
-  'borderLeftColor': 'black', // TODO: Should be 'currentColor'.
-  'borderLeftWidth': '3px', // TODO: Should be 'medium'.
-  'borderRightColor': 'black', // TODO: Should be 'currentColor'.
-  'borderRightWidth': '3px', // TODO: Should be 'medium'.
-  'borderSpacing': '0px',
-  'borderTopColor': 'black', // TODO: Should be 'currentColor'.
-  'borderTopLeftRadius': '0px',
-  'borderTopRightRadius': '0px',
-  'borderTopWidth': '3px', // TODO: Should be 'medium'.
-  'bottom': 'auto',
-  'clip': 'rect(0px, 0px, 0px, 0px)',
-  'color': 'black', // Depends on user agent.
-  'fontSize': '12pt', // TODO: Should be 'medium'.
-  'fontWeight': 'normal',
-  'height': 'auto',
-  'left': 'auto',
-  'letterSpacing': '0px', // TODO: Should be 'normal'.
-  'lineHeight': '130%', // TODO: Should be 'normal'.
-  'marginBottom': '0px',
-  'marginLeft': '0px',
-  'marginRight': '0px',
-  'marginTop': '0px',
-  'maxHeight': '100%', // TODO: Should be 'none'.
-  'maxWidth': '100%', // TODO: Should be 'none'.
-  'minHeight': '0px',
-  'minWidth': '0px',
-  'opacity': '1.0',
-  'outlineColor': 'black', // TODO: Should be 'currentColor'.
-  'outlineOffset': '0px',
-  'outlineWidth': '3px', // TODO: Should be 'medium'.
-  'paddingBottom': '0px',
-  'paddingLeft': '0px',
-  'paddingRight': '0px',
-  'paddingTop': '0px',
-  'right': 'auto',
-  'textIndent': '0px',
-  'textShadow': '0px 0px 0px transparent', // TODO: Should be 'none'.
-  'top': 'auto',
-  'transform': '', // TODO: Should be 'none'.
-  'verticalAlign': '0px', // TODO: Should be 'baseline'.
-  'visibility': 'visible',
-  'width': 'auto',
-  'wordSpacing': '0px', // TODO: Should be 'normal'.
-  'zIndex': '0',  // TODO: Should be 'auto'.
+  backgroundColor: 'transparent',
+  backgroundPosition: '0% 0%',
+  borderBottomColor: 'black', // TODO: Should be 'currentColor'.
+  borderBottomLeftRadius: '0px',
+  borderBottomRightRadius: '0px',
+  borderBottomWidth: '3px', // TODO: Should be 'medium'.
+  borderLeftColor: 'black', // TODO: Should be 'currentColor'.
+  borderLeftWidth: '3px', // TODO: Should be 'medium'.
+  borderRightColor: 'black', // TODO: Should be 'currentColor'.
+  borderRightWidth: '3px', // TODO: Should be 'medium'.
+  borderSpacing: '0px',
+  borderTopColor: 'black', // TODO: Should be 'currentColor'.
+  borderTopLeftRadius: '0px',
+  borderTopRightRadius: '0px',
+  borderTopWidth: '3px', // TODO: Should be 'medium'.
+  bottom: 'auto',
+  clip: 'rect(0px, 0px, 0px, 0px)',
+  color: 'black', // Depends on user agent.
+  fontSize: '12pt', // TODO: Should be 'medium'.
+  fontWeight: 'normal',
+  height: 'auto',
+  left: 'auto',
+  letterSpacing: '0px', // TODO: Should be 'normal'.
+  lineHeight: '130%', // TODO: Should be 'normal'.
+  marginBottom: '0px',
+  marginLeft: '0px',
+  marginRight: '0px',
+  marginTop: '0px',
+  maxHeight: '100%', // TODO: Should be 'none'.
+  maxWidth: '100%', // TODO: Should be 'none'.
+  minHeight: '0px',
+  minWidth: '0px',
+  opacity: '1.0',
+  outlineColor: 'black', // TODO: Should be 'currentColor'.
+  outlineOffset: '0px',
+  outlineWidth: '3px', // TODO: Should be 'medium'.
+  paddingBottom: '0px',
+  paddingLeft: '0px',
+  paddingRight: '0px',
+  paddingTop: '0px',
+  right: 'auto',
+  textIndent: '0px',
+  textShadow: '0px 0px 0px transparent', // TODO: Should be 'none'.
+  top: 'auto',
+  transform: '', // TODO: Should be 'none'.
+  verticalAlign: '0px', // TODO: Should be 'baseline'.
+  visibility: 'visible',
+  width: 'auto',
+  wordSpacing: '0px', // TODO: Should be 'normal'.
+  zIndex: '0',  // TODO: Should be 'auto'.
 };
 
 // Sentinel values
