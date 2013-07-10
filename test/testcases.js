@@ -17,6 +17,7 @@ var tests = [
   'test-fill-values.html',
   'test-font-weight.html',
   'test-getcurrent.html',
+  'test-initial.html',
   'test-integer.html',
   'test-iteration-start.html',
   'test-iterations-alternate.html',
