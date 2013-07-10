@@ -127,6 +127,11 @@ function startGeneratingExpectations() {
 
     var t = 0;
     while(t <= endTime) {
+      if (typeof testWindow.testharness_timeline == 'undefined') {
+          alert("Your page doesn't contain testharness_timline, can not generate anything!");
+          return;
+      }
+
       testWindow.testharness_timeline.setTime(t * 1000.0);
 
       // Update the endTime as it can change dependent on the running animations
