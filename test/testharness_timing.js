@@ -345,7 +345,6 @@
         }
     };
 
-
     /**
      * Return the current time in milliseconds.
      */
@@ -548,8 +547,14 @@
 
         var t = ts - raf_t0;
 
+        var endTime = testharness_timeline.endTime_;
+        // If we have no events paste t=0, endTime is going to be zero. Instead
+        // make the test run for 2 minutes.
+        if (endTime == 0)
+            endTime = 120e3;
+
         // Do we still have time to go?
-        if (t < testharness_timeline.endTime_) {
+        if (t < endTime) {
             testharness_timeline.setTime(t);
             raf(testharness_raf);
 
@@ -564,9 +569,6 @@
 
     function testharness_timeline_setup()
     {
-        if (!testharness_timeline_enabled)
-            return;
-
         testharness_timeline.createGUI(document.getElementsByTagName("body")[0]);
         testharness_timeline.start();
         testharness_timeline.updateGUI();
@@ -607,10 +609,7 @@
         window.at = orig_at;
     }
 
-    var testharness_timeline_enabled = false;
     function timing_test(f, desc) {
-        testharness_timeline_enabled = true;
-
         /**
          * at function inside a timing_test function allows testing things at a
          * given time rather then onload.
@@ -658,8 +657,6 @@
      */
     function at(seconds, f)
     {
-        testharness_timeline_enabled = true;
-
         assert_true(typeof seconds == "number", "at's first argument shoud be a number.");
         assert_true(typeof f == "function", "at's second argument should be a function.");
 
