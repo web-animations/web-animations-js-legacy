@@ -3071,6 +3071,7 @@ function interpolateTransformsWithMatrices(from, to, f) {
 function interpTransformValue(from, to, f) {
   var type = from.t ? from.t : to.t;
   switch(type) {
+    // Transforms with unitless parameters.
     case 'rotate':
     case 'rotateX':
     case 'rotateY':
@@ -3083,9 +3084,11 @@ function interpTransformValue(from, to, f) {
     case 'skew':
     case 'skewX':
     case 'skewY':
+    case 'matrix':
       return {t: type, d:interp(from.d, to.d, f, type)};
       break;
     default:
+      // Transforms with lengthType parameters.
       var result = [];
       if (from.d && to.d) {
         var maxVal = Math.max(from.d.length, to.d.length);
