@@ -45,6 +45,7 @@ var tests = [
   'test-dynamic-load.html',
   'test-events.html',
   'test-getcurrent.html',
+  'test-initial.html',
   'test-keyframe-animation-effect.html',
   'test-keyframe-composite-operation.html',
   'test-null-target.html',
