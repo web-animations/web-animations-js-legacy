@@ -2209,7 +2209,11 @@ var fontWeightType = {
       return 700;
     }
     // TODO: support lighter / darker ?
-    return Number(value);
+    var out = Number(value);
+    if (isNaN(out) || out < 100 || out > 900 || out % 100 !== 0) {
+      return undefined;
+    }
+    return out;
   }
 };
 
@@ -2371,12 +2375,16 @@ var rectangleType = {
     if (!match) {
       return undefined;
     }
-    return {
+    var out = {
       top: percentLengthType.fromCssValue(match[1]),
       right: percentLengthType.fromCssValue(match[2]),
       bottom: percentLengthType.fromCssValue(match[3]),
       left: percentLengthType.fromCssValue(match[4])
     };
+    if (out.top && out.right && out.bottom && out.left) {
+      return out;
+    }
+    return undefined;
   }
 };
 
@@ -2501,6 +2509,9 @@ var shadowType = {
           break;
         }
         var length = lengthType.fromCssValue(part);
+        if (!length) {
+          return undefined;
+        }
         lengths.push(length);
       }
       if (lengths.length < 2 || lengths.length > 4) {
@@ -2535,7 +2546,7 @@ var nonNumericType = {
   },
   fromCssValue: function(value) {
     return value;
-  }
+  },
 };
 
 var visibilityType = createObject(nonNumericType, {
@@ -2550,6 +2561,12 @@ var visibilityType = createObject(nonNumericType, {
       return to;
     }
     return 'visible';
+  },
+  fromCssValue: function(value) {
+    if (['visible', 'hidden', 'collapse'].indexOf(value) !== -1) {
+      return value;
+    }
+    return undefined;
   },
 });
 
@@ -2653,11 +2670,19 @@ var colorType = {
   fromCssValue: function(value) {
     var r = rgbRE.exec(value);
     if (r) {
-      return [Number(r[1]), Number(r[2]), Number(r[3]), 1];
+      var out = [Number(r[1]), Number(r[2]), Number(r[3]), 1];
+      if (out.some(isNaN)) {
+        return undefined;
+      }
+      return out;
     }
     r = rgbaRE.exec(value);
     if (r) {
-      return [Number(r[1]), Number(r[2]), Number(r[3]), Number(r[4])];
+      var out = [Number(r[1]), Number(r[2]), Number(r[3]), Number(r[4])];
+      if (out.some(isNaN)) {
+        return undefined;
+      }
+      return out;
     }
     return namedColors[value];
   }
