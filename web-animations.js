@@ -2285,33 +2285,40 @@ var percentLengthType = {
     return s;
   },
   fromCssValue: function(value) {
+    return percentLengthType.consumeStringValue(value).value;
+  },
+  consumeStringValue: function(value) {
     var out = {}
-    var innards = outerCalcRE.exec(value);
-    if (!innards) {
+    var calcMatch = outerCalcRE.exec(value);
+    if (!calcMatch) {
       var singleValue = valueRE.exec(value);
       if (singleValue && (singleValue.length == 3)) {
         out[singleValue[2]] = Number(singleValue[1]);
-        return out;
+        return {
+          value: out,
+          remaining: value.substring(singleValue[0]),
+        };
       }
       return undefined;
     }
-    innards = innards[1];
+    var remaining = value.substring(calcMatch[0].length);
+    var calcInnards = calcMatch[1];
     var first_time = true;
     while (true) {
       var reversed = false;
       if (first_time) {
         first_time = false;
       } else {
-        var op = operatorRE.exec(innards);
+        var op = operatorRE.exec(calcInnards);
         if (!op) {
           return undefined;
         }
         if (op[1] == '-') {
           reversed = true;
         }
-        innards = innards.substring(op[0].length);
+        calcInnards = calcInnards.substring(op[0].length);
       }
-      value = valueRE.exec(innards);
+      value = valueRE.exec(calcInnards);
       if (!value) {
         return undefined;
       }
@@ -2323,12 +2330,49 @@ var percentLengthType = {
       } else {
         out[value[2]] += Number(value[1]);
       }
-      innards = innards.substring(value[0].length);
-      if (/\s*/.exec(innards)[0].length == innards.length) {
-        return out;
+      calcInnards = calcInnards.substring(value[0].length);
+      if (/\s*/.exec(calcInnards)[0].length == calcInnards.length) {
+        return {
+          value: out,
+          remaining: remaining
+        };
       }
     }
-  }
+  },
+};
+
+var singleOrPairPercentLengthType = {
+  zero: function() { return [{}]; },
+  add: function(base, delta) {
+    return [
+      percentLengthType.add(base[0], delta[0]),
+      percentLengthType.add(base[1], delta[1]),
+    ];
+  },
+  interpolate: function(from, to, f) {
+    return [
+      percentLengthType.interpolate(from[0], to[0], f),
+      percentLengthType.interpolate(from[1], to[1], f),
+    ];
+  },
+  toCssValue: function(value) {
+    return value.map(percentLengthType.toCssValue).join(' ');
+  },
+  fromCssValue: function(value) {
+    var result = percentLengthType.consumeStringValue(value);
+    if (!isDefinedAndNotNull(result.value)) {
+      return undefined;
+    }
+    var first = result.value;
+    if (result.remaining.trim()) {
+      result = percentLengthType.consumeStringValue(result[1]);
+      if (isDefinedAndNotNull(result.value)) {
+        return [first, result.value];
+      }
+      return undefined;
+    }
+    return [first, first];
+  },
 };
 
 var rectangleRE = /rect\(([^,]+),([^,]+),([^,]+),([^)]+)\)/;
@@ -3329,7 +3373,7 @@ var transformType = {
 
 var propertyTypes = {
   'backgroundColor': colorType,
-  'backgroundPosition': percentLengthType,
+  'backgroundPosition': singleOrPairPercentLengthType,
   'borderBottomColor': colorType,
   'borderBottomWidth': lengthType,
   'borderLeftColor': colorType,
