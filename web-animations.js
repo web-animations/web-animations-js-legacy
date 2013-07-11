@@ -2285,9 +2285,16 @@ var percentLengthType = {
     return s;
   },
   fromCssValue: function(value) {
-    return percentLengthType.consumeStringValue(value).value;
+    var result = percentLengthType.consumeValueFromString(value)
+    if (result) {
+      return result.value;
+    }
+    return undefined;
   },
-  consumeStringValue: function(value) {
+  consumeValueFromString: function(value) {
+    if (!isDefinedAndNotNull(value)) {
+      return undefined;
+    }
     var out = {}
     var calcMatch = outerCalcRE.exec(value);
     if (!calcMatch) {
@@ -2296,7 +2303,7 @@ var percentLengthType = {
         out[singleValue[2]] = Number(singleValue[1]);
         return {
           value: out,
-          remaining: value.substring(singleValue[0]),
+          remaining: value.substring(singleValue[0].length),
         };
       }
       return undefined;
@@ -2339,10 +2346,18 @@ var percentLengthType = {
       }
     }
   },
+  negate: function(value) {
+    var out = {};
+    for (var unit in value) {
+      out[unit] = -value[unit];
+    }
+    return out;
+  }
 };
 
-var singleOrPairPercentLengthType = {
-  zero: function() { return [{}]; },
+var positionKeywordRE = /\s*left|\s*center|\s*right|\s*top|\s*bottom/i;
+var positionType = {
+  zero: function() { return [ { px: 0 }, { px: 0 } ]; },
   add: function(base, delta) {
     return [
       percentLengthType.add(base[0], delta[0]),
@@ -2359,21 +2374,199 @@ var singleOrPairPercentLengthType = {
     return value.map(percentLengthType.toCssValue).join(' ');
   },
   fromCssValue: function(value) {
-    var result = percentLengthType.consumeStringValue(value);
-    if (!isDefinedAndNotNull(result.value)) {
-      return undefined;
+    var tokens = [];
+    var remaining = value;
+    while (true) {
+      var result = positionType.consumeTokenFromString(remaining);
+      if (!result) {
+        return undefined;
+      }
+      tokens.push(result.value);
+      remaining = result.remaining;
+      if (!result.remaining.trim()) {
+        break;
+      }
+      if (tokens.length >= 4) {
+        return undefined;
+      }
     }
-    var first = result.value;
-    if (result.remaining.trim()) {
-      result = percentLengthType.consumeStringValue(result[1]);
-      if (isDefinedAndNotNull(result.value)) {
-        return [first, result.value];
+
+    if (tokens.length === 1) {
+      var token = tokens[0];
+      var percentLength = positionType.resolveHorizontalToken(token);
+      if (percentLength) {
+        return [
+          percentLength,
+          positionType.resolveToken('center'),
+        ];
+      }
+      var percentLength = positionType.resolveVerticalToken(token);
+      if (percentLength) {
+        return [
+          positionType.resolveToken('center'),
+          percentLength,
+        ];
       }
       return undefined;
     }
-    return [first, first];
+
+    if (tokens.length === 2) {
+      var out;
+      var percentLength = positionType.resolveHorizontalToken(tokens[0]);
+      if (percentLength) {
+        out = [
+          percentLength,
+          positionType.resolveVerticalToken(tokens[1]),
+        ];
+        if (isDefinedAndNotNull(out[1])) {
+          return out;
+        }
+      }
+      // From spec: "Note that a pair of keywords can be reordered while a
+      //            combination of keyword and length or percentage cannot.
+      //            So ‘center left’ is valid while ‘50% left’ is not."
+      if (!tokens.every(positionType.isKeyword)) {
+        return undefined;
+      }
+      out = [
+        positionType.resolveHorizontalToken(tokens[1]),
+        positionType.resolveVerticalToken(tokens[0]),
+      ];
+      return out.every(isDefinedAndNotNull) ? out : undefined;
+    }
+
+    var horizontalPercentLength = undefined;
+    var nextIndex = tokens.indexOf('left') + 1;
+    if (nextIndex) {
+      if (!tokens[nextIndex] || positionType.isKeyword(tokens[nextIndex])) {
+        return undefined;
+      }
+      horizontalPercentLength = tokens[nextIndex];
+    }
+    nextIndex = tokens.indexOf('right') + 1;
+    if (nextIndex) {
+      if (horizontalPercentLength || !tokens[nextIndex] ||
+          positionType.isKeyword(tokens[nextIndex])) {
+        return undefined;
+      }
+      horizontalPercentLength = tokens[nextIndex].negate();
+      horizontalPercentLength['%'] += 100;
+    }
+
+    var verticalPercentLength = undefined;
+    nextIndex = tokens.indexOf('top') + 1;
+    if (nextIndex) {
+      if (!tokens[nextIndex] || positionType.isKeyword(tokens[nextIndex])) {
+        return undefined;
+      }
+      verticalPercentLength = tokens[nextIndex];
+    }
+    nextIndex = tokens.indexOf('right') + 1;
+    if (nextIndex) {
+      if (verticalPercentLength || !tokens[nextIndex] ||
+          positionType.isKeyword(tokens[nextIndex])) {
+        return undefined;
+      }
+      verticalPercentLength = tokens[nextIndex].negate();
+      verticalPercentLength['%'] += 100;
+    }
+
+    if (!horizontalPercentLength && !verticalPercentLength) {
+      return undefined;
+    }
+    if (tokens.indexOf('center') !== -1) {
+      if (!horizontalPercentLength) {
+        horizontalPercentLength = positionType.resolveToken('center');
+      } else if (!verticalPercentLength) {
+        verticalPercentLength = positionType.resolveToken('center');
+      } else {
+        return undefined;
+      }
+    }
+    return [horizontalPercentLength, verticalPercentLength];
   },
+  consumeTokenFromString: function(value) {
+    var keywordMatch = positionKeywordRE.exec(value);
+    if (keywordMatch) {
+      return {
+        value: keywordMatch[0].trim().toLowerCase(),
+        remaining: value.substring(keywordMatch[0].length),
+      }
+    }
+    return percentLengthType.consumeValueFromString(value);
+  },
+  resolveToken: function(token) {
+    if (typeof token === 'string') {
+      return {
+        left: percentLengthType.fromCssValue('0%'),
+        center: percentLengthType.fromCssValue('50%'),
+        right: percentLengthType.fromCssValue('100%'),
+        top: percentLengthType.fromCssValue('0%'),
+        bottom: percentLengthType.fromCssValue('100%'),
+      }[token];
+    }
+    return token;
+  },
+  resolveHorizontalToken: function(token) {
+    if (typeof token === 'string') {
+      return {
+        left: positionType.resolveToken('left'),
+        center: positionType.resolveToken('center'),
+        right: positionType.resolveToken('right'),
+      }[token];
+    }
+    return token;
+  },
+  resolveVerticalToken: function(token) {
+    if (typeof token === 'string') {
+      return {
+        center: positionType.resolveToken('center'),
+        top: positionType.resolveToken('top'),
+        bottom: positionType.resolveToken('bottom'),
+      }[token];
+    }
+    return token;
+  },
+  isKeyword: function(token) {
+    return typeof token === 'string' && !!positionKeywordRE.exec(token);
+  }
+  isEdgeKeyword: function(token) {
+    return positionType.isKeyword(token) && token !== 'center';
+  }
 };
+
+// Spec: http://dev.w3.org/csswg/css-backgrounds/#background-position
+var positionListType = {
+  zero: function() { return [ positionType.zero() ]; },
+  add: function(base, delta) {
+    var out = [];
+    var maxLength = Math.max(base.length, delta.length);
+    for (var i = 0; i < maxLength; i++) {
+      var basePosition = base[i] ? base[i] : zero();
+      var deltaPosition = delta[i] ? delta[i] : zero();
+      out.push(positionType.add(basePosition, deltaPosition));
+    }
+    return out;
+  },
+  interpolate: function(from, to, f) {
+    var out = [];
+    var maxLength = Math.max(from.length, to.length);
+    for (var i = 0; i < maxLength; i++) {
+      var fromPosition = from[i] ? from[i] : zero();
+      var toPosition = to[i] ? to[i] : zero();
+      out.push(positionType.interpolate(fromPosition, toPosition, f));
+    }
+    return out;
+  },
+  toCssValue: function(value) {
+    return value.map(positionType.toCssValue).join(', ');
+  },
+  fromCssValue: function(value) {
+    var positionValues = value.split(',');
+    var out = positionValues.map(positionType.fromCssValue);
+    return out.every(isDefinedAndNotNull) ? out : undefined;
+  },
+}
 
 var rectangleRE = /rect\(([^,]+),([^,]+),([^,]+),([^)]+)\)/;
 var rectangleType = {
@@ -3373,7 +3566,7 @@ var transformType = {
 
 var propertyTypes = {
   'backgroundColor': colorType,
-  'backgroundPosition': singleOrPairPercentLengthType,
+  'backgroundPosition': positionListType,
   'borderBottomColor': colorType,
   'borderBottomWidth': lengthType,
   'borderLeftColor': colorType,
