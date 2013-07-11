@@ -171,6 +171,12 @@
         var reference_element = (object.namespaceURI == svg_namespace_uri) ?
             document.createElementNS(svg_namespace_uri, object.nodeName) :
             document.createElement(object.nodeName);
+        var computedObjectStyle = getComputedStyle(object, null);
+        for (var i = 0; i < computedObjectStyle.length; i++) {
+            var property = computedObjectStyle[i];
+            reference_element.style.setProperty(property,
+                computedObjectStyle.getPropertyValue(property));
+        }
         reference_element.style.position = "absolute";
         if (object.parentNode) {
             object.parentNode.appendChild(reference_element);
@@ -205,7 +211,7 @@
               } else {
                   reference_element.style[output_prop_name] = prop_value;
 
-                  var current_style = getComputedStyle(object, null);
+                  var current_style = computedObjectStyle;
                   var target_style = getComputedStyle(reference_element, null);
               }
 
