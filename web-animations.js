@@ -2222,9 +2222,10 @@ var fontWeightType = {
 // input. While we are restrictive with the transform property
 // name, we need to be able to read underlying calc values from
 // computedStyle so can't easily restrict the input here.
-var outerCalcRE = /calc\s*\(\s*([^)]*)\)/;
-var valueRE = /\s*(-?[0-9.]*)([a-zA-Z%]*)/;
-var operatorRE = /\s*([+-])/;
+var outerCalcRE = /^\s*(-webkit-)?calc\s*\(\s*([^)]*)\)/;
+var valueRE = /^\s*(-?[0-9]+(\.[0-9])?[0-9]*)([a-zA-Z%]*)/;
+var operatorRE = /^\s*([+-])/;
+var autoRE = /^\s*auto/i;
 var percentLengthType = {
   isAuto: function(x) {
     if ('auto' in x) {
@@ -2287,51 +2288,254 @@ var percentLengthType = {
     return s;
   },
   fromCssValue: function(value) {
+    var result = percentLengthType.consumeValueFromString(value)
+    if (result) {
+      return result.value;
+    }
+    return undefined;
+  },
+  consumeValueFromString: function(value) {
+    if (!isDefinedAndNotNull(value)) {
+      return undefined;
+    }
+    var autoMatch = autoRE.exec(value);
+    if (autoMatch) {
+      return {
+        value: { auto: true },
+        remaining: value.substring(autoMatch[0].length),
+      };
+    }
     var out = {}
-    var innards = outerCalcRE.exec(value);
-    if (!innards) {
+    var calcMatch = outerCalcRE.exec(value);
+    if (!calcMatch) {
       var singleValue = valueRE.exec(value);
-      if (singleValue && (singleValue.length == 3)) {
-        out[singleValue[2]] = Number(singleValue[1]);
-        return out;
+      if (singleValue && (singleValue.length == 4)) {
+        out[singleValue[3]] = Number(singleValue[1]);
+        return {
+          value: out,
+          remaining: value.substring(singleValue[0].length),
+        };
       }
       return undefined;
     }
-    innards = innards[1];
+    var remaining = value.substring(calcMatch[0].length);
+    var calcInnards = calcMatch[2];
     var first_time = true;
     while (true) {
       var reversed = false;
       if (first_time) {
         first_time = false;
       } else {
-        var op = operatorRE.exec(innards);
+        var op = operatorRE.exec(calcInnards);
         if (!op) {
           return undefined;
         }
         if (op[1] == '-') {
           reversed = true;
         }
-        innards = innards.substring(op[0].length);
+        calcInnards = calcInnards.substring(op[0].length);
       }
-      value = valueRE.exec(innards);
+      value = valueRE.exec(calcInnards);
       if (!value) {
         return undefined;
       }
-      if (!isDefinedAndNotNull(out[value[2]])) {
-        out[value[2]] = 0;
+      var valueUnit = value[3];
+      var valueNumber = Number(value[1]);
+      if (!isDefinedAndNotNull(out[valueUnit])) {
+        out[valueUnit] = 0;
       }
       if (reversed) {
-        out[value[2]] -= Number(value[1]);
+        out[valueUnit] -= valueNumber;
       } else {
-        out[value[2]] += Number(value[1]);
+        out[valueUnit] += valueNumber;
       }
-      innards = innards.substring(value[0].length);
-      if (/\s*/.exec(innards)[0].length == innards.length) {
-        return out;
+      calcInnards = calcInnards.substring(value[0].length);
+      if (/\s*/.exec(calcInnards)[0].length == calcInnards.length) {
+        return {
+          value: out,
+          remaining: remaining
+        };
       }
     }
+  },
+  negate: function(value) {
+    var out = {};
+    for (var unit in value) {
+      out[unit] = -value[unit];
+    }
+    return out;
   }
 };
+
+var positionKeywordRE = /^\s*left|^\s*center|^\s*right|^\s*top|^\s*bottom/i;
+var positionType = {
+  zero: function() { return [ { px: 0 }, { px: 0 } ]; },
+  add: function(base, delta) {
+    return [
+      percentLengthType.add(base[0], delta[0]),
+      percentLengthType.add(base[1], delta[1]),
+    ];
+  },
+  interpolate: function(from, to, f) {
+    return [
+      percentLengthType.interpolate(from[0], to[0], f),
+      percentLengthType.interpolate(from[1], to[1], f),
+    ];
+  },
+  toCssValue: function(value) {
+    return value.map(percentLengthType.toCssValue).join(' ');
+  },
+  fromCssValue: function(value) {
+    var tokens = [];
+    var remaining = value;
+    while (true) {
+      var result = positionType.consumeTokenFromString(remaining);
+      if (!result) {
+        return undefined;
+      }
+      tokens.push(result.value);
+      remaining = result.remaining;
+      if (!result.remaining.trim()) {
+        break;
+      }
+      if (tokens.length >= 4) {
+        return undefined;
+      }
+    }
+
+    if (tokens.length === 1) {
+      var token = tokens[0];
+      return (positionType.isHorizontalToken(token) ?
+          [token, 'center'] : ['center', token]).map(positionType.resolveToken);
+    }
+
+    if (tokens.length === 2 &&
+        positionType.isHorizontalToken(tokens[0]) &&
+        positionType.isVerticalToken(tokens[1])) {
+      return tokens.map(positionType.resolveToken);
+    }
+
+    if (tokens.filter(positionType.isKeyword).length != 2) {
+      return undefined;
+    }
+
+    var out = [undefined, undefined];
+    var center = false;
+    for (var i = 0; i < tokens.length; i++) {
+      var token = tokens[i];
+      if (!positionType.isKeyword(token)) {
+        return undefined;
+      }
+      if (token === 'center') {
+        if (center) {
+          return undefined;
+        }
+        center = true;
+        continue
+      }
+      var axis = Number(positionType.isVerticalToken(token));
+      if (out[axis]) {
+        return undefined;
+      }
+      if (i === tokens.length - 1 || positionType.isKeyword(tokens[i + 1])) {
+        out[axis] = positionType.resolveToken(token);
+        continue;
+      }
+      var percentLength = tokens[++i];
+      if (token === 'bottom' || token === 'right') {
+        percentLength = percentLengthType.negate(percentLength);
+        percentLength['%'] = (percentLength['%'] || 0) + 100;
+      }
+      out[axis] = percentLength;
+    }
+    if (center) {
+      if (!out[0]) {
+        out[0] = positionType.resolveToken('center');
+      } else if (!out[1]) {
+        out[1] = positionType.resolveToken('center');
+      } else {
+        return undefined;
+      }
+    }
+    return out.every(isDefinedAndNotNull) ? out : undefined;
+  },
+  consumeTokenFromString: function(value) {
+    var keywordMatch = positionKeywordRE.exec(value);
+    if (keywordMatch) {
+      return {
+        value: keywordMatch[0].trim().toLowerCase(),
+        remaining: value.substring(keywordMatch[0].length),
+      }
+    }
+    return percentLengthType.consumeValueFromString(value);
+  },
+  resolveToken: function(token) {
+    if (typeof token === 'string') {
+      return percentLengthType.fromCssValue({
+        left: '0%',
+        center: '50%',
+        right: '100%',
+        top: '0%',
+        bottom: '100%',
+      }[token]);
+    }
+    return token;
+  },
+  isHorizontalToken: function(token) {
+    if (typeof token === 'string') {
+      return token in { left: true, center: true, right: true };
+    }
+    return true;
+  },
+  isVerticalToken: function(token) {
+    if (typeof token === 'string') {
+      return token in { top: true, center: true, bottom: true };
+    }
+    return true;
+  },
+  isKeyword: function(token) {
+    return typeof token === 'string';
+  }
+};
+
+// Spec: http://dev.w3.org/csswg/css-backgrounds/#background-position
+var positionListType = {
+  zero: function() { return [ positionType.zero() ]; },
+  add: function(base, delta) {
+    var out = [];
+    var maxLength = Math.max(base.length, delta.length);
+    for (var i = 0; i < maxLength; i++) {
+      var basePosition = base[i] ? base[i] : positionType.zero();
+      var deltaPosition = delta[i] ? delta[i] : positionType.zero();
+      out.push(positionType.add(basePosition, deltaPosition));
+    }
+    return out;
+  },
+  interpolate: function(from, to, f) {
+    var out = [];
+    var maxLength = Math.max(from.length, to.length);
+    for (var i = 0; i < maxLength; i++) {
+      var fromPosition = from[i] ? from[i] : positionType.zero();
+      var toPosition = to[i] ? to[i] : positionType.zero();
+      out.push(positionType.interpolate(fromPosition, toPosition, f));
+    }
+    return out;
+  },
+  toCssValue: function(value) {
+    return value.map(positionType.toCssValue).join(', ');
+  },
+  fromCssValue: function(value) {
+    if (!isDefinedAndNotNull(value)) {
+      return undefined;
+    }
+    if (!value.trim()) {
+      return [positionType.fromCssValue('0% 0%')];
+    }
+    var positionValues = value.split(',');
+    var out = positionValues.map(positionType.fromCssValue);
+    return out.every(isDefinedAndNotNull) ? out : undefined;
+  },
+}
 
 var rectangleRE = /rect\(([^,]+),([^,]+),([^,]+),([^)]+)\)/;
 var rectangleType = {
@@ -3331,7 +3535,7 @@ var transformType = {
 
 var propertyTypes = {
   'backgroundColor': colorType,
-  'backgroundPosition': percentLengthType,
+  'backgroundPosition': positionListType,
   'borderBottomColor': colorType,
   'borderBottomWidth': lengthType,
   'borderLeftColor': colorType,
@@ -3657,7 +3861,7 @@ var initializeIfSVGAndUninitialized = function(property, target) {
         }
       };
     }
-    if(!isDefinedAndNotNull(target._actuals[property])) {
+    if (!isDefinedAndNotNull(target._actuals[property])) {
       var baseVal = target.getAttribute(property);
       target._actuals[property] = 0;
       target._bases[property] = baseVal;
@@ -3968,6 +4172,9 @@ window.Timeline = Timeline;
 window.TimingEvent = TimingEvent;
 window.TimingGroup = TimingGroup;
 
-window._WebAnimationsTestingUtilities = { _constructorToken : constructorToken }
+window._WebAnimationsTestingUtilities = {
+  _constructorToken : constructorToken,
+  _positionListType: positionListType,
+};
 
 })();
