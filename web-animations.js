@@ -219,12 +219,15 @@ Timeline.prototype = {
 
 // TODO: Remove dead Players from here?
 var PLAYERS = [];
+var sortedPlayers;
+var playerSequenceNumber = 0;
 
 /** @constructor */
 var Player = function(token, source, timeline) {
   if (token !== constructorToken) {
     throw new TypeError('Illegal constructor');
   }
+  this._sequenceNumber = playerSequenceNumber++;
   this._timeline = timeline;
   this._startTime =
       this.timeline.currentTime === null ? 0 : this.timeline.currentTime;
@@ -238,6 +241,7 @@ var Player = function(token, source, timeline) {
   this._lastCurrentTime = undefined;
 
   PLAYERS.push(this);
+  sortedPlayers = null;
   maybeRestartAnimation();
 };
 
@@ -304,6 +308,7 @@ Player.prototype = {
       // This seeks by updating _startTime and hence the currentTime. It does not
       // affect _drift.
       this._startTime = startTime;
+      sortedPlayers = null;
       this._update();
       maybeRestartAnimation();
     } finally {
@@ -1604,7 +1609,7 @@ var normalizeKeyframeDictionary = function(properties) {
   }
   // TODO: Remove prefixed properties if the unprefixed version is also
   // supported and present.
-  animationProperties = animationProperties.sort();
+  animationProperties = animationProperties.sort(playerSortFunction);
   for (var i = 0; i < animationProperties.length; i++) {
     // TODO: Apply the IDL attribute to CSS property algorithm.
     var property = animationProperties[i];
@@ -3718,21 +3723,6 @@ var rafScheduled = false;
 
 var compositor = new Compositor();
 
-// ECMA Script does not guarantee stable sort.
-var stableSort = function(array, compare) {
-  var indicesAndValues = array.map(function(value, index) {
-    return { index: index, value: value };
-  });
-  indicesAndValues.sort(function(a, b) {
-    var r = compare(a.value, b.value);
-    return r == 0 ? a.index - b.index : r;
-  });
-  array.length = 0;
-  array.push.apply(array, indicesAndValues.map(function(value) {
-    return value.value;
-  }));
-};
-
 var usePerformanceTiming =
     typeof performance === "object" &&
     typeof performance.timing === "object" &&
@@ -3858,6 +3848,11 @@ var repeatLastTick = function() {
   }
 };
 
+var playerSortFunction = function(a, b) {
+  var result = a.startTime - b.startTime;
+  return result != 0 ? result : a._sequenceNumber - b.sequenceNumber;
+};
+
 var lastTickTime;
 var ticker = function(rafTime, isRepeat) {
   // Don't tick till the page is loaded....
@@ -3871,12 +3866,11 @@ var ticker = function(rafTime, isRepeat) {
     cachedClockTimeMillis = rafTime;
   }
 
-  // Get animations for this sample. We order first by Player start time, and
-  // second by DFS order within each Player's tree.
-  var sortedPlayers = PLAYERS;
-  stableSort(sortedPlayers, function(a, b) {
-    return a.startTime - b.startTime;
-  });
+  // Get animations for this sample. We order by Player then by DFS order within
+  // each Player's tree.
+  if (!sortedPlayers) {
+    sortedPlayers = PLAYERS.sort(playerSortFunction);
+  }
   var finished = true;
   var paused = true;
   var animations = [];
