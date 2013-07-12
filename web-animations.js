@@ -3542,6 +3542,7 @@ AccumulatedCompositableValue.prototype =
 /** @constructor */
 var CompositedPropertyMap = function(target) {
   this.properties = {};
+  this.baseValues = {};
   this.target = target;
 };
 
@@ -3555,35 +3556,40 @@ CompositedPropertyMap.prototype = {
     }
     this.properties[property].push(animValue);
   },
-  applyAnimatedValues: function() {
+  stackDependsOnUnderlyingValue: function(stack) {
+    for (var i = 0; i < stack.length; i++) {
+      if (!stack[i].dependsOnUnderlyingValue()) {
+        return false;
+      }
+    }
+    return true;
+  },
+  clear: function() {
     for (var property in this.properties) {
-      var valuesToComposite = this.properties[property];
-      if (valuesToComposite.length === 0) {
-        // property has previously been set but no value was accumulated
-        // in this animation iteration. Reset value and stop tracking.
+      if (this.stackDependsOnUnderlyingValue(this.properties[property])) {
         clearValue(this.target, property);
-        delete this.properties[property];
-        continue;
       }
-      var i = valuesToComposite.length - 1;
-      for ( ; i >= 0; i--) {
-        if (!valuesToComposite[i].dependsOnUnderlyingValue()) {
-          break;
-        }
-      }
-      // the baseValue will either be retrieved after clearing the value or
-      // will be overwritten by a 'replace'.
-      var baseValue = undefined;
-      if (i === -1) {
-        clearValue(this.target, property);
-        baseValue = fromCssValue(property, getValue(this.target, property));
+    }
+  },
+  captureBaseValues: function() {
+    for (var property in this.properties) {
+      if (this.stackDependsOnUnderlyingValue(this.properties[property])) {
+        var baseValue = fromCssValue(property, getValue(this.target, property));
         // TODO: Decide what to do with elements not in the DOM.
         console.assert(isDefinedAndNotNull(baseValue) && baseValue !== '',
             'Base value should always be set. ' +
             'Is the target element in the DOM?');
-        i = 0;
+        this.baseValues[property] = baseValue;
+      } else {
+        this.baseValues[property] = undefined;
       }
-      for ( ; i < valuesToComposite.length; i++) {
+    }
+  },
+  applyAnimatedValues: function() {
+    for (var property in this.properties) {
+      var valuesToComposite = this.properties[property];
+      var baseValue = this.baseValues[property];
+      for (var i = 0; i < valuesToComposite.length; i++) {
         baseValue = valuesToComposite[i].compositeOnto(property, baseValue);
       }
       console.assert(isDefinedAndNotNull(baseValue) && baseValue !== '',
@@ -3612,6 +3618,14 @@ Compositor.prototype = {
     }
   },
   applyAnimatedValues: function() {
+    for (var i = 0; i < this.targets.length; i++) {
+      var target = this.targets[i];
+      target._anim_properties.clear();
+    }
+    for (var i = 0; i < this.targets.length; i++) {
+      var target = this.targets[i];
+      target._anim_properties.captureBaseValues();
+    }
     for (var i = 0; i < this.targets.length; i++) {
       var target = this.targets[i];
       target._anim_properties.applyAnimatedValues();
