@@ -2225,6 +2225,7 @@ var fontWeightType = {
 var outerCalcRE = /^\s*(-webkit-|-moz-|-o-|-ms-)?calc\s*\(\s*([^)]*)\)/;
 var valueRE = /^\s*(-?[0-9]+(\.[0-9])?[0-9]*)([a-zA-Z%]*)/;
 var operatorRE = /^\s*([+-])/;
+var autoRE = /^\s*auto/i;
 var percentLengthType = {
   isAuto: function(x) {
     if ('auto' in x) {
@@ -2294,6 +2295,13 @@ var percentLengthType = {
   consumeValueFromString: function(value) {
     if (!isDefinedAndNotNull(value)) {
       return undefined;
+    }
+    var autoMatch = autoRE.exec(value);
+    if (autoMatch) {
+      return {
+        value: { auto: true },
+        remaining: value.substring(autoMatch[0].length),
+      };
     }
     var out = {}
     var calcMatch = outerCalcRE.exec(value);
