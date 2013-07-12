@@ -2222,7 +2222,7 @@ var fontWeightType = {
 // input. While we are restrictive with the transform property
 // name, we need to be able to read underlying calc values from
 // computedStyle so can't easily restrict the input here.
-var outerCalcRE = /^\s*calc\s*\(\s*([^)]*)\)/;
+var outerCalcRE = /^\s*(-webkit-|-moz-|-o-|-ms-)?calc\s*\(\s*([^)]*)\)/;
 var valueRE = /^\s*(-?[0-9]+(\.[0-9])?[0-9]*)([a-zA-Z%]*)/;
 var operatorRE = /^\s*([+-])/;
 var percentLengthType = {
@@ -2309,7 +2309,7 @@ var percentLengthType = {
       return undefined;
     }
     var remaining = value.substring(calcMatch[0].length);
-    var calcInnards = calcMatch[1];
+    var calcInnards = calcMatch[2];
     var first_time = true;
     while (true) {
       var reversed = false;
