@@ -31,7 +31,7 @@ var testParse = function(input, expected) {
     }
     assert_equals(result, expected);
   }, 'from/toCssValue: ' + input);
-}
+};
 
 var testAdd = function(base, delta, expected) {
   test(function() {
@@ -39,7 +39,7 @@ var testAdd = function(base, delta, expected) {
         positionListType.fromCssValue(base),
         positionListType.fromCssValue(delta))), expected);
   }, 'add: ' + base + ' with ' + delta);
-}
+};
 
 var testInterpolate = function(from, to, fraction, expected) {
   test(function() {
@@ -48,7 +48,7 @@ var testInterpolate = function(from, to, fraction, expected) {
         positionListType.fromCssValue(to),
         fraction)), expected);
   }, 'interpolate: ' + from + ' to ' + to + ' at ' + fraction);
-}
+};
 
 testParse('', '0% 0%');
 
@@ -201,38 +201,14 @@ testParse('aoeu, asdf', undefined);
 testParse('laft 45%', undefined);
 
 
-testAdd(
-  '0px 0px',
-  '0px 0px',
-  '0px 0px');
-testAdd(
-  '0px 0px',
-  '25px 50px',
-  '25px 50px');
-testAdd(
-  '0% 0%',
-  '25% 50%',
-  '25% 50%');
-testAdd(
-  '10px 10%',
-  '25px 50%',
-  '35px 60%');
-testAdd(
-  '10px 10%',
-  '25% 50px',
-  'calc(10px + 25%) calc(10% + 50px)');
-testAdd(
-  '10px 10%, 10px 10px',
-  '25px 50%',
-  '35px 60%, 10px 10px');
-testAdd(
-  '10px 10%',
-  '25px 50%, 10px 10px',
-  '35px 60%, 10px 10px');
-testAdd(
-  '10px 10%, 5% 5px',
-  '25px 50%, 20% 20px',
-  '35px 60%, 25% 25px');
+testAdd('0px 0px', '0px 0px', '0px 0px');
+testAdd('0px 0px', '25px 50px', '25px 50px');
+testAdd('0% 0%', '25% 50%', '25% 50%');
+testAdd('10px 10%', '25px 50%', '35px 60%');
+testAdd('10px 10%', '25% 50px', 'calc(10px + 25%) calc(10% + 50px)');
+testAdd('10px 10%, 10px 10px', '25px 50%', '35px 60%, 10px 10px');
+testAdd('10px 10%', '25px 50%, 10px 10px', '35px 60%, 10px 10px');
+testAdd('10px 10%, 5% 5px', '25px 50%, 20% 20px', '35px 60%, 25% 25px');
 
 
 testInterpolate(

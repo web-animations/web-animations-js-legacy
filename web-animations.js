@@ -2337,13 +2337,15 @@ var percentLengthType = {
       if (!value) {
         return undefined;
       }
-      if (!isDefinedAndNotNull(out[value[3]])) {
-        out[value[3]] = 0;
+      var valueUnit = value[3];
+      var valueNumber = Number(value[1]);
+      if (!isDefinedAndNotNull(out[valueUnit])) {
+        out[valueUnit] = 0;
       }
       if (reversed) {
-        out[value[3]] -= Number(value[1]);
+        out[valueUnit] -= valueNumber;
       } else {
-        out[value[3]] += Number(value[1]);
+        out[valueUnit] += valueNumber;
       }
       calcInnards = calcInnards.substring(value[0].length);
       if (/\s*/.exec(calcInnards)[0].length == calcInnards.length) {
