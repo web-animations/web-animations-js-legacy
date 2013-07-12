@@ -3657,7 +3657,7 @@ var initializeIfSVGAndUninitialized = function(property, target) {
     }
     if(!isDefinedAndNotNull(target._actuals[property])) {
       var baseVal = target.getAttribute(property);
-      target._actuals[property] = 0;
+      target._actuals[property] = baseVal;
       target._bases[property] = baseVal;
 
       Object.defineProperty(target.actuals, property, configureDescriptor({
