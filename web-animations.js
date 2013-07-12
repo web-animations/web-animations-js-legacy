@@ -2222,9 +2222,9 @@ var fontWeightType = {
 // input. While we are restrictive with the transform property
 // name, we need to be able to read underlying calc values from
 // computedStyle so can't easily restrict the input here.
-var outerCalcRE = /calc\s*\(\s*([^)]*)\)/;
-var valueRE = /\s*(-?[0-9.]*)([a-zA-Z%]*)/;
-var operatorRE = /\s*([+-])/;
+var outerCalcRE = /^\s*calc\s*\(\s*([^)]*)\)/;
+var valueRE = /^\s*(-?[0-9](\.[0-9])?[0-9]*)([a-zA-Z%]*)/;
+var operatorRE = /^\s*([+-])/;
 var percentLengthType = {
   isAuto: function(x) {
     if ('auto' in x) {
@@ -2299,8 +2299,8 @@ var percentLengthType = {
     var calcMatch = outerCalcRE.exec(value);
     if (!calcMatch) {
       var singleValue = valueRE.exec(value);
-      if (singleValue && (singleValue.length == 3)) {
-        out[singleValue[2]] = Number(singleValue[1]);
+      if (singleValue && (singleValue.length == 4)) {
+        out[singleValue[3]] = Number(singleValue[1]);
         return {
           value: out,
           remaining: value.substring(singleValue[0].length),
@@ -2329,13 +2329,13 @@ var percentLengthType = {
       if (!value) {
         return undefined;
       }
-      if (!isDefinedAndNotNull(out[value[2]])) {
-        out[value[2]] = 0;
+      if (!isDefinedAndNotNull(out[value[3]])) {
+        out[value[3]] = 0;
       }
       if (reversed) {
-        out[value[2]] -= Number(value[1]);
+        out[value[3]] -= Number(value[1]);
       } else {
-        out[value[2]] += Number(value[1]);
+        out[value[3]] += Number(value[1]);
       }
       calcInnards = calcInnards.substring(value[0].length);
       if (/\s*/.exec(calcInnards)[0].length == calcInnards.length) {
@@ -2355,7 +2355,7 @@ var percentLengthType = {
   }
 };
 
-var positionKeywordRE = /\s*left|\s*center|\s*right|\s*top|\s*bottom/i;
+var positionKeywordRE = /^\s*left|^\s*center|^\s*right|^\s*top|^\s*bottom/i;
 var positionType = {
   zero: function() { return [ { px: 0 }, { px: 0 } ]; },
   add: function(base, delta) {
@@ -2393,97 +2393,60 @@ var positionType = {
 
     if (tokens.length === 1) {
       var token = tokens[0];
-      var percentLength = positionType.resolveHorizontalToken(token);
-      if (percentLength) {
-        return [
-          percentLength,
-          positionType.resolveToken('center'),
-        ];
-      }
-      var percentLength = positionType.resolveVerticalToken(token);
-      if (percentLength) {
-        return [
-          positionType.resolveToken('center'),
-          percentLength,
-        ];
-      }
-      return undefined;
+      return (positionType.isHorizontalToken(token) ?
+        [token, 'center'] : ['center', token]).map(positionType.resolveToken);
     }
 
     if (tokens.length === 2) {
-      var out;
-      var percentLength = positionType.resolveHorizontalToken(tokens[0]);
-      if (percentLength) {
-        out = [
-          percentLength,
-          positionType.resolveVerticalToken(tokens[1]),
-        ];
-        if (isDefinedAndNotNull(out[1])) {
-          return out;
-        }
+      if (positionType.isHorizontalToken(tokens[0]) &&
+          positionType.isVerticalToken(tokens[1])) {
+        return tokens.map(positionType.resolveToken);
       }
-      // From spec: "Note that a pair of keywords can be reordered while a
-      //            combination of keyword and length or percentage cannot.
-      //            So ‘center left’ is valid while ‘50% left’ is not."
-      if (!tokens.every(positionType.isKeyword)) {
-        return undefined;
-      }
-      out = [
-        positionType.resolveHorizontalToken(tokens[1]),
-        positionType.resolveVerticalToken(tokens[0]),
-      ];
-      return out.every(isDefinedAndNotNull) ? out : undefined;
     }
 
-    var horizontalPercentLength = undefined;
-    var nextIndex = tokens.indexOf('left') + 1;
-    if (nextIndex) {
-      if (!tokens[nextIndex] || positionType.isKeyword(tokens[nextIndex])) {
-        return undefined;
-      }
-      horizontalPercentLength = tokens[nextIndex];
-    }
-    nextIndex = tokens.indexOf('right') + 1;
-    if (nextIndex) {
-      if (horizontalPercentLength || !tokens[nextIndex] ||
-          positionType.isKeyword(tokens[nextIndex])) {
-        return undefined;
-      }
-      horizontalPercentLength = tokens[nextIndex].negate();
-      horizontalPercentLength['%'] += 100;
-    }
-
-    var verticalPercentLength = undefined;
-    nextIndex = tokens.indexOf('top') + 1;
-    if (nextIndex) {
-      if (!tokens[nextIndex] || positionType.isKeyword(tokens[nextIndex])) {
-        return undefined;
-      }
-      verticalPercentLength = tokens[nextIndex];
-    }
-    nextIndex = tokens.indexOf('right') + 1;
-    if (nextIndex) {
-      if (verticalPercentLength || !tokens[nextIndex] ||
-          positionType.isKeyword(tokens[nextIndex])) {
-        return undefined;
-      }
-      verticalPercentLength = tokens[nextIndex].negate();
-      verticalPercentLength['%'] += 100;
-    }
-
-    if (!horizontalPercentLength && !verticalPercentLength) {
+    if (tokens.filter(positionType.isKeyword).length != 2) {
       return undefined;
     }
-    if (tokens.indexOf('center') !== -1) {
-      if (!horizontalPercentLength) {
-        horizontalPercentLength = positionType.resolveToken('center');
-      } else if (!verticalPercentLength) {
-        verticalPercentLength = positionType.resolveToken('center');
+
+    var out = [undefined, undefined];
+    var center = false;
+    for (var i = 0; i < tokens.length; i++) {
+      var token = tokens[i];
+      if (!positionType.isKeyword(token)) {
+        return undefined;
+      }
+      if (token === 'center') {
+        if (center) {
+          return undefined;
+        }
+        center = true;
+        continue
+      }
+      var axis = Number(positionType.isVerticalToken(token));
+      if (out[axis]) {
+        return undefined;
+      }
+      if (i === tokens.length - 1 || positionType.isKeyword(tokens[i + 1])) {
+        out[axis] = positionType.resolveToken(token);
+        continue;
+      }
+      var percentLength = tokens[++i];
+      if (token === 'bottom' || token === 'right') {
+        percentLength = percentLengthType.negate(percentLength);
+        percentLength['%'] = ('%' in percentLength ? percentLength['%'] : 0) + 100;
+      }
+      out[axis] = percentLength;
+    }
+    if (center) {
+      if (!out[0]) {
+        out[0] = positionType.resolveToken('center');
+      } else if (!out[1]) {
+        out[1] = positionType.resolveToken('center');
       } else {
         return undefined;
       }
     }
-    return [horizontalPercentLength, verticalPercentLength];
+    return out.every(isDefinedAndNotNull) ? out : undefined;
   },
   consumeTokenFromString: function(value) {
     var keywordMatch = positionKeywordRE.exec(value);
@@ -2497,41 +2460,26 @@ var positionType = {
   },
   resolveToken: function(token) {
     if (typeof token === 'string') {
-      return {
-        left: percentLengthType.fromCssValue('0%'),
-        center: percentLengthType.fromCssValue('50%'),
-        right: percentLengthType.fromCssValue('100%'),
-        top: percentLengthType.fromCssValue('0%'),
-        bottom: percentLengthType.fromCssValue('100%'),
-      }[token];
+      return percentLengthType.fromCssValue({
+        left: '0%', center: '50%', right: '100%', top: '0%', bottom: '100%'
+      }[token]);
     }
     return token;
   },
-  resolveHorizontalToken: function(token) {
+  isHorizontalToken: function(token) {
     if (typeof token === 'string') {
-      return {
-        left: positionType.resolveToken('left'),
-        center: positionType.resolveToken('center'),
-        right: positionType.resolveToken('right'),
-      }[token];
+      return token in { left: true, center: true, right: true };
     }
-    return token;
+    return true;
   },
-  resolveVerticalToken: function(token) {
+  isVerticalToken: function(token) {
     if (typeof token === 'string') {
-      return {
-        center: positionType.resolveToken('center'),
-        top: positionType.resolveToken('top'),
-        bottom: positionType.resolveToken('bottom'),
-      }[token];
+      return token in { top: true, center: true, bottom: true };
     }
-    return token;
+    return true;
   },
   isKeyword: function(token) {
-    return typeof token === 'string' && !!positionKeywordRE.exec(token);
-  }
-  isEdgeKeyword: function(token) {
-    return positionType.isKeyword(token) && token !== 'center';
+    return typeof token === 'string';
   }
 };
 
@@ -2562,6 +2510,12 @@ var positionListType = {
     return value.map(positionType.toCssValue).join(', ');
   },
   fromCssValue: function(value) {
+    if (!isDefinedAndNotNull(value)) {
+      return undefined;
+    }
+    if (!value.trim()) {
+      return [positionType.fromCssValue('0% 0%')];
+    }
     var positionValues = value.split(',');
     var out = positionValues.map(positionType.fromCssValue);
     return out.every(isDefinedAndNotNull) ? out : undefined;
@@ -3878,7 +3832,7 @@ var initializeIfSVGAndUninitialized = function(property, target) {
         }
       };
     }
-    if(!isDefinedAndNotNull(target._actuals[property])) {
+    if (!isDefinedAndNotNull(target._actuals[property])) {
       var baseVal = target.getAttribute(property);
       target._actuals[property] = 0;
       target._bases[property] = baseVal;
@@ -4189,6 +4143,9 @@ window.Timeline = Timeline;
 window.TimingEvent = TimingEvent;
 window.TimingGroup = TimingGroup;
 
-window._WebAnimationsTestingUtilities = { _constructorToken : constructorToken }
+window._WebAnimationsTestingUtilities = {
+  _constructorToken : constructorToken,
+  _positionListType: positionListType,
+};
 
 })();
