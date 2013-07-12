@@ -2222,7 +2222,7 @@ var fontWeightType = {
 // input. While we are restrictive with the transform property
 // name, we need to be able to read underlying calc values from
 // computedStyle so can't easily restrict the input here.
-var outerCalcRE = /^\s*(-webkit-|-moz-|-o-|-ms-)?calc\s*\(\s*([^)]*)\)/;
+var outerCalcRE = /^\s*(-webkit-)?calc\s*\(\s*([^)]*)\)/;
 var valueRE = /^\s*(-?[0-9]+(\.[0-9])?[0-9]*)([a-zA-Z%]*)/;
 var operatorRE = /^\s*([+-])/;
 var autoRE = /^\s*auto/i;
@@ -2407,11 +2407,10 @@ var positionType = {
         [token, 'center'] : ['center', token]).map(positionType.resolveToken);
     }
 
-    if (tokens.length === 2) {
-      if (positionType.isHorizontalToken(tokens[0]) &&
-          positionType.isVerticalToken(tokens[1])) {
-        return tokens.map(positionType.resolveToken);
-      }
+    if (tokens.length === 2 &&
+        positionType.isHorizontalToken(tokens[0]) &&
+        positionType.isVerticalToken(tokens[1])) {
+      return tokens.map(positionType.resolveToken);
     }
 
     if (tokens.filter(positionType.isKeyword).length != 2) {
@@ -2471,7 +2470,11 @@ var positionType = {
   resolveToken: function(token) {
     if (typeof token === 'string') {
       return percentLengthType.fromCssValue({
-        left: '0%', center: '50%', right: '100%', top: '0%', bottom: '100%'
+        left: '0%',
+        center: '50%',
+        right: '100%',
+        top: '0%',
+        bottom: '100%',
       }[token]);
     }
     return token;

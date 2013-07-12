@@ -20,7 +20,7 @@ limitations under the License.
 
 <script src="../bootstrap.js"></script>
 <script>
-"use strict";
+'use strict';
 
 var positionListType = window._WebAnimationsTestingUtilities._positionListType;
 var testParse = function(input, expected) {
@@ -41,13 +41,13 @@ var testAdd = function(base, delta, expected) {
   }, 'add: ' + base + ' with ' + delta);
 };
 
-var testInterpolate = function(from, to, fraction, expected) {
+var testInterpolate = function(parameters) {
   test(function() {
     assert_equals(positionListType.toCssValue(positionListType.interpolate(
-        positionListType.fromCssValue(from),
-        positionListType.fromCssValue(to),
-        fraction)), expected);
-  }, 'interpolate: ' + from + ' to ' + to + ' at ' + fraction);
+        positionListType.fromCssValue(parameters.from),
+        positionListType.fromCssValue(parameters.to),
+        parameters.fraction)), parameters.expected);
+  }, 'interpolate: ' + parameters.from + ' to ' + parameters.to + ' at ' + parameters.fraction);
 };
 
 testParse('', '0% 0%');
@@ -211,45 +211,45 @@ testAdd('10px 10%', '25px 50%, 10px 10px', '35px 60%, 10px 10px');
 testAdd('10px 10%, 5% 5px', '25px 50%, 20% 20px', '35px 60%, 25% 25px');
 
 
-testInterpolate(
-  '0px 0px',
-  '0px 0px',
-  0.2,
-  '0px 0px');
-testInterpolate(
-  '0px 0px',
-  '25px 50px',
-  0.2,
-  '5px 10px');
-testInterpolate(
-  '0% 0%',
-  '25% 50%',
-  0.2,
-  '5% 10%');
-testInterpolate(
-  '10px 10%',
-  '25px 50%',
-  0.2,
-  '13px 18%');
-testInterpolate(
-  '10px 10%',
-  '25% 50px',
-  0.2,
-  'calc(8px + 5%) calc(8% + 10px)');
-testInterpolate(
-  '10px 10%, 10px 10px',
-  '25px 50%',
-  0.2,
-  '13px 18%, 8px 8px');
-testInterpolate(
-  '10px 10%',
-  '25px 50%, 10px 10px',
-  0.2,
-  '13px 18%, 2px 2px');
-testInterpolate(
-  '10px 10%, 5% 5px',
-  '25px 50%, 20% 20px',
-  0.2,
-  '13px 18%, 8% 8px');
+testInterpolate({
+  from: '0px 0px',
+  to: '0px 0px',
+  fraction: 0.2,
+  expected: '0px 0px'});
+testInterpolate({
+  from: '0px 0px',
+  to: '25px 50px',
+  fraction: 0.2,
+  expected: '5px 10px'});
+testInterpolate({
+  from: '0% 0%',
+  to: '25% 50%',
+  fraction: 0.2,
+  expected: '5% 10%'});
+testInterpolate({
+  from: '10px 10%',
+  to: '25px 50%',
+  fraction: 0.2,
+  expected: '13px 18%'});
+testInterpolate({
+  from: '10px 10%',
+  to: '25% 50px',
+  fraction: 0.2,
+  expected: 'calc(8px + 5%) calc(8% + 10px)'});
+testInterpolate({
+  from: '10px 10%, 10px 10px',
+  to: '25px 50%',
+  fraction: 0.2,
+  expected: '13px 18%, 8px 8px'});
+testInterpolate({
+  from: '10px 10%',
+  to: '25px 50%, 10px 10px',
+  fraction: 0.2,
+  expected: '13px 18%, 2px 2px'});
+testInterpolate({
+  from: '10px 10%, 5% 5px',
+  to: '25px 50%, 20% 20px',
+  fraction: 0.2,
+  expected: '13px 18%, 8% 8px'});
 
 </script>
