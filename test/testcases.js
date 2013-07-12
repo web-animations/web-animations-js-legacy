@@ -3,6 +3,7 @@
 var tests = [
   'impl-test-player-sees-handlers.html',
   'impl-test-totimelinetime.html',
+  'impl-unit-test-position-type.html',
   'test-bounds.html',
   'test-calc.html',
   'test-color.html',

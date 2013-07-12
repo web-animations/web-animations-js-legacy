@@ -1,0 +1,74 @@
+<!--
+Copyright 2012 Google Inc. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<!DOCTYPE html>
+<style>
+.anim {
+  width: 200px;
+  height: 200px;
+  background-color: #777;
+  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAYAAACtWK6eAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8AAAAAMyd88wAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB90HCwMjOJO4j+YAAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIEdJTVBXgQ4XAAADJUlEQVR42u3d3W0iMQCF0etVCqADXMJ0Aq2lk9CJSzAdpAPvwypofxKWIJQM+BwpL8koaAY+jBnwlJGMAO96SpKMURyKdSiljDHR/fFd+3vR7ZaSHx6S8DGBgEBAICAQEAgIBAQCAgGBgEAAgYBAQCAgEBAICAQEAgIBgYBAAIGAQEAgIBAQCAgEBAICAYEAAgGBgEBAICAQEAgIBAQCAgGBAAIBgYBAQCAgEBAICAQEAgIBBAICAYGAQEAgIBAQCAgEBAICAQQCAgGBgEBAICAQEAgIBAQCCAQEAgIBgYBAQCAgEBAICAQEAggEBAICAYGAQEAgIBAQCAgEEAgIBAQCAgGBgEBAICAQEAgIBPjdk0MASUp5/9cjGcXhgY9HkDE0sp4nsjJmuj++a38vut1SzEHAJB0EAgIBgYBAQCAgEBAIzMhnsSb3+vqa3ntaazkej0mS7XabZVlSa81msxEI88bx8vKSw+GQ1lp670mSWmuWZclut8t+v586EoFMHsfz83Naa3/8rfd++kkydSTmIJPqvZ9Gjo+01nI4HE6hCIRptNbOxvHZ7QTCQzkejxeNDL330+RdIIBA+PVWbq31v9vVWrPdbgXCXJZlybIsN9tOIDyUWmt2u93ZB//buZBLRppH5TzIpDabTfb7fZI4UXhGGcmIRRvWc4d88SIG3/1Rk7Uv2iCQyQOZdX+tagIm6SAQEAgIBAQCAgGBgEAAgYBAQCAgEBAICAQEAgIBgQACAYGAQEAgIBAQCAgEBAICAYEAAgGBgEBAICAQEAgIBB6Qq9zCm/LvJQvLSFzBE86NIMNVblf0JOYqt6u5XVe5BZN0EAgIBAQCAgGBwL1zJp27Ucplp0vGGEYQxHGLbQXCVHHcOhKB8HBxmKSDQEAgIBAQCAgEBAIP4RZvEQsEkQiEe3XLz1UJBJHceBQRCEYSgTB7JNeOIgIBgWAUEQgiEQh8ZSS+k85dR3LzL1T99f+s7g7/G0Gs7r4eVne/6n98+iWZ1d0xH7nBfMUcBJP2M4wg63q94RisjEDwhCAQuC5MgYBA4DpPJodem0+7vxfc7k/Yw/n1NBLHXQAAAABJRU5ErkJggg==);
+  float: left;
+  border-style: solid;
+  font-weight: bold;
+  border-color: white;
+  color: white;
+}
+</style>
+
+<div id="container"></div>
+
+<script src="../bootstrap.js"></script>
+<script>
+"use strict";
+
+var startPosition = '0% 0%';
+var endPositions = [
+  'left',
+  'center',
+  'right',
+  'top',
+  'bottom',
+  '10px',
+  '20%',
+  'center left',
+  'center center',
+  'right bottom',
+  'right 160px',
+  '10px bottom',
+  '10px 40px',
+  'left bottom 160px',
+  'center top 20%',
+  'right top 10px',
+  'right bottom 80%',
+  'right 80% bottom',
+  'bottom left 10px',
+  'left 40px bottom 160px',
+  'left 20% top 20%',
+];
+
+for (var i = 0; i < endPositions.length; i++) {
+  var endPosition = endPositions[i];
+  var div = document.createElement('pre');
+  div.className = 'anim';
+  div.innerText = 'background-position:\n ' + startPosition + ' -> ' + endPosition;
+  document.querySelector('#container').appendChild(div);
+  document.timeline.play(new Animation(div, new KeyframeAnimationEffect([
+    { backgroundPosition: startPosition },
+    { backgroundPosition: endPosition },
+  ]), { iterationDuration:2, timingFunction: 'ease-in'}));
+}
+</script>
