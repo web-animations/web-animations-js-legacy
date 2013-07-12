@@ -18,7 +18,6 @@ limitations under the License.
 
 <style>
 .anim {
-  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB90HCAs5M6jhUuMAAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIEdJTVBXgQ4XAAAANUlEQVQY02NkYGD4z0AEYEHjM6Lx4YYw4VGEIUaM1f+ZGIgEtFOIz53/0U38j0sRzPtEBTgAb9gJDSeG6FIAAAAASUVORK5CYII=);
   border-style: solid;
   outline-style: groove;
 }
@@ -37,7 +36,6 @@ td {
 document.timeline.play(new Animation(document.querySelector('.anim'), [
   {
     backgroundColor: 'initial',
-    backgroundPosition: 'initial',
     borderBottomColor: 'initial',
     borderBottomLeftRadius: 'initial',
     borderBottomRightRadius: 'initial',
@@ -87,7 +85,6 @@ document.timeline.play(new Animation(document.querySelector('.anim'), [
     zIndex: 'initial',
   }, {
     backgroundColor: 'black',
-    backgroundPosition: '100px 50px',
     borderBottomColor: 'lime',
     borderBottomLeftRadius: '50px',
     borderBottomRightRadius: '50px',

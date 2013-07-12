@@ -2,7 +2,6 @@ timing_test(function() {
   at(0, function() {
     assert_styles(".anim",{
       'backgroundColor':'rgba(0, 0, 0, 0)',
-      'backgroundPosition':'50%',
       'borderBottomColor':'rgb(0, 0, 0)',
       'borderBottomLeftRadius':'0px',
       'borderBottomRightRadius':'0px',
@@ -38,7 +37,6 @@ timing_test(function() {
   at(0.5, function() {
     assert_styles(".anim",{
       'backgroundColor':'rgba(0, 0, 0, 0.121569)',
-      'backgroundPosition':'50%',
       'borderBottomColor':'rgb(0, 32, 0)',
       'borderBottomLeftRadius':'6.25px',
       'borderBottomRightRadius':'6.25px',
@@ -74,7 +72,6 @@ timing_test(function() {
   at(1, function() {
     assert_styles(".anim",{
       'backgroundColor':'rgba(0, 0, 0, 0.247059)',
-      'backgroundPosition':'50%',
       'borderBottomColor':'rgb(0, 64, 0)',
       'borderBottomLeftRadius':'12.5px',
       'borderBottomRightRadius':'12.5px',
@@ -110,7 +107,6 @@ timing_test(function() {
   at(1.5, function() {
     assert_styles(".anim",{
       'backgroundColor':'rgba(0, 0, 0, 0.372549)',
-      'backgroundPosition':'50%',
       'borderBottomColor':'rgb(0, 96, 0)',
       'borderBottomLeftRadius':'18.75px',
       'borderBottomRightRadius':'18.75px',
@@ -146,7 +142,6 @@ timing_test(function() {
   at(2, function() {
     assert_styles(".anim",{
       'backgroundColor':'rgba(0, 0, 0, 0.498039)',
-      'backgroundPosition':'50%',
       'borderBottomColor':'rgb(0, 128, 0)',
       'borderBottomLeftRadius':'25px',
       'borderBottomRightRadius':'25px',
@@ -182,7 +177,6 @@ timing_test(function() {
   at(2.5, function() {
     assert_styles(".anim",{
       'backgroundColor':'rgba(0, 0, 0, 0.623529)',
-      'backgroundPosition':'50%',
       'borderBottomColor':'rgb(0, 159, 0)',
       'borderBottomLeftRadius':'31.25px',
       'borderBottomRightRadius':'31.25px',
@@ -218,7 +212,6 @@ timing_test(function() {
   at(3, function() {
     assert_styles(".anim",{
       'backgroundColor':'rgba(0, 0, 0, 0.74902)',
-      'backgroundPosition':'50%',
       'borderBottomColor':'rgb(0, 191, 0)',
       'borderBottomLeftRadius':'37.5px',
       'borderBottomRightRadius':'37.5px',
@@ -254,7 +247,6 @@ timing_test(function() {
   at(3.5, function() {
     assert_styles(".anim",{
       'backgroundColor':'rgba(0, 0, 0, 0.87451)',
-      'backgroundPosition':'50%',
       'borderBottomColor':'rgb(0, 223, 0)',
       'borderBottomLeftRadius':'43.75px',
       'borderBottomRightRadius':'43.75px',
@@ -290,7 +282,6 @@ timing_test(function() {
   at(4, function() {
     assert_styles(".anim",{
       'backgroundColor':'rgb(0, 0, 0)',
-      'backgroundPosition':'50%',
       'borderBottomColor':'rgb(0, 255, 0)',
       'borderBottomLeftRadius':'50px',
       'borderBottomRightRadius':'50px',
