@@ -2490,8 +2490,8 @@ var positionListType = {
     var out = [];
     var maxLength = Math.max(base.length, delta.length);
     for (var i = 0; i < maxLength; i++) {
-      var basePosition = base[i] ? base[i] : zero();
-      var deltaPosition = delta[i] ? delta[i] : zero();
+      var basePosition = base[i] ? base[i] : positionType.zero();
+      var deltaPosition = delta[i] ? delta[i] : positionType.zero();
       out.push(positionType.add(basePosition, deltaPosition));
     }
     return out;
@@ -2500,8 +2500,8 @@ var positionListType = {
     var out = [];
     var maxLength = Math.max(from.length, to.length);
     for (var i = 0; i < maxLength; i++) {
-      var fromPosition = from[i] ? from[i] : zero();
-      var toPosition = to[i] ? to[i] : zero();
+      var fromPosition = from[i] ? from[i] : positionType.zero();
+      var toPosition = to[i] ? to[i] : positionType.zero();
       out.push(positionType.interpolate(fromPosition, toPosition, f));
     }
     return out;
