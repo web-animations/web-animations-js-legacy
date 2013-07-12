@@ -5,34 +5,34 @@ timing_test(function() {
   at(0.5, function() {
     assert_styles(".anim", [
       {'width':'81.25px'},
-      {'width':'109.375px'},
+      {'width':'81.25px'},
       {'width':'137.5px'},
+      {'width':'81.25px'},
       {'width':'95.3125px'},
       {'width':'95.3125px'},
-      {'width':'123.4375px'},
-      {'width':'67.1875px'},
+      {'width':'95.3125px'},
     ]);
   });
   at(1, function() {
     assert_styles(".anim", [
       {'width':'150px'},
-      {'width':'187.5px'},
+      {'width':'150px'},
       {'width':'225px'},
+      {'width':'150px'},
       {'width':'168.75px'},
       {'width':'168.75px'},
-      {'width':'206.25px'},
-      {'width':'143.75px'},
+      {'width':'168.75px'},
     ]);
   });
   at(1.5, function() {
     assert_styles(".anim", [
       {'width':'256.25px'},
-      {'width':'284.375px'},
+      {'width':'256.25px'},
       {'width':'312.5px'},
+      {'width':'256.25px'},
       {'width':'270.3125px'},
       {'width':'270.3125px'},
-      {'width':'298.4375px'},
-      {'width':'257.8125px'},
+      {'width':'270.3125px'},
     ]);
   });
   at(2, function() {
