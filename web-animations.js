@@ -3463,7 +3463,7 @@ var initialValues = {
   borderLeftWidth: '3px', // TODO: Should be 'medium'.
   borderRightColor: 'black', // TODO: Should be 'currentColor'.
   borderRightWidth: '3px', // TODO: Should be 'medium'.
-  borderSpacing: '0px',
+  borderSpacing: '2px', // spec says this should be 0 but in practise it is 2px.
   borderTopColor: 'black', // TODO: Should be 'currentColor'.
   borderTopLeftRadius: '0px',
   borderTopRightRadius: '0px',
