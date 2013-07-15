@@ -18,24 +18,55 @@ limitations under the License.
 
 <style>
 .anim {
-  border-style: solid;
-  outline-style: groove;
+  display: inline-block;
 }
-td {
+#allToInitial, #border, #borderSpacing, #padding, #table, td {
   border-style: solid;
+}
+#outline {
+  outline-style: solid;
+  left: 20px;
+  width: 100px;
 }
 </style>
 
-<table class="anim"><tr><td>Initial test initial test initial test initial test initial test initial test initial test initial test initial test initial test initial test.</td><td>Initial test.</td></tr></table>
+<table id="allToInitial" class="anim"><tr><td>All initial.</td><td>All initial.</td></tr></table>
+<pre id="background" class="anim">background-color</pre>
+<pre id="border" class="anim">border-width
+border-radius
+border-color</pre>
+<table id="table" class="anim">
+  <tr>
+    <td>border-spacing<br>vertical-align</td>
+    <td>border-spacing<br>vertical-align</td>
+  </tr>
+</table>
+<pre id="opacity" class="anim">opacity</pre>
+<br>
+<pre id="outline" class="anim">outline</pre>
+<pre id="padding" class="anim">padding</pre>
+<pre id="transform" class="anim">transform</pre>
+<br>
+<pre id="text" class="anim">color
+font-size
+font-weight
+letter-spacing
+line-height
+text-indent
+text-shadow
+word-spacing
+word word word word</pre>
+
 
 <script src="../bootstrap.js"></script>
 <script>
 "use strict";
 
 
-document.timeline.play(new Animation(document.querySelector('.anim'), [
+document.timeline.play(new Animation(document.querySelector('#allToInitial'), [
   {
     backgroundColor: 'initial',
+    backgroundPosition: 'initial',
     borderBottomColor: 'initial',
     borderBottomLeftRadius: 'initial',
     borderBottomRightRadius: 'initial',
@@ -83,8 +114,25 @@ document.timeline.play(new Animation(document.querySelector('.anim'), [
     width: 'initial',
     wordSpacing: 'initial',
     zIndex: 'initial',
+  }], 2));
+
+document.timeline.play(new Animation(document.querySelector('#background'), [{ backgroundColor: 'initial' }, { backgroundColor: 'green' }], 2));
+
+document.timeline.play(new Animation(document.querySelector('#border'), [
+  {
+    borderBottomColor: 'initial',
+    borderBottomLeftRadius: 'initial',
+    borderBottomRightRadius: 'initial',
+    borderBottomWidth: 'initial',
+    borderLeftColor: 'initial',
+    borderLeftWidth: 'initial',
+    borderRightColor: 'initial',
+    borderRightWidth: 'initial',
+    borderTopColor: 'initial',
+    borderTopLeftRadius: 'initial',
+    borderTopRightRadius: 'initial',
+    borderTopWidth: 'initial',
   }, {
-    backgroundColor: 'black',
     borderBottomColor: 'lime',
     borderBottomLeftRadius: '50px',
     borderBottomRightRadius: '50px',
@@ -93,29 +141,68 @@ document.timeline.play(new Animation(document.querySelector('.anim'), [
     borderLeftWidth: '10px',
     borderRightColor: 'lime',
     borderRightWidth: '10px',
-    borderSpacing: '50px',
     borderTopColor: 'lime',
     borderTopLeftRadius: '50px',
     borderTopRightRadius: '50px',
     borderTopWidth: '10px',
-    color: 'green',
-    fontSize: '30px',
-    fontWeight: 'bold',
-    letterSpacing: '5px',
-    lineHeight: '200%',
-    opacity: '0.75',
+  }], 2));
+
+document.timeline.play(new Animation(document.querySelector('#table'), [
+  {
+    borderSpacing: 'initial',
+    verticalAlign: 'initial',
+  }, {
+    borderSpacing: '10px',
+    verticalAlign: '10px',
+  }], 2));
+
+document.timeline.play(new Animation(document.querySelector('#opacity'), [{ opacity: 'initial' }, { opacity: '0.25' }], 2));
+
+document.timeline.play(new Animation(document.querySelector('#outline'), [
+  {
+    outlineColor: 'initial',
+    outlineWidth: 'initial',
+    outlineOffset: 'initial',
+  }, {
     outlineColor: 'green',
     outlineWidth: '10px',
     outlineOffset: '10px',
-    paddingBottom: '50px',
+  }], 2));
+
+document.timeline.play(new Animation(document.querySelector('#padding'), [
+  {
+    paddingBottom: 'initial',
+    paddingLeft: 'initial',
+    paddingRight: 'initial',
+    paddingTop: 'initial',
+  }, {
+  paddingBottom: '50px',
     paddingLeft: '50px',
     paddingRight: '50px',
     paddingTop: '50px',
+  }], 2));
+
+document.timeline.play(new Animation(document.querySelector('#transform'), [{ transform: 'initial' }, { transform: 'rotate(360deg)' }], 2));
+
+document.timeline.play(new Animation(document.querySelector('#text'), [
+  {
+    color: 'initial',
+    fontSize: 'initial',
+    fontWeight: 'initial',
+    letterSpacing: 'initial',
+    lineHeight: 'initial',
+    textIndent: 'initial',
+    textShadow: 'initial',
+    wordSpacing: 'initial',
+  }, {
+    color: 'green',
+    fontSize: '30px',
+    fontWeight: '900',
+    letterSpacing: '5px',
+    lineHeight: '200%',
     textIndent: '50px',
     textShadow: '10px 10px 50px lime',
-    transform: 'rotate(360deg)',
-    verticalAlign: '50px',
     wordSpacing: '100px',
-  }], 4));
+  }], 2));
 
 </script>
