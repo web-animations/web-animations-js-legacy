@@ -2276,9 +2276,11 @@ var percentLengthType = {
       if (s === '') {
         s = value[item] + item;
       } else if (single_value) {
-        s = features.calcFunction + '(' + s + ' + ' + value[item] + item + ')';
-        single_value = false;
-      } else {
+        if (value[item] != 0) {
+          s = features.calcFunction + '(' + s + ' + ' + value[item] + item + ')';
+          single_value = false;
+        }
+      } else if (value[item] != 0) {
         s = s.substring(0, s.length - 1) + ' + ' + value[item] + item + ')';
       }
     }
