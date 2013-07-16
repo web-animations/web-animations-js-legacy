@@ -4,8 +4,11 @@ env:
   - BROWSER=Chrome-stable
   - BROWSER=Chrome-beta
   - BROWSER=Chrome-unstable
-#  - BROWSER=PhantomJS
-#  - BROWSER=Firefox
+  - BROWSER=Firefox
+
+matrix:
+  allow_failures:
+    - env: BROWSER=Firefox
 
 notifications:
   irc: "irc.freenode.org#webanimations"
