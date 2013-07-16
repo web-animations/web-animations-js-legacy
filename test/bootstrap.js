@@ -592,6 +592,20 @@ TestTimeline.prototype.createGUI = function(body) {
   this.prev.onclick = this.toPrevEvent.bind(this);
   this.div.appendChild(this.prev);
 
+  this.control = document.createElement('button');
+  this.control.innerText = 'Pause';
+  this.control.id = 'control';
+  this.control.onclick = function() {
+    if (this.control.innerText == 'Go!') {
+      testharness_raf_start();
+      this.control.innerText = 'Pause';
+    } else {
+      testharness_raf_pause();
+      this.control.innerText = 'Go!';
+    }
+  }.bind(this);
+  this.div.appendChild(this.control);
+
   body.appendChild(this.div);
 }
 
@@ -835,13 +849,22 @@ TestTimeline.prototype.autorun = function() {
 // Capture the real requestAnimationFrame so we can run in 'real time' mode
 // rather than as fast as possible.
 var raf = window.requestAnimationFrame;
-var raf_t0 = null;
+var raf_now = Date.now;
+
+var raf_t0 = null;    // Time the page loaded
+var raf_pauseStartTime = null; // Time at which we paused raf
+var raf_timeDrift = 0;    // Amount we have been stopped for.
 function testharness_raf(ts) {
   if (raf_t0 === null) {
     raf_t0 = ts;
   }
 
-  var t = ts - raf_t0;
+  // Are we paused? Stop rafing.
+  if (raf_pauseStartTime != null) {
+    return;
+  }
+
+  var t = ts - raf_t0 - raf_timeDrift;
 
   var endTime = testharness_timeline.endTime_;
   // If we have no events paste t=0, endTime is going to be zero. Instead
@@ -864,6 +887,25 @@ function testharness_raf(ts) {
 
   // FIXME: When reset is called, we need to clear raf_t0
 }
+
+function testharness_raf_start() {
+  if (raf_pauseStartTime == null) {
+    return;
+  }
+
+  raf_timeDrift += (raf_now() - raf_pauseStartTime);
+  raf_pauseStartTime = null;
+
+  raf(testharness_raf);
+}
+
+function testharness_raf_pause() {
+  if (raf_pauseStartTime != null) {
+    return;
+  }
+  raf_pauseStartTime = raf_now();
+}
+
 
 function testharness_timeline_setup() {
   testharness_timeline.createGUI(document.getElementsByTagName('body')[0]);
@@ -1015,6 +1057,7 @@ loadScript('../testharness/testharnessreport.js');
 if (!hasFlag('nopolyfill')) {
   loadScript('../../web-animations.js');
 }
+
 
 // Don't export the timing functions in unittests.
 if (!isUnitTest()) {
