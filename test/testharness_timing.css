@@ -20,7 +20,7 @@ html, body {
   border: 1px solid black;
   top: 25px;
   height: 10px;
-  width: calc(100% - 100px);
+  width: calc(100% - 135px);
 }
 
 #timeline button {
@@ -29,6 +29,12 @@ html, body {
   margin-top: 17px;
   height: 20px;
   width: 20px;
+}
+
+#timeline #control {
+  width: 30px;
+  font-size: 6pt;
+  padding: 0;
 }
 
 #timeline div.progress {
