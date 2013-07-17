@@ -575,6 +575,7 @@ elif args.browser == "Remote":
             caps[key] = value
     driver_arguments['desired_capabilities'] = caps
 
+major_failure = False
 try:
     browser = None
     try:
@@ -610,6 +611,11 @@ try:
         else:
             break
 
+except Exception, e:
+    import traceback
+    sys.stderr.write(traceback.format_exc())
+    major_failure = True
+
 finally:
     output.stopTestRun()
 
@@ -623,7 +629,7 @@ if summary.testsRun == 0:
    print
    print "FAIL: No tests run!"
 
-if summary.wasSuccessful() and summary.testsRun > 0:
+if summary.wasSuccessful() and summary.testsRun > 0 and not major_failure:
     sys.exit(0)
 else:
     sys.exit(1)
