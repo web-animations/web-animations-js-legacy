@@ -512,6 +512,7 @@ if args.virtual and args.browser != "PhantomJS":
 # ----------------------------------------------------------------------------
 
 from selenium import webdriver
+from selenium.common import exceptions as selenium_exceptions
 
 driver_arguments = {}
 if args.browser == "Chrome":
@@ -554,6 +555,10 @@ if args.browser == "Chrome":
 
 elif args.browser == "Firefox":
     driver_arguments['firefox_profile'] = webdriver.FirefoxProfile()
+    # Firefox will often pop-up a dialog saying "script is taking too long" or
+    # similar. So we can notice this problem we use "accept" rather then the
+    # default "dismiss".
+    webdriver.DesiredCapabilities.FIREFOX["unexpectedAlertBehaviour"] = "accept"
 
 elif args.browser == "PhantomJS":
     driver_arguments['executable_path'] = phantomjs
@@ -605,11 +610,28 @@ try:
         if len(browser.window_handles) > 1:
             close_other_windows(browser, url)
 
-        if not browser.execute_script('return window.finished'):
-            time.sleep(1)
-            continue
-        else:
-            break
+        try:
+            if not browser.execute_script('return window.finished'):
+                time.sleep(1)
+                continue
+            else:
+                break
+
+        # Deal with unexpected alerts, sometimes they are dismissed by
+        # alternative means so we have to deal with that case too.
+        except selenium_exceptions.UnexpectedAlertPresentException, e:
+            try:
+                alert = browser.switch_to_alert()
+                sys.stderr.write("""\
+WARNING: Unexpected alert found!
+---------------------------------------------------------------------
+%s
+---------------------------------------------------------------------
+""" % alert.text)
+                alert.dismiss()
+            except selenium_exceptions.NoAlertPresentException, e:
+                sys.stderr.write("WARNING: Unexpected alert which dissappeared on it's own!\n")
+            sys.stderr.flush()
 
 except Exception, e:
     import traceback
