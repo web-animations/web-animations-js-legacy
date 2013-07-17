@@ -883,9 +883,6 @@ TimingEvent.prototype = Object.create(Event.prototype, {
     get: function() {
       return this._target;
     },
-    set: function(target) {
-      this._target = target;
-    },
   },
   cancelable: {
     get: function() {
@@ -905,9 +902,6 @@ TimingEvent.prototype = Object.create(Event.prototype, {
   type: {
     get: function() {
       return this._type;
-    },
-    set: function(type) {
-      this._type = type;
     },
   },
 });
@@ -1596,7 +1590,8 @@ PathAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
       var cumulativeLengths = [0];
       // TODO: *moving* the path segments is not correct, but pathSegList
       //       is read only
-      while (segments.numberOfItems) {
+      var items = segments.numberOfItems;
+      while (targetSegments.numberOfItems < items) {
         var segment = segments.getItem(0);
         targetSegments.appendItem(segment);
         if (segment.pathSegType !== SVGPathSeg.PATHSEG_MOVETO_REL &&
