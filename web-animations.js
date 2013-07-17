@@ -868,12 +868,9 @@ var TimingEvent = function(token, target, type, localTime, timelineTime, iterati
   if (token !== constructorToken) {
     throw new TypeError('Illegal constructor');
   }
-  this.target = target;
-  this.type = type;
+  this._target = target;
+  this._type = type;
   this.cancelBubble = false;
-  this.cancelable = false;
-  this.defaultPrevented = false;
-  this.eventPhase = 0;
   this.returnValue = true;
   this.localTime = localTime;
   this.timelineTime = timelineTime;
@@ -881,7 +878,39 @@ var TimingEvent = function(token, target, type, localTime, timelineTime, iterati
   this.seeked = seeked ? true : false;
 }
 
-TimingEvent.prototype = Object.create(Event.prototype);
+TimingEvent.prototype = Object.create(Event.prototype, {
+  target: {
+    get: function() {
+      return this._target;
+    },
+    set: function(target) {
+      this._target = target;
+    },
+  },
+  cancelable: {
+    get: function() {
+      return false;
+    },
+  },
+  defaultPrevented: {
+    get: function() {
+      return false;
+    },
+  },
+  eventPhase: {
+    get: function() {
+      return 0;
+    },
+  },
+  type: {
+    get: function() {
+      return this._type;
+    },
+    set: function(type) {
+      this._type = type;
+    },
+  },
+});
 
 var isCustomAnimationEffect = function(animationEffect) {
   // TODO: How does WebIDL actually differentiate different callback interfaces?
