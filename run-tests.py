@@ -494,13 +494,15 @@ port = httpd.socket.getsockname()[-1]
 # Start up a virtual display, useful for testing on headless servers.
 # -----------------------------------------------------------------------------
 
+VIRTUAL_SIZE=(1024, 2000)
+
 # PhantomJS doesn't need a display
 disp = None
 if args.virtual and args.browser != "PhantomJS":
     from pyvirtualdisplay.smartdisplay import SmartDisplay
 
     try:
-        disp = SmartDisplay(visible=0, bgcolor='black').start()
+        disp = SmartDisplay(visible=0, bgcolor='black', size=VIRTUAL_SIZE).start()
         atexit.register(disp.stop)
     except:
         if disp:
@@ -513,6 +515,7 @@ if args.virtual and args.browser != "PhantomJS":
 
 from selenium import webdriver
 from selenium.common import exceptions as selenium_exceptions
+from selenium.webdriver.common.keys import Keys as selenium_keys
 
 driver_arguments = {}
 if args.browser == "Chrome":
@@ -541,6 +544,8 @@ if args.browser == "Chrome":
         '--user-data-dir=%s' % user_data_dir)
     driver_arguments['chrome_options'].add_argument(
         '--enable-logging')
+    driver_arguments['chrome_options'].add_argument(
+        '--start-maximized')
 
     driver_arguments['chrome_options'].binary_location = (
         '/usr/bin/google-chrome')
@@ -592,6 +597,16 @@ try:
         if browser:
             browser.close()
         raise
+
+    if args.virtual and args.browser == "Firefox":
+        # Calling browser.maximize_window() doesn't work as we don't have a
+        # window manager, so instead we for the size/position.
+        browser.set_window_position(0, 0)
+        browser.set_window_size(*VIRTUAL_SIZE)
+        # Also lets go into full screen mode to get rid of the "Chrome" around
+        # the edges.
+        e = browser.find_element_by_tag_name('body')
+        e.send_keys(selenium_keys.F11)
 
     url = 'http://localhost:%i/test/test-runner.html?%s' % (
         port, "|".join(tests))
