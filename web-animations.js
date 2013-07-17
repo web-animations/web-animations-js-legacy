@@ -1511,7 +1511,7 @@ PathAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
       angle += rotation / 2 / Math.PI * 360;
     }
     value.push({t:'rotate', d: [angle]});
-    compositor.setAnimatedValue(target, "transform",
+    Compositor.setAnimatedValue(target, "transform",
         new AddReplaceCompositableValue(value, this.composite));
   },
   _lengthAtTimeFraction: function(timeFraction) {
@@ -1666,7 +1666,7 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
   _sample: function(timeFraction, currentIteration, target) {
     var properties = this._getProperties();
     for (var i = 0; i < properties.length; i++) {
-      compositor.setAnimatedValue(target, properties[i],
+      Compositor.setAnimatedValue(target, properties[i],
           this._sampleForProperty(timeFraction, currentIteration,
               properties[i]));
     }
@@ -3566,11 +3566,9 @@ CompositedPropertyMap.prototype = {
     }
     return true;
   },
-  clear: function() {
+  clearAppliedValues: function() {
     for (var property in this.properties) {
-      if (this.stackDependsOnUnderlyingValue(this.properties[property])) {
-        clearValue(this.target, property);
-      }
+      clearAppliedValue(this.target, property);
     }
   },
   captureBaseValues: function() {
@@ -3604,33 +3602,32 @@ CompositedPropertyMap.prototype = {
   },
 };
 
-/** @constructor */
-var Compositor = function() {
-  this.targets = []
-};
-
-Compositor.prototype = {
-  setAnimatedValue: function(target, property, animValue) {
-    if (target !== null) {
-      if (target._anim_properties === undefined) {
-        target._anim_properties = new CompositedPropertyMap(target);
-        this.targets.push(target);
-      }
-      target._anim_properties.addValue(property, animValue);
+var Compositor = {
+  _targets: [],
+  clearAppliedValues: function() {
+    for (var i = 0; i < Compositor._targets.length; i++) {
+      var target = Compositor._targets[i];
+      target._animProperties.clearAppliedValues();
+      target._animProperties = undefined;
     }
+    Compositor._targets = [];
+  },
+  setAnimatedValue: function(target, property, animValue) {
+    if (!isDefinedAndNotNull(target)) {
+      return;
+    }
+    if (!isDefinedAndNotNull(target._animProperties)) {
+      target._animProperties = new CompositedPropertyMap(target);
+      Compositor._targets.push(target);
+    }
+    target._animProperties.addValue(property, animValue);
   },
   applyAnimatedValues: function() {
-    for (var i = 0; i < this.targets.length; i++) {
-      var target = this.targets[i];
-      target._anim_properties.clear();
+    for (var i = 0; i < Compositor._targets.length; i++) {
+      Compositor._targets[i]._animProperties.captureBaseValues();
     }
-    for (var i = 0; i < this.targets.length; i++) {
-      var target = this.targets[i];
-      target._anim_properties.captureBaseValues();
-    }
-    for (var i = 0; i < this.targets.length; i++) {
-      var target = this.targets[i];
-      target._anim_properties.applyAnimatedValues();
+    for (var i = 0; i < Compositor._targets.length; i++) {
+      Compositor._targets[i]._animProperties.applyAnimatedValues();
     }
   }
 };
@@ -3659,7 +3656,7 @@ var initializeIfSVGAndUninitialized = function(property, target) {
     }
     if(!isDefinedAndNotNull(target._actuals[property])) {
       var baseVal = target.getAttribute(property);
-      target._actuals[property] = 0;
+      target._actuals[property] = baseVal;
       target._bases[property] = baseVal;
 
       Object.defineProperty(target.actuals, property, configureDescriptor({
@@ -3692,7 +3689,7 @@ var setValue = function(target, property, value) {
   }
 }
 
-var clearValue = function(target, property) {
+var clearAppliedValue = function(target, property) {
   initializeIfSVGAndUninitialized(property, target);
   if (property == "transform") {
     property = features.transformProperty;
@@ -3717,8 +3714,6 @@ var getValue = function(target, property) {
 }
 
 var rafScheduled = false;
-
-var compositor = new Compositor();
 
 // ECMA Script does not guarantee stable sort.
 var stableSort = function(array, compare) {
@@ -3890,6 +3885,7 @@ var ticker = function(rafTime, isRepeat) {
     player._getLeafItemsInEffect(animations);
   });
 
+  Compositor.clearAppliedValues();
   // Apply animations in order
   for (var i = 0; i < animations.length; i++) {
     if (animations[i] instanceof Animation) {
@@ -3903,7 +3899,7 @@ var ticker = function(rafTime, isRepeat) {
   });
 
   // Composite animated values into element styles
-  compositor.applyAnimatedValues();
+  Compositor.applyAnimatedValues();
 
   if (!isRepeat) {
     if (finished || paused) {
