@@ -19,16 +19,12 @@ def main():
     test_dir = os.path.dirname(os.path.realpath(__file__))
     testcase_dir = os.path.join(test_dir, 'testcases')
     testcase_file = os.path.join(test_dir, 'testcases.js')
-    testcases_disabled = os.path.join(test_dir, 'disabled-testcases')
-
-    disabled_tests = [
-        x.split("#")[0].strip() for x in file(testcases_disabled).readlines()]
 
     def is_testcase_file(filename):
         return (
             fnmatch(filename, "*.html") and
             not fnmatch(filename, "manual-test*") and
-            filename not in disabled_tests)
+            not fnmatch(filename, "disabled-*"))
 
     new_testcases = StringIO.StringIO()
     new_testcases.write("""\
