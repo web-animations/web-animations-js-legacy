@@ -436,7 +436,11 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 'CONTENT_TYPE': self.headers['Content-Type'],
             })
 
-        data = simplejson.loads(form.getvalue('data'))
+        try:
+            json_data = form.getvalue('data')
+            data = simplejson.loads(json_data)
+        except ValueError, e:
+            raise ValueError("Unable to decode JSON object (%s)\n%s" % (e, json_data))
 
         overall_status = 0
         for result in data['results']:
