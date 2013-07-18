@@ -363,7 +363,7 @@ function changeTestState(test, newState) {
       // Open up the window of the failed result
       test.showInfo();
       // Scroll to it.
-      window.scroll(0, [trueOffsetTop(test), 0]);
+      window.scroll(0, trueOffsetTop(test));
     }
 
     // Open the status window for taking of screenshots

@@ -459,6 +459,7 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
         # Take a screenshot of result if a failure occurred.
         if overall_status > 0 and args.virtual:
+            time.sleep(1)
             screenshot = data['testName'] + '.png'
             disp.grab().save(screenshot)
 
