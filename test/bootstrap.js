@@ -65,8 +65,12 @@ function hasFlag(flag) {
   return thisScript && thisScript.getAttribute(flag) !== null;
 }
 
-function isUnitTest() {
-  return /unit-test[^\\\/]*\.html$/.exec(location.pathname);
+function testType() {
+  var p = location.pathname;
+  p = p.replace(/^disabled-/, '');
+
+  var match = /(auto|impl|manual|unit)-test[^\\\/]*$/.exec(p);
+  return match ? match[1]: 'unknown';
 }
 
 var instrumentationDepsLoaded = false;
@@ -1047,8 +1051,11 @@ loadScript('../testharness/testharness.js');
 loadCSS('../testharness/testharness.css');
 loadCSS('../testharness_timing.css');
 
-if (!isUnitTest() && !hasFlag('nochecks')) {
-  loadScript(location.pathname.replace('.html', '-checks.js'), {coverage: false});
+if (testType() == 'auto') {
+  var checksFile = location.pathname;
+  checksFile = checksFile.replace(/disabled-/, '');
+  checksFile = checksFile.replace(/.html$/, '-checks.js')
+  loadScript(checksFile, {coverage: false});
 }
 
 document.write('<div id="log"></div>');
@@ -1060,7 +1067,7 @@ if (!hasFlag('nopolyfill')) {
 
 
 // Don't export the timing functions in unittests.
-if (!isUnitTest()) {
+if (testType() != 'unit') {
   addEventListener('load', testharness_timeline_setup);
 
   window.at = at;
