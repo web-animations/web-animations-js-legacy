@@ -40,6 +40,7 @@ var tests = [
   'auto-test-wrapping-bug.html',
   'impl-test-player-sees-handlers.html',
   'impl-test-totimelinetime.html',
+  'impl-unit-test-position-type.html',
   'test-bounds.html',
   'test-document-timeline.html',
   'test-dynamic-load.html',
