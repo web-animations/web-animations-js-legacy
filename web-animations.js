@@ -3758,13 +3758,13 @@ var fromCssValue = function(property, value) {
   if (value === 'inherit') {
     return value;
   }
-  // Currently we'll hit this assert if input to the API is bad. To avoid this,
-  // we should eliminate invalid values when normalizing the list of keyframes.
-  // See the TODO in isSupportedPropertyValue().
   if (property in propertyValueAliases) {
     value = propertyValueAliases[property][value] || value;
   }
   var result = getType(property).fromCssValue(value);
+  // Currently we'll hit this assert if input to the API is bad. To avoid this,
+  // we should eliminate invalid values when normalizing the list of keyframes.
+  // See the TODO in isSupportedPropertyValue().
   console.assert(isDefinedAndNotNull(result),
       'Invalid property value "' + value + '" for property "' + property + '"');
   return result;
