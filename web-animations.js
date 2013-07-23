@@ -2232,12 +2232,6 @@ var fontWeightType = {
     return String(value);
   },
   fromCssValue: function(value) {
-    if (value === 'normal') {
-      return 400;
-    }
-    if (value === 'bold') {
-      return 700;
-    }
     // TODO: support lighter / darker ?
     var out = Number(value);
     if (isNaN(out) || out < 100 || out > 900 || out % 100 !== 0) {
