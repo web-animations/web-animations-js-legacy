@@ -2153,7 +2153,7 @@ var interpArray = function(from, to, f, type) {
   return result;
 };
 
-var addKeywordsToType = function(type, keywords) {
+var typeWithKeywords = function(keywords, type) {
   var isKeyword = {};
   for (var i in keywords) {
     isKeyword[keywords[i]] = true;
@@ -2375,7 +2375,7 @@ var percentLengthType = {
   }
 };
 
-var percentLengthAutoType = addKeywordsToType(percentLengthType, ['auto']);
+var percentLengthAutoType = typeWithKeywords(['auto'], percentLengthType);
 
 var positionKeywordRE = /^\s*left|^\s*center|^\s*right|^\s*top|^\s*bottom/i;
 var positionType = {
@@ -2773,7 +2773,7 @@ var visibilityType = createObject(nonNumericType, {
 });
 
 var lengthType = percentLengthType;
-var lengthAutoType = addKeywordsToType(lengthType, ['auto']);
+var lengthAutoType = typeWithKeywords(['auto'], lengthType);
 
 var rgbRE = /^\s*rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/;
 var rgbaRE =
@@ -2856,7 +2856,7 @@ var namedColors = {
   yellow: [255, 255, 0, 1], yellowgreen: [154, 205, 50, 1],
 };
 
-var keywordlessColorType = {
+var colorType = typeWithKeywords(['currentColor'], {
   zero: function() { return [0,0,0,0]; },
   add: function(base, delta) {
     return [base[0] + delta[0], base[1] + delta[1],
@@ -2889,9 +2889,7 @@ var keywordlessColorType = {
     }
     return namedColors[value];
   }
-};
-
-var colorType = addKeywordsToType(keywordlessColorType, ['currentColor']);
+});
 
 var convertToDeg = function(num, type) {
   switch (type) {
@@ -3549,29 +3547,33 @@ var propertyTypes = {
   borderTopRightRadius: percentLengthType,
   borderTopWidth: lengthType,
   bottom: percentLengthAutoType,
-  clip: addKeywordsToType(rectangleType, ['auto']),
+  clip: typeWithKeywords(['auto'], rectangleType),
   color: colorType,
   cx: lengthType,
-  fontSize: addKeywordsToType(percentLengthType, ['smaller', 'larger']), // TODO: Handle these properly.
-  fontWeight: addKeywordsToType(fontWeightType, ['lighter', 'bolder']), // TODO: Handle these properly.
+  fontSize: typeWithKeywords(['smaller', 'larger'], percentLengthType), // TODO: Handle these properly.
+  fontWeight: typeWithKeywords(['lighter', 'bolder'], fontWeightType), // TODO: Handle these properly.
   height: percentLengthAutoType,
   left: percentLengthAutoType,
-  letterSpacing: addKeywordsToType(lengthType, ['normal']),
+  letterSpacing: typeWithKeywords(['normal'], lengthType),
   lineHeight: percentLengthType, // TODO: should be both number and percentLength
   marginBottom: lengthAutoType,
   marginLeft: lengthAutoType,
   marginRight: lengthAutoType,
   marginTop: lengthAutoType,
-  maxHeight: addKeywordsToType(percentLengthType,
-    ['none', 'max-content', 'min-content', 'fill-available', 'fit-content']),
-  maxWidth: addKeywordsToType(percentLengthType,
-    ['none', 'max-content', 'min-content', 'fill-available', 'fit-content']),
-  minHeight: addKeywordsToType(percentLengthType,
-    ['max-content', 'min-content', 'fill-available', 'fit-content']),
-  minWidth: addKeywordsToType(percentLengthType,
-    ['max-content', 'min-content', 'fill-available', 'fit-content']),
+  maxHeight: typeWithKeywords(
+    ['none', 'max-content', 'min-content', 'fill-available', 'fit-content'],
+    percentLengthType),
+  maxWidth: typeWithKeywords(
+    ['none', 'max-content', 'min-content', 'fill-available', 'fit-content'],
+    percentLengthType),
+  minHeight: typeWithKeywords(
+    ['max-content', 'min-content', 'fill-available', 'fit-content'],
+    percentLengthType),
+  minWidth: typeWithKeywords(
+    ['max-content', 'min-content', 'fill-available', 'fit-content'],
+    percentLengthType),
   opacity: numberType,
-  outlineColor: addKeywordsToType(colorType, ['invert']),
+  outlineColor: typeWithKeywords(['invert'], colorType),
   outlineOffset: lengthType,
   outlineWidth: lengthType,
   paddingBottom: lengthType,
@@ -3579,11 +3581,11 @@ var propertyTypes = {
   paddingRight: lengthType,
   paddingTop: lengthType,
   right: percentLengthAutoType,
-  textIndent: addKeywordsToType(percentLengthType, ['each-line', 'hanging']),
+  textIndent: typeWithKeywords(['each-line', 'hanging'], percentLengthType),
   textShadow: shadowType,
   top: percentLengthAutoType,
   transform: transformType,
-  verticalAlign: addKeywordsToType(percentLengthType, [
+  verticalAlign: typeWithKeywords([
     'baseline',
     'sub',
     'super',
@@ -3591,20 +3593,22 @@ var propertyTypes = {
     'text-bottom',
     'middle',
     'top',
-    'bottom']),
+    'bottom'],
+    percentLengthType),
   visibility: visibilityType,
-  width: addKeywordsToType(percentLengthType, [
+  width: typeWithKeywords([
     'border-box',
     'content-box',
     'auto',
     'max-content',
     'min-content',
     'available',
-    'fit-content']),
-  wordSpacing: addKeywordsToType(percentLengthType, ['normal']),
+    'fit-content'],
+    percentLengthType),
+  wordSpacing: typeWithKeywords(['normal'], percentLengthType),
   x: lengthType,
   y: lengthType,
-  zIndex: addKeywordsToType(integerType, ['auto']),
+  zIndex: typeWithKeywords(['auto'], integerType),
 };
 
 var svgProperties = {
