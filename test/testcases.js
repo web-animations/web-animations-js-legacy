@@ -9,6 +9,7 @@ var tests = [
   'auto-test-element-animate.html',
   'auto-test-fill-values.html',
   'auto-test-font-weight.html',
+  'auto-test-initial.html',
   'auto-test-integer.html',
   'auto-test-iteration-start.html',
   'auto-test-iterations-alternate.html',
