@@ -2856,10 +2856,10 @@ var namedColors = {
   springgreen: [0, 255, 127, 1], steelblue: [70, 130, 180, 1],
   tan: [210, 180, 140, 1], teal: [0, 128, 128, 1],
   thistle: [216, 191, 216, 1], tomato: [255, 99, 71, 1],
-  turquoise: [64, 224, 208, 1], violet: [238, 130, 238, 1],
-  wheat: [245, 222, 179, 1], white: [255, 255, 255, 1],
-  whitesmoke: [245, 245, 245, 1], yellow: [255, 255, 0, 1],
-  yellowgreen: [154, 205, 50, 1]
+  transparent: [0, 0, 0, 0], turquoise: [64, 224, 208, 1],
+  violet: [238, 130, 238, 1], wheat: [245, 222, 179, 1],
+  white: [255, 255, 255, 1], whitesmoke: [245, 245, 245, 1],
+  yellow: [255, 255, 0, 1], yellowgreen: [154, 205, 50, 1],
 };
 
 var keywordlessColorType = {
@@ -2897,7 +2897,7 @@ var keywordlessColorType = {
   }
 };
 
-var colorType = addKeywordsToType(keywordlessColorType, ['currentColor'])
+var colorType = addKeywordsToType(keywordlessColorType, ['currentColor']);
 
 var convertToDeg = function(num, type) {
   switch (type) {
@@ -3542,6 +3542,8 @@ var propertyTypes = {
   backgroundColor: colorType,
   backgroundPosition: positionListType,
   borderBottomColor: colorType,
+  borderBottomLeftRadius: percentLengthType,
+  borderBottomRightRadius: percentLengthType,
   borderBottomWidth: lengthType,
   borderLeftColor: colorType,
   borderLeftWidth: lengthType,
@@ -3549,6 +3551,8 @@ var propertyTypes = {
   borderRightWidth: lengthType,
   borderSpacing: lengthType,
   borderTopColor: colorType,
+  borderTopLeftRadius: percentLengthType,
+  borderTopRightRadius: percentLengthType,
   borderTopWidth: lengthType,
   bottom: percentLengthAutoType,
   clip: addKeywordsToType(rectangleType, ['auto']),
@@ -3661,8 +3665,8 @@ var propertyValueAliases = {
   left: { initial: 'auto' },
   letterSpacing: { initial: 'normal' },
   lineHeight: {
-    initial: '130%',
-    normal: '130%',
+    initial: '120%',
+    normal: '120%',
   },
   marginBottom: { initial: '0px' },
   marginLeft: { initial: '0px' },
