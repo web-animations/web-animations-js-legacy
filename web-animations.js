@@ -2153,7 +2153,33 @@ var interpArray = function(from, to, f, type) {
   return result;
 };
 
-// TODO: This type does not handle 'inherit'.
+var typeWithKeywords = function(keywords, type) {
+  var isKeyword = {};
+  for (var i in keywords) {
+    isKeyword[keywords[i]] = true;
+  }
+  return createObject(type, {
+    add: function(base, delta) {
+      if (isKeyword[base] || isKeyword[delta]) {
+        return delta;
+      }
+      return type.add(base, delta);
+    },
+    interpolate: function(from, to, f) {
+      if (isKeyword[from] || isKeyword[to]) {
+        return nonNumericType.interpolate(from, to, f);
+      }
+      return type.interpolate(from, to, f);
+    },
+    toCssValue: function(value, svgMode) {
+      return isKeyword[value] ? value : type.toCssValue(value, svgMode);
+    },
+    fromCssValue: function(value) {
+      return isKeyword[value] ? value : type.fromCssValue(value);
+    },
+  });
+};
+
 var numberType = {
   add: function(base, delta) {
     // If base or delta are 'auto', we fall back to replacement.
@@ -2179,7 +2205,6 @@ var numberType = {
   },
 };
 
-// TODO: This type does not handle 'inherit'.
 var integerType = createObject(numberType, {
   interpolate: function(from, to, f) {
     // If from or to are 'auto', we fall back to step interpolation.
@@ -2207,12 +2232,6 @@ var fontWeightType = {
     return String(value);
   },
   fromCssValue: function(value) {
-    if (value === 'normal') {
-      return 400;
-    }
-    if (value === 'bold') {
-      return 700;
-    }
     // TODO: support lighter / darker ?
     var out = Number(value);
     if (isNaN(out) || out < 100 || out > 900 || out % 100 !== 0) {
@@ -2232,20 +2251,8 @@ var valueRE = /^\s*(-?[0-9]+(\.[0-9])?[0-9]*)([a-zA-Z%]*)/;
 var operatorRE = /^\s*([+-])/;
 var autoRE = /^\s*auto/i;
 var percentLengthType = {
-  isAuto: function(x) {
-    if ('auto' in x) {
-      console.assert(Object.keys(x).length === 1,
-          'percentLengthType should not contain auto with other values');
-      return true;
-    }
-    return false;
-  },
   zero: function() { return {}; },
   add: function(base, delta) {
-    // If base or delta are 'auto', we fall back to replacement.
-    if (percentLengthType.isAuto(base) || percentLengthType.isAuto(delta)) {
-      return nonNumericType.add(base, delta);
-    }
     var out = {};
     for (var value in base) {
       out[value] = base[value] + (delta[value] || 0);
@@ -2259,10 +2266,6 @@ var percentLengthType = {
     return out;
   },
   interpolate: function(from, to, f) {
-    // If from or to are 'auto', we fall back to step interpolation.
-    if (percentLengthType.isAuto(from) || percentLengthType.isAuto(to)) {
-      return nonNumericType.interpolate(from, to);
-    }
     var out = {};
     for (var value in from) {
       out[value] = interp(from[value], to[value], f);
@@ -2371,6 +2374,8 @@ var percentLengthType = {
     return out;
   }
 };
+
+var percentLengthAutoType = typeWithKeywords(['auto'], percentLengthType);
 
 var positionKeywordRE = /^\s*left|^\s*center|^\s*right|^\s*top|^\s*bottom/i;
 var positionType = {
@@ -2561,12 +2566,6 @@ var rectangleType = {
     };
   },
   toCssValue: function(value) {
-    if (percentLengthType.isAuto(value.top) &&
-        percentLengthType.isAuto(value.right) &&
-        percentLengthType.isAuto(value.bottom) &&
-        percentLengthType.isAuto(value.left)) {
-      return 'auto';
-    }
     return 'rect(' +
         percentLengthType.toCssValue(value.top) + ',' +
         percentLengthType.toCssValue(value.right) + ',' +
@@ -2574,14 +2573,6 @@ var rectangleType = {
         percentLengthType.toCssValue(value.left) + ')';
   },
   fromCssValue: function(value) {
-    if (value === 'auto') {
-      return {
-        top: percentLengthType.fromCssValue('auto'),
-        right: percentLengthType.fromCssValue('auto'),
-        bottom: percentLengthType.fromCssValue('auto'),
-        left: percentLengthType.fromCssValue('auto'),
-      };
-    }
     var match = rectangleRE.exec(value);
     if (!match) {
       return undefined;
@@ -2782,6 +2773,7 @@ var visibilityType = createObject(nonNumericType, {
 });
 
 var lengthType = percentLengthType;
+var lengthAutoType = typeWithKeywords(['auto'], lengthType);
 
 var rgbRE = /^\s*rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/;
 var rgbaRE =
@@ -2858,13 +2850,13 @@ var namedColors = {
   springgreen: [0, 255, 127, 1], steelblue: [70, 130, 180, 1],
   tan: [210, 180, 140, 1], teal: [0, 128, 128, 1],
   thistle: [216, 191, 216, 1], tomato: [255, 99, 71, 1],
-  turquoise: [64, 224, 208, 1], violet: [238, 130, 238, 1],
-  wheat: [245, 222, 179, 1], white: [255, 255, 255, 1],
-  whitesmoke: [245, 245, 245, 1], yellow: [255, 255, 0, 1],
-  yellowgreen: [154, 205, 50, 1]
+  transparent: [0, 0, 0, 0], turquoise: [64, 224, 208, 1],
+  violet: [238, 130, 238, 1], wheat: [245, 222, 179, 1],
+  white: [255, 255, 255, 1], whitesmoke: [245, 245, 245, 1],
+  yellow: [255, 255, 0, 1], yellowgreen: [154, 205, 50, 1],
 };
 
-var colorType = {
+var colorType = typeWithKeywords(['currentColor'], {
   zero: function() { return [0,0,0,0]; },
   add: function(base, delta) {
     return [base[0] + delta[0], base[1] + delta[1],
@@ -2897,7 +2889,7 @@ var colorType = {
     }
     return namedColors[value];
   }
-};
+});
 
 var convertToDeg = function(num, type) {
   switch (type) {
@@ -3539,58 +3531,87 @@ var transformType = {
 };
 
 var propertyTypes = {
-  'backgroundColor': colorType,
-  'backgroundPosition': positionListType,
-  'borderBottomColor': colorType,
-  'borderBottomWidth': lengthType,
-  'borderLeftColor': colorType,
-  'borderLeftWidth': lengthType,
-  'borderRightColor': colorType,
-  'borderRightWidth': lengthType,
-  'borderSpacing': lengthType,
-  'borderTopColor': colorType,
-  'borderTopWidth': lengthType,
-  'bottom': percentLengthType,
-  'clip': rectangleType,
-  'color': colorType,
-  'crop': rectangleType,
-  'cx': lengthType,
-  'fontSize': percentLengthType,
-  'fontWeight': fontWeightType,
-  'height': percentLengthType,
-  'left': percentLengthType,
-  'letterSpacing': lengthType,
-  // TODO: should be both number and percentLength
-  'lineHeight': percentLengthType,
-  'marginBottom': lengthType,
-  'marginLeft': lengthType,
-  'marginRight': lengthType,
-  'marginTop': lengthType,
-  'maxHeight': percentLengthType,
-  'maxWidth': percentLengthType,
-  'minHeight': percentLengthType,
-  'minWidth': percentLengthType,
-  'opacity': numberType,
-  'outlineColor': colorType,
-  // TODO: not clear why this is an integer in the transitions spec
-  'outlineOffset': integerType,
-  'outlineWidth': lengthType,
-  'paddingBottom': lengthType,
-  'paddingLeft': lengthType,
-  'paddingRight': lengthType,
-  'paddingTop': lengthType,
-  'right': percentLengthType,
-  'textIndent': percentLengthType,
-  'textShadow': shadowType,
-  'top': percentLengthType,
-  'transform': transformType,
-  'verticalAlign': percentLengthType,
-  'visibility': visibilityType,
-  'width': percentLengthType,
-  'wordSpacing': percentLengthType,
-  'x': lengthType,
-  'y': lengthType,
-  'zIndex': integerType,
+  backgroundColor: colorType,
+  backgroundPosition: positionListType,
+  borderBottomColor: colorType,
+  borderBottomLeftRadius: percentLengthType,
+  borderBottomRightRadius: percentLengthType,
+  borderBottomWidth: lengthType,
+  borderLeftColor: colorType,
+  borderLeftWidth: lengthType,
+  borderRightColor: colorType,
+  borderRightWidth: lengthType,
+  borderSpacing: lengthType,
+  borderTopColor: colorType,
+  borderTopLeftRadius: percentLengthType,
+  borderTopRightRadius: percentLengthType,
+  borderTopWidth: lengthType,
+  bottom: percentLengthAutoType,
+  clip: typeWithKeywords(['auto'], rectangleType),
+  color: colorType,
+  cx: lengthType,
+
+  // TODO: Handle these keywords properly.
+  fontSize: typeWithKeywords(['smaller', 'larger'], percentLengthType),
+  fontWeight: typeWithKeywords(['lighter', 'bolder'], fontWeightType),
+
+  height: percentLengthAutoType,
+  left: percentLengthAutoType,
+  letterSpacing: typeWithKeywords(['normal'], lengthType),
+  lineHeight: percentLengthType, // TODO: Should support numberType as well.
+  marginBottom: lengthAutoType,
+  marginLeft: lengthAutoType,
+  marginRight: lengthAutoType,
+  marginTop: lengthAutoType,
+  maxHeight: typeWithKeywords(
+      ['none', 'max-content', 'min-content', 'fill-available', 'fit-content'],
+      percentLengthType),
+  maxWidth: typeWithKeywords(
+      ['none', 'max-content', 'min-content', 'fill-available', 'fit-content'],
+      percentLengthType),
+  minHeight: typeWithKeywords(
+      ['max-content', 'min-content', 'fill-available', 'fit-content'],
+      percentLengthType),
+  minWidth: typeWithKeywords(
+      ['max-content', 'min-content', 'fill-available', 'fit-content'],
+      percentLengthType),
+  opacity: numberType,
+  outlineColor: typeWithKeywords(['invert'], colorType),
+  outlineOffset: lengthType,
+  outlineWidth: lengthType,
+  paddingBottom: lengthType,
+  paddingLeft: lengthType,
+  paddingRight: lengthType,
+  paddingTop: lengthType,
+  right: percentLengthAutoType,
+  textIndent: typeWithKeywords(['each-line', 'hanging'], percentLengthType),
+  textShadow: shadowType,
+  top: percentLengthAutoType,
+  transform: transformType,
+  verticalAlign: typeWithKeywords([
+        'baseline',
+        'sub',
+        'super',
+        'text-top',
+        'text-bottom',
+        'middle',
+        'top',
+        'bottom'],
+      percentLengthType),
+  visibility: visibilityType,
+  width: typeWithKeywords([
+        'border-box',
+        'content-box',
+        'auto',
+        'max-content',
+        'min-content',
+        'available',
+        'fit-content'],
+      percentLengthType),
+  wordSpacing: typeWithKeywords(['normal'], percentLengthType),
+  x: lengthType,
+  y: lengthType,
+  zIndex: typeWithKeywords(['auto'], integerType),
 };
 
 var svgProperties = {
@@ -3600,6 +3621,87 @@ var svgProperties = {
   'y': 1,
 };
 
+var borderWidthAliases = {
+  initial: '3px',
+  thin: '1px',
+  medium: '3px',
+  thick: '5px',
+};
+
+var propertyValueAliases = {
+  backgroundColor: { initial: 'transparent' },
+  backgroundPosition: { initial: '0% 0%' },
+  borderBottomColor: { initial: 'currentColor' },
+  borderBottomLeftRadius: { initial: '0px' },
+  borderBottomRightRadius: { initial: '0px' },
+  borderBottomWidth: borderWidthAliases,
+  borderLeftColor: { initial: 'currentColor' },
+  borderLeftWidth: borderWidthAliases,
+  borderRightColor: { initial: 'currentColor' },
+  borderRightWidth: borderWidthAliases,
+  borderSpacing: { initial: '2px' }, // Spec says this should be 0 but in practise it is 2px.
+  borderTopColor: { initial: 'currentColor' },
+  borderTopLeftRadius: { initial: '0px' },
+  borderTopRightRadius: { initial: '0px' },
+  borderTopWidth: borderWidthAliases,
+  bottom: { initial: 'auto' },
+  clip: { initial: 'rect(0px, 0px, 0px, 0px)' },
+  color: { initial: 'black' }, // Depends on user agent.
+  fontSize: {
+    initial: '100%',
+    'xx-small': '60%',
+    'x-small': '75%',
+    'small': '89%',
+    'medium': '100%',
+    'large': '120%',
+    'x-large': '150%',
+    'xx-large': '200%',
+  },
+  fontWeight: {
+    initial: '400',
+    normal: '400',
+    bold: '700',
+  },
+  height: { initial: 'auto' },
+  left: { initial: 'auto' },
+  letterSpacing: { initial: 'normal' },
+  lineHeight: {
+    initial: '120%',
+    normal: '120%',
+  },
+  marginBottom: { initial: '0px' },
+  marginLeft: { initial: '0px' },
+  marginRight: { initial: '0px' },
+  marginTop: { initial: '0px' },
+  maxHeight: { initial: 'none' },
+  maxWidth: { initial: 'none' },
+  minHeight: { initial: '0px' },
+  minWidth: { initial: '0px' },
+  opacity: { initial: '1.0' },
+  outlineColor: { initial: 'invert' },
+  outlineOffset: { initial: '0px' },
+  outlineWidth: borderWidthAliases,
+  paddingBottom: { initial: '0px' },
+  paddingLeft: { initial: '0px' },
+  paddingRight: { initial: '0px' },
+  paddingTop: { initial: '0px' },
+  right: { initial: 'auto' },
+  textIndent: { initial: '0px' },
+  textShadow: {
+    initial: '0px 0px 0px transparent',
+    none: '0px 0px 0px transparent',
+  },
+  top: { initial: 'auto' },
+  transform: {
+    initial: '',
+    none: '',
+  },
+  verticalAlign: { initial: '0px' },
+  visibility: { initial: 'visible' },
+  width: { initial: 'auto' },
+  wordSpacing: { initial: 'normal' },
+  zIndex: { initial: 'auto' },
+}
 
 var propertyIsSVGAttrib = function(property, target) {
   return target.namespaceURI == 'http://www.w3.org/2000/svg' &&
@@ -3613,6 +3715,9 @@ var getType = function(property) {
 var add = function(property, base, delta) {
   if (delta === rawNeutralValue) {
     return base;
+  }
+  if (base === 'inherit' || delta === 'inherit') {
+    return nonNumericType.add(base, delta);
   }
   return getType(property).add(base, delta);
 }
@@ -3631,6 +3736,9 @@ var add = function(property, base, delta) {
 var interpolate = function(property, from, to, f) {
   console.assert(isDefinedAndNotNull(from) && isDefinedAndNotNull(to),
       'Both to and from values should be specified for interpolation');
+  if (from === 'inherit' || to === 'inherit') {
+    return nonNumericType.interpolate(from, to, f);
+  }
   return getType(property).interpolate(from, to, f);
 }
 
@@ -3640,6 +3748,9 @@ var interpolate = function(property, from, to, f) {
  * or rotate values while CSS properties require 'px' or 'deg' units.
  */
 var toCssValue = function(property, value, svgMode) {
+  if (value === 'inherit') {
+    return value;
+  }
   return getType(property).toCssValue(value, svgMode);
 }
 
@@ -3647,10 +3758,16 @@ var fromCssValue = function(property, value) {
   if (value === cssNeutralValue) {
     return rawNeutralValue;
   }
+  if (value === 'inherit') {
+    return value;
+  }
+  if (property in propertyValueAliases && value in propertyValueAliases[property]) {
+    value = propertyValueAliases[property][value];
+  }
+  var result = getType(property).fromCssValue(value);
   // Currently we'll hit this assert if input to the API is bad. To avoid this,
   // we should eliminate invalid values when normalizing the list of keyframes.
   // See the TODO in isSupportedPropertyValue().
-  var result = getType(property).fromCssValue(value);
   console.assert(isDefinedAndNotNull(result),
       'Invalid property value "' + value + '" for property "' + property + '"');
   return result;
