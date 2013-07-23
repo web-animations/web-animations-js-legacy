@@ -3758,8 +3758,8 @@ var fromCssValue = function(property, value) {
   if (value === 'inherit') {
     return value;
   }
-  if (property in propertyValueAliases) {
-    value = propertyValueAliases[property][value] || value;
+  if (property in propertyValueAliases && value in propertyValueAliases[property]) {
+    value = propertyValueAliases[property][value];
   }
   var result = getType(property).fromCssValue(value);
   // Currently we'll hit this assert if input to the API is bad. To avoid this,
