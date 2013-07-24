@@ -539,6 +539,84 @@ TestTimelineGroup.prototype.draw = function(container, endTime) {
   this.info.style.display = 'none';
 };
 
+
+
+/**
+ * Moves the testharness_timeline in "real time".
+ * (IE 1 test second takes 1 real second).
+ *
+ * @constructor
+ */
+function RealtimeRunner(timeline) {
+  this.timeline = timeline;
+
+  // Capture the real requestAnimationFrame so we can run in 'real time' mode
+  // rather than as fast as possible.
+  var nativeRequestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame;
+  this.boundRequestAnimationFrame = function(f) {
+    nativeRequestAnimationFrame(f.bind(this))
+  };
+  this.now = window.Date.now;
+
+  this.zeroTime = null;       // Time the page loaded
+  this.pauseStartTime = null; // Time at which we paused raf
+  this.timeDrift = 0;         // Amount we have been stopped for
+}
+
+/**
+ * Callback called from nativeRequestAnimationFrame.
+ *
+ * @private
+ * @param {number} timestamp The current time for the animation frame
+ *   (in millis).
+ */
+RealtimeRunner.prototype.animationFrame_ = function(timestamp) {
+  if (this.zeroTime === null) {
+    this.zeroTime = timestamp;
+  }
+
+  // Are we paused? Stop calling requestAnimationFrame.
+  if (this.pauseStartTime != null) {
+    return;
+  }
+
+  var virtualAnimationTime = timestamp - this.zeroTime - this.timeDrift;
+  var endTime = this.timeline.endTime_;
+  // If we have no events paste t=0, endTime is going to be zero. Instead
+  // make the test run for 2 minutes.
+  if (endTime == 0) {
+    endTime = 120e3;
+  }
+
+  // Do we still have time to go?
+  if (virtualAnimationTime < endTime) {
+    this.timeline.setTime(virtualAnimationTime);
+    this.boundRequestAnimationFrame(this.animationFrame_);
+
+  } else {
+    // Have we gone past endTime_? Force the harness to its endTime_.
+
+    this.timeline.setTime(endTime);
+    // Don't continue to raf
+  }
+};
+
+RealtimeRunner.prototype.start = function() {
+  if (this.pauseStartTime != null) {
+    this.timeDrift += (this.now() - this.pauseStartTime);
+    this.pauseStartTime = null;
+  }
+  this.boundRequestAnimationFrame(this.animationFrame_);
+};
+
+RealtimeRunner.prototype.pause = function() {
+  if (this.pauseStartTime != null) {
+    return;
+  }
+  this.pauseStartTime = this.now();
+};
+
+
 /**
  * Class for storing events that happen during at given times (such as
  * animation checks, or setTimeout).
@@ -563,6 +641,8 @@ function TestTimeline(everyFrame) {
   this.schedule(function() {}, 0);
 
   this.reset();
+
+  this.runner_ = new RealtimeRunner(this);
 }
 
 /**
@@ -601,10 +681,10 @@ TestTimeline.prototype.createGUI = function(body) {
   this.control.id = 'control';
   this.control.onclick = function() {
     if (this.control.innerText == 'Go!') {
-      testharness_raf_start();
+      this.runner_.start();
       this.control.innerText = 'Pause';
     } else {
-      testharness_raf_pause();
+      this.runner_.pause();
       this.control.innerText = 'Go!';
     }
   }.bind(this);
@@ -850,65 +930,6 @@ TestTimeline.prototype.autorun = function() {
   this.toNextEvent();
 };
 
-// Capture the real requestAnimationFrame so we can run in 'real time' mode
-// rather than as fast as possible.
-var raf = window.requestAnimationFrame;
-var raf_now = Date.now;
-
-var raf_t0 = null;    // Time the page loaded
-var raf_pauseStartTime = null; // Time at which we paused raf
-var raf_timeDrift = 0;    // Amount we have been stopped for.
-function testharness_raf(ts) {
-  if (raf_t0 === null) {
-    raf_t0 = ts;
-  }
-
-  // Are we paused? Stop rafing.
-  if (raf_pauseStartTime != null) {
-    return;
-  }
-
-  var t = ts - raf_t0 - raf_timeDrift;
-
-  var endTime = testharness_timeline.endTime_;
-  // If we have no events paste t=0, endTime is going to be zero. Instead
-  // make the test run for 2 minutes.
-  if (endTime == 0) {
-    endTime = 120e3;
-  }
-
-  // Do we still have time to go?
-  if (t < endTime) {
-    testharness_timeline.setTime(t);
-    raf(testharness_raf);
-
-  } else {
-    // Have we gone past endTime_? Force the harness to its endTime_.
-
-    testharness_timeline.setTime(testharness_timeline.endTime_);
-    // Don't continue to raf
-  }
-
-  // FIXME: When reset is called, we need to clear raf_t0
-}
-
-function testharness_raf_start() {
-  if (raf_pauseStartTime == null) {
-    return;
-  }
-
-  raf_timeDrift += (raf_now() - raf_pauseStartTime);
-  raf_pauseStartTime = null;
-
-  raf(testharness_raf);
-}
-
-function testharness_raf_pause() {
-  if (raf_pauseStartTime != null) {
-    return;
-  }
-  raf_pauseStartTime = raf_now();
-}
 
 
 function testharness_timeline_setup() {
@@ -935,7 +956,8 @@ function testharness_timeline_setup() {
 
   } else if('#explore' == window.location.hash ||
         window.location.hash.length == 0) {
-    raf(testharness_raf);
+
+    setTimeout(testharness_timeline.runner_.start.bind(testharness_timeline.runner_), 1);
   } else {
     alert('Unknown start mode.');
   }
