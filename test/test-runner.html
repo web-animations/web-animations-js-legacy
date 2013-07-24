@@ -193,16 +193,30 @@ function createTestRows(testName, testURL) {
   logCell.colSpan = '4';
   logRow.appendChild(logCell);
 
+  /**
+   * Normally we would use "display: none;" but that causes Firefox to return
+   * null for getComputedStyle, so instead we have to use this visibility hack.
+   */
   tableGroup.showInfo = function() {
-    logRow.style.display = 'table-row';
-    iframeRow.style.display = 'table-row';
+    logRow.style.visibility = 'visible';
+    logRow.style.position = '';
+    logRow.style.height = 'auto';
+
+    iframeRow.style.visibility = 'visible';
+    iframeRow.style.position = '';
+    iframeRow.style.height = 'auto';
   };
   tableGroup.hideInfo = function() {
-    logRow.style.display = 'none';
-    iframeRow.style.display = 'none';
+    logRow.style.visibility = 'hidden';
+    logRow.style.position = 'absolute';
+    logRow.style.height = '0';
+
+    iframeRow.style.visibility = 'hidden';
+    iframeRow.style.position = 'absolute';
+    iframeRow.style.height = '0';
   };
   tableGroup.toggleInfo = function() {
-    if (logRow.style.display == 'none') {
+    if (logRow.style.visibility == 'hidden') {
       tableGroup.showInfo();
     } else {
       tableGroup.hideInfo();
@@ -349,7 +363,7 @@ function changeTestState(test, newState) {
       // Open up the window of the failed result
       test.showInfo();
       // Scroll to it.
-      window.scroll(0, [trueOffsetTop(test), 0]);
+      window.scroll(0, trueOffsetTop(test));
     }
 
     // Open the status window for taking of screenshots

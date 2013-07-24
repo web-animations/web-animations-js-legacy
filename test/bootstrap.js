@@ -855,7 +855,7 @@ TestTimeline.prototype.toNextEvent = function() {
     this.setTime(events[0].millis);
 
     if (this.autorun_) {
-      this.toNextEvent();
+      setTimeout(this.toNextEvent.bind(this), 0);
     }
 
     return true;

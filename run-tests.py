@@ -436,7 +436,11 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 'CONTENT_TYPE': self.headers['Content-Type'],
             })
 
-        data = simplejson.loads(form.getvalue('data'))
+        try:
+            json_data = form.getvalue('data')
+            data = simplejson.loads(json_data)
+        except ValueError, e:
+            raise ValueError("Unable to decode JSON object (%s)\n%s" % (e, json_data))
 
         overall_status = 0
         for result in data['results']:
@@ -455,6 +459,7 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
         # Take a screenshot of result if a failure occurred.
         if overall_status > 0 and args.virtual:
+            time.sleep(1)
             screenshot = data['testName'] + '.png'
             disp.grab().save(screenshot)
 
@@ -494,13 +499,15 @@ port = httpd.socket.getsockname()[-1]
 # Start up a virtual display, useful for testing on headless servers.
 # -----------------------------------------------------------------------------
 
+VIRTUAL_SIZE=(1024, 2000)
+
 # PhantomJS doesn't need a display
 disp = None
 if args.virtual and args.browser != "PhantomJS":
     from pyvirtualdisplay.smartdisplay import SmartDisplay
 
     try:
-        disp = SmartDisplay(visible=0, bgcolor='black').start()
+        disp = SmartDisplay(visible=0, bgcolor='black', size=VIRTUAL_SIZE).start()
         atexit.register(disp.stop)
     except:
         if disp:
@@ -512,6 +519,8 @@ if args.virtual and args.browser != "PhantomJS":
 # ----------------------------------------------------------------------------
 
 from selenium import webdriver
+from selenium.common import exceptions as selenium_exceptions
+from selenium.webdriver.common.keys import Keys as selenium_keys
 
 driver_arguments = {}
 if args.browser == "Chrome":
@@ -540,6 +549,8 @@ if args.browser == "Chrome":
         '--user-data-dir=%s' % user_data_dir)
     driver_arguments['chrome_options'].add_argument(
         '--enable-logging')
+    driver_arguments['chrome_options'].add_argument(
+        '--start-maximized')
 
     driver_arguments['chrome_options'].binary_location = (
         '/usr/bin/google-chrome')
@@ -554,6 +565,10 @@ if args.browser == "Chrome":
 
 elif args.browser == "Firefox":
     driver_arguments['firefox_profile'] = webdriver.FirefoxProfile()
+    # Firefox will often pop-up a dialog saying "script is taking too long" or
+    # similar. So we can notice this problem we use "accept" rather then the
+    # default "dismiss".
+    webdriver.DesiredCapabilities.FIREFOX["unexpectedAlertBehaviour"] = "accept"
 
 elif args.browser == "PhantomJS":
     driver_arguments['executable_path'] = phantomjs
@@ -575,6 +590,7 @@ elif args.browser == "Remote":
             caps[key] = value
     driver_arguments['desired_capabilities'] = caps
 
+major_failure = False
 try:
     browser = None
     try:
@@ -586,6 +602,16 @@ try:
         if browser:
             browser.close()
         raise
+
+    if args.virtual and args.browser == "Firefox":
+        # Calling browser.maximize_window() doesn't work as we don't have a
+        # window manager, so instead we for the size/position.
+        browser.set_window_position(0, 0)
+        browser.set_window_size(*VIRTUAL_SIZE)
+        # Also lets go into full screen mode to get rid of the "Chrome" around
+        # the edges.
+        e = browser.find_element_by_tag_name('body')
+        e.send_keys(selenium_keys.F11)
 
     url = 'http://localhost:%i/test/test-runner.html?%s' % (
         port, "|".join(tests))
@@ -604,11 +630,33 @@ try:
         if len(browser.window_handles) > 1:
             close_other_windows(browser, url)
 
-        if not browser.execute_script('return window.finished'):
-            time.sleep(1)
-            continue
-        else:
-            break
+        try:
+            if not browser.execute_script('return window.finished'):
+                time.sleep(1)
+                continue
+            else:
+                break
+
+        # Deal with unexpected alerts, sometimes they are dismissed by
+        # alternative means so we have to deal with that case too.
+        except selenium_exceptions.UnexpectedAlertPresentException, e:
+            try:
+                alert = browser.switch_to_alert()
+                sys.stderr.write("""\
+WARNING: Unexpected alert found!
+---------------------------------------------------------------------
+%s
+---------------------------------------------------------------------
+""" % alert.text)
+                alert.dismiss()
+            except selenium_exceptions.NoAlertPresentException, e:
+                sys.stderr.write("WARNING: Unexpected alert which dissappeared on it's own!\n")
+            sys.stderr.flush()
+
+except Exception, e:
+    import traceback
+    sys.stderr.write(traceback.format_exc())
+    major_failure = True
 
 finally:
     output.stopTestRun()
@@ -623,7 +671,7 @@ if summary.testsRun == 0:
    print
    print "FAIL: No tests run!"
 
-if summary.wasSuccessful() and summary.testsRun > 0:
+if summary.wasSuccessful() and summary.testsRun > 0 and not major_failure:
     sys.exit(0)
 else:
     sys.exit(1)
