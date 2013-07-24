@@ -38,9 +38,7 @@ function getSync(src) {
 function loadScript(src, options) {
   options = options || {coverage: true};
   if (window.__resources__[src]) {
-    (function() {
-      eval(window.__resources__[src]);
-    }).call(window);
+    document.write('<script type="text/javascript">eval(window.__resources__["'+src+'"]);</script>');
   } else if (coverageMode && options.coverage) {
     instrument(src);
     loadScript(src);
@@ -948,7 +946,7 @@ function testharness_timeline_setup() {
           break;
       }
     });
-  } else if ('#auto' == window.location.hash) {
+  } else if ('#auto' == window.location.hash || '#coverage' == window.location.hash) {
     // Run the test as fast as possible, skipping time.
 
     // Need non-zero timeout to allow chrome to run other code.
@@ -1069,7 +1067,7 @@ window.testharness_after_loaded = function() {
 };
 
 
-loadScript('../testharness/testharness.js');
+loadScript('../testharness/testharness.js', {coverage: false});
 loadCSS('../testharness/testharness.css');
 loadCSS('../testharness_timing.css');
 
@@ -1081,7 +1079,7 @@ if (testType() == 'auto') {
 }
 
 document.write('<div id="log"></div>');
-loadScript('../testharness/testharnessreport.js');
+loadScript('../testharness/testharnessreport.js', {coverage: false});
 
 if (!hasFlag('nopolyfill')) {
   loadScript('../../web-animations.js');
