@@ -28,6 +28,7 @@ var tests = [
   'auto-test-rectangle.html',
   'auto-test-reparent.html',
   'auto-test-seq-speed.html',
+  'auto-test-shorthand.html',
   'auto-test-start-time.html',
   'auto-test-start-time-iterations.html',
   'auto-test-svg-anim.html',
