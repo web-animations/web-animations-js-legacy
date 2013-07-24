@@ -1585,6 +1585,107 @@ PathAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
   }
 });
 
+var shorthandToLonghand = {
+  background: [
+    'backgroundImage',
+    'backgroundPosition',
+    'backgroundSize',
+    'backgroundRepeat',
+    'backgroundAttachment',
+    'backgroundOrigin',
+    'backgroundClip',
+    'backgroundColor',
+  ],
+  border: [
+    'borderTopColor',
+    'borderTopStyle',
+    'borderTopWidth',
+    'borderRightColor',
+    'borderRightStyle',
+    'borderRightWidth',
+    'borderBottomColor',
+    'borderBottomStyle',
+    'borderBottomWidth',
+    'borderLeftColor',
+    'borderLeftStyle',
+    'borderLeftWidth',
+  ],
+  borderBottom: [
+    'borderBottomWidth',
+    'borderBottomStyle',
+    'borderBottomColor',
+  ],
+  borderColor: [
+    'borderTopColor',
+    'borderRightColor',
+    'borderBottomColor',
+    'borderLeftColor',
+  ],
+  borderLeft: [
+    'borderLeftWidth',
+    'borderLeftStyle',
+    'borderLeftColor',
+  ],
+  borderRadius: [
+    'borderTopLeftRadius',
+    'borderTopRightRadius',
+    'borderBottomRightRadius',
+    'borderBottomLeftRadius',
+  ],
+  borderRight: [
+    'borderRightWidth',
+    'borderRightStyle',
+    'borderRightColor',
+  ],
+  borderTop: [
+    'borderTopWidth',
+    'borderTopStyle',
+    'borderTopColor',
+  ],
+  borderWidth: [
+    'borderTopWidth',
+    'borderRightWidth',
+    'borderBottomWidth',
+    'borderLeftWidth',
+  ],
+  font: [
+    'fontFamily',
+    'fontSize',
+    'fontStyle',
+    'fontVariant',
+    'fontWeight',
+    'lineHeight',
+  ],
+  margin: [
+    'marginTop',
+    'marginRight',
+    'marginBottom',
+    'marginLeft',
+  ],
+  outline: [
+    'outlineColor',
+    'outlineStyle',
+    'outlineWidth',
+  ],
+  padding: [
+    'paddingTop',
+    'paddingRight',
+    'paddingBottom',
+    'paddingLeft',
+  ],
+};
+
+// This delegates parsing shorthand value syntax to the browser.
+var shorthandExpanderDiv = document.createElement("div");
+var expandShorthand = function(property, value, result) {
+  shorthandExpanderDiv.style[property] = value;
+  var longProperties = shorthandToLonghand[property]
+  for (var i in longProperties) {
+    var longProperty = longProperties[i];
+    var longhandValue = shorthandExpanderDiv.style[longProperty];
+    result[longProperty] = longhandValue;
+  }
+};
 
 var normalizeKeyframeDictionary = function(properties) {
   var result = {
@@ -1615,8 +1716,13 @@ var normalizeKeyframeDictionary = function(properties) {
     var property = animationProperties[i];
     // TODO: The spec does not specify how to handle null values.
     // See https://www.w3.org/Bugs/Public/show_bug.cgi?id=22572
-    result[property] = isDefinedAndNotNull(properties[property]) ?
+    var value = isDefinedAndNotNull(properties[property]) ?
         properties[property].toString() : '';
+    if (property in shorthandToLonghand) {
+      expandShorthand(property, value, result);
+    } else {
+      result[property] = value;
+    }
   }
   return result;
 };
