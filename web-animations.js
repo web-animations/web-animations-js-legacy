@@ -2056,17 +2056,15 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
   },
   _getProperties: function() {
     if (!isDefinedAndNotNull(this._cachedProperties)) {
+      this._cachedProperties = [];
       var properties = {};
       var frames = this._getDistributedKeyframes();
       for (var i = 0; i < frames.length; i++) {
         for (var property in frames[i].cssValues) {
-          properties[property] = true;
-        }
-      }
-      this._cachedProperties = [];
-      for (var p in properties) {
-        if (p in properties) {
-          this._cachedProperties.push(p);
+          if (!properties[property]) {
+            this._cachedProperties.push(property);
+            properties[property] = true;
+          }
         }
       }
     }
