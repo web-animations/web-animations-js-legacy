@@ -17,6 +17,8 @@
 (function() {
 "use strict";
 
+var ASSERT_ENABLED = false;
+
 function detectFeatures() {
   var style = document.createElement('style');
   style.textContent = '' +
@@ -549,7 +551,7 @@ TimedItem.prototype = {
     this._timeFraction = this._isCurrentDirectionForwards() ?
             unscaledFraction :
             1.0 - unscaledFraction;
-    console.assert(this._timeFraction >= 0.0 && this._timeFraction <= 1.0,
+    ASSERT_ENABLED && console.assert(this._timeFraction >= 0.0 && this._timeFraction <= 1.0,
         'Time fraction should be in the range [0, 1]');
     if (timingFunction) {
       this._timeFraction = timingFunction.scaleTime(this._timeFraction);
@@ -586,7 +588,7 @@ TimedItem.prototype = {
             adjustedAnimationTime, this.iterationDuration);
     this._iterationTime = this._scaleIterationTime(unscaledIterationTime);
     this._timeFraction = this._iterationTime / this.iterationDuration;
-    console.assert(this._timeFraction >= 0.0 && this._timeFraction <= 1.0,
+    ASSERT_ENABLED && console.assert(this._timeFraction >= 0.0 && this._timeFraction <= 1.0,
         'Time fraction should be in the range [0, 1], got ' +
         this._timeFraction + ' ' + this._iterationTime + ' ' +
         this.iterationDuration + ' ' + isAtEndOfIterations + ' ' +
@@ -624,17 +626,17 @@ TimedItem.prototype = {
     return Math.ceil(x / range) - 1;
   },
   _modulusWithClosedOpenRange: function(x, range) {
-    console.assert(range > 0, 'Range must be strictly positive');
+    ASSERT_ENABLED && console.assert(range > 0, 'Range must be strictly positive');
     var modulus = x % range;
     var result = modulus < 0 ? modulus + range : modulus;
-    console.assert(result >= 0.0 && result < range,
+    ASSERT_ENABLED && console.assert(result >= 0.0 && result < range,
         'Result should be in the range [0, range)');
     return result;
   },
   _modulusWithOpenClosedRange: function(x, range) {
     var modulus = this._modulusWithClosedOpenRange(x, range);
     var result = modulus == 0 ? range : modulus;
-    console.assert(result > 0.0 && result <= range,
+    ASSERT_ENABLED && console.assert(result > 0.0 && result <= range,
         'Result should be in the range (0, range]');
     return result;
   },
@@ -1825,7 +1827,7 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     return unaccumulatedValue;
   },
   _getAccumulatingValue: function(frames, property) {
-    console.assert(this._allKeyframesUseSameCompositeOperation(frames),
+    ASSERT_ENABLED && console.assert(this._allKeyframesUseSameCompositeOperation(frames),
         'Accumulation only valid if all frames use same composite operation');
 
     // This is a BlendedCompositableValue, though because the offset is 1.0, we
@@ -1845,12 +1847,12 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     // to get a concrete value (note that the choice of underlying value is
     // irrelevant since it uses replace composition). We then form a new
     // AddReplaceCompositable value to add-composite this concrete value.
-    console.assert(!unaccumulatedValueAtOffsetOne.dependsOnUnderlyingValue());
+    ASSERT_ENABLED && console.assert(!unaccumulatedValueAtOffsetOne.dependsOnUnderlyingValue());
     return new AddReplaceCompositableValue(
         unaccumulatedValueAtOffsetOne.compositeOnto(property, null), 'add');
   },
   _unaccumulatedValueForProperty: function(frames, timeFraction, property) {
-    console.assert(frames.length >= 2,
+    ASSERT_ENABLED && console.assert(frames.length >= 2,
         'Interpolation requires at least two keyframes');
 
     var startKeyframeIndex;
@@ -1876,7 +1878,7 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     } else {
       for (var i = length - 1; i >= 0; i--) {
         if (frames[i].offset <= timeFraction) {
-          console.assert(frames[i].offset !== 1.0);
+          ASSERT_ENABLED && console.assert(frames[i].offset !== 1.0);
           startKeyframeIndex = i;
           break;
         }
@@ -1904,7 +1906,7 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
         frames.push(distributedFrames[i]);
       }
     }
-    console.assert(frames.length > 0,
+    ASSERT_ENABLED && console.assert(frames.length > 0,
         'There should always be keyframes for each property');
 
     // Add 0 and 1 keyframes if required.
@@ -1918,7 +1920,7 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
       keyframe.addPropertyValuePair(property, cssNeutralValue);
       frames.push(keyframe);
     }
-    console.assert(frames.length >= 2,
+    ASSERT_ENABLED && console.assert(frames.length >= 2,
         'There should be at least two keyframes including synthetic keyframes');
 
     return frames;
@@ -1937,7 +1939,7 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
         keyframe.composite : this.composite;
   },
   _allKeyframesUseSameCompositeOperation: function(keyframes) {
-    console.assert(keyframes.length >= 1, 'This requires at least one keyframe');
+    ASSERT_ENABLED && console.assert(keyframes.length >= 1, 'This requires at least one keyframe');
     var composite = this._compositeForKeyframe(keyframes[0]);
     for (var i = 1; i < keyframes.length; i++) {
       if (this._compositeForKeyframe(keyframes[i]) !== composite) {
@@ -2029,9 +2031,9 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
       var lastOffset = this._cachedDistributedKeyframes[lastOffsetIndex].offset;
       var nextOffset = this._cachedDistributedKeyframes[nextOffsetIndex].offset;
       var unspecifiedKeyframes = nextOffsetIndex - lastOffsetIndex - 1;
-      console.assert(unspecifiedKeyframes > 0);
+      ASSERT_ENABLED && console.assert(unspecifiedKeyframes > 0);
       var localIndex = i - lastOffsetIndex;
-      console.assert(localIndex > 0);
+      ASSERT_ENABLED && console.assert(localIndex > 0);
       this._cachedDistributedKeyframes[i].offset = lastOffset +
           (nextOffset - lastOffset) * localIndex / (unspecifiedKeyframes + 1);
     }
@@ -2054,17 +2056,15 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
   },
   _getProperties: function() {
     if (!isDefinedAndNotNull(this._cachedProperties)) {
+      this._cachedProperties = [];
       var properties = {};
       var frames = this._getDistributedKeyframes();
       for (var i = 0; i < frames.length; i++) {
         for (var property in frames[i].cssValues) {
-          properties[property] = true;
-        }
-      }
-      this._cachedProperties = [];
-      for (var p in properties) {
-        if (properties.hasOwnProperty(p)) {
-          this._cachedProperties.push(p);
+          if (!properties[property]) {
+            this._cachedProperties.push(property);
+            properties[property] = true;
+          }
         }
       }
     }
@@ -2077,9 +2077,9 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
 // just a dictionary and is not exposed.
 /** @constructor */
 var KeyframeInternal = function(offset, composite) {
-  console.assert(typeof offset === 'number' || offset === null,
+  ASSERT_ENABLED && console.assert(typeof offset === 'number' || offset === null,
       'Invalid offset value');
-  console.assert(composite === 'add' || composite === 'replace' || composite === null,
+  ASSERT_ENABLED && console.assert(composite === 'add' || composite === 'replace' || composite === null,
       'Invalid composite value');
   this.offset = offset;
   this.composite = composite;
@@ -2096,22 +2096,22 @@ KeyframeInternal.prototype = {
     return this.rawValues[property];
   },
   addPropertyValuePair: function(property, value) {
-    console.assert(!this.cssValues.hasOwnProperty(property));
+    ASSERT_ENABLED && console.assert(!this.cssValues.hasOwnProperty(property));
     this.cssValues[property] = value;
   },
   hasValueForProperty: function(property) {
-    return this.cssValues.hasOwnProperty(property);
+    return property in this.cssValues;
   }
 };
 
 KeyframeInternal.isSupportedPropertyValue = function(value) {
-  console.assert(typeof value === 'string' || value === cssNeutralValue);
+  ASSERT_ENABLED && console.assert(typeof value === 'string' || value === cssNeutralValue);
   // TODO: Check this properly!
   return value !== '';
 };
 
 KeyframeInternal.createFromNormalizedProperties = function(properties) {
-  console.assert(
+  ASSERT_ENABLED && console.assert(
       isDefinedAndNotNull(properties) && typeof properties === 'object',
       'Properties must be an object');
   var keyframe = new KeyframeInternal(properties.offset, properties.composite);
@@ -2268,11 +2268,11 @@ var interp = function(from, to, f, type) {
 };
 
 var interpArray = function(from, to, f, type) {
-  console.assert(Array.isArray(from) || from === null,
+  ASSERT_ENABLED && console.assert(Array.isArray(from) || from === null,
       'From is not an array or null');
-  console.assert(Array.isArray(to) || to === null,
+  ASSERT_ENABLED && console.assert(Array.isArray(to) || to === null,
       'To is not an array or null');
-  console.assert(from === null || to === null || from.length === to.length,
+  ASSERT_ENABLED && console.assert(from === null || to === null || from.length === to.length,
       'Arrays differ in length ' + from + " : " + to);
   var length = from ? from.length : to.length;
 
@@ -3560,7 +3560,7 @@ var transformType = {
     // TODO: fix this :)
     var out = ''
     for (var i = 0; i < value.length; i++) {
-      console.assert(value[i].t, 'transform type should be resolved by now');
+      ASSERT_ENABLED && console.assert(value[i].t, 'transform type should be resolved by now');
       switch (value[i].t) {
         case 'rotate':
         case 'rotateX':
@@ -3864,7 +3864,7 @@ var add = function(property, base, delta) {
  *   will return 'rotate(43deg)'.
  */
 var interpolate = function(property, from, to, f) {
-  console.assert(isDefinedAndNotNull(from) && isDefinedAndNotNull(to),
+  ASSERT_ENABLED && console.assert(isDefinedAndNotNull(from) && isDefinedAndNotNull(to),
       'Both to and from values should be specified for interpolation');
   if (from === 'inherit' || to === 'inherit') {
     return nonNumericType.interpolate(from, to, f);
@@ -3898,7 +3898,7 @@ var fromCssValue = function(property, value) {
   // Currently we'll hit this assert if input to the API is bad. To avoid this,
   // we should eliminate invalid values when normalizing the list of keyframes.
   // See the TODO in isSupportedPropertyValue().
-  console.assert(isDefinedAndNotNull(result),
+  ASSERT_ENABLED && console.assert(isDefinedAndNotNull(result),
       'Invalid property value "' + value + '" for property "' + property + '"');
   return result;
 }
@@ -3924,7 +3924,7 @@ CompositableValue.prototype = {
 var AddReplaceCompositableValue = function(value, composite) {
   this.value = value;
   this.composite = composite;
-  console.assert(
+  ASSERT_ENABLED && console.assert(
       !(this.value === cssNeutralValue && this.composite === 'replace'),
       'Should never replace-composite the neutral value');
 };
@@ -3938,7 +3938,7 @@ AddReplaceCompositableValue.prototype =
       case 'add':
         return add(property, underlyingValue, this.value);
       default:
-        console.assert(false, 'Invalid composite operation ' + this.composite);
+        ASSERT_ENABLED && console.assert(false, 'Invalid composite operation ' + this.composite);
     }
   },
   dependsOnUnderlyingValue: function() {
@@ -3975,7 +3975,7 @@ var AccumulatedCompositableValue = function(bottomValue, accumulatingValue,
   this.bottomValue = bottomValue;
   this.accumulatingValue = accumulatingValue;
   this.accumulationCount = accumulationCount;
-  console.assert(this.accumulationCount > 0,
+  ASSERT_ENABLED && console.assert(this.accumulationCount > 0,
       'Accumumlation count should be strictly positive');
 };
 
@@ -4034,7 +4034,7 @@ CompositedPropertyMap.prototype = {
       if (this.stackDependsOnUnderlyingValue(this.properties[property])) {
         var baseValue = fromCssValue(property, getValue(this.target, property));
         // TODO: Decide what to do with elements not in the DOM.
-        console.assert(isDefinedAndNotNull(baseValue) && baseValue !== '',
+        ASSERT_ENABLED && console.assert(isDefinedAndNotNull(baseValue) && baseValue !== '',
             'Base value should always be set. ' +
             'Is the target element in the DOM?');
         this.baseValues[property] = baseValue;
@@ -4050,7 +4050,7 @@ CompositedPropertyMap.prototype = {
       for (var i = 0; i < valuesToComposite.length; i++) {
         baseValue = valuesToComposite[i].compositeOnto(property, baseValue);
       }
-      console.assert(isDefinedAndNotNull(baseValue) && baseValue !== '',
+      ASSERT_ENABLED && console.assert(isDefinedAndNotNull(baseValue) && baseValue !== '',
           'Value should always be set after compositing');
       var isSvgMode = propertyIsSVGAttrib(property, this.target);
       setValue(this.target, property, toCssValue(property, baseValue,
