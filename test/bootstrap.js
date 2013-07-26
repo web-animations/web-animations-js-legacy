@@ -108,7 +108,7 @@ var is_svg_attrib = function(property, target) {
 
 var svg_namespace_uri = 'http://www.w3.org/2000/svg';
 
-var features = (function() {
+window.test_features = (function() {
   var style = document.createElement('style');
   style.textContent = '' +
      'dummyRuleForTesting {' +
@@ -211,7 +211,7 @@ function _assert_style_element(object, style, description) {
       }
 
       if (prop_name == 'transform') {
-        var output_prop_name = features.transformProperty;
+        var output_prop_name = test_features.transformProperty;
       } else {
         var output_prop_name = prop_name;
       }
