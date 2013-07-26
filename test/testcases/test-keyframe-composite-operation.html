@@ -38,7 +38,7 @@ function testComposite(property, initialValue, composite, keyframeValue, offset,
   var target = document.createElement('div');
   document.getElementById('targets').appendChild(target);
   if (initialValue !== undefined && initialValue !== null) {
-    target.style[property === 'transform' ? '-webkit-transform' : property] = initialValue;
+    target.style[property === 'transform' ? test_features.transformProperty : property] = initialValue;
   }
   var keyframes = {};
   keyframes[property] = keyframeValue;
@@ -52,7 +52,6 @@ function testComposite(property, initialValue, composite, keyframeValue, offset,
     });
   }, message);
 }
-
 
 // Test replace composition.
 testComposite('color', null, 'replace', 'red', 1.0, 'rgb(255, 0, 0)',
@@ -150,7 +149,9 @@ testComposite('zIndex', 42, null, null, 0.0, 42,
 testComposite('textShadow', '1px 2px red', null, null, 0.0, 'rgb(255, 0, 0) 1px 2px',
     'Add-composite the neutral value onto a shadow type property');
 testComposite('transform', 'scale(42)', null, null, 0.0, 'matrix(42, 0, 0, 42, 0, 0)',
-    'Add-composite the neutral value onto a transform type property');
+    'Add-composite the neutral value onto a transform type property (scale)');
+testComposite('transform', 'rotate(0deg)', null, null, 0.0, 'matrix(1, 0, 0, 1, 0, 0)',
+    'Add-composite the neutral value onto a transform type property (rotate)');
 testComposite('visibility', 'hidden', null, null, 0.0, 'hidden',
     'Add-composite the neutral value onto a visibility type property');
 
