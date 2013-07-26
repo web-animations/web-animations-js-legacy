@@ -515,8 +515,13 @@ TestTimelineGroup.prototype.draw = function(container, endTime) {
   this.marker.title = this.millis + 'ms';
   this.marker.className = 'marker';
   this.marker.src = '../img/unknown.png';
-  this.marker.style.left = 'calc(' + (this.millis / endTime) * 100.0 +
-               '%' + ' - 10px)';
+
+  var mleft = 'calc(100% - 10px)';
+  if (endTime != 0) {
+    mleft = 'calc(' + (this.millis / endTime) * 100.0 + '%' + ' - 10px)';
+  }
+  this.marker.style.left = mleft;
+
   container.appendChild(this.marker);
 
   this.info.className = 'info';
@@ -532,8 +537,15 @@ TestTimelineGroup.prototype.draw = function(container, endTime) {
     this.style.display = 'none';
   }.bind(this.info);
 
-  this.info.style.left = 'calc(' + (this.millis / endTime) * 100.0 + '%' +
-      ' - ' + this.info.offsetWidth / 2 + 'px)';
+
+  var offset = Math.ceil(this.info.offsetWidth / 2);
+  var ileft = 'calc(100% - ' + offset + 'px)';
+  if (endTime != 0) {
+    ileft = 'calc(' + (this.millis / endTime) * 100.0 + '%' + ' - ' + offset +
+        'px)';
+  }
+  this.info.style.left = ileft;
+
   this.info.style.display = 'none';
 };
 
@@ -698,7 +710,11 @@ TestTimeline.prototype.createGUI = function(body) {
  */
 TestTimeline.prototype.updateGUI = function () {
   // Update the timeline
-  this.timelineprogress.style.width = (this.currentTime_ / this.endTime_) * 100.0 +'%';
+  var width = "100%";
+  if (this.endTime_ != 0) {
+    width = (this.currentTime_ / this.endTime_) * 100.0 +'%'
+  }
+  this.timelineprogress.style.width = width;
   this.timelinebar.title = (this.currentTime_).toFixed(0) + 'ms';
 };
 
