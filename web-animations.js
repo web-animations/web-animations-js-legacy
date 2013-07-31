@@ -2993,7 +2993,7 @@ var colorType = typeWithKeywords(['currentColor'], {
       return [value[0] * alpha, value[1] * alpha, value[2] * alpha];
   },
   add: function(base, delta) {
-    var alpha = Math.min(base[3] + delta[3], 255);
+    var alpha = Math.min(base[3] + delta[3], 1);
     if (alpha === 0) {
       return [0, 0, 0, 0];
     }
@@ -3003,13 +3003,14 @@ var colorType = typeWithKeywords(['currentColor'], {
             (base[2] + delta[2]) / alpha, alpha];
   },
   interpolate: function(from, to, f) {
-    var alpha = clamp(interp(from[3], to[3], f), 0, 255);
+    var alpha = clamp(interp(from[3], to[3], f), 0, 1);
     if (alpha === 0) {
       return [0, 0, 0, 0];
     }
     from = this._premultiply(from);
     to = this._premultiply(to);
-    return [interp(from[0], to[0], f) / alpha, interp(from[1], to[1], f) / alpha,
+    return [interp(from[0], to[0], f) / alpha,
+            interp(from[1], to[1], f) / alpha,
             interp(from[2], to[2], f) / alpha, alpha];
   },
   toCssValue: function(value) {
