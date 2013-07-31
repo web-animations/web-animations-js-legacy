@@ -64,21 +64,21 @@ var expected_failures = {
       message: "Output changes from rgb to rgba in later Chrome"
    },
    '/(#background|#outline) at t=0s/' : {
-    firefox: true,
+      firefox: true,
       message: "rbga(0, 0, 0, 0) gets converted to 'transparent' in Firefox."
    },
-  '#text at t=0s': {
-    firefox: true,
-    message: "Floating point issues."
-  },
-  '/(#background|#transform|#text) at t=1s/': {
-    firefox: true,
-    message: "Floating point issues."
-  },
-  '/(#border|#transform) at t=2s/': {
-    firefox: true,
-    message: "Floating point issues."
-  },
+   '#background at t=1s' : {
+      firefox: true,
+      message: "FIXME: Transparency is wrong."
+   },
+   '#border at t=2s' : {
+      firefox: true,
+      message: "FIXME: Border is wrong."
+   },
+   '/#text at t=(0|1)/': {
+      firefox: true,
+      message: "FIXME: font-size is returning different values."
+   },
 };
 </script>
 <script src="../bootstrap.js"></script>
