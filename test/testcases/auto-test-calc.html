@@ -39,7 +39,7 @@ limitations under the License.
 }
 
 #d {
-  width: -webkit-calc(25px + 12.5%);
+  width: calc(25px + 12.5%);
   top: 150px;
 }
 
@@ -54,7 +54,7 @@ limitations under the License.
 }
 
 #g {
-  width: -webkit-calc(100px - 25%);
+  width: calc(100px - 25%);
   top: 300px;
 }
 
@@ -114,7 +114,7 @@ completely cover the light red box when the animation has finished.
 
 <script>
 var expected_failures = {
-  '/Auto generated tests at t=(0|0.5|1|1.5)s/': {
+  'Auto generated tests at t=0.5s': {
     firefox: true,
     message: "Floating point issues."
   }
@@ -140,12 +140,12 @@ dt.play(new Animation(document.querySelector("#c"),
 dt.play(new Animation(document.querySelector("#d"), {width: "50%"}, 2));
 // 50px -> 100px linear, 0% -> 37.5% (0px -> 300px quadratic)
 dt.play(new Animation(document.querySelector("#e"),
-    {width: "-webkit-calc(37.5% + 100px)"}, 2));
+    {width: "calc(37.5% + 100px)"}, 2));
 // 0px -> 100px linear, 25% -> 37.5% (50px -> 300px quadratic)
 dt.play(new Animation(document.querySelector("#f"),
-    {width: "-webkit-calc(37.5% + 100px)"}, 2));
+    {width: "calc(37.5% + 100px)"}, 2));
 // 100px -> 100px linear, -25% -> 37.5% (-50px -> 300px quadratic)
 dt.play(new Animation(document.querySelector("#g"),
-    {width: "-webkit-calc(37.5% + 100px)"}, 2));
+    {width: "calc(37.5% + 100px)"}, 2));
 
 </script>
