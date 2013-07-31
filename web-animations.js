@@ -2988,13 +2988,30 @@ var namedColors = {
 
 var colorType = typeWithKeywords(['currentColor'], {
   zero: function() { return [0,0,0,0]; },
+  _premultiply: function(value) {
+      var alpha = value[3];
+      return [value[0] * alpha, value[1] * alpha, value[2] * alpha];
+  },
   add: function(base, delta) {
-    return [base[0] + delta[0], base[1] + delta[1],
-            base[2] + delta[2], base[3] + delta[3]];
+    var alpha = Math.min(base[3] + delta[3], 1);
+    if (alpha === 0) {
+      return [0, 0, 0, 0];
+    }
+    base = this._premultiply(base);
+    delta = this._premultiply(delta);
+    return [(base[0] + delta[0]) / alpha, (base[1] + delta[1]) / alpha,
+            (base[2] + delta[2]) / alpha, alpha];
   },
   interpolate: function(from, to, f) {
-    return [interp(from[0], to[0], f), interp(from[1], to[1], f),
-            interp(from[2], to[2], f), interp(from[3], to[3], f)];
+    var alpha = clamp(interp(from[3], to[3], f), 0, 1);
+    if (alpha === 0) {
+      return [0, 0, 0, 0];
+    }
+    from = this._premultiply(from);
+    to = this._premultiply(to);
+    return [interp(from[0], to[0], f) / alpha,
+            interp(from[1], to[1], f) / alpha,
+            interp(from[2], to[2], f) / alpha, alpha];
   },
   toCssValue: function(value) {
     return 'rgba(' + Math.round(value[0]) + ', ' + Math.round(value[1]) +
