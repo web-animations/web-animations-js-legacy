@@ -154,6 +154,8 @@ function findElementsToCheck(rawString){
   for (var x in rawString){
     rawString[x] = rawString[x].replace(/\s/g, "");
     rawString[x] = rawString[x].split(",");
+    if (rawString[x][0].length == 0)
+      continue;
     var object = window.frames[0].document.querySelectorAll(rawString[x][0]);
     var prop = [];
     for (var i = 1; i < rawString[x].length; i++){
