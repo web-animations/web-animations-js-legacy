@@ -71,4 +71,52 @@ test(function() {
   assert_styles(element, {left: '-100px'});
 }, 'assert_styles should handle negative values');
 
+test(function() {
+  var en = window.assert_styles_extract_numbers;
+
+  assert_array_equals(en("1"), [1]);
+  assert_array_equals(en("10"), [10]);
+  assert_array_equals(en("2.0"), [2.0]);
+  assert_array_equals(en("20.0"), [20.0]);
+  assert_array_equals(en("40e2"), [4000.0]);
+  assert_array_equals(en("40e+3"), [40000.0]);
+  assert_array_equals(en("50e-4"), [0.005]);
+
+  assert_array_equals(en("+1"), [1]);
+  assert_array_equals(en("+10"), [10]);
+  assert_array_equals(en("+2.0"), [2.0]);
+  assert_array_equals(en("+20.0"), [20.0]);
+  assert_array_equals(en("+40e2"), [4000.0]);
+  assert_array_equals(en("+40e+3"), [40000.0]);
+  assert_array_equals(en("+50e-4"), [0.005]);
+
+  assert_array_equals(en("-1"), [-1]);
+  assert_array_equals(en("-10"), [-10]);
+  assert_array_equals(en("-2.0"), [-2.0]);
+  assert_array_equals(en("-20.0"), [-20.0]);
+  assert_array_equals(en("-40e2"), [-4000]);
+  assert_array_equals(en("-50e-3"), [-0.05]);
+
+  assert_array_equals(en("matrix(1%"), [1]);
+  assert_array_equals(en("matrix(10px"), [10]);
+  assert_array_equals(en("matrix(2.0em"), [2.0]);
+  assert_array_equals(en("matrix(20.0en"), [20.0]);
+  assert_array_equals(en("matrix(40e2ve"), [4000.0]);
+  assert_array_equals(en("matrix(40e+3vw"), [40000.0]);
+  assert_array_equals(en("matrix(50e-4%"), [0.005]);
+
+  assert_array_equals(en("matrix("), []);
+  assert_array_equals(en("blah"), []);
+  assert_array_equals(en("+"), []);
+  assert_array_equals(en("none"), []);
+  assert_array_equals(en("----"), []);
+  assert_array_equals(en("-a"), []);
+  assert_array_equals(en("b.j"), []);
+
+  assert_array_equals(en("matrix(1, 0, 0, 1, 0, 0)"),
+      [1, 0, 0, 1, 0, 0]);
+  assert_array_equals(en("matrix(0.9511, 0.309, -0.309, 0.9511, 0, 0)"),
+      [0.9511, 0.309, -0.309, 0.9511, 0, 0]);
+}, "Checking numbers are extracted successfully");
+
 </script>
