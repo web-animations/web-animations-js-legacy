@@ -37,11 +37,21 @@ limitations under the License.
   background-color: green;
 }
 
+#d {
+  left: 350px;
+  background-color: rgba(0, 0, 0, 0);
+}
+
+#e {
+  left: 450px;
+  background-color: rgba(255, 0, 255, 0);
+}
+
 #container {
   position: absolute;
   left: 0px;
   top: 50px;
-  width: 400px;
+  width: 600px;
   height: 200px;
   background-color: green;
 }
@@ -54,6 +64,8 @@ All three boxes should end up the same color as the outline.
   <div id="a" class="anim"></div>
   <div id="b" class="anim"></div>
   <div id="c" class="anim"></div>
+  <div id="d" class="anim"></div>
+  <div id="e" class="anim"></div>
 </div>
 
 <script src="../bootstrap.js"></script>
@@ -71,5 +83,9 @@ dt.play(new Animation(document.querySelector("#c"),
       {offset: 0.25, backgroundColor: "rgb(255, 0, 0)"},
       {offset: 0.75, backgroundColor: "rgb(0, 0, 255)"},
     ], 'add'), 2));
+dt.play(new Animation(document.querySelector("#d"),
+    {offset: 0.5, backgroundColor: "white"}, 2));
+dt.play(new Animation(document.querySelector("#e"),
+    {offset: 0.5, backgroundColor: "white"}, 2));
 
 </script>
