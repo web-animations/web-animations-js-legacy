@@ -116,6 +116,7 @@ function startGeneratingExpectations() {
   var obProp = document.getElementById("obProp").value;
 
   var output = document.getElementById("checks");
+  output.innerHTML = "";
 
   loadFile("message", function () {
     findElementsToCheck(obProp);
@@ -182,6 +183,7 @@ function generate(time){
   console.log("Generating checks for t=", time);
 
   // Produce checks at this time
+  var outputText = "  at(" + time + ", function() {\n";
   for (var x in checks){
     var propslist = [];
     for (var i = 0; i < checks[x].object.length; i++){
@@ -210,14 +212,16 @@ function generate(time){
       propsPrint += "}";
       propslist.push(propsPrint);
     }
-    printCheck(checks[x].initSelctor, i, propslist, time);
+    outputText += printCheck(checks[x].initSelctor, i, propslist, time);
   }
+  outputText += '  });';
+  var output = document.getElementById("checks");
+  output.innerHTML += outputText + "<br>";
 }
 
 function printCheck(object, number, properties, time){
 
-  var newCheck = "  at(" + time + ", function() {\n" +
-     '    assert_styles("' + object + '",'
+  var newCheck = '    assert_styles("' + object + '",';
 
   // If all the properties are the same for every object, just pass the list.
   var allsame = properties.every(function(x) { return x === properties[0] });
@@ -234,8 +238,6 @@ function printCheck(object, number, properties, time){
     newCheck += "    ]);\n";
   }
 
-  newCheck += '  });';
-  var output = document.getElementById("checks");
-  output.innerHTML += newCheck + "<br>";
+  return newCheck;
 }
 </script>
