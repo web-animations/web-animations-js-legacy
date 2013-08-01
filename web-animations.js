@@ -1886,6 +1886,16 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     }
     var startKeyframe = frames[startKeyframeIndex];
     var endKeyframe = frames[startKeyframeIndex + 1];
+    if (startKeyframe.offset == timeFraction) {
+      return new AddReplaceCompositableValue(
+          startKeyframe.rawValueForProperty(property),
+          this._compositeForKeyframe(startKeyframe));
+    }
+    if (endKeyframe.offset == timeFraction) {
+      return new AddReplaceCompositableValue(
+          endKeyframe.rawValueForProperty(property),
+          this._compositeForKeyframe(endKeyframe));
+    }
     var intervalDistance = (timeFraction - startKeyframe.offset) /
         (endKeyframe.offset - startKeyframe.offset);
     return new BlendedCompositableValue(
