@@ -59,6 +59,10 @@ word word word word</pre>
 
 <script>
 var expected_failures = {
+   '#outline at t=0s' : {
+      chrome: ["28.0", "29.0"],
+      message: "Output changes from rgb to rgba in later Chrome"
+   },
   '#text at t=0s': {
     firefox: true,
     message: "Floating point issues."
@@ -70,7 +74,7 @@ var expected_failures = {
   '/(#border|#transform) at t=2s/': {
     firefox: true,
     message: "Floating point issues."
-  }
+  },
 };
 </script>
 <script src="../bootstrap.js"></script>
