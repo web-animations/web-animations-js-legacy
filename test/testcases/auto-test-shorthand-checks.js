@@ -171,7 +171,7 @@ timing_test(function() {
     assert_styles("#borderLeft.test",{'borderLeftWidth':'4px','borderLeftStyle':'solid','borderLeftColor':'rgb(0, 128, 0)'});
   }, "#borderLeft");
   at(2, function() {
-    assert_styles("#borderRadius.test",{'borderTopLeftRadius':'10px','borderTopRightRadius':'20px','borderBottomRightRadius':'0px','borderBottomLeftRadius':'0px'});
+    assert_styles("#borderRadius.test",{'borderTopLeftRadius':'10px','borderTopRightRadius':'20px','borderBottomRightRadius':'10%','borderBottomLeftRadius':'50%'});
   }, "#borderRadius");
   at(2, function() {
     assert_styles("#borderRight.test",{'borderRightWidth':'4px','borderRightStyle':'solid','borderRightColor':'rgb(0, 128, 0)'});

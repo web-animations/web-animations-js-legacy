@@ -1886,6 +1886,16 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     }
     var startKeyframe = frames[startKeyframeIndex];
     var endKeyframe = frames[startKeyframeIndex + 1];
+    if (startKeyframe.offset == timeFraction) {
+      return new AddReplaceCompositableValue(
+          startKeyframe.rawValueForProperty(property),
+          this._compositeForKeyframe(startKeyframe));
+    }
+    if (endKeyframe.offset == timeFraction) {
+      return new AddReplaceCompositableValue(
+          endKeyframe.rawValueForProperty(property),
+          this._compositeForKeyframe(endKeyframe));
+    }
     var intervalDistance = (timeFraction - startKeyframe.offset) /
         (endKeyframe.offset - startKeyframe.offset);
     return new BlendedCompositableValue(
@@ -3885,6 +3895,12 @@ var interpolate = function(property, from, to, f) {
       'Both to and from values should be specified for interpolation');
   if (from === 'inherit' || to === 'inherit') {
     return nonNumericType.interpolate(from, to, f);
+  }
+  if (f == 0) {
+    return from;
+  }
+  if (f == 1) {
+    return to;
   }
   return getType(property).interpolate(from, to, f);
 }

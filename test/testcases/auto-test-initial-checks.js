@@ -18,7 +18,7 @@ timing_test(function() {
     assert_styles("#padding",{'paddingBottom':'0px','paddingLeft':'0px','paddingRight':'0px','paddingTop':'0px'});
   }, "#padding");
   at(0, function() {
-    assert_styles("#transform",{'transform':'matrix(1, 0, 0, 1, 0, 0)'});
+    assert_styles("#transform",{'transform':'none'});
   }, "#transform");
   at(0, function() {
     assert_styles("#text",{'color':'rgb(0, 0, 0)','fontSize':'13px','fontWeight':'normal','letterSpacing':'normal','lineHeight':'15px','textIndent':'0px','textShadow':'rgba(0, 0, 0, 0) 0px 0px 0px','wordSpacing':'0px'});
