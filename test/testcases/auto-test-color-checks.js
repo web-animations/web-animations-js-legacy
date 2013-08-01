@@ -5,7 +5,7 @@ timing_test(function() {
       {'background-color':'rgb(176, 196, 222)'},
       {'background-color':'rgb(0, 128, 0)'},
       {'background-color':'rgba(0, 0, 0, 0)'},
-      {'background-color':'rgba(0, 0, 0, 0)'},
+      {'background-color':'rgba(255, 0, 255, 0)'},
     ]);
   });
   at(0.25, function() {
@@ -77,7 +77,7 @@ timing_test(function() {
       {'background-color':'rgb(0, 128, 0)'},
       {'background-color':'rgb(0, 128, 0)'},
       {'background-color':'rgba(0, 0, 0, 0)'},
-      {'background-color':'rgba(0, 0, 0, 0)'},
+      {'background-color':'rgba(255, 0, 255, 0)'},
     ]);
   });
 }, "Auto generated tests");
