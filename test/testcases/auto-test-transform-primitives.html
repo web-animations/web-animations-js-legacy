@@ -33,6 +33,14 @@ limitations under the License.
 </style>
 <div></div>
 <div style="height: 600px;"></div>
+<script>
+var expected_failures = {
+  '/Auto generated tests at t=(0|0.5|1|1.5|2|2.5)s/': {
+    firefox: true,
+    message: "Floating point issues."
+  }
+};
+</script>
 <script src="../bootstrap.js"></script>
 <script>
 "use strict";
