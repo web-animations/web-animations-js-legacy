@@ -171,18 +171,15 @@ function _assert_style_get(style, i) {
 /**
  * Extract all the numeric values from a string.
  */
-function _extract_numbers(v) {
-  var n = /([-+]?[0-9]+\.?[0-9]*(?:[eE][-+]?[0-9]+)?)/;
+function _extract_numbers(input) {
+  var re = /([-+]?[0-9]+\.?[0-9]*(?:[eE][-+]?[0-9]+)?)/g;
 
-  var bits = v.split(n);
-  var o = [];
-  for (var i=0; i < bits.length; i++) {
-    if (n.test(bits[i])) {
-      o.unshift(Number(bits[i]));
-    }
+  var match;
+  var result = [];
+  while (match = re.exec(input)) {
+    result.push(Number(match[0]));
   }
-  o.reverse();
-  return o;
+  return result;
 }
 window.assert_styles_extract_numbers = _extract_numbers;
 
