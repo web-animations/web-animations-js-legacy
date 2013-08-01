@@ -3896,6 +3896,12 @@ var interpolate = function(property, from, to, f) {
   if (from === 'inherit' || to === 'inherit') {
     return nonNumericType.interpolate(from, to, f);
   }
+  if (f == 0) {
+    return from;
+  }
+  if (f == 1) {
+    return to;
+  }
   return getType(property).interpolate(from, to, f);
 }
 
