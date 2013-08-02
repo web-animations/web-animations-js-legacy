@@ -65,12 +65,21 @@ li.pass {
   color: green;
 }
 
+tbody.pass-expected-failure {
+  color: #00aa00;
+}
+
+li.pass-expected-failure {
+  color: #00aa00;
+}
+
 /* No-test styles */
 tbody.no-tests {
   color: #ff8a00;
 }
 
 </style>
+<script src="browserdetect/bowser.js"></script>
 <script src="testcases.js"></script>
 
 <div id=status-box>
@@ -350,7 +359,7 @@ function changeTestState(test, newState) {
       timingInfo.textContent = '(Load only)';
     }
 
-    processResults(test);
+    processResults(test, test.querySelector('iframe').contentWindow.expected_failures);
 
     break;
 
@@ -527,49 +536,117 @@ window.addEventListener(
  * @param {Element} test DOM object representing the test.
  * @param {Array.<Object>} results List of testharness.js result objects.
  */
-function processResults(test) {
-  var logElement = test.querySelector('.log');
-
-  var newResultsDiv = document.createElement('ul');
-  for (var x in test.results_raw) {
-    var output = document.createElement('li');
-    output.innerHTML += test.results_raw[x].name + ' ';
-
-    var grade = 'fail';
-    if (test.results_raw[x].status == 0) {
-      grade = 'pass';
+function processResults(test, expected_failures) {
+  var browser_expected_failures = {};
+  for(var tname in expected_failures) {
+    for(var bname in bowser) {
+      var fails = expected_failures[tname][bname];
+      if ((typeof fails != "undefined") &&
+          (typeof fails == "boolean" && fails) ||
+          (typeof fails == "object" && fails.indexOf(bowser.version) != -1)) {
+        browser_expected_failures[tname] = true;
+      }
     }
-    output.className = grade;
+  }
+  console.log(browser_expected_failures);
 
-    output.innerHTML += grade + ' ';
-    if (test.results_raw[x].message != null) {
-      output.innerHTML += test.results_raw[x].message;
+  var counts = {
+    passed: 0,
+    failed: 0,
+    skipped: 0,
+    expected_failed: 0, // This count is included in the above
+    total: test.results_raw.length,
+  };
+  var results = [];
+  var newResultsDiv = document.createElement('ul');
+
+  for(var i = 0; i < test.results_raw.length; i++) {
+    var result = test.results_raw[i];
+    results[i] = result;
+
+    // Invert expected_failures
+    var expected_failure = Boolean(browser_expected_failures[result['name']]);
+    if (expected_failure) {
+      if (result.status != result.FAIL) {
+        result.message = "Expected failure, actually " +
+          {0: 'PASS', 2: 'TIMEOUT', 3:'NOTRUN'}[result.status] + " " +
+          result.message;
+        result.status = result.FAIL;
+      } else {
+        result.status = result.PASS;
+        result.message = "Expected failure: " + result.message;
+      }
+      counts.expected_failed++;
+    }
+
+    var output = document.createElement('li');
+    output.innerHTML += result.name + ': ';
+
+    switch (result.status) {
+    case result.PASS:
+      if (!expected_failure) {
+        output.className = 'pass';
+      } else {
+        output.className = 'pass-expected-failure';
+      }
+      counts.passed++;
+      break;
+
+    case result.TIMEOUT:
+      output.className = 'timeout';
+      counts.failed++;
+      break;
+
+    case result.NOTRUN:
+      output.className = 'skipped';
+      counts.skipped++;
+      break;
+
+    case result.FAIL:
+    default:
+      output.className = 'failed';
+      counts.failed++;
+    }
+
+    output.innerHTML += output.className;
+    if (result.message != null) {
+      output.innerHTML += ' - ' + result.message;
     }
     newResultsDiv.appendChild(output);
   }
-  logElement.appendChild(newResultsDiv);
+  test.querySelector('.log').appendChild(newResultsDiv);
 
-  var count = test.querySelector('.count');
-
-  if (test.results_raw.length > 0) {
+  if (counts.total > 0) {
     test.results_processed = {
       type: 'result',
       testName: test.id,
-      results: test.results_raw,
+      results: results,
     };
 
-    var passed = test.results_raw.filter(function(result) {
-      return result.status == 0;
-    }).length;
-    var failed = test.results_raw.length - passed;
-
-    if (!failed) {
-      test.className = 'pass';
+    if (counts.failed == 0) {
+      if (counts.expected_failed > 0) {
+        test.className = 'pass-expected-failure';
+      } else {
+        test.className = 'pass';
+      }
     } else {
       test.className = 'fail';
     }
 
-    count.textContent = passed + ' of ' + test.results_raw.length + ' passed';
+    var summary = counts.total +  ' tests; ';
+    if (counts.passed > 0) {
+      summary += ' ' + counts.passed + ' passed';
+      if (counts.expected_failed > 0) {
+        summary += ' (with ' + counts.expected_failed + ' expected failures)';
+      }
+    }
+    if (counts.failed > 0) {
+      summary += ' ' + counts.failed + ' failed';
+    }
+    if (counts.skipped > 0) {
+      summary += ' ' + counts.skipped + ' skipped';
+    }
+    test.querySelector('.count').textContent = summary;
   } else {
     test.results_processed = {
       type: 'result',
@@ -577,7 +654,7 @@ function processResults(test) {
       results: [],
     };
     test.className = 'no-tests';
-    count.textContent = 'TIMEOUT';
+    test.querySelector('.count').textContent = 'TIMEOUT';
   }
 }
 
