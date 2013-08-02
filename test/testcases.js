@@ -64,5 +64,6 @@ var tests = [
   'unit-test-null-effect.html',
   'unit-test-set-parent.html',
   'unit-test-testharness.html',
+  'unit-test-testharness-failure.html',
   'unit-test-unpause.html',
 ];
