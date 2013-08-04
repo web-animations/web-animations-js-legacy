@@ -10,3 +10,6 @@
 [submodule "test/coverage/esprima"]
 	path = test/coverage/esprima
 	url = https://github.com/ariya/esprima
+[submodule "test/browserdetect"]
+	path = test/browserdetect
+	url = https://github.com/ded/bowser.git
