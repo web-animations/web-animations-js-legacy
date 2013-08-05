@@ -544,11 +544,10 @@ function processResults(test, expected_failures) {
       if ((typeof fails != "undefined") &&
           (typeof fails == "boolean" && fails) ||
           (typeof fails == "object" && fails.indexOf(bowser.version) != -1)) {
-        browser_expected_failures[tname] = true;
+        browser_expected_failures[tname] = expected_failures[tname];
       }
     }
   }
-  console.log(browser_expected_failures);
 
   var counts = {
     passed: 0,
@@ -565,16 +564,25 @@ function processResults(test, expected_failures) {
     results[i] = result;
 
     // Invert expected_failures
-    var expected_failure = Boolean(browser_expected_failures[result['name']]);
-    if (expected_failure) {
+    var expected_failure = null;
+    for(var tname in browser_expected_failures) {
+      var tomatch = tname;
+      if (tname.charAt(0) == '/' && tname.charAt(tname.length-1) == '/') {
+         tomatch = new RegExp(tname.substr(1, tname.length-2));
+      }
+      if (result['name'].match(tomatch)) {
+        expected_failure = browser_expected_failures[tname];
+      }
+    }
+    if (expected_failure !== null) {
       if (result.status != result.FAIL) {
-        result.message = "Expected failure, actually " +
+        result.message = "Expected failure (" + expected_failure.message + "), actually " +
           {0: 'PASS', 2: 'TIMEOUT', 3:'NOTRUN'}[result.status] + " " +
           result.message;
         result.status = result.FAIL;
       } else {
         result.status = result.PASS;
-        result.message = "Expected failure: " + result.message;
+        result.message = "Expected failure (" + expected_failure.message + "): " + result.message;
       }
       counts.expected_failed++;
     }
