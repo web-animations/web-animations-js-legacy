@@ -4299,10 +4299,13 @@ var relativeTime = function(time, zeroTime) {
   return isDefined(zeroTime) ? time - zeroTime : null;
 }
 
+var lastClockTimeMillis = undefined;
+
 var cachedClockTime = function() {
   // Cache a document time for the remainder of this callstack.
   if (!isDefined(cachedClockTimeMillis)) {
     cachedClockTimeMillis = clockMillis();
+    lastClockTimeMillis = cachedClockTimeMillis;
     setTimeout(function() { cachedClockTimeMillis = undefined; }, 0);
   }
   return cachedClockTimeMillis / 1000;
@@ -4348,6 +4351,9 @@ var ticker = function(rafTime, isRepeat) {
   }
 
   if (!isRepeat) {
+    if (rafTime < lastClockTimeMillis) {
+      rafTime = lastClockTimeMillis;
+    }
     lastTickTime = rafTime;
     cachedClockTimeMillis = rafTime;
   }
