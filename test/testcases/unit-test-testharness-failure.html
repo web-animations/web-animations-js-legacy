@@ -19,13 +19,16 @@ limitations under the License.
 var expected_failures = {
  'Failing on Chrome 28': {
    chrome: ["28.0"],
+   message: "This test is deliberately broken on Chrome 28.0"
  },
- 'Failing on all Chrome': {
+ '/Chrome for regexing/': {
    chrome: true,
+   message: "This test is deliberately broken on all Chromes."
  },
  'Failing on all Firefox': {
    firefox: true,
- },
+   message: "This test is deliberately broken on all Firefoxs."
+ }
 };
 </script>
 <script src="../bootstrap.js"></script>
@@ -42,6 +45,10 @@ test(function() {
 
 test(function() {
   assert_false(/Chrome/.test(navigator.userAgent));
-}, 'Failing on all Chrome');
+}, 'Failing on all Chrome for regexing 1');
+
+test(function() {
+  assert_false(/Chrome/.test(navigator.userAgent));
+}, 'Failing on all Chrome for regexing 2');
 
 </script>
