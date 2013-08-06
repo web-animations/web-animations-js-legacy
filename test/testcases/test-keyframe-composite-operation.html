@@ -27,6 +27,14 @@ div#targets div {
 
 <div id="targets"></div>
 
+<script>
+var expected_failures = {
+  'Add-composite the neutral value onto a percent length type property with default value': {
+    chrome: true,
+    message: "getComputedStyle is broken under Chrome and this will return 'auto' while the specification says it should return pixels. https://code.google.com/p/chromium/issues/detail?id=229280"
+  }
+};
+</script>
 <script src="../bootstrap.js"></script>
 <script>
 "use strict";
@@ -118,7 +126,7 @@ testComposite('fontWeight',null, null, null, 0.0, 'normal',
     'Add-composite the neutral value onto a font weight type property with default value');
 testComposite('opacity',null, null, null, 0.0, 1.0,
     'Add-composite the neutral value onto a number type property with default value');
-testComposite('zIndex',null, null, null, 0.0, 0,
+testComposite('zIndex',null, null, null, 0.0, 'auto',
     'Add-composite the neutral value onto an integer type property with default value');
 testComposite('textShadow',null, null, null, 0.0, 'none',
     'Add-composite the neutral value onto a shadow type property with default value');

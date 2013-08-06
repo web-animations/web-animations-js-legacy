@@ -167,6 +167,22 @@ function _assert_style_get(style, i) {
   }
 }
 
+
+/**
+ * Extract all the numeric values from a string.
+ */
+function _extract_numbers(input) {
+  var re = /([-+]?[0-9]+\.?[0-9]*(?:[eE][-+]?[0-9]+)?)/g;
+
+  var match;
+  var result = [];
+  while (match = re.exec(input)) {
+    result.push(Number(match[0]));
+  }
+  return result;
+}
+window.assert_styles_extract_numbers = _extract_numbers;
+
 /**
  * asserts that actual has the same styles as the dictionary given by
  * expected.
@@ -246,25 +262,23 @@ function _assert_style_element(object, style, description) {
       }
 
       if (target) {
-        var t = target.replace(/[^0-9.\s-]/g, '');
+        var t = _extract_numbers(target);
       } else {
-        var t = '';
+        var t = [];
       }
 
       if (curr) {
-        var c = curr.replace(/[^0-9.\s-]/g, '');
+        var c = _extract_numbers(curr);
       } else {
-        var c = '';
+        var c = [];
       }
 
-      if (t.length == 0) {
+      if (t.length == 0 || t.length != c.length) {
         // Assume it's a word property so do an exact assert
         assert_equals(
             curr, target,
-            prop_name + ' is not ' + target + ', actually ' + curr);
+            prop_name + ' is not ' + target + ', actually ' + curr + '.');
       } else {
-        t = t.split(' ');
-        c = c.split(' ');
         for (var x in t) {
           assert_equals(
               Number(c[x]), Number(t[x]), 

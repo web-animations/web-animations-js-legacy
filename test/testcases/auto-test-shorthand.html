@@ -41,6 +41,18 @@ p {
 }
 
 </style>
+<script>
+var expected_failures = {
+  '/(#borderRadius|#font) at t=(0.5|1|1.5)s/': {
+    firefox: true,
+    message: "Floating point issues."
+  },
+  '#font at t=2s': {
+    firefox: true,
+    message: "Floating point issues."
+  },
+};
+</script>
 <script src="../bootstrap.js"></script>
 <div id="container"></div>
 <script>
