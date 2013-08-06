@@ -6,9 +6,9 @@ env:
   - BROWSER=Chrome-unstable
   - BROWSER=Firefox
 
-matrix:
-  allow_failures:
-    - env: BROWSER=Firefox
+#matrix:
+#  allow_failures:
+#    - env: BROWSER=Firefox
 
 notifications:
   irc: "irc.freenode.org#webanimations"
