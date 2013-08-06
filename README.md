@@ -88,7 +88,7 @@ A `PathAnimationEffect` allows elements to be animated along SVG-style paths. Fo
 
     <svg xmlns="http://www.w3.org/2000/svg" version="1.1">
       <defs>
-        <path id=path1 d="M 100,100 a 75,75 0 1,0 150,0 a 75,75 0 1,0 -150,0"/>
+        <path id=path d="M 100,100 a 75,75 0 1,0 150,0 a 75,75 0 1,0 -150,0"/>
       </defs>
     </svg>
     <script>
