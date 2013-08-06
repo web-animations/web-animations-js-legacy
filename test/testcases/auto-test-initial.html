@@ -57,7 +57,22 @@ text-shadow
 word-spacing
 word word word word</pre>
 
-
+<script>
+var expected_failures = {
+  '#text at t=0s': {
+    firefox: true,
+    message: "Floating point issues."
+  },
+  '/(#background|#transform|#text) at t=1s/': {
+    firefox: true,
+    message: "Floating point issues."
+  },
+  '/(#border|#transform) at t=2s/': {
+    firefox: true,
+    message: "Floating point issues."
+  }
+};
+</script>
 <script src="../bootstrap.js"></script>
 <script>
 "use strict";

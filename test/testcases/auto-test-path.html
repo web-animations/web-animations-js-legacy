@@ -81,7 +81,26 @@ height: 600px;
 <div id="e4" class="expectation"></div>
 <div id="anim4" class="animation">&rarr;</div>
 
-
+<script>
+var expected_failures = {
+  '/Check .* t=[0123]s/': {
+    firefox: true,
+    message: "Doesn't actually follow paths."
+  },
+  '/Check #anim[123] .* t=[456]s/': {
+    firefox: true,
+    message: "Doesn't actually follow paths."
+  },
+  '/Check .* t=[789]s/': {
+    firefox: true,
+    message: "Doesn't actually follow paths."
+  },
+  '/Check .* t=1[01]s/': {
+    firefox: true,
+    message: "Doesn't actually follow paths."
+  },
+};
+</script>
 <script src="../bootstrap.js"></script>
 <script>
 "use strict";
