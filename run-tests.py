@@ -603,6 +603,8 @@ try:
             browser.close()
         raise
 
+    # Load an empty page so the body element is always visible
+    browser.get('data:text/html;charset=utf-8,<!DOCTYPE html><html><body>EMPTY</body></html>')
     if args.virtual and args.browser == "Firefox":
         # Calling browser.maximize_window() doesn't work as we don't have a
         # window manager, so instead we for the size/position.
