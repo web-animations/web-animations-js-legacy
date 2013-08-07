@@ -27,7 +27,7 @@ input#iframeSrc {
 }
 </style>
 
-<input type="text" id="iframeSrc" value="testcases/test-calc.html">
+<input type="text" id="iframeSrc">
 <button id="load-button" onclick="loadFile()">Load</button><br>
 <iframe id="frame" src=""></iframe>
 <div id="userOptions">
@@ -74,6 +74,7 @@ var frameTime = 100;
 var checks = [];
 var interval;
 
+document.getElementById("iframeSrc").value = window.location.search.substring(1) || "testcases/test-calc.html";
 document.getElementById("interval").value = "1";
 document.getElementById("obProp").value = ".anim, width";
 
@@ -115,6 +116,7 @@ function startGeneratingExpectations() {
   var obProp = document.getElementById("obProp").value;
 
   var output = document.getElementById("checks");
+  output.innerHTML = "";
 
   loadFile("message", function () {
     findElementsToCheck(obProp);
@@ -154,6 +156,8 @@ function findElementsToCheck(rawString){
   for (var x in rawString){
     rawString[x] = rawString[x].replace(/\s/g, "");
     rawString[x] = rawString[x].split(",");
+    if (rawString[x][0].length == 0)
+      continue;
     var object = window.frames[0].document.querySelectorAll(rawString[x][0]);
     var prop = [];
     for (var i = 1; i < rawString[x].length; i++){
@@ -179,6 +183,7 @@ function generate(time){
   console.log("Generating checks for t=", time);
 
   // Produce checks at this time
+  var outputText = "  at(" + time + ", function() {\n";
   for (var x in checks){
     var propslist = [];
     for (var i = 0; i < checks[x].object.length; i++){
@@ -207,14 +212,16 @@ function generate(time){
       propsPrint += "}";
       propslist.push(propsPrint);
     }
-    printCheck(checks[x].initSelctor, i, propslist, time);
+    outputText += printCheck(checks[x].initSelctor, i, propslist, time);
   }
+  outputText += '  });';
+  var output = document.getElementById("checks");
+  output.innerHTML += outputText + "<br>";
 }
 
 function printCheck(object, number, properties, time){
 
-  var newCheck = "  at(" + time + ", function() {\n" +
-     '    assert_styles("' + object + '",'
+  var newCheck = '    assert_styles("' + object + '",';
 
   // If all the properties are the same for every object, just pass the list.
   var allsame = properties.every(function(x) { return x === properties[0] });
@@ -231,8 +238,6 @@ function printCheck(object, number, properties, time){
     newCheck += "    ]);\n";
   }
 
-  newCheck += '  });';
-  var output = document.getElementById("checks");
-  output.innerHTML += newCheck + "<br>";
+  return newCheck;
 }
 </script>
