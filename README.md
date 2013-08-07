@@ -32,7 +32,7 @@ a `<div>` over 0.5 seconds. The animation alternates producing a pulsing effect.
         [{opacity: "0.5"}, {opacity: "1.0"}], 
         [{transform: "scale(0.5)"}, {transform: "scale(1)"}]
       }, {
-        direction: "alternate", duration: 0.5, iterationCount: Infinity
+        direction: "alternate", iterationDuration: 0.5, iterationCount: Infinity
       }));
     </script>
 
