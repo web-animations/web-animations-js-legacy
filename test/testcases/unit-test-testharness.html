@@ -125,6 +125,70 @@ test(function() {
     assert_regexp_match(e.message, /^matrix 1% to matrix 1px/);
   }
 
+  /* Check that it only needs to match to 4 significant figures */
+  assert('1', [1.0001]);
+  assert('1.0001', [1]);
+  try {
+    assert('1', [1.001]);
+    assert_unreached();
+  } catch(e) {
+    assert_not_equals(e.message, "assert_unreached: Reached unreachable code");
+  }
+
+  assert('10', [10.001]);
+  assert('10.001', [10]);
+  try {
+    assert('10', [10.01]);
+    assert_unreached();
+  } catch(e) {
+    assert_not_equals(e.message, "assert_unreached: Reached unreachable code");
+  }
+
+  assert('2.0', [2.0001]);
+  assert('2.0001', [2]);
+  try {
+    assert('2', [2.001]);
+    assert_unreached();
+  } catch(e) {
+    assert_not_equals(e.message, "assert_unreached: Reached unreachable code");
+  }
+
+  assert('20.0', [20.001]);
+  assert('20.001', [20]);
+  try {
+    assert('20.0', [20.01]);
+    assert_unreached();
+  } catch(e) {
+    assert_not_equals(e.message, "assert_unreached: Reached unreachable code");
+  }
+
+  assert('40e2', [4000.1]);
+  assert('40.001e2', [4000]);
+  try {
+    assert('40e2', [4001]);
+    assert_unreached();
+  } catch(e) {
+    assert_not_equals(e.message, "assert_unreached: Reached unreachable code");
+  }
+
+  assert('40e+3', [40001]);
+  assert('40.001e+3', [40000]);
+  try {
+    assert('40e+3', [40010]);
+    assert_unreached();
+  } catch(e) {
+    assert_not_equals(e.message, "assert_unreached: Reached unreachable code");
+  }
+
+  assert('50e-4', [0.0050001]);
+  assert('50.001e-4', [0.005]);
+  try {
+    assert('50e-4', [0.005001]);
+    assert_unreached();
+  } catch(e) {
+    assert_not_equals(e.message, "assert_unreached: Reached unreachable code");
+  }
+
 }, 'Checking assert_important_in_array works');
 
 test(function() {
@@ -137,6 +201,7 @@ test(function() {
   assert_array_equals(ei('40e2'), [4000.0]);
   assert_array_equals(ei('40e+3'), [40000.0]);
   assert_array_equals(ei('50e-4'), [0.005]);
+  assert_array_equals(ei('60.6e-4'), [0.00606]);
 
   assert_array_equals(ei('+1'), [1]);
   assert_array_equals(ei('+10'), [10]);
@@ -145,6 +210,7 @@ test(function() {
   assert_array_equals(ei('+40e2'), [4000.0]);
   assert_array_equals(ei('+40e+3'), [40000.0]);
   assert_array_equals(ei('+50e-4'), [0.005]);
+  assert_array_equals(ei('+60.6e-4'), [0.00606]);
 
   assert_array_equals(ei('-1'), [-1]);
   assert_array_equals(ei('-10'), [-10]);
@@ -152,6 +218,7 @@ test(function() {
   assert_array_equals(ei('-20.0'), [-20.0]);
   assert_array_equals(ei('-40e2'), [-4000]);
   assert_array_equals(ei('-50e-3'), [-0.05]);
+  assert_array_equals(ei('-60.6e-4'), [-0.00606]);
 
   assert_array_equals(ei('matrix(1%'), ['matrix', 1, '%']);
   assert_array_equals(ei('matrix(10px'), ['matrix', 10, 'px']);
@@ -175,6 +242,7 @@ test(function() {
       ['matrix', 1, 0, 0, 1, 0, 0]);
   assert_array_equals(ei('matrix(0.9511, 0.309, -0.309, 0.9511, 0, 0)'),
       ['matrix', 0.9511, 0.309, -0.309, 0.9511, 0, 0]);
+
 }, 'Checking important parts are extracted successfully');
 
 </script>
