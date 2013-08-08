@@ -61,3 +61,8 @@ div.info {
 div.info pre {
   display: block;
 }
+
+#results tr td:last-child {
+  white-space: pre;
+  font-family: monospace;
+}
