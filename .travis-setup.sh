@@ -1,6 +1,6 @@
 #! /bin/sh
 
-set +x
+set -x
 
 # Make sure /dev/shm has correct permissions.
 ls -l /dev/shm
@@ -19,6 +19,9 @@ ln -s /usr/lib/$VIRTUAL_ENV_python_version/dist-packages/PIL $VIRTUAL_ENV_site_p
 
 export VERSION=$(echo $BROWSER | sed -e's/[^-]*-//')
 export BROWSER=$(echo $BROWSER | sed -e's/-.*//')
+
+echo BROWSER=$BROWSER
+echo VERSION=$VERSION
 
 case $BROWSER in
 Chrome)
