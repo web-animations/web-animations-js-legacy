@@ -4,7 +4,9 @@ env:
   - BROWSER=Chrome-stable
   - BROWSER=Chrome-beta
   - BROWSER=Chrome-unstable
-  - BROWSER=Firefox
+  - BROWSER=Firefox-stable
+  - BROWSER=Firefox-beta
+  - BROWSER=Firefox-aurora
 
 #matrix:
 #  allow_failures:
