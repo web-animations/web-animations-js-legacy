@@ -206,6 +206,14 @@ function generate(time){
         }
         console.log("Node:", checks[x].object[i].cloneNode(), "Property:", checks[x].properties[j], "Value:", value);
 
+        value = value.replace(/[-+]?[0-9]+\.?[0-9]*(?:[eE][-+]?[0-9]+)?/g, function(v) {
+          v = Number(v);
+          if (Math.abs(v) < 1e-10) {
+            v = 0;
+          }
+          return ("" + v.toPrecision(4)).replace(/\.?0+$/, '');
+        });
+
         propsPrint += "'"+ p + "':'" + value + "'";
         if (j < checks[x].properties.length -1) propsPrint += ",";
       }

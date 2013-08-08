@@ -167,7 +167,6 @@ function _assert_style_get(style, i) {
   }
 }
 
-
 /**
  * Extract all the informative parts of a string. Ignores spacing, punctuation
  * and other random extra characters.
@@ -221,6 +220,20 @@ function _assert_important_in_array(actual, expected, message) {
 
       try {
         assert_equals(typeof actual, typeof expected);
+
+        if (typeof actual === 'number') {
+          if (Math.abs(actual) < 1e-10) {
+            actual = 0;
+          }
+          actual = '' + actual.toPrecision(4);
+        }
+        if (typeof expected === 'number') {
+          if (Math.abs(expected) < 1e-10) {
+            expected = 0;
+          }
+          expected = '' + expected.toPrecision(4);
+        }
+
         assert_equals(actual, expected);
       } catch (e) {
         element_errors.push(
@@ -334,7 +347,6 @@ function _assert_style_element(object, style, description) {
         var target = target_style[output_prop_name];
         var curr = current_style[output_prop_name];
       }
-
 
       _assert_important_in_array(curr, [target], description);
     }
