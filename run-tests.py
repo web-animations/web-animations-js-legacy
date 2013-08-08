@@ -522,14 +522,28 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         self.wfile.write(response)
         self.wfile.close()
 
-httpd = SocketServer.TCPServer(
-    ("127.0.0.1", 0),  # Bind to any port on localhost
-    ServerHandler)
+if args.sauce:
+    port = 55001
+else:
+    port = 0  # Bind to any port on localhost
+
+while True:
+    try:
+        httpd = SocketServer.TCPServer(
+            ("127.0.0.1", port),
+            ServerHandler)
+        break
+    except socket.error as e:
+      print e
+      time.sleep(5)
+
+port = httpd.socket.getsockname()[-1]
+print "Serving at", port
+
 httpd_thread = threading.Thread(target=httpd.serve_forever)
 httpd_thread.daemon = True
 httpd_thread.start()
 
-port = httpd.socket.getsockname()[-1]
 
 # Start up a virtual display, useful for testing on headless servers.
 # -----------------------------------------------------------------------------
