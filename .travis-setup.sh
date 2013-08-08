@@ -26,6 +26,7 @@ Chrome*)
 	;;
 
 Firefox)
+	apt-get install firefox
 	firefox --version
 	;;
 esac
