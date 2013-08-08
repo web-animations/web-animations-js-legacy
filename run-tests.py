@@ -488,10 +488,15 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                     eof=True)
 
         # Take a screenshot of result if a failure occurred.
-        if overall_status > 0 and args.virtual:
+        if overall_status > 0 and (args.virtual or args.browser == "Remote"):
             time.sleep(1)
+
             screenshot = test_id + '.png'
-            disp.grab().save(screenshot)
+            if args.virtual:
+                disp.grab().save(screenshot)
+            elif args.browser == "Remote":
+                global browser
+                browser.save_screenshot(screenshot)
 
             if args.upload and not already_failed:
                 form = MultiPartForm()
@@ -621,8 +626,8 @@ elif args.browser == "Remote":
     driver_arguments['desired_capabilities'] = caps
 
 major_failure = False
+browser = None
 try:
-    browser = None
     try:
         if args.verbose:
             print driver_arguments
