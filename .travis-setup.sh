@@ -1,9 +1,13 @@
 #! /bin/sh
 
+set +x
+
 # Make sure /dev/shm has correct permissions.
 ls -l /dev/shm
 sudo chmod 1777 /dev/shm
 ls -l /dev/shm
+
+sudo apt-get update --fix-missing
 
 # Install python-imaging from the environment rather then build it.
 # If the below fails, pip will build it via the .requirements
@@ -13,20 +17,34 @@ VIRTUAL_ENV_python_version=$(echo $VIRTUAL_ENV_site_packages | sed -e's@.*/\(.*\
 ln -s /usr/lib/$VIRTUAL_ENV_python_version/dist-packages/PIL.pth $VIRTUAL_ENV_site_packages/PIL.pth
 ln -s /usr/lib/$VIRTUAL_ENV_python_version/dist-packages/PIL $VIRTUAL_ENV_site_packages/PIL
 
+export VERSION=$(echo $BROWSER | sed -e's/[^-]*-//')
+export BROWSER=$(echo $BROWSER | sed -e's/-.*//')
+
 case $BROWSER in
-Chrome*)
-	export VERSION=$(echo $BROWSER | sed -e's/[^-]*-//')
-	export BROWSER=$(echo $BROWSER | sed -e's/-.*//')
+Chrome)
 	echo "Getting $VERSION of $BROWSER"
 	export CHROME=google-chrome-${VERSION}_current_amd64.deb
 	wget https://dl.google.com/linux/direct/$CHROME
 	sudo dpkg --install $CHROME || sudo apt-get -f install
-	ls -l /usr/bin/google-chrome
+	which google-chrome
+	ls -l `which google-chrome`
 	google-chrome --version
 	;;
 
 Firefox)
-	apt-get install firefox
+	sudo rm -f /usr/local/bin/firefox
+	case $VERSION in
+	beta)
+		yes "\n" | sudo add-apt-repository -y ppa:mozillateam/firefox-next
+		;;
+	aurora)
+		yes "\n" | sudo add-apt-repository -y ppa:ubuntu-mozilla-daily/firefox-aurora
+		;;
+	esac
+	sudo apt-get update --fix-missing
+	sudo apt-get install firefox
+	which firefox
+	ls -l `which firefox`
 	firefox --version
 	;;
 esac
