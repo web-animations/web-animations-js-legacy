@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-<!DOCTYPE html>
+<!DOCTYPE html><meta charset="UTF-8">
 <style>
 .anim {
   left: 0px;
@@ -52,32 +52,6 @@ var separation_x = 100;
 var separation_y = 50;
 var max_x = 1000;
 
-// TODO: refactor into test harness
-function detectFeatures() {
-  var style = document.createElement('style');
-  style.textContent = '' +
-     'dummyRuleForTesting {' +
-     'width: calc(0px);' +
-     'width: -webkit-calc(0px); }';
-  document.head.appendChild(style);
-  var transformCandidates = [
-      'transform',
-      'webkitTransform',
-      'msTransform'
-  ];
-  var transformProperty = transformCandidates.filter(function(property) {
-    return property in style.sheet.cssRules[0].style;
-  })[0];
-  var calcFunction = style.sheet.cssRules[0].style.width.split('(')[0];
-  document.head.removeChild(style);
-  return {
-    transformProperty: transformProperty,
-    calcFunction: calcFunction
-  };
-}
-
-var features = detectFeatures();
-
 var toplevel = document.querySelector("div");
 var y = 50;
 
@@ -95,7 +69,7 @@ for (var i = 0; i < transformValues.length; i++) {
       div.className = "expected";
       div.style.top = y + 'px';
       div.style.left = x + 'px';
-      div.style[features.transformProperty] = transformValues[i][k];
+      div.style[test_features.transformProperty] = transformValues[i][k];
       toplevel.appendChild(document.createElement("div"));
       var div = toplevel.lastChild;
       div.className = "anim";
