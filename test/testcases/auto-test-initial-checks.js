@@ -12,7 +12,7 @@ timing_test(function() {
     assert_styles("#opacity",{'opacity':'1'});
   }, "#opacity");
   at(0, function() {
-    assert_styles("#outline",{'outlineColor':'rgb(0, 0, 0)','outlineWidth':'3px','outlineOffset':'0px'});
+    assert_styles("#outline",{'outlineColor':'rgba(0, 0, 0, 0)','outlineWidth':'3px','outlineOffset':'0px'});
   }, "#outline");
   at(0, function() {
     assert_styles("#padding",{'paddingBottom':'0px','paddingLeft':'0px','paddingRight':'0px','paddingTop':'0px'});

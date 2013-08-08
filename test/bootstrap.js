@@ -167,6 +167,85 @@ function _assert_style_get(style, i) {
   }
 }
 
+
+/**
+ * Extract all the informative parts of a string. Ignores spacing, punctuation
+ * and other random extra characters.
+ */
+function _extract_important(input) {
+  var re = /([-+]?[0-9]+\.?[0-9]*(?:[eE][-+]?[0-9]+)?)|[A-Za-z%]+/g;
+
+  var match;
+  var result = [];
+  while (match = re.exec(input)) {
+    var value = match[0];
+    if (typeof match[1] != "undefined") {
+       value = Number(match[1]);
+    }
+    result.push(value);
+  }
+  return result;
+}
+window.assert_styles_extract_important = _extract_important;
+
+function AssertionError(message) {
+  this.message = message;
+}
+window.assert_styles_assertion_error = AssertionError;
+
+/**
+ * Asserts that a string is in the array of expected only comparing the
+ * important parts. Ignores spacing, punctuation and other random extra
+ * characters.
+ */
+function _assert_important_in_array(actual, expected, message) {
+  var actual_array = _extract_important(actual);
+
+  var expected_array_array = [];
+  for (var i = 0; i < expected.length; i++) {
+    expected_array_array.push(_extract_important(expected[i]));
+  }
+
+  var errors = [];
+  for (var i = 0; i < expected_array_array.length; i++) {
+    var expected_array = expected_array_array[i];
+
+    var element_errors = [];
+    if (actual_array.length != expected_array.length) {
+      element_errors.push('Number of elements don\'t match');
+    }
+
+    for (var j = 0; j < expected_array.length; j++) {
+      var actual = actual_array[j];
+      var expected = expected_array[j];
+
+      try {
+        assert_equals(typeof actual, typeof expected);
+        assert_equals(actual, expected);
+      } catch (e) {
+        element_errors.push(
+            'Element ' + j + ' - ' + e.message);
+      }
+    }
+
+    if (element_errors.length == 0) {
+      return;
+    } else {
+      element_errors.reverse();
+      errors.push(
+          'Expected value "' + expected_array + '" did not match\n' +
+          '  ' + element_errors.join('\n  '));
+    }
+  }
+  errors.unshift('Value - ' + JSON.stringify(actual_array) + ', ' +
+                 'Expected - ' + JSON.stringify(expected_array_array));
+  if (typeof message !== 'undefined') {
+    errors.unshift(message);
+  }
+  throw new AssertionError(errors.join('\n'));
+}
+window.assert_styles_assert_important_in_array = _assert_important_in_array;
+
 /**
  * asserts that actual has the same styles as the dictionary given by
  * expected.
@@ -210,6 +289,8 @@ function _assert_style_element(object, style, description) {
         var prop_value = style[prop_name];
       }
 
+      prop_value = '' + prop_value;
+
       if (prop_name == 'transform') {
         var output_prop_name = test_features.transformProperty;
       } else {
@@ -227,6 +308,15 @@ function _assert_style_element(object, style, description) {
 
         var current_style = computedObjectStyle;
         var target_style = getComputedStyle(reference_element, null);
+
+        _assert_important_in_array(
+            prop_value, [reference_element.style[output_prop_name], target_style[output_prop_name]],
+            'Tried to set the reference element\'s '+ output_prop_name +
+            ' to ' + JSON.stringify(prop_value) +
+            ' but neither the style' +
+            ' ' + JSON.stringify(reference_element.style[output_prop_name]) +
+            ' nor computedStyle ' + JSON.stringify(target) +
+            ' ended up matching requested value.');
       }
 
       if (prop_name == 'ctm') {
@@ -245,32 +335,8 @@ function _assert_style_element(object, style, description) {
         var curr = current_style[output_prop_name];
       }
 
-      if (target) {
-        var t = target.replace(/[^0-9.\s-]/g, '');
-      } else {
-        var t = '';
-      }
 
-      if (curr) {
-        var c = curr.replace(/[^0-9.\s-]/g, '');
-      } else {
-        var c = '';
-      }
-
-      if (t.length == 0) {
-        // Assume it's a word property so do an exact assert
-        assert_equals(
-            curr, target,
-            prop_name + ' is not ' + target + ', actually ' + curr);
-      } else {
-        t = t.split(' ');
-        c = c.split(' ');
-        for (var x in t) {
-          assert_equals(
-              Number(c[x]), Number(t[x]), 
-              prop_name + ' is not ' + target + ', actually ' + curr);
-        }
-      }
+      _assert_important_in_array(curr, [target], description);
     }
   } finally {
     if (reference_element.parentNode) {

@@ -27,6 +27,14 @@ div#targets div {
 
 <div id="targets"></div>
 
+<script>
+var expected_failures = {
+  'Add-composite the neutral value onto a percent length type property with default value': {
+    chrome: true,
+    message: "getComputedStyle is broken under Chrome and this will return 'auto' while the specification says it should return pixels. https://code.google.com/p/chromium/issues/detail?id=229280"
+  }
+};
+</script>
 <script src="../bootstrap.js"></script>
 <script>
 "use strict";
@@ -62,7 +70,7 @@ testComposite('left', null, 'replace', '42%', 1.0, '42px',
     'Replace-composite a percent length type property with a percentage');
 testComposite('marginTop', null, 'replace', '42px', 1.0, '42px',
     'Replace-composite a length type property');
-testComposite('clip', null, 'replace', 'rect(1px, 2px, 3px, 4px)', 1.0, 'rect(1px, 2px, 3px, 4px)',
+testComposite('clip', null, 'replace', 'rect(1px, 2px, 3px, 4px)', 1.0, 'rect(1px 2px 3px 4px)',
     'Replace-composite a rectangle type property');
 testComposite('fontWeight', null, 'replace', 'bold', 1.0, 'bold',
     'Replace-composite a font weight type property with a number');
@@ -72,7 +80,7 @@ testComposite('opacity', null, 'replace', 0.42, 1.0, 0.42,
     'Replace-composite a number type property');
 testComposite('zIndex', null, 'replace', 42, 1.0, 42,
     'Replace-composite an integer type property');
-testComposite('textShadow', null, 'replace', '1px 2px red', 1.0, 'rgb(255, 0, 0) 1px 2px',
+testComposite('textShadow', null, 'replace', '1px 2px red', 1.0, 'rgb(255, 0, 0) 1px 2px 0px',
     'Replace-composite a shadow type property');
 testComposite('transform', null, 'replace', 'scale(42)', 1.0, 'matrix(42, 0, 0, 42, 0, 0)',
     'Replace-composite a transform type property');
@@ -88,7 +96,7 @@ testComposite('left', null, 'add', '42%', 1.0, '42px',
     'Add-composite a percent length type property with a percentage');
 testComposite('marginTop', null, 'add', '42px', 1.0, '42px',
     'Add-composite a length type property');
-testComposite('clip', null, 'add', 'rect(1px, 2px, 3px, 4px)', 1.0, 'rect(1px, 2px, 3px, 4px)',
+testComposite('clip', null, 'add', 'rect(1px, 2px, 3px, 4px)', 1.0, 'rect(1px 2px 3px 4px)',
     'Add-composite a rectangle type property');
 testComposite('fontWeight', null, 'add', 'bold', 1.0, 900,
     'Add-composite a font weight type property with a number');
@@ -98,7 +106,7 @@ testComposite('opacity', null, 'add', -0.42, 1.0, 0.58,
     'Add-composite a number type property');
 testComposite('zIndex', null, 'add', 42, 1.0, 42,
     'Add-composite an integer type property');
-testComposite('textShadow', null, 'add', '1px 2px red', 1.0, 'rgb(255, 0, 0) 1px 2px',
+testComposite('textShadow', null, 'add', '1px 2px red', 1.0, 'rgb(255, 0, 0) 1px 2px 0px',
     'Add-composite a shadow type property');
 testComposite('transform', null, 'add', 'scale(42)', 1.0, 'matrix(42, 0, 0, 42, 0, 0)',
     'Add-composite a transform type property');
@@ -108,9 +116,9 @@ testComposite('visibility', null, 'add', 'hidden', 1.0, 'hidden',
 // Test add composition with neutral value onto default value.
 testComposite('color', null, null, null, 0.0, 'rgb(0, 0, 0)',
     'Add-composite the neutral value onto a color type property with default value');
-testComposite('left', null, null, null, 0.0, 0,
+testComposite('left', null, null, null, 0.0, '0px',
     'Add-composite the neutral value onto a percent length type property with default value');
-testComposite('marginTop',null, null, null, 0.0, 0,
+testComposite('marginTop',null, null, null, 0.0, '0%',
     'Add-composite the neutral value onto a length type property with default value');
 testComposite('clip',null, null, null, 0.0, 'auto',
     'Add-composite the neutral value onto a rectangle type property with default value');
@@ -118,7 +126,7 @@ testComposite('fontWeight',null, null, null, 0.0, 'normal',
     'Add-composite the neutral value onto a font weight type property with default value');
 testComposite('opacity',null, null, null, 0.0, 1.0,
     'Add-composite the neutral value onto a number type property with default value');
-testComposite('zIndex',null, null, null, 0.0, 0,
+testComposite('zIndex',null, null, null, 0.0, 'auto',
     'Add-composite the neutral value onto an integer type property with default value');
 testComposite('textShadow',null, null, null, 0.0, 'none',
     'Add-composite the neutral value onto a shadow type property with default value');
@@ -146,7 +154,7 @@ testComposite('opacity', 0.42, null, null, 0.0, 0.42,
     'Add-composite the neutral value onto a number type property');
 testComposite('zIndex', 42, null, null, 0.0, 42,
     'Add-composite the neutral value onto an integer type property');
-testComposite('textShadow', '1px 2px red', null, null, 0.0, 'rgb(255, 0, 0) 1px 2px',
+testComposite('textShadow', '1px 2px red', null, null, 0.0, 'rgb(255, 0, 0) 1px 2px 0px',
     'Add-composite the neutral value onto a shadow type property');
 testComposite('transform', 'scale(42)', null, null, 0.0, 'matrix(42, 0, 0, 42, 0, 0)',
     'Add-composite the neutral value onto a transform type property (scale)');
