@@ -1130,16 +1130,16 @@ window.testharness_after_loaded = function() {
    */
   var pageerror_test = async_test('Page contains no errors');
 
-  addEventListener('error', function(evt) {
-    var msg = 'Error in ' + evt.filename + '\n' +
-        'Line ' + evt.lineno + ': ' + evt.message + '\n';
+  window.onerror = function(msg, url, line) {
+    var msg = 'Error in ' + url + '\n' +
+        'Line ' + line + ': ' + msg + '\n';
 
     pageerror_test.is_done = true;
     pageerror_test.step(function() { 
       assert_true(false, msg);
     });
     pageerror_test.is_done = false;
-  });
+  };
 
   var pageerror_tests;
   function pageerror_othertests_finished(test, harness) {
