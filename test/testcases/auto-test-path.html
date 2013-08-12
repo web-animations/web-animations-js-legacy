@@ -53,19 +53,7 @@ limitations under the License.
 'use strict';
 
 var expected_failures = {
-  '/Check .* t=[0123]s/': {
-    firefox: true,
-    message: "Doesn't actually follow paths."
-  },
-  '/Check #anim[123] .* t=[456]s/': {
-    firefox: true,
-    message: "Doesn't actually follow paths."
-  },
-  '/Check .* t=[789]s/': {
-    firefox: true,
-    message: "Doesn't actually follow paths."
-  },
-  '/Check .* t=1[01]s/': {
+  '/Auto generated tests at t=[0-9]s.*/': {
     firefox: true,
     message: "Doesn't actually follow paths."
   },
