@@ -16,86 +16,44 @@ limitations under the License.
 
 <!DOCTYPE html><meta charset="UTF-8">
 <style>
-.animation {
+#svgContainer, #targetContainer {
   position: absolute;
-  width: 25px;
-  height: 25px;
-  top: 0px;
-  left: 0px;
+  left: 0;
+  top: 100;
+}
+
+.title {
+  position: absolute;
+  width: 300px;
+  color: grey;
+}
+
+.target {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  top: 0;
+  left: 0;
   background: lightsteelblue;
 }
-.expectation {
-  background: red;
+
+.targetStart {
   position: absolute;
-  width: 25px;
-  height: 25px;
-  top: 0px;
-  left: 0px;
+  width: 20px;
+  height: 20px;
+  background: darkred;
 }
-#e1 {
-  -webkit-transform: translate(87.5px, 87.5px);
-  transform: translate(87.5px, 87.5px);
-}
-#e2 {
-  -webkit-transform: translate(387.5px, 87.5px);
-  transform: translate(387.5px, 87.5px);
-}
-#e3 {
-  -webkit-transform: translate(87.5px, 287.5px);
-  transform: translate(87.5px, 287.5px);
-}
-#e4, #anim4 {
-  -webkit-transform: translate(387.5px, 287.5px);
-  transform: translate(387.5px, 287.5px);
-}
-svg {
-position:absolute;
-top: 0px;
-left: 0px;
-width: 800px;
-height: 600px;
-}
+
 </style>
 
-<svg xmlns="http://www.w3.org/2000/svg" version="1.1">
-  <path id=path1 d="M 100,100 a 75,75 0 1,0 150,0 a 75,75 0 1,0 -150,0 " />
-  <path d="M 100,100 a 75,75 0 1,0 150,0 a 75,75 0 1,0 -150,0 "
-      stroke="black" stroke-width="1" fill="none" />
-  <path id=path2 d="M400,100l0,0l0,-50l100,0l86.3325,122.665z" />
-  <path d="M400,100l0,0l0,-50l100,0l86.3325,122.665z" stroke="black"
-      stroke-width="1" fill="none" />
-  <path id=path3 d="M100,300l0,0l0,-50l100,0l86.3325,122.665z" />
-  <path d="M100,300l0,0l0,-50l100,0l86.3325,122.665z" stroke="black"
-      stroke-width="1" fill="none" />
-  <path id=path4 d="M400,300l0,0l0,-50l100,0l86.3325,122.665z" />
-  <path d="M400,300l0,0l0,-50l100,0l86.3325,122.665z" stroke="black"
-      stroke-width="1" fill="none" />
-</svg>
-
-<div id="e1" class="expectation"></div>
-<div id="anim1" class="animation">&rarr;</div>
-<div id="e2" class="expectation"></div>
-<div id="anim2" class="animation">&rarr;</div>
-<div id="e3" class="expectation"></div>
-<div id="anim3" class="animation">&rarr;</div>
-<div id="e4" class="expectation"></div>
-<div id="anim4" class="animation">&rarr;</div>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" id="svgContainer"></svg>
+<div id="targetContainer"></div>
 
 <script>
+'use strict';
+
 var expected_failures = {
-  '/Check .* t=[0123]s/': {
-    firefox: true,
-    message: "Doesn't actually follow paths."
-  },
-  '/Check #anim[123] .* t=[456]s/': {
-    firefox: true,
-    message: "Doesn't actually follow paths."
-  },
-  '/Check .* t=[789]s/': {
-    firefox: true,
-    message: "Doesn't actually follow paths."
-  },
-  '/Check .* t=1[01]s/': {
+  '/Auto generated tests at t=[0-9]s.*/': {
     firefox: true,
     message: "Doesn't actually follow paths."
   },
@@ -103,36 +61,138 @@ var expected_failures = {
 </script>
 <script src="../bootstrap.js"></script>
 <script>
-"use strict";
+'use strict';
 
-var animFunc1 = new PathAnimationEffect(
-    document.querySelector('#path1').pathSegList, 'auto-rotate');
-document.timeline.play(new Animation(document.querySelector("#anim1"),
-    animFunc1, {iterationDuration: 10, iterationCount: 2}));
+var svgContainer = document.querySelector('#svgContainer');
+var container = document.querySelector('#container');
 
-var animFunc2 = new PathAnimationEffect(
-    document.querySelector('#path2').pathSegList, 'auto-rotate');
-document.timeline.play(new Animation(document.querySelector("#anim2"),
-    animFunc2, {iterationDuration: 10, iterationCount: 2}));
+var circlePath = "a 75,75 0 1,0 150,0 a 75,75 0 1,0 -150,0";
+var quadPath = "l 0,0 l 0,-50 l 100,0 l 86.3325,122.665 z";
 
-var animFunc3 = new PathAnimationEffect(
-    document.querySelector('#path3').pathSegList, 'auto-rotate');
-document.timeline.play(new Animation(
-    document.querySelector("#anim3"), animFunc3,
-    {iterationDuration: 10, iterationCount: 2, timingFunction: "paced"}));
+var tests = [
+  {
+    name: 'Simple path',
+    path: circlePath,
+  },
+  {
+    name: 'auto-rotate',
+    path: circlePath,
+    autoRotate: true,
+  },
+  {
+    name: 'Unpaced path',
+    path: quadPath,
+    autoRotate: true,
+  },
+  {
+    name: 'Paced path',
+    path: quadPath,
+    autoRotate: true,
+    paced: true,
+  },
+  {
+    name: 'Transform offset',
+    path: quadPath,
+    paced: true,
+    transformOffset: 'translateY(-20px) rotate(-90deg) scale(2)',
+  },
+  {
+    name: 'Transform offset, auto-rotate',
+    path: quadPath,
+    paced: true,
+    autoRotate: true,
+    transformOffset: 'translateY(-10px) skewX(20deg)',
+  },
+  {
+    name: 'Modify paced PathAnimationEffect',
+    path: quadPath,
+    paced: true,
+    autoRotate: true,
+    modifyEffect: true,
+  },
+  {
+    name: 'Modify transform offset',
+    path: quadPath,
+    paced: true,
+    autoRotate: true,
+    transformOffset: 'translateY(-10px) skewX(20deg)',
+    modifyTransformOffset: true,
+  },
+];
 
-var animFunc4KeyFrames = new KeyframeAnimationEffect(
-    [{transform: "translate(387.5px, 287.5px) rotate(180deg)"}], "replace");
-var animFunc4Path = new PathAnimationEffect(
-    document.querySelector('#path4').pathSegList, 'auto-rotate');
-var anim4 = new Animation(document.querySelector("#anim4"), animFunc4Path,
-    {iterationDuration: 10, iterationCount: 2, timingFunction: "paced"});
-document.timeline.play(anim4);
+var topPadding = 150;
+var leftPadding = 40;
+var colWidth = 300;
+var rowHeight = 200;
+var colCount = 2;
 
-testharness_timeline.schedule(function() {
-    anim4.effect = animFunc4KeyFrames;
-}, 3000);
-testharness_timeline.schedule(function() {
-    anim4.effect = animFunc4Path;
-}, 6000);
+for (var i = 0; i < tests.length; i++) {
+  var test = tests[i];
+  var x = leftPadding + (i % colCount) * colWidth;
+  var y = topPadding + parseInt(i / colCount) * rowHeight;
+  var positionedPathData = 'M ' + x + ',' + y + ' ' + test.path;
+
+  var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('d', positionedPathData);
+  path.setAttribute('stroke', 'black');
+  path.setAttribute('stroke-width', '1');
+  path.setAttribute('fill', 'none');
+  svgContainer.appendChild(path);
+
+  var title = document.createElement('div');
+  title.className = 'title';
+  title.style.left = x + 'px';
+  title.style.top = (y - 100) + 'px';
+  title.innerText = test.name;
+  targetContainer.appendChild(title);
+
+  var targetStart = document.createElement('div');
+  targetStart.className = 'targetStart';
+  targetStart.style.left = (x - 10) + 'px';
+  targetStart.style.top = (y - 10) + 'px';
+  targetContainer.appendChild(targetStart);
+
+  var target = document.createElement('div');
+  target.className = 'target';
+  target.innerText = '→';
+  targetContainer.appendChild(target);
+
+  var effect = new PathAnimationEffect(
+    positionedPathData,
+    test.autoRotate ? 'auto-rotate' : 'none',
+    test.transformOffset ? test.transformOffset : 'none');
+  var animParams = {
+    iterationDuration: 5,
+    iterationCount: 2,
+  };
+  if (test.paced) {
+    animParams.timingFunction = 'paced';
+  }
+  var animation = new Animation(target, effect, animParams);
+  document.timeline.play(animation)
+
+  if (test.modifyEffect) {
+    (function(animation, effect, x, y) {
+      testharness_timeline.schedule(function() {
+          animation.effect = new KeyframeAnimationEffect([
+            { left: x, top: y, backgroundColor: 'lightsteelblue' },
+            { left: x, top: y, backgroundColor: 'green', transform: 'rotate(-180deg)' }]);4
+      }, 1500);
+      testharness_timeline.schedule(function() {
+          animation.effect = effect;
+      }, 2999);
+    })(animation, effect, (x + 50) + 'px', (y - 10) + 'px');
+  }
+  if (test.modifyTransformOffset) {
+    (function(effect, transformOffset) {
+      testharness_timeline.schedule(function() {
+        effect.transformOffset = 'rotate(90deg) translateX(-10px)';
+      }, 1500);
+      testharness_timeline.schedule(function() {
+        effect.transformOffset = transformOffset;
+      }, 2999);
+    })(effect, test.transformOffset);
+  }
+}
+
 </script>
