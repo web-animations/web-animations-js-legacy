@@ -3356,26 +3356,50 @@ var decomposeMatrix = function() {
     var pdum3 = cross(row[1], row[2]);
     if (dot(row[0], pdum3) < 0) {
       for (var i = 0; i < 3; i++) {
-        scale[0] *= -1;
+        scale[i] *= -1;
         row[i][0] *= -1;
         row[i][1] *= -1;
         row[i][2] *= -1;
       }
     } 
     
-    var quaternion = [
-      0.5 * Math.sqrt(Math.max(1 + row[0][0] - row[1][1] - row[2][2], 0)),
-      0.5 * Math.sqrt(Math.max(1 - row[0][0] + row[1][1] - row[2][2], 0)),
-      0.5 * Math.sqrt(Math.max(1 - row[0][0] - row[1][1] + row[2][2], 0)),
-      0.5 * Math.sqrt(Math.max(1 + row[0][0] + row[1][1] + row[2][2], 0))
-    ];
+    var t = row[0][0] + row[1][1] + row[2][2] + 1;
+    var s;
+    var quaternion;
 
-    if (row[2][1] > row[1][2])
-      quaternion[0] = -quaternion[0];
-    if (row[0][2] > row[2][0])
-      quaternion[1] = -quaternion[1];
-    if (row[1][0] > row[0][1])
-      quaternion[2] = -quaternion[2];
+    if (t > 1e-4) {
+      s = 0.5 / Math.sqrt(t);
+      quaternion = [
+        (row[2][1] - row[1][2]) * s,
+        (row[0][2] - row[2][0]) * s,
+        (row[1][0] - row[0][1]) * s,
+        0.25 / s
+      ];
+    } else if (row[0][0] > row[1][1] && row[0][0] > row[2][2]) {
+      s = Math.sqrt(1 + row[0][0] - row[1][1] - row[2][2]) * 2.0;
+      quaternion = [
+        0.25 * s,
+        (row[0][1] + row[1][0]) / s,
+        (row[0][2] + row[2][0]) / s,
+        (row[2][1] - row[1][2]) / s
+      ];
+    } else if (row[1][1] > row[2][2]) {
+      s = Math.sqrt(1.0 + row[1][1] - row[0][0] - row[2][2]) * 2.0;
+      quaternion = [
+        (row[0][1] + row[1][0]) / s,
+        0.25 * s,
+        (row[1][2] + row[2][1]) / s,
+        (row[0][2] - row[2][0]) / s
+      ];
+    } else {
+      s = Math.sqrt(1.0 + row[2][2] - row[0][0] - row[1][1]) * 2.0;
+      quaternion = [
+        (row[0][2] + row[2][0]) / s,
+        (row[1][2] + row[2][1]) / s,
+        0.25 * s,
+        (row[1][0] - row[0][1]) / s
+      ];
+    }
 
     return {translate: translate, scale: scale, skew: skew, 
             quaternion: quaternion, perspective: perspective};
