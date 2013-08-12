@@ -1483,7 +1483,7 @@ var clamp = function(x, min, max) {
 }
 
 /** @constructor */
-var PathAnimationEffect = function(path, autoRotate, angle, composite,
+var PathAnimationEffect = function(path, autoRotate, transformOffset, composite,
     accumulate) {
   enterModifyCurrentAnimationState();
   try {
@@ -1495,7 +1495,8 @@ var PathAnimationEffect = function(path, autoRotate, angle, composite,
     // TODO: path argument is not in the spec -- seems useful since
     // SVGPathSegList doesn't have a constructor.
     this.autoRotate = isDefined(autoRotate) ? autoRotate : 'none';
-    this.angle = isDefined(angle) ? angle : 0;
+    this.transformOffset = transformType.fromCssValue(
+        isDefined(transformOffset) ? transformOffset : 'none');
     this._path = document.createElementNS('http://www.w3.org/2000/svg','path');
     if (path instanceof SVGPathSegList) {
       this.segments = path;
@@ -1530,8 +1531,7 @@ PathAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     var x = point.x - target.offsetWidth / 2;
     var y = point.y - target.offsetHeight / 2;
     // TODO: calc(point.x - 50%) doesn't work?
-    var value = [{t: 'translate', d: [{px: x}, {px: y}]}];
-    var angle = this.angle;
+    var angle = 0;
     if (this._autoRotate == 'auto-rotate') {
       // Super hacks
       var lastPoint = this._path.getPointAtLength(lengthAtTimeFraction - 0.01);
@@ -1540,9 +1540,12 @@ PathAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
       var rotation = Math.atan2(dy, dx);
       angle += rotation / 2 / Math.PI * 360;
     }
-    value.push({t:'rotate', d: [angle]});
+    var transformValue = [
+      {t: 'translate', d: [{px: x}, {px: y}]},
+      {t:'rotate', d: [angle]},
+    ].concat(this.transformOffset);
     compositor.setAnimatedValue(target, "transform",
-        new AddReplaceCompositableValue(value, this.composite));
+        new AddReplaceCompositableValue(transformValue, this.composite));
   },
   _lengthAtTimeFraction: function(timeFraction) {
     var segmentCount = this._cumulativeLengths.length - 1;
