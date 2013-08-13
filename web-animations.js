@@ -1810,8 +1810,7 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
   },
   _sampleForProperty: function(timeFraction, currentIteration, property) {
     var frames = this._propertySpecificKeyframes(property);
-    var unaccumulatedValue =
-        this._unaccumulatedValueForProperty(frames, timeFraction, property);
+    var unaccumulatedValue = this._getUnaccumulatedValue(frames, timeFraction);
 
     // We can only accumulate if this iteration is strictly positive and if all
     // keyframes use the same composite operation.
@@ -1821,12 +1820,12 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
       // TODO: The spec is vague about the order of addition here when using add
       // composition.
       return new AccumulatedCompositableValue(unaccumulatedValue,
-          this._getAccumulatingValue(frames, property), currentIteration);
+          this._getAccumulatingValue(frames), currentIteration);
     }
 
     return unaccumulatedValue;
   },
-  _getAccumulatingValue: function(frames, property) {
+  _getAccumulatingValue: function(frames) {
     ASSERT_ENABLED && console.assert(this._allKeyframesUseSameCompositeOperation(frames),
         'Accumulation only valid if all frames use same composite operation');
 
@@ -1836,8 +1835,7 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     // change such that there is no guarantee that a keyframe with offset 1.0 is
     // present.
     // TODO: Consider caching this.
-    var unaccumulatedValueAtOffsetOne =
-        this._unaccumulatedValueForProperty(frames, 1.0, property);
+    var unaccumulatedValueAtOffsetOne = this._getUnaccumulatedValue(frames, 1.0);
 
     if (this._compositeForKeyframe(frames[0]) === 'add') {
       return unaccumulatedValueAtOffsetOne;
@@ -1849,9 +1847,9 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     // AddReplaceCompositable value to add-composite this concrete value.
     ASSERT_ENABLED && console.assert(!unaccumulatedValueAtOffsetOne.dependsOnUnderlyingValue());
     return new AddReplaceCompositableValue(
-        unaccumulatedValueAtOffsetOne.compositeOnto(property, null), 'add');
+        unaccumulatedValueAtOffsetOne.compositeOnto(null, null), 'add');
   },
-  _unaccumulatedValueForProperty: function(frames, timeFraction, property) {
+  _getUnaccumulatedValue: function(frames, timeFraction) {
     ASSERT_ENABLED && console.assert(frames.length >= 2,
         'Interpolation requires at least two keyframes');
 
@@ -1861,16 +1859,14 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     // keyframes at offsets of 0 and 1.
     if (timeFraction < 0.0) {
       if (frames[1].offset === 0.0) {
-        return new AddReplaceCompositableValue(
-            frames[0].rawValueForProperty(property),
+        return new AddReplaceCompositableValue(frames[0].rawValue(),
             this._compositeForKeyframe(frames[0]));
       } else {
         startKeyframeIndex = 0;
       }
     } else if (timeFraction >= 1.0) {
       if (frames[length - 2].offset === 1.0) {
-        return new AddReplaceCompositableValue(
-            frames[length - 1].rawValueForProperty(property),
+        return new AddReplaceCompositableValue(frames[length - 1].rawValue(),
             this._compositeForKeyframe(frames[length - 1]));
       } else {
         startKeyframeIndex = length - 2;
@@ -1887,23 +1883,19 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     var startKeyframe = frames[startKeyframeIndex];
     var endKeyframe = frames[startKeyframeIndex + 1];
     if (startKeyframe.offset == timeFraction) {
-      return new AddReplaceCompositableValue(
-          startKeyframe.rawValueForProperty(property),
+      return new AddReplaceCompositableValue(startKeyframe.rawValue(),
           this._compositeForKeyframe(startKeyframe));
     }
     if (endKeyframe.offset == timeFraction) {
-      return new AddReplaceCompositableValue(
-          endKeyframe.rawValueForProperty(property),
+      return new AddReplaceCompositableValue(endKeyframe.rawValue(),
           this._compositeForKeyframe(endKeyframe));
     }
     var intervalDistance = (timeFraction - startKeyframe.offset) /
         (endKeyframe.offset - startKeyframe.offset);
     return new BlendedCompositableValue(
-        new AddReplaceCompositableValue(
-            startKeyframe.rawValueForProperty(property),
+        new AddReplaceCompositableValue(startKeyframe.rawValue(),
             this._compositeForKeyframe(startKeyframe)),
-        new AddReplaceCompositableValue(
-            endKeyframe.rawValueForProperty(property),
+        new AddReplaceCompositableValue(endKeyframe.rawValue(),
             this._compositeForKeyframe(endKeyframe)),
         intervalDistance);
   },
@@ -1913,21 +1905,23 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     var frames = [];
     for (var i = 0; i < distributedFrames.length; i++) {
       if (distributedFrames[i].hasValueForProperty(property)) {
-        frames.push(distributedFrames[i]);
+        var frame = distributedFrames[i];
+        frames.push(new PropertySpecificKeyframe(frame.offset,
+            frame.composite, property, frame.cssValues[property]));
       }
     }
     ASSERT_ENABLED && console.assert(frames.length > 0,
         'There should always be keyframes for each property');
 
-    // Add 0 and 1 keyframes if required.
+    // Add synthetic keyframes at offsets of 0 and 1 if required.
     if (frames[0].offset !== 0.0) {
-      var keyframe = new KeyframeInternal(0.0, 'add');
-      keyframe.addPropertyValuePair(property, cssNeutralValue);
+      var keyframe = new PropertySpecificKeyframe(0.0, 'add',
+          property, cssNeutralValue);
       frames.unshift(keyframe);
     }
     if (frames[frames.length - 1].offset !== 1.0) {
-      var keyframe = new KeyframeInternal(1.0, 'add');
-      keyframe.addPropertyValuePair(property, cssNeutralValue);
+      var keyframe = new PropertySpecificKeyframe(1.0, 'add',
+          property, cssNeutralValue);
       frames.push(keyframe);
     }
     ASSERT_ENABLED && console.assert(frames.length >= 2,
@@ -2094,24 +2088,16 @@ var KeyframeInternal = function(offset, composite) {
   this.offset = offset;
   this.composite = composite;
   this.cssValues = {};
-  // Set lazily
-  this.rawValues = {};
 };
 
 KeyframeInternal.prototype = {
-  rawValueForProperty: function(property) {
-    if (!isDefinedAndNotNull(this.rawValues[property])) {
-      this.rawValues[property] = fromCssValue(property, this.cssValues[property]);
-    }
-    return this.rawValues[property];
-  },
   addPropertyValuePair: function(property, value) {
     ASSERT_ENABLED && console.assert(!this.cssValues.hasOwnProperty(property));
     this.cssValues[property] = value;
   },
   hasValueForProperty: function(property) {
     return property in this.cssValues;
-  }
+  },
 };
 
 KeyframeInternal.isSupportedPropertyValue = function(value) {
@@ -2131,6 +2117,25 @@ KeyframeInternal.createFromNormalizedProperties = function(properties) {
     }
   }
   return keyframe;
+};
+
+/** @constructor */
+var PropertySpecificKeyframe = function(offset, composite, property, cssValue) {
+  this.offset = offset;
+  this.composite = composite;
+  this.property = property;
+  this.cssValue = cssValue;
+  // Calculated lazily
+  this.cachedRawValue = null;
+};
+
+PropertySpecificKeyframe.prototype = {
+  rawValue: function() {
+    if (!isDefinedAndNotNull(this.cachedRawValue)) {
+      this.cachedRawValue = fromCssValue(this.property, this.cssValue);
+    }
+    return this.cachedRawValue;
+  },
 };
 
 /** @constructor */
