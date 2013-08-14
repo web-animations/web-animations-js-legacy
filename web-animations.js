@@ -408,7 +408,7 @@ Player.prototype = {
   },
   _deregisterFromTimeline: function() {
     PLAYERS.splice(PLAYERS.indexOf(this), 1);
-    player._registeredOnTimeline = false;
+    this._registeredOnTimeline = false;
   }
 };
 
