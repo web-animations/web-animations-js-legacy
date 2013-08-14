@@ -229,6 +229,7 @@ var Player = function(token, source, timeline) {
   if (token !== constructorToken) {
     throw new TypeError('Illegal constructor');
   }
+  this._attachedToTimeline = false;
   this._sequenceNumber = playerSequenceNumber++;
   this._timeline = timeline;
   this._startTime =
@@ -242,7 +243,6 @@ var Player = function(token, source, timeline) {
   this._checkForHandlers();
   this._lastCurrentTime = undefined;
 
-  PLAYERS.push(this);
   sortedPlayers = null;
   maybeRestartAnimation();
 };
@@ -354,6 +354,7 @@ Player.prototype = {
   _update: function() {
     if (this.source !== null) {
       this.source._updateInheritedTime(this._currentTime);
+      this._attachToTimeline();
     }
   },
   _isPastEndOfActiveInterval: function() {
@@ -362,6 +363,9 @@ Player.prototype = {
   },
   _isCurrent: function() {
     return this.source && this.source._isCurrent();
+  },
+  _hasEffect: function() {
+      return this.source && this.source._hasEffect();
   },
   _getLeafItemsInEffect: function(items) {
     if (this.source) {
@@ -396,6 +400,12 @@ Player.prototype = {
 
     this._lastCurrentTime = this._currentTime;
   },
+  _attachToTimeline: function() {
+    if (!this._attachedToTimeline) {
+      PLAYERS.push(this);
+      this._attachedToTimeline = true;
+    }
+  }
 };
 
 
@@ -706,6 +716,9 @@ TimedItem.prototype = {
         this.specified.playbackRate : -this.specified.playbackRate;
     return this.parent === null ? effectivePlaybackRate :
         effectivePlaybackRate * this.parent._netEffectivePlaybackRate();
+  },
+  _hasEffect: function() {
+      return this._isCurrent() || this.specified.fillMode !== 'none';
   },
   set onstart(fun) {
     this._startHandler = fun;
@@ -4458,10 +4471,14 @@ var ticker = function(rafTime, isRepeat) {
   var finished = true;
   var paused = true;
   var animations = [];
+  var finishedPlayers = [];
   sortedPlayers.forEach(function(player) {
     player._hasTicked = true;
     player._update();
     finished = finished && player._isPastEndOfActiveInterval();
+    if (!player._hasEffect()) {
+      finishedPlayers.push(player);
+    }
     paused = paused && player.paused;
     player._getLeafItemsInEffect(animations);
   });
@@ -4476,6 +4493,13 @@ var ticker = function(rafTime, isRepeat) {
   // Generate events
   sortedPlayers.forEach(function(player) {
     player._generateEvents();
+  });
+
+  // Remove finished players.
+  finishedPlayers.forEach(function(player) {
+    PLAYERS.splice(PLAYERS.indexOf(player), 1);
+    player._attachedToTimeline = false;
+    sortedPlayers = undefined;
   });
 
   // Composite animated values into element styles
@@ -4550,7 +4574,8 @@ window._WebAnimationsTestingUtilities = {
   _hsl2rgb: hsl2rgb,
   _types: {
     colorType: colorType,
-  }
+  },
+  _knownPlayers: PLAYERS,
 };
 
 })();
