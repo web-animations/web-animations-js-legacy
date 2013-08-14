@@ -229,7 +229,7 @@ var Player = function(token, source, timeline) {
   if (token !== constructorToken) {
     throw new TypeError('Illegal constructor');
   }
-  this._attachedToTimeline = false;
+  this._registeredOnTimeline = false;
   this._sequenceNumber = playerSequenceNumber++;
   this._timeline = timeline;
   this._startTime =
@@ -354,7 +354,7 @@ Player.prototype = {
   _update: function() {
     if (this.source !== null) {
       this.source._updateInheritedTime(this._currentTime);
-      this._attachToTimeline();
+      this._registerOnTimeline();
     }
   },
   _isPastEndOfActiveInterval: function() {
@@ -400,11 +400,15 @@ Player.prototype = {
 
     this._lastCurrentTime = this._currentTime;
   },
-  _attachToTimeline: function() {
-    if (!this._attachedToTimeline) {
+  _registerOnTimeline: function() {
+    if (!this._registeredOnTimeline) {
       PLAYERS.push(this);
-      this._attachedToTimeline = true;
+      this._registeredOnTimeline = true;
     }
+  },
+  _deregisterFromTimeline: function() {
+    PLAYERS.splice(PLAYERS.indexOf(this), 1);
+    player._registeredOnTimeline = false;
   }
 };
 
@@ -718,7 +722,7 @@ TimedItem.prototype = {
         effectivePlaybackRate * this.parent._netEffectivePlaybackRate();
   },
   _hasEffect: function() {
-      return this._isCurrent() || this.specified.fillMode !== 'none';
+    return this._isCurrent() || this.specified.fillMode !== 'none';
   },
   set onstart(fun) {
     this._startHandler = fun;
@@ -4495,11 +4499,12 @@ var ticker = function(rafTime, isRepeat) {
     player._generateEvents();
   });
 
-  // Remove finished players.
+  // Remove finished players. Warning: _deregisterFromTimeline modifies
+  // the PLAYER list, which is aliased by sortedPlayers. It should not be
+  // called from within a sortedPlayers.forEach loop directly.
   finishedPlayers.forEach(function(player) {
-    PLAYERS.splice(PLAYERS.indexOf(player), 1);
-    player._attachedToTimeline = false;
-    sortedPlayers = undefined;
+    player._deregisterFromTimeline();
+    sortedPlayers = null;
   });
 
   // Composite animated values into element styles
