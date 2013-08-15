@@ -2915,9 +2915,45 @@ var visibilityType = createObject(nonNumericType, {
 var lengthType = percentLengthType;
 var lengthAutoType = typeWithKeywords(['auto'], lengthType);
 
-var rgbRE = /^\s*rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/;
-var rgbaRE =
-    /^\s*rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+|\d*\.\d+)\s*\)/;
+var colorRE = /(hsla?|rgba?)\(([\-0-9]+%?),?\s*([\-0-9]+%?),?\s*([\-0-9]+%?)(?:,?\s*([\-0-9\.]+%?))?\)/;
+var colorHashRE = /#([0-9A-Fa-f][0-9A-Fa-f]?)([0-9A-Fa-f][0-9A-Fa-f]?)([0-9A-Fa-f][0-9A-Fa-f]?)/;
+
+function hsl2rgb(h, s, l) {
+  // Cribbed from http://dev.w3.org/csswg/css-color/#hsl-color
+  // Wrap to 0->360 degrees (IE -10 == 350) then normalize
+  h = (((h % 360) + 360) % 360) / 360;
+  s = s / 100;
+  l = l / 100;
+  function hue2rgb(m1, m2, h) {
+     if (h < 0) {
+       h += 1;
+     }
+     if (h > 1) {
+       h -= 1;
+     }
+     if (h * 6 < 1) {
+        return m1 + (m2 - m1) * h * 6;
+     }
+     if (h * 2 < 1) {
+        return m2;
+     }
+     if (h * 3 < 2) {
+        return m1 + (m2 - m1) * (2 / 3 - h) * 6;
+     }
+     return m1;
+  }
+  if (l <= 0.5) {
+    var m2 = l * (s + 1)
+  } else {
+    var m2 = l + s - l * s;
+  }
+
+  var m1 = l * 2 - m2;
+  var r = Math.ceil(hue2rgb(m1, m2, h + 1 / 3) * 255);
+  var g = Math.ceil(hue2rgb(m1, m2, h) * 255);
+  var b = Math.ceil(hue2rgb(m1, m2, h - 1 / 3) * 255);
+  return [r, g, b]
+}
 
 var namedColors = {
   aliceblue: [240, 248, 255, 1], antiquewhite: [250, 235, 215, 1],
@@ -3028,20 +3064,60 @@ var colorType = typeWithKeywords(['currentColor'], {
               ', ' + Math.round(value[2]) + ', ' + value[3] + ')';
   },
   fromCssValue: function(value) {
-    var r = rgbRE.exec(value);
-    if (r) {
-      var out = [Number(r[1]), Number(r[2]), Number(r[3]), 1];
-      if (out.some(isNaN)) {
+    // http://dev.w3.org/csswg/css-color/#color
+    var out = [];
+
+    var regexResult = colorHashRE.exec(value);
+    if (regexResult) {
+      if (value.length != 4 && value.length != 7) {
         return undefined;
       }
-      return out;
+
+      var out = [];
+      regexResult.shift();
+      for (var i = 0; i < 3; i++) {
+        if (regexResult[i].length == 1) {
+          regexResult[i] = regexResult[i] + regexResult[i];
+        }
+        var v = Math.max(Math.min(parseInt(regexResult[i], 16), 255), 0);
+        out[i] = v;
+      }
+      out.push(1.0);
     }
-    r = rgbaRE.exec(value);
-    if (r) {
-      var out = [Number(r[1]), Number(r[2]), Number(r[3]), Number(r[4])];
-      if (out.some(isNaN)) {
-        return undefined;
+
+    var regexResult = colorRE.exec(value);
+    if (regexResult) {
+      regexResult.shift();
+      var type = regexResult.shift().substr(0, 3);
+      for (var i = 0; i < 3; i++) {
+        var m = 1;
+        if (regexResult[i][regexResult[i].length - 1] == '%') {
+          regexResult[i] = regexResult[i].substr(0, regexResult[i].length - 1);
+          m = 255.0 / 100.0;
+        }
+        if (type == 'rgb') {
+          out[i] = Math.max(Math.min(Math.round(parseInt(regexResult[i])*m), 255), 0);
+        } else {
+          out[i] = parseInt(regexResult[i]);
+        }
       }
+
+      // Convert hsl values to rgb value
+      if (type == 'hsl') {
+        out = hsl2rgb.apply(null, out);
+      }
+
+      if (typeof regexResult[3] != 'undefined') {
+        out[3] = Math.max(Math.min(parseFloat(regexResult[3]), 1.0), 0.0);
+      } else {
+        out.push(1.0);
+      }
+    }
+
+    if (out.some(isNaN)) {
+      return undefined;
+    }
+    if (out.length > 0) {
       return out;
     }
     return namedColors[value];
@@ -4455,6 +4531,10 @@ window.TimingGroup = TimingGroup;
 window._WebAnimationsTestingUtilities = {
   _constructorToken : constructorToken,
   _positionListType: positionListType,
+  _hsl2rgb: hsl2rgb,
+  _types: {
+    colorType: colorType,
+  }
 };
 
 })();
