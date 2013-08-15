@@ -4461,8 +4461,6 @@ var ticker = function(rafTime, isRepeat) {
   sortedPlayers.forEach(function(player) {
     player._hasTicked = true;
     player._update();
-    finished = finished && player._isPastEndOfActiveInterval();
-    paused = paused && player.paused;
     player._getLeafItemsInEffect(animations);
   });
 
@@ -4476,6 +4474,13 @@ var ticker = function(rafTime, isRepeat) {
   // Generate events
   sortedPlayers.forEach(function(player) {
     player._generateEvents();
+  });
+
+  // Players may have been added during event handling, we must check whether 
+  // we're finished after handling all events.
+  PLAYERS.forEach(function(player) {
+    finished = finished && player._isPastEndOfActiveInterval();
+    paused = paused && player.paused;
   });
 
   // Composite animated values into element styles

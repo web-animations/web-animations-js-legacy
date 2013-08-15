@@ -44,6 +44,7 @@ var tests = [
   'impl-test-player-sees-handlers.html',
   'impl-test-totimelinetime.html',
   'impl-unit-test-position-type.html',
+  'test-add-player-onend.html',
   'test-bounds.html',
   'test-document-timeline.html',
   'test-dynamic-load.html',
