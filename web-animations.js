@@ -4476,7 +4476,7 @@ var ticker = function(rafTime, isRepeat) {
     player._generateEvents();
   });
 
-  // Players may have been added during event handling, we must check whether 
+  // Players may have been added during event handling, we must check whether
   // we're finished after handling all events.
   PLAYERS.forEach(function(player) {
     finished = finished && player._isPastEndOfActiveInterval();
