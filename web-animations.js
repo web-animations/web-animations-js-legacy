@@ -221,7 +221,7 @@ Timeline.prototype = {
 
 // TODO: Remove dead Players from here?
 var PLAYERS = [];
-var sortedPlayers;
+var playersAreSorted = false;
 var playerSequenceNumber = 0;
 
 /** @constructor */
@@ -243,7 +243,7 @@ var Player = function(token, source, timeline) {
   this._checkForHandlers();
   this._lastCurrentTime = undefined;
 
-  sortedPlayers = null;
+  playersAreSorted = false;
   maybeRestartAnimation();
 };
 
@@ -310,7 +310,7 @@ Player.prototype = {
       // This seeks by updating _startTime and hence the currentTime. It does not
       // affect _drift.
       this._startTime = startTime;
-      sortedPlayers = null;
+      playersAreSorted = false;
       this._update();
       maybeRestartAnimation();
     } finally {
@@ -364,8 +364,8 @@ Player.prototype = {
   _isCurrent: function() {
     return this.source && this.source._isCurrent();
   },
-  _hasEffect: function() {
-      return this.source && this.source._hasEffect();
+  _hasFutureEffect: function() {
+      return this.source && this.source._hasFutureEffect();
   },
   _getLeafItemsInEffect: function(items) {
     if (this.source) {
@@ -508,6 +508,8 @@ TimedItem.prototype = {
   _updateInternalState: function() {
     if (this.parent) {
       this.parent._childrenStateModified();
+    } else if (this._player) {
+      this._player._registerOnTimeline();
     }
     this._updateTimeMarkers();
   },
@@ -721,7 +723,11 @@ TimedItem.prototype = {
     return this.parent === null ? effectivePlaybackRate :
         effectivePlaybackRate * this.parent._netEffectivePlaybackRate();
   },
-  _hasEffect: function() {
+  // Note that this restriction is currently incomplete - for example,
+  // Animations which are playing forwards and have a fillMode of backwards
+  // are not in effect unless current.
+  // TODO: Complete this restriction. 
+  _hasFutureEffect: function() {
     return this._isCurrent() || this.specified.fillMode !== 'none';
   },
   set onstart(fun) {
@@ -4469,18 +4475,19 @@ var ticker = function(rafTime, isRepeat) {
 
   // Get animations for this sample. We order by Player then by DFS order within
   // each Player's tree.
-  if (!sortedPlayers) {
-    sortedPlayers = PLAYERS.sort(playerSortFunction);
+  if (!playersAreSorted) {
+    PLAYERS.sort(playerSortFunction);
+    playersAreSorted = true;
   }
   var finished = true;
   var paused = true;
   var animations = [];
   var finishedPlayers = [];
-  sortedPlayers.forEach(function(player) {
+  PLAYERS.forEach(function(player) {
     player._hasTicked = true;
     player._update();
     finished = finished && player._isPastEndOfActiveInterval();
-    if (!player._hasEffect()) {
+    if (!player._hasFutureEffect()) {
       finishedPlayers.push(player);
     }
     paused = paused && player.paused;
@@ -4495,16 +4502,16 @@ var ticker = function(rafTime, isRepeat) {
   }
 
   // Generate events
-  sortedPlayers.forEach(function(player) {
+  PLAYERS.forEach(function(player) {
     player._generateEvents();
   });
 
   // Remove finished players. Warning: _deregisterFromTimeline modifies
-  // the PLAYER list, which is aliased by sortedPlayers. It should not be
-  // called from within a sortedPlayers.forEach loop directly.
+  // the PLAYER list. It should not be called from within a PLAYERS.forEach
+  // loop directly.
   finishedPlayers.forEach(function(player) {
     player._deregisterFromTimeline();
-    sortedPlayers = null;
+    playersAreSorted = false;
   });
 
   // Composite animated values into element styles
