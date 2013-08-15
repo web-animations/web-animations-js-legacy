@@ -54,6 +54,7 @@ var tests = [
   'test-null-target.html',
   'test-pause-for-testing.html',
   'test-player.html',
+  'test-player-cleanup.html',
   'test-pseudo-element-reference.html',
   'test-repeated-pause.html',
   'test-restart.html',
