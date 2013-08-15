@@ -162,7 +162,7 @@ if not args.sauce:
                 # 32 bit binary needed
                 chromedriver_url = "https://chromedriver.googlecode.com/files/chromedriver_linux32_26.0.1383.0.zip"  # noqa
 
-        elif platform.system() == "mac":
+        elif platform.system() == "Darwin":
             chromedriver_url = "https://chromedriver.googlecode.com/files/chromedriver2_mac32_0.7.zip"  # noqa
             chromedriver_bin = "chromedriver"
         elif platform.system() == "win32":
@@ -213,7 +213,7 @@ if not args.sauce:
             phantomjs = os.path.realpath(phantomjs_local)
             os.chmod(phantomjs, 0755)
         else:
-            if platform.system() == "mac":
+            if platform.system() == "Darwin":
                 phantomjs_url = "https://phantomjs.googlecode.com/files/phantomjs-1.9.0-macosx.zip"  # noqa
                 phantomjs_bin = "phantomjs"
 
@@ -552,8 +552,8 @@ if args.browser == "Chrome":
     driver_arguments['chrome_options'].add_argument(
         '--start-maximized')
 
-    driver_arguments['chrome_options'].binary_location = (
-        '/usr/bin/google-chrome')
+    #driver_arguments['chrome_options'].binary_location = (
+    #    '/usr/bin/google-chrome')
     driver_arguments['executable_path'] = chromedriver
 
     # Travis-CI uses OpenVZ containers which are incompatible with the sandbox
