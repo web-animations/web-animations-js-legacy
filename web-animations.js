@@ -1736,6 +1736,69 @@ var expandShorthand = function(property, value, result) {
   }
 };
 
+var normalizeKeyframesSpecifiedAsObject = function(keyframeInput) {
+  if ('offset' in keyframeInput || 'composite' in keyframeInput) {
+    return [keyframeInput];
+  }
+  var containsArray = false;
+  for (var k in keyframeInput) {
+    if (Array.isArray(keyframeInput[k])) {
+      containsArray = true;
+    }
+  }
+  if (!containsArray) {
+    return [keyframeInput];
+  }
+  // Otherwise must be property-indexed.
+  var unmergedKeyframes = [];
+  for (var property in keyframeInput) {
+    var value = keyframeInput[property];
+    if (!Array.isArray(value)) {
+      value = [value];
+    }
+    // Build a separate property-specific keyframe for each offset.
+    var keyframesForProperty = [];
+    value.forEach(function(inputKeyframe) {
+      var resultFrame = {};
+      if (typeof inputKeyframe == 'object') {
+        if ('offset' in inputKeyframe) {
+          resultFrame.offset = inputKeyframe.offset;
+        }
+        if ('composite' in inputKeyframe) {
+          resultFrame.composite = inputKeyframe.composite;
+        }
+        resultFrame[property] = inputKeyframe.value;
+      } else {
+        resultFrame[property] = inputKeyframe;
+      }
+      keyframesForProperty.push(resultFrame);
+    });
+    // Distribute to fill out any offsets that weren't specified.
+    evenlyDistributeKeyframes(keyframesForProperty);
+    if (keyframesForProperty.length > 0) {
+      unmergedKeyframes.push(keyframesForProperty);
+    }
+  }
+  // Merge the keyframe lists from each property. This wont be needed after we
+  // move to the normalization in the latest draft which sorts by offset.
+  var result = [];
+  do {
+    var minimum = undefined;
+    for (var i = 0; i < unmergedKeyframes.length; i++) {
+      if (unmergedKeyframes[i].length == 0) {
+        continue;
+      }
+      if (!minimum || unmergedKeyframes[i][0].offset < minimum[0].offset) {
+        minimum = unmergedKeyframes[i];
+      }
+    }
+    if (minimum) {
+      result.push(minimum.shift());
+    }
+  } while (minimum);
+  return result;
+};
+
 var normalizeKeyframeDictionary = function(properties) {
   var result = {
     offset: null,
@@ -1889,7 +1952,8 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     enterModifyCurrentAnimationState();
     try {
       if (!Array.isArray(oneOrMoreKeyframeDictionaries)) {
-        oneOrMoreKeyframeDictionaries = [oneOrMoreKeyframeDictionaries];
+        oneOrMoreKeyframeDictionaries =
+            normalizeKeyframesSpecifiedAsObject(oneOrMoreKeyframeDictionaries);
       }
       this._keyframeDictionaries =
           oneOrMoreKeyframeDictionaries.map(normalizeKeyframeDictionary);

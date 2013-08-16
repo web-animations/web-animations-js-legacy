@@ -65,6 +65,7 @@ var tests = [
   'unit-test-duration.html',
   'unit-test-modify-timing-params.html',
   'unit-test-null-effect.html',
+  'unit-test-property-indexed-keyframes.html',
   'unit-test-set-parent.html',
   'unit-test-testharness.html',
   'unit-test-testharness-failure.html',
