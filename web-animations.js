@@ -762,6 +762,28 @@ TimedItem.prototype = {
   _getSingleHandler: function(type) {
     return this._handlers[type] ? this._handlers[type][0] : null;
   },
+  addEventListener: function(type, fun) {
+    if (typeof fun !== 'function' || type !== 'start' || type !== 'iteration' ||
+      type !== 'end' || type !== 'cancel') {
+      return;
+    }
+    if (!isDefinedAndNotNull(this._handlers[type])) {
+      this._handlers[type] = [];
+    }
+    this._handlers[type].push(fun);
+    this._newHandler(fun);
+  },
+  removeEventListener: function(type, fun) {
+    if (!this._handlers[type]) {
+      return;
+    }
+    var index = this._handlers[type].indexOf(fun);
+    if (index === -1) {
+      return;
+    }
+    this._handlers.splice(index, 1);
+    this.player._checkForHandlers();
+  },
   _newHandler: function(fun) {
     if (typeof fun === 'function') {
       if (this.player) {
@@ -821,16 +843,21 @@ TimedItem.prototype = {
     }
     var startTime = this.startTime + this.specified.delay;
 
-    if (isDefinedAndNotNull(this.onstart)) {
+    if (this._handlers.start) {
       // Did we pass the start of this animation in the forward direction?
       if (fromTime <= startTime && toTime > startTime) {
-        this.onstart(new TimingEvent(constructorToken, this, 'start',
-            this.specified.delay, toGlobal(startTime), firstIteration));
+        for (var i = 0; i < this._handlers.start.length; i++) {
+          this._handlers.start[i].call(this, new TimingEvent(constructorToken,
+              this, 'start', this.specified.delay, toGlobal(startTime),
+              firstIteration));
+        }
       // Did we pass the end of this animation in the reverse direction?
       } else if (fromTime > this.endTime && toTime <= this.endTime) {
-        this.onstart(new TimingEvent(constructorToken, this, 'start',
-            this.endTime - this.startTime, toGlobal(this.endTime),
-            lastIteration));
+        for (var i = 0; i < this._handlers.start.length; i++) {
+          this._handlers.start[i].call(this, new TimingEvent(constructorToken,
+              this, 'start', this.endTime - this.startTime,
+              toGlobal(this.endTime), lastIteration));
+        }
       }
     }
 
@@ -857,10 +884,13 @@ TimedItem.prototype = {
       iterationTimes);
     for (var i = 0; i < subranges.ranges.length; i++) {
       var currentIter = subranges.start + i * subranges.delta;
-      if (isDefinedAndNotNull(this.oniteration) && i > 0) {
+      if (this._handlers.iteration && i > 0) {
         var iterTime = subranges.ranges[i][0];
-        this.oniteration(new TimingEvent(constructorToken, this, 'iteration',
-            iterTime - this.startTime, toGlobal(iterTime), currentIter));
+        for (var i = 0; i < this._handlers.iteration.length; i++) {
+          this._handlers.iteration[i].call(this, new TimingEvent(constructorToken,
+              this, 'iteration', iterTime - this.startTime, toGlobal(iterTime),
+              currentIter));
+        }
       }
 
       var iterFraction;
@@ -876,16 +906,21 @@ TimedItem.prototype = {
           globalTime, deltaScale * this.specified.playbackRate);
     }
 
-    if (isDefinedAndNotNull(this.onend)) {
+    if (this._handlers.end) {
       // Did we pass the end of this animation in the forward direction?
       if (fromTime < this.endTime && toTime >= this.endTime) {
-        this.onend(new TimingEvent(constructorToken, this, 'end',
-            this.endTime - this.startTime, toGlobal(this.endTime),
+        for (var i = 0; i < this._handlers.end.length; i++) {
+          this._handlers.end[i].call(this, new TimingEvent(constructorToken,
+              this, 'end', this.endTime - this.startTime, toGlobal(this.endTime),
             lastIteration));
+        }
       // Did we pass the start of this animation in the reverse direction?
       } else if (fromTime >= startTime && toTime < startTime) {
-        this.onend(new TimingEvent(constructorToken, this, 'end',
-            this.specified.delay, toGlobal(startTime), firstIteration));
+        for (var i = 0; i < this._handlers.end.length; i++) {
+          this._handlers.end[i].call(this, new TimingEvent(constructorToken,
+              this, 'end', this.specified.delay, toGlobal(startTime),
+              firstIteration));
+        }
       }
     }
   },
