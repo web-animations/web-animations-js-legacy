@@ -44,7 +44,9 @@ function createAnimation() {
 }
 
 ['start', 'iteration', 'end'].forEach(function (eventType) {
-  var animation = createAnimation();
+  var animation;
+
+  animation = createAnimation();
   var singleEventHandler = false;
   animation.addEventListener(eventType, function() { singleEventHandler = true; })
   document.timeline.play(animation);
@@ -91,17 +93,11 @@ function createAnimation() {
 
 
   animation = createAnimation();
-  var overshadowedEventHandlerA = true;
-  var overshadowedEventHandlerB = true;
-  var overshadowedEventHandlerC = true;
-  var oldEventHandling = false;
-  animation.addEventListener(eventType, function() { overshadowedEventHandlerA = false; });
-  animation.addEventListener(eventType, function() { overshadowedEventHandlerB = false; });
-  animation.addEventListener(eventType, function() { overshadowedEventHandlerC = false; });
-  animation['on' + eventType] = function() { oldEventHandling = true; };
+  var onEventHandler = false;
+  animation['on' + eventType] = function() { onEventHandler = true; };
   document.timeline.play(animation);
   timing_test(function() {at(1, function() {
-    assert_true(overshadowedEventHandlerA && overshadowedEventHandlerB && overshadowedEventHandlerC && oldEventHandling);
-  });}, 'Check ' + eventType + ' event with event handlers replaced by on' + eventType);
+    assert_true(onEventHandler);
+  });}, 'Check on' + eventType + ' handler');
 });
 </script>
