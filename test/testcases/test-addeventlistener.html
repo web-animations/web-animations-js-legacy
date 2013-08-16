@@ -1,0 +1,96 @@
+<!--
+Copyright 2013 Google Inc. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<!DOCTYPE html><meta charset="UTF-8">
+<style>
+.target {
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  width: 100px;
+  height: 100px;
+  background-color: green;
+}
+</style>
+<script src="../bootstrap.js"></script>
+<script>
+'use strict';
+
+var effect = new KeyframeAnimationEffect([{ left: '100px' }]);
+
+var timingInput = {
+  iterationCount: 2,
+  iterationDuration: 0.25,
+};
+
+function createAnimation() {
+  var target = document.createElement('div');
+  target.className = 'target';
+  document.body.appendChild(target);
+  return new Animation(target, effect, timingInput);
+}
+
+['start', 'iteration', 'end'].forEach(function (eventType) {
+  var animation = createAnimation();
+  var singleEventHandler = false;
+  animation.addEventListener(eventType, function() { singleEventHandler = true; })
+  document.timeline.play(animation);
+  timing_test(function() {at(1, function() {
+    assert_true(singleEventHandler);
+  });}, 'Check ' + eventType + ' event with single handler');
+
+
+  animation = createAnimation();
+  var multiEventHandlerA = false;
+  var multiEventHandlerB = false;
+  var multiEventHandlerC = false;
+  animation.addEventListener(eventType, function() { multiEventHandlerA = true; })
+  animation.addEventListener(eventType, function() { multiEventHandlerB = true; })
+  animation.addEventListener(eventType, function() { multiEventHandlerC = true; })
+  document.timeline.play(animation);
+  timing_test(function() {at(1, function() {
+    assert_true(multiEventHandlerA && multiEventHandlerB && multiEventHandlerC);
+  });}, 'Check ' + eventType + ' event with multiple handlers');
+
+
+  animation = createAnimation();
+  var retainEventHandler = false;
+  animation.addEventListener(eventType, function() { retainEventHandler = true; });
+  var removeEventHandler = true;
+  var eventHandlerToRemove = function() { removeEventHandler = false; }
+  animation.addEventListener(eventType, eventHandlerToRemove);
+  animation.removeEventListener(eventType, eventHandlerToRemove);
+  document.timeline.play(animation);
+  timing_test(function() {at(1, function() {
+    assert_true(retainEventHandler && removeEventHandler);
+  });}, 'Check ' + eventType + ' event with event handler removed');
+
+
+  animation = createAnimation();
+  var overshadowedEventHandlerA = true;
+  var overshadowedEventHandlerB = true;
+  var overshadowedEventHandlerC = true;
+  var oldEventHandling = false;
+  animation.addEventListener(eventType, function() { overshadowedEventHandlerA = false; });
+  animation.addEventListener(eventType, function() { overshadowedEventHandlerB = false; });
+  animation.addEventListener(eventType, function() { overshadowedEventHandlerC = false; });
+  animation['on' + eventType] = function() { oldEventHandling = true; };
+  document.timeline.play(animation);
+  timing_test(function() {at(1, function() {
+    assert_true(overshadowedEventHandlerA && overshadowedEventHandlerB && overshadowedEventHandlerC && oldEventHandling);
+  });}, 'Check ' + eventType + ' event with event handlers replaced by on' + eventType);
+});
+</script>

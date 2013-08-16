@@ -800,8 +800,8 @@ TimedItem.prototype = {
     }
   },
   _hasHandler: function() {
-    return this._handlers.start || this._handlers.iteration ||
-        this._handlers.end || this._handlers.cancel;
+    return !!(this._handlers.start || this._handlers.iteration ||
+        this._handlers.end || this._handlers.cancel);
   },
   _generateChildEventsForRange: function() { },
   _toSubRanges: function(fromTime, toTime, iterationTimes) {
