@@ -53,6 +53,17 @@ function createAnimation() {
   });}, 'Check ' + eventType + ' event with single handler');
 
 
+  var animation = createAnimation();
+  var eventHandlingCount = 0;
+  var addMultipleTimes = function() { eventHandlingCount++; };
+  animation.addEventListener(eventType, addMultipleTimes);
+  animation.addEventListener(eventType, addMultipleTimes);
+  document.timeline.play(animation);
+  timing_test(function() {at(1, function() {
+    assert_equals(eventHandlingCount, 1);
+  });}, 'Check ' + eventType + ' event with single handler added multiple times');
+
+
   animation = createAnimation();
   var multiEventHandlerA = false;
   var multiEventHandlerB = false;

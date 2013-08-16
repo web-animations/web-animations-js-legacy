@@ -768,7 +768,14 @@ TimedItem.prototype = {
       return;
     }
     if (!isDefinedAndNotNull(this._handlers[type])) {
-      this._handlers[type] = [];
+      this._handlers[type] = [fun];
+      if (this.player) {
+        this.player._handlerAdded();
+      }
+      return;
+    }
+    if (this._handlers[type].indexOf(fun) !== -1) {
+      return;
     }
     this._handlers[type].push(fun);
     if (this.player) {
