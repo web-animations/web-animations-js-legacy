@@ -78,7 +78,7 @@ between 0 and 1.
 
     [{left: "35px"}, {left: "50px"}, {left: "70px"}]
 
-See the [specification](http://dev.w3.org/fxtf/web-animations) for the details
+See the [specification](http://www.w3.org/TR/web-animations/#keyframe-animation-effects) for the details
 of the keyframe distribution procedure, and how KeyframeAnimationEffects are
 evaluated at offsets outside those specified by the keyframes.
 
@@ -100,7 +100,7 @@ A `PathAnimationEffect` allows elements to be animated along SVG-style paths. Fo
 
 A `CustomAnimationEffect` allows animations to generate call-outs to JavaScript
 rather than manipulating properties directly. Please see the
-[specification](http://dev.w3.org/fxtf/web-animations) for more details on this
+[specification](http://www.w3.org/TR/web-animations/#custom-effects) for more details on this
 feature.
 
 ### Sequencing and synchronizing animations
