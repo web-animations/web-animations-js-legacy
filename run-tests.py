@@ -418,8 +418,10 @@ class MultiPartForm(object):
         return '\r\n'.join(flattened)
 
 
+critical_failure = False
 class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     STATUS = {0: 'success', 1: 'fail', 2: 'fail', 3: 'skip'}
+
 
     # Make the HTTP requests be quiet
     def log_message(self, format, *a):
@@ -428,6 +430,9 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 self, format, *a)
 
     def do_POST(self):
+        global critical_failure
+        already_failed = critical_failure
+
         form = cgi.FieldStorage(
             fp=self.rfile,
             headers=self.headers,
@@ -436,34 +441,49 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 'CONTENT_TYPE': self.headers['Content-Type'],
             })
 
+        overall_status = 0
+        test_id = None
         try:
             json_data = form.getvalue('data')
             data = simplejson.loads(json_data)
         except ValueError, e:
-            raise ValueError("Unable to decode JSON object (%s)\n%s" % (e, json_data))
+            critical_failure = True
 
-        overall_status = 0
-        for result in data['results']:
-            info = dict(result)
-            info.pop('_structured_clone', None)
+            test_id = "CRITICAL-FAILURE"
 
-            overall_status += result['status']
+            msg = "Unable to decode JSON object (%s)\n%s" % (e, json_data)
+            overall_status = 1
             output.status(
-                test_id="%s:%s" % (data['testName'][:-5], result['name']),
-                test_status=self.STATUS[result['status']],
+                test_id="CRITICAL-FAILURE",
+                test_status='fail',
                 test_tags=[args.browser],
                 file_name='message',
-                file_bytes=repr(result['message']),
+                file_bytes=msg,
                 mime_type='text/plain; charset=UTF-8',
                 eof=True)
+        else:
+            test_id = data['testName'][:-5]
+            for result in data['results']:
+                info = dict(result)
+                info.pop('_structured_clone', None)
+
+                overall_status += result['status']
+                output.status(
+                    test_id="%s:%s" % (test_id, result['name']),
+                    test_status=self.STATUS[result['status']],
+                    test_tags=[args.browser],
+                    file_name='message',
+                    file_bytes=repr(result['message']),
+                    mime_type='text/plain; charset=UTF-8',
+                    eof=True)
 
         # Take a screenshot of result if a failure occurred.
         if overall_status > 0 and args.virtual:
             time.sleep(1)
-            screenshot = data['testName'] + '.png'
+            screenshot = test_id + '.png'
             disp.grab().save(screenshot)
 
-            if args.upload:
+            if args.upload and not already_failed:
                 form = MultiPartForm()
                 form.add_field('adult', 'no')
                 form.add_field('optsize', '0')
