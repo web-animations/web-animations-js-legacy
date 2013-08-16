@@ -779,8 +779,8 @@ TimedItem.prototype = {
     return null;
   },
   addEventListener: function(type, func) {
-    if (typeof func !== 'function' || !(type !== 'start' ||
-        type !== 'iteration' || type !== 'end' || type !== 'cancel')) {
+    if (typeof func !== 'function' || !(type === 'start' ||
+        type === 'iteration' || type === 'end' || type === 'cancel')) {
       return;
     }
     if (!isDefinedAndNotNull(this._handlers[type])) {
