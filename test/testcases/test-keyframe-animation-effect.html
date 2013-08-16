@@ -120,14 +120,12 @@ test(function() {
 
 test(function() {
   var frames = new KeyframeAnimationEffect().getFrames();
-  assert_equals(frames.length, 1);
-  assert_equals(typeof frames[0], "object");
+  assert_equals(frames.length, 0);
 }, "KeyframeAnimationEffect should handle no input for keyframe dictionary");
 
 test(function() {
   var frames = new KeyframeAnimationEffect(42).getFrames();
-  assert_equals(frames.length, 1);
-  assert_equals(typeof frames[0], "object");
+  assert_equals(frames.length, 0);
 }, "KeyframeAnimationEffect should handle non-objects for keyframe dictionary");
 
 test(function() {

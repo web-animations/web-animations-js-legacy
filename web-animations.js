@@ -1952,8 +1952,12 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     enterModifyCurrentAnimationState();
     try {
       if (!Array.isArray(oneOrMoreKeyframeDictionaries)) {
-        oneOrMoreKeyframeDictionaries =
-            normalizeKeyframesSpecifiedAsObject(oneOrMoreKeyframeDictionaries);
+        if (typeof oneOrMoreKeyframeDictionaries == 'object') {
+          oneOrMoreKeyframeDictionaries =
+              normalizeKeyframesSpecifiedAsObject(oneOrMoreKeyframeDictionaries);
+        } else {
+          oneOrMoreKeyframeDictionaries = [];
+        }
       }
       this._keyframeDictionaries =
           oneOrMoreKeyframeDictionaries.map(normalizeKeyframeDictionary);
