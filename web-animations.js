@@ -1776,6 +1776,83 @@ var normalizeKeyframeDictionary = function(properties) {
   return result;
 };
 
+var evenlyDistributeKeyframes = function(distributedKeyframes) {
+  // Remove keyframes with offsets out of bounds.
+  var length = distributedKeyframes.length;
+  var count = 0;
+  for (var i = 0; i < length; i++) {
+    var offset = distributedKeyframes[i].offset;
+    if (isDefinedAndNotNull(offset)) {
+      if (offset >= 0) {
+        break;
+      } else {
+        count = i;
+      }
+    }
+  }
+  distributedKeyframes.splice(0, count);
+
+  length = distributedKeyframes.length;
+  count = 0;
+  for (var i = length - 1; i >= 0; i--) {
+    var offset = distributedKeyframes[i].offset;
+    if (isDefinedAndNotNull(offset)) {
+      if (offset <= 1) {
+        break;
+      } else {
+        count = length - i;
+      }
+    }
+  }
+  distributedKeyframes.splice(length - count, count);
+
+  // Distribute offsets.
+  length = distributedKeyframes.length;
+  if (length > 1 && !isDefinedAndNotNull(distributedKeyframes[0].offset)) {
+    distributedKeyframes[0].offset = 0;
+  }
+  if (!isDefinedAndNotNull(distributedKeyframes[length - 1].offset)) {
+    distributedKeyframes[length - 1].offset = 1;
+  }
+  var lastOffsetIndex = 0;
+  var nextOffsetIndex = 0;
+  for (var i = 1; i < distributedKeyframes.length - 1; i++) {
+    var keyframe = distributedKeyframes[i];
+    if (isDefinedAndNotNull(keyframe.offset)) {
+      lastOffsetIndex = i;
+      continue;
+    }
+    if (i > nextOffsetIndex) {
+      nextOffsetIndex = i;
+      while (!isDefinedAndNotNull(
+          distributedKeyframes[nextOffsetIndex].offset)) {
+        nextOffsetIndex++;
+      }
+    }
+    var lastOffset = distributedKeyframes[lastOffsetIndex].offset;
+    var nextOffset = distributedKeyframes[nextOffsetIndex].offset;
+    var unspecifiedKeyframes = nextOffsetIndex - lastOffsetIndex - 1;
+    ASSERT_ENABLED && console.assert(unspecifiedKeyframes > 0);
+    var localIndex = i - lastOffsetIndex;
+    ASSERT_ENABLED && console.assert(localIndex > 0);
+    distributedKeyframes[i].offset = lastOffset +
+        (nextOffset - lastOffset) * localIndex / (unspecifiedKeyframes + 1);
+  }
+
+  // Remove invalid property values.
+  for (var i = distributedKeyframes.length - 1; i >= 0; i--) {
+    var keyframe = distributedKeyframes[i];
+    for (var property in keyframe.cssValues) {
+      if (!KeyframeInternal.isSupportedPropertyValue(
+          keyframe.cssValues[property])) {
+        delete(keyframe.cssValues[property]);
+      }
+    }
+    if (Object.keys(keyframe).length === 0) {
+      distributedKeyframes.splice(i, 1);
+    }
+  }
+};
 
 /** @constructor */
 var KeyframeAnimationEffect = function(oneOrMoreKeyframeDictionaries,
@@ -2002,88 +2079,12 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     if (!this._areKeyframeDictionariesLooselySorted()) {
       return [];
     }
-
-    var distributedKeyframes = this._keyframeDictionaries.map(
+    var keyframes = this._keyframeDictionaries.map(
         KeyframeInternal.createFromNormalizedProperties);
-
-    // Remove keyframes with offsets out of bounds.
-    var length = distributedKeyframes.length;
-    var count = 0;
-    for (var i = 0; i < length; i++) {
-      var offset = distributedKeyframes[i].offset;
-      if (isDefinedAndNotNull(offset)) {
-        if (offset >= 0) {
-          break;
-        } else {
-          count = i;
-        }
-      }
-    }
-    distributedKeyframes.splice(0, count);
-
-    length = distributedKeyframes.length;
-    count = 0;
-    for (var i = length - 1; i >= 0; i--) {
-      var offset = distributedKeyframes[i].offset;
-      if (isDefinedAndNotNull(offset)) {
-        if (offset <= 1) {
-          break;
-        } else {
-          count = length - i;
-        }
-      }
-    }
-    distributedKeyframes.splice(length - count, count);
-
-    // Distribute offsets.
-    length = distributedKeyframes.length;
-    if (length > 1 && !isDefinedAndNotNull(distributedKeyframes[0].offset)) {
-      distributedKeyframes[0].offset = 0;
-    }
-    if (!isDefinedAndNotNull(distributedKeyframes[length - 1].offset)) {
-      distributedKeyframes[length - 1].offset = 1;
-    }
-    var lastOffsetIndex = 0;
-    var nextOffsetIndex = 0;
-    for (var i = 1; i < distributedKeyframes.length - 1; i++) {
-      var keyframe = distributedKeyframes[i];
-      if (isDefinedAndNotNull(keyframe.offset)) {
-        lastOffsetIndex = i;
-        continue;
-      }
-      if (i > nextOffsetIndex) {
-        nextOffsetIndex = i;
-        while (!isDefinedAndNotNull(
-            distributedKeyframes[nextOffsetIndex].offset)) {
-          nextOffsetIndex++;
-        }
-      }
-      var lastOffset = distributedKeyframes[lastOffsetIndex].offset;
-      var nextOffset = distributedKeyframes[nextOffsetIndex].offset;
-      var unspecifiedKeyframes = nextOffsetIndex - lastOffsetIndex - 1;
-      ASSERT_ENABLED && console.assert(unspecifiedKeyframes > 0);
-      var localIndex = i - lastOffsetIndex;
-      ASSERT_ENABLED && console.assert(localIndex > 0);
-      distributedKeyframes[i].offset = lastOffset +
-          (nextOffset - lastOffset) * localIndex / (unspecifiedKeyframes + 1);
-    }
-
-    // Remove invalid property values.
-    for (var i = distributedKeyframes.length - 1; i >= 0; i--) {
-      var keyframe = distributedKeyframes[i];
-      for (var property in keyframe.cssValues) {
-        if (!KeyframeInternal.isSupportedPropertyValue(
-            keyframe.cssValues[property])) {
-          delete(keyframe.cssValues[property]);
-        }
-      }
-      if (Object.keys(keyframe).length === 0) {
-        distributedKeyframes.splice(i, 1);
-      }
-    }
-
-    return distributedKeyframes;
+    evenlyDistributeKeyframes(keyframes);
+    return keyframes;
   },
+
 });
 
 
