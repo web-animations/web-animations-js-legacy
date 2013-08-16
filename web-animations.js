@@ -427,6 +427,7 @@ var TimedItem = function(token, timingInput) {
   this._player = null;
   this._parent = null;
   this._updateInternalState();
+  this._handlers = {};
 };
 
 TimedItem.prototype = {
@@ -731,35 +732,38 @@ TimedItem.prototype = {
     return this._isCurrent() || this.specified.fill !== 'none';
   },
   set onstart(fun) {
-    this._startHandler = fun;
-    this._newHandler(fun);
+    this._setSingleHandler('start', fun);
   },
   get onstart() {
-    return this._startHandler;
+    return this._getSingleHandler('start');
   },
   set oniteration(fun) {
-    this._iterationHandler = fun;
-    this._newHandler(fun);
+    this._setSingleHandler('iteration', fun);
   },
   get oniteration() {
-    return this._iterationHandler;
+    return this._getSingleHandler('iteration');
   },
   set onend(fun) {
-    this._endHandler = fun;
-    this._newHandler(fun);
+    this._setSingleHandler('end', fun);
   },
   get onend() {
-    return this._endHandler;
+    return this._getSingleHandler('end');
   },
   set oncancel(fun) {
-    this._cancelHandler = fun;
-    this._newHandler(fun);
+    this._setSingleHandler('cancel', fun);
   },
   get oncancel() {
-    return this._cancelHander;
+    return this._getSingleHandler('cancel');
+  },
+  _setSingleHandler: function(type, fun) {
+    this._handlers[type] = (typeof fun === 'function') ? [fun] : null;
+    this._newHandler(fun);
+  },
+  _getSingleHandler: function(type) {
+    return this._handlers[type] ? this._handlers[type][0] : null;
   },
   _newHandler: function(fun) {
-    if (isDefinedAndNotNull(fun)) {
+    if (typeof fun === 'function') {
       if (this.player) {
         this.player._handlerAdded();
       }
@@ -770,10 +774,8 @@ TimedItem.prototype = {
     }
   },
   _hasHandler: function() {
-    return isDefinedAndNotNull(this._startHandler) ||
-      isDefinedAndNotNull(this._iterationHandler) ||
-      isDefinedAndNotNull(this._endHandler) ||
-      isDefinedAndNotNull(this._cancelHandler);
+    return this._handlers.start || this._handlers.iteration ||
+        this._handlers.end || this._handlers.cancel;
   },
   _generateChildEventsForRange: function() { },
   _toSubRanges: function(fromTime, toTime, iterationTimes) {
