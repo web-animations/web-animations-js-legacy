@@ -779,18 +779,13 @@ TimedItem.prototype = {
     return null;
   },
   addEventListener: function(type, func) {
-    if (typeof func !== 'function' || !(type !== 'start' || type !== 'iteration' ||
-      type !== 'end' || type !== 'cancel')) {
+    if (typeof func !== 'function' || !(type !== 'start' ||
+        type !== 'iteration' || type !== 'end' || type !== 'cancel')) {
       return;
     }
     if (!isDefinedAndNotNull(this._handlers[type])) {
-      this._handlers[type] = [func];
-      if (this.player) {
-        this.player._handlerAdded();
-      }
-      return;
-    }
-    if (this._handlers[type].indexOf(func) !== -1) {
+      this._handlers[type] = [];
+    } else if (this._handlers[type].indexOf(func) !== -1) {
       return;
     }
     this._handlers[type].push(func);
@@ -826,9 +821,9 @@ TimedItem.prototype = {
         isDefinedAndNotNull(this._onHandlers[type]);
   },
   _callHandlers: function(type, eventFunction) {
-    var onIndex =  -1;
+    var onIndex = -1;
     if (isDefinedAndNotNull(this._onHandlers[type])) {
-      onIndex =  this._onHandlers[type].index;
+      onIndex = this._onHandlers[type].index;
     }
     var handlersLength = (this._handlers[type] || []).length;
     for (var i = 0; i < handlersLength; i++) {
