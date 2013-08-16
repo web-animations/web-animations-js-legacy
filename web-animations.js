@@ -763,15 +763,17 @@ TimedItem.prototype = {
     return this._handlers[type] ? this._handlers[type][0] : null;
   },
   addEventListener: function(type, fun) {
-    if (typeof fun !== 'function' || type !== 'start' || type !== 'iteration' ||
-      type !== 'end' || type !== 'cancel') {
+    if (typeof fun !== 'function' || !(type !== 'start' || type !== 'iteration' ||
+      type !== 'end' || type !== 'cancel')) {
       return;
     }
     if (!isDefinedAndNotNull(this._handlers[type])) {
       this._handlers[type] = [];
     }
     this._handlers[type].push(fun);
-    this._newHandler(fun);
+    if (this.player) {
+      this.player._handlerAdded();
+    }
   },
   removeEventListener: function(type, fun) {
     if (!this._handlers[type]) {
@@ -781,8 +783,10 @@ TimedItem.prototype = {
     if (index === -1) {
       return;
     }
-    this._handlers.splice(index, 1);
-    this.player._checkForHandlers();
+    this._handlers[type].splice(index, 1);
+    if (this.player) {
+      this.player._checkForHandlers();
+    }
   },
   _newHandler: function(fun) {
     if (typeof fun === 'function') {
@@ -886,8 +890,8 @@ TimedItem.prototype = {
       var currentIter = subranges.start + i * subranges.delta;
       if (this._handlers.iteration && i > 0) {
         var iterTime = subranges.ranges[i][0];
-        for (var i = 0; i < this._handlers.iteration.length; i++) {
-          this._handlers.iteration[i].call(this, new TimingEvent(constructorToken,
+        for (var j = 0; j < this._handlers.iteration.length; j++) {
+          this._handlers.iteration[j].call(this, new TimingEvent(constructorToken,
               this, 'iteration', iterTime - this.startTime, toGlobal(iterTime),
               currentIter));
         }
