@@ -826,14 +826,13 @@ TimedItem.prototype = {
       onIndex = this._onHandlers[type].index;
     }
     var handlersLength = (this._handlers[type] || []).length;
-    for (var i = 0; i < handlersLength; i++) {
+    for (var i = 0; i <= handlersLength; i++) {
       if (onIndex === i) {
         this._onHandlers[type].callback(event);
       }
-      this._handlers[type][i].call(this, event);
-    }
-    if (onIndex >= handlersLength) {
-      this._onHandlers[type].callback(event);
+      if (i < handlersLength) {
+        this._handlers[type][i].call(this, event);
+      }
     }
   },
   _generateChildEventsForRange: function() { },
