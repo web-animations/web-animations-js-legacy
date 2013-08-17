@@ -811,9 +811,9 @@ TimedItem.prototype = {
     }
   },
   _hasHandlers: function() {
-    return ['start', 'iteration', 'end', 'cancel'].some((function(type) {
-      return this._hasHandlersForEvent(type);
-    }).bind(this));
+    return this._hasHandlersForEvent('start') ||
+        this._hasHandlersForEvent('iteration') ||
+        this._hasHandlersForEvent('end') || this._hasHandlersForEvent('cancel');
   },
   _hasHandlersForEvent: function(type) {
     return (isDefinedAndNotNull(this._handlers[type]) &&
