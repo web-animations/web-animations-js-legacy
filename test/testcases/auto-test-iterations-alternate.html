@@ -36,14 +36,14 @@ var effect = [{left: "100px"}, {left: "500px"}];
 
 var anim1 = new Animation(
     document.getElementById("a"), effect,
-    {duration: 1.0, iterationCount: 3.0, direction: "alternate"});
+    {duration: 1.0, iterations: 3.0, direction: "alternate"});
 
 var anim2 = new Animation(
     document.getElementById("b"), effect,
     {duration: 1.0});
 var parGroup = new ParGroup(
     [anim2],
-    {duration: 1.0, iterationCount: 3.0, direction: "alternate"});
+    {duration: 1.0, iterations: 3.0, direction: "alternate"});
 
 document.timeline.play(anim1);
 document.timeline.play(parGroup);

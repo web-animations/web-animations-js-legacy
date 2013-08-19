@@ -91,11 +91,11 @@ var animation = [{left: "100px"}, {left: "500px"}];
 // We use a new group for each animation to avoid coupling due to the intrinsic
 // duration of a par group.
 var group = function(direction) {
-  return new ParGroup([], {iterationCount: 2.0, direction: direction});
+  return new ParGroup([], {iterations: 2.0, direction: direction});
 };
 var groupWithFixedDuration = function(direction) {
   return new ParGroup([],
-      {iterationCount: 2.0, direction: direction, duration: 4.0});
+      {iterations: 2.0, direction: direction, duration: 4.0});
 };
 
 for (var i = 0; i < directions.length; i++) {

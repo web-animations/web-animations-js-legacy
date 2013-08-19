@@ -65,7 +65,7 @@ test(function() {
 
 timing_test(function() {
   var animation = new Animation(document.getElementById("anim0"), keyframes,
-      {duration: 1.0, iterationCount: 2.0});
+      {duration: 1.0, iterations: 2.0});
   document.timeline.play(animation);
   at(1.5, function() {
     assert_styles("#anim0", {left: "250px"});
@@ -224,7 +224,7 @@ timing_test(function() {
 timing_test(function() {
   document.timeline.play(new Animation(document.getElementById("anim4"),
       new KeyframeAnimationEffect(keyframes, 'replace', 'sum'),
-      {duration: 1.0, iterationCount: 3.0}));
+      {duration: 1.0, iterations: 3.0}));
   at(0.5, function() {
     assert_styles("#anim4", {left: "250px"});
   });
@@ -239,7 +239,7 @@ timing_test(function() {
 timing_test(function() {
   document.timeline.play(new Animation(document.getElementById("anim5"),
       new KeyframeAnimationEffect(keyframes, 'add', 'sum'),
-      {duration: 1.0, iterationCount: 3.0}));
+      {duration: 1.0, iterations: 3.0}));
   at(0.5, function() {
     assert_styles("#anim5", {left: "350px"});
   });
@@ -254,7 +254,7 @@ timing_test(function() {
 timing_test(function() {
   document.timeline.play(new Animation(document.getElementById("anim6"),
       new KeyframeAnimationEffect(keyframes, 'add', 'sum'),
-      {duration: 1.0, iterationStart: 1.0, iterationCount: 3.0}));
+      {duration: 1.0, iterationStart: 1.0, iterations: 3.0}));
   at(0.5, function() {
     assert_styles("#anim6", {left: "650px"});
   });
@@ -269,7 +269,7 @@ timing_test(function() {
 timing_test(function() {
   document.timeline.play(new Animation(document.getElementById("anim7"),
       new KeyframeAnimationEffect(keyframes, 'add', 'sum'),
-      {duration: 1.0, iterationStart: 1.1, iterationCount: 3.0}));
+      {duration: 1.0, iterationStart: 1.1, iterations: 3.0}));
   at(0.4, function() {
     assert_styles("#anim7", {left: "650px"});
   });
@@ -287,7 +287,7 @@ timing_test(function() {
         {left: "200px", composite: "add"},
         {left: "300px", composite: "replace"}
       ], 'replace', 'sum'),
-      {duration: 1.0, iterationCount: 3.0}));
+      {duration: 1.0, iterations: 3.0}));
   at(0.5, function() {
     assert_styles("#anim8", {left: "300px"});
   });
@@ -299,7 +299,7 @@ timing_test(function() {
 timing_test(function() {
   document.timeline.play(new Animation(document.getElementById("anim9"),
       new KeyframeAnimationEffect(keyframes, 'add', 'sum'),
-      {duration: 1.0, iterationStart: -2.0, iterationCount: 4.0}));
+      {duration: 1.0, iterationStart: -2.0, iterations: 4.0}));
   at(0.5, function() {
     assert_styles("#anim9", {left: "350px"});
   });

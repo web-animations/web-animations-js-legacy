@@ -292,12 +292,12 @@ timing_test(function() {
   var video = getNextVideo();
   at(0.0, function() {
     dt.play(createTestMediaReference(video,
-        {iterationCount: 2.0, duration: 1.0}));
+        {iterations: 2.0, duration: 1.0}));
   });
   at(1.5, function() {
     assert_equals(video.currentTime,  0.5);
   });
-}, "Video should respect iterationCount");
+}, "Video should respect iterations");
 
 // Test iterationStart.
 timing_test(function() {

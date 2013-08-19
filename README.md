@@ -32,7 +32,7 @@ a `<div>` over 0.5 seconds. The animation alternates producing a pulsing effect.
         [{opacity: "0.5"}, {opacity: "1.0"}], 
         [{transform: "scale(0.5)"}, {transform: "scale(1)"}]
       }, {
-        direction: "alternate", duration: 0.5, iterationCount: Infinity
+        direction: "alternate", duration: 0.5, iterations: Infinity
       }));
     </script>
 
@@ -127,14 +127,14 @@ Because `Animation`, `ParGroup`, `SeqGroup` are all TimedItems, groups can be ne
 
 Groups also take an optional TimingDictionary parameter (see below), which among other things allows iteration and timing functions to apply at the group level:
 
-    var parGroup = new ParGroup([new Animation(...), new Animation(...)], {iterationCount: 4});
+    var parGroup = new ParGroup([new Animation(...), new Animation(...)], {iterations: 4});
 
 ### Controlling the animation timing
 
 TimingDictionaries are used to control the internal timing of an animation (players control how an animation progresses relative to document time). TimingDictionaries have several properties that can be tweaked:
 
 - **duration**: the duration of a single iteration of the animation
-- **iterationCount**: the number of iterations of the animation that will be played (fractional iterationCounts are allowed)
+- **iterations**: the number of iterations of the animation that will be played (fractional iterationss are allowed)
 - **iterationStart**: the start offset of the first iteration
 - **fill**: whether the animation has effect before starting the first iteration and/or after finishing the final iteration
 - **delay**: the time between the animation's start time and the first animation effect of the animation
@@ -161,7 +161,7 @@ The following example illustrates these rules:
         new Animation(..., {duration: 5, fill: 'both'})
       ], {duration: 6, delay: 3, fill: 'none'}),
       new Animation(..., {duration: 8, fill: 'forward'})
-    ], {iterationCount: 2, fill: 'forward'});
+    ], {iterations: 2, fill: 'forward'});
 
 In this example:
 

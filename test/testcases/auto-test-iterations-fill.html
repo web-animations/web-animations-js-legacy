@@ -131,7 +131,7 @@ for (var i = 0; i < directions.length; i++) {
   groups.push(new ParGroup([], {
     delay: 1,
     duration: 8,
-    iterationCount: 3,
+    iterations: 3,
     playbackRate: 2,
     direction: dir,
   }));
@@ -147,14 +147,14 @@ for (var i = 0; i < fills.length; i++) {
     groups[j].append(new Animation(divs[j], [{left: "100px"}, {left: "200px"}], {
       delay: 1,
       duration: 1,
-      iterationCount: 2,
+      iterations: 2,
       fill: fills[i],
       playbackRate: 0.8
     }));
     groups[j].append(new Animation(divs[j], {sample: sampleFunc}, {
       delay: 1,
       duration: 1,
-      iterationCount: 2,
+      iterations: 2,
       fill: fills[i],
       playbackRate: 0.8
     }));

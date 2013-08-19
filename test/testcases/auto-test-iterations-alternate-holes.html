@@ -40,9 +40,9 @@ limitations under the License.
 
 var anim = new Animation(
     document.getElementById("a"), [{left: "100px"}, {left: "500px"}],
-    {iterationCount: Infinity, duration: 1.0});
+    {iterations: Infinity, duration: 1.0});
 var parGroup = new ParGroup([anim],
-    {direction: "alternate", duration: 1.0, iterationCount: 3.0});
+    {direction: "alternate", duration: 1.0, iterations: 3.0});
 
 document.timeline.play(parGroup);
 </script>

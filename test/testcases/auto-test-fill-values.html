@@ -116,7 +116,7 @@ for (var i = 0; i < containers.length; i++) {
   for (var j = 0; j < fills.length; j++) {
     document.timeline.play(
         new Animation(divs[2 * j], effect, {
-          iterationCount: 4,
+          iterations: 4,
           direction: directions[i],
           duration: 1,
           fill: fills[j]
@@ -125,7 +125,7 @@ for (var i = 0; i < containers.length; i++) {
         " dur: 1";
     document.timeline.play(
         new Animation(divs[2 * j + 1], effect, {
-          iterationCount: 4,
+          iterations: 4,
           direction: directions[i],
           duration: 0,
           fill: fills[j]

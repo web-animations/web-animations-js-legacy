@@ -102,15 +102,15 @@ for (var i = 0; i < directions.length; i++) {
           // Test basic use.
           new Animation(container.getElementsByClassName("a")[0],
               [{left: "100px"}, {left: "300px"}],
-              {duration: 1, iterationCount: 3.4}),
-          // Test integer iterationCount.
+              {duration: 1, iterations: 3.4}),
+          // Test integer iterations.
           new Animation(container.getElementsByClassName("b")[0],
               [{left: "100px"}, {left: "180px"}],
-              {duration: 1, iterationCount: 3.0}),
-          // Test zero iterationCount.
+              {duration: 1, iterations: 3.0}),
+          // Test zero iterations.
           new Animation(container.getElementsByClassName("c")[0],
               [{left: "180px"}, {left: "300px"}],
-              {duration: 1, iterationCount: 0.0}),
-          ], {iterationCount: 2, direction: dir, duration: 4}));
+              {duration: 1, iterations: 0.0}),
+          ], {iterations: 2, direction: dir, duration: 4}));
 }
 </script>

@@ -99,7 +99,7 @@ limitations under the License.
           {delay: 6, duration: 2});
       var blueBallMove = new ParGroup(
           [around1, around2, around3, around4, around5],
-          {iterationCount: 2, direction: "alternate"});
+          {iterations: 2, direction: "alternate"});
 
       var redBallMove = new SeqGroup([
         new Animation(document.querySelector("#b"), {top: "0px", left: "0px"}, 2),
