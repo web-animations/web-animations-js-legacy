@@ -38,22 +38,22 @@ var group = new ParGroup();
 document.timeline.play(new ParGroup([
     new Animation(overflow,
                   effect,
-                  { iterationDuration: 0.3, startDelay: 0.25, fillMode: 'forwards' })]));
+                  { duration: 0.3, delay: 0.25, fill: 'forwards' })]));
 
 document.timeline.play(new ParGroup([
     new Animation(overflowControl,
                   effect,
-                  { iterationDuration: 0.3, startDelay: 0.2, fillMode: 'forwards' })]));
+                  { duration: 0.3, delay: 0.2, fill: 'forwards' })]));
 
 document.timeline.play(new ParGroup([
     new Animation(underflow,
                   effect,
-                  { iterationDuration: 0.3, startDelay: 0.20001, fillMode: 'none' })]));
+                  { duration: 0.3, delay: 0.20001, fill: 'none' })]));
 
 document.timeline.play(new ParGroup([
     new Animation(underflowControl,
                   effect,
-                  { iterationDuration: 0.3, startDelay: 0.2, fillMode: 'none' })]));
+                  { duration: 0.3, delay: 0.2, fill: 'none' })]));
 
 </script>
 

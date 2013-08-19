@@ -101,28 +101,28 @@ var effect300To100 = [{left: "300px"}, {left: "100px"}];
 
 for (var i = 0; i < directions.length; i++) {
   var dir = directions[i];
-  groups.push(new ParGroup([], {direction: dir, iterationDuration: 3}));
+  groups.push(new ParGroup([], {direction: dir, duration: 3}));
 }
 
 for (var i = 0; i < containers.length; i++) {
   var container = document.getElementById(containers[i]);
   // Test basic use.
   groups[i].append(new Animation(container.getElementsByClassName("a")[0],
-      effect100To300, {iterationDuration: 1.0}, groups[i]));
+      effect100To300, {duration: 1.0}, groups[i]));
   groups[i].append(new Animation(container.getElementsByClassName("b")[0],
-      effect100To300, {iterationDuration: 0.5, playbackRate: 0.5}));
+      effect100To300, {duration: 0.5, playbackRate: 0.5}));
   groups[i].append(new Animation(container.getElementsByClassName("c")[0],
-      effect100To300, {iterationDuration: 2.0, playbackRate: 2.0}));
+      effect100To300, {duration: 2.0, playbackRate: 2.0}));
    // Test negative values.
   groups[i].append(new Animation(container.getElementsByClassName("d")[0],
-      effect300To100, {iterationDuration: 1.0, playbackRate: -1.0}));
+      effect300To100, {duration: 1.0, playbackRate: -1.0}));
   groups[i].append(new Animation(container.getElementsByClassName("e")[0],
-      effect300To100, {iterationDuration: 0.5, playbackRate: -0.5}));
+      effect300To100, {duration: 0.5, playbackRate: -0.5}));
   groups[i].append(new Animation(container.getElementsByClassName("f")[0],
-      effect300To100, {iterationDuration: 2.0, playbackRate: -2.0}));
+      effect300To100, {duration: 2.0, playbackRate: -2.0}));
    // Test zero.
   groups[i].append(new Animation(container.getElementsByClassName("g")[0],
-      effect300To100, {iterationDuration: 1.0, playbackRate: 0.0}));
+      effect300To100, {duration: 1.0, playbackRate: 0.0}));
   document.timeline.play(groups[i]);
 }
 </script>

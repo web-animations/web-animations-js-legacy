@@ -34,7 +34,7 @@ var downRed = new ParGroup(
     [new Animation(document.querySelector('#a'), {top: '600px'}, 4)]);
 var downBlue = new ParGroup(
     [new Animation(document.querySelector('#b'), {top: '600px'}, 4)],
-    {startDelay: 1});
+    {delay: 1});
 document.timeline.play(downRed);
 document.timeline.play(downBlue);
 document.timeline._pauseAnimationsForTesting(2);

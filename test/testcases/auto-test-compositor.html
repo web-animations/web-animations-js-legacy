@@ -51,7 +51,7 @@ var dt = document.timeline;
 dt.play(new Animation(rect, [{x: "0px"}, {x: "400px"}], 3));
 dt.play(new Animation(rect,
     new KeyframeAnimationEffect([{x: "0px"}, {x: "200px"}], 'add'),
-    {startDelay: 1, iterationDuration: 4}));
+    {delay: 1, duration: 4}));
 
 dt.play(new Animation(rect2, [
   {transform: "translate(0px, 0px)"},
@@ -60,5 +60,5 @@ dt.play(new Animation(rect2, [
 dt.play(new Animation(rect2, new KeyframeAnimationEffect([
   {transform: "rotate(0deg) translate(0px, 0px)"},
   {transform: "rotate(90deg) translate(100px, 0px)"},
-], 'add'), {startDelay: 1, iterationDuration: 4}));
+], 'add'), {delay: 1, duration: 4}));
 </script>

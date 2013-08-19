@@ -137,27 +137,27 @@
   var carAnimation = new SeqGroup([
     new ParGroup([
       new Animation(document.querySelector("#redLight"),
-          {"backgroundColor": lightOff}, {iterationDuration: 0.5}),
+          {"backgroundColor": lightOff}, {duration: 0.5}),
       new Animation(document.querySelector("#greenLight"),
-          {"backgroundColor": "green"}, {iterationDuration: 0.5}),
+          {"backgroundColor": "green"}, {duration: 0.5}),
     ], {}),
     new Animation(document.querySelector(".car"), {left: "100%"},
-        {iterationDuration: 3, timingFunction: "ease-in"}),
+        {duration: 3, easing: "ease-in"}),
     new ParGroup([
       new Animation(document.querySelector("#greenLight"),
-          {"backgroundColor": lightOff}, {iterationDuration: 0.5}),
+          {"backgroundColor": lightOff}, {duration: 0.5}),
       new Animation(document.querySelector("#orangeLight"),
-          {"backgroundColor": "rgb(255,165,0)"}, {iterationDuration: 0.5}),
-    ], {startDelay: 0.25}),
+          {"backgroundColor": "rgb(255,165,0)"}, {duration: 0.5}),
+    ], {delay: 0.25}),
     new ParGroup([
       new Animation(document.querySelector("#orangeLight"),
-          {"backgroundColor": lightOff}, {iterationDuration: 0.5}),
+          {"backgroundColor": lightOff}, {duration: 0.5}),
       new Animation(document.querySelector("#redLight"),
-          {"backgroundColor": "red"}, {iterationDuration: 0.5}),
-    ], {startDelay: 0.25}),
+          {"backgroundColor": "red"}, {duration: 0.5}),
+    ], {delay: 0.25}),
     new Animation(document.querySelector(".car"),
         [{left: "-500px"}, {left: "10px"}],
-        {iterationDuration: 2, timingFunction: "ease-out"}),
+        {duration: 2, easing: "ease-out"}),
   ]);
 
   document.querySelector("#buttonA").addEventListener('mousedown', function() {
