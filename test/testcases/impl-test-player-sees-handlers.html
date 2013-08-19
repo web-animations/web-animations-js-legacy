@@ -26,7 +26,7 @@ test(function() {
   var anAnimation = new Animation(body, {left: '100px'}, 1);
   var player = document.timeline.play(anAnimation);
   assert_false(player._needsHandlerPass);
-  anAnimation.onstart = new function() { };
+  anAnimation.onstart = function() { };
   assert_true(player._needsHandlerPass);
   anAnimation.onstart = undefined;
   assert_false(player._needsHandlerPass);
@@ -34,7 +34,7 @@ test(function() {
 
 test(function() {
   var anAnimation = new Animation(body, {left: '100px'}, 1);
-  anAnimation.onend = new function() { };
+  anAnimation.onend = function() { };
   var player = document.timeline.play(anAnimation);
   assert_true(player._needsHandlerPass);
   anAnimation.onend = null;
@@ -45,10 +45,10 @@ test(function() {
 
 test(function() {
   var anAnimation = new Animation(body, {left: '100px'}, 1);
-  anAnimation.oniteration = new function() { };
+  anAnimation.oniteration = function() { };
   var player = document.timeline.play(anAnimation);
   assert_true(player._needsHandlerPass);
-  anAnimation.oncancel = new function() { };
+  anAnimation.oncancel = function() { };
   assert_true(player._needsHandlerPass);
   anAnimation.oniteration = null;
   assert_true(player._needsHandlerPass);
@@ -65,20 +65,20 @@ test(function() {
     ]),
     new Animation(body, {left: '100px'}, 1)
   ]);
-  aTree.children[1].onend = new function() { };
+  aTree.children[1].onend = function() { };
   var player = document.timeline.play(aTree);
   assert_true(player._needsHandlerPass);
   aTree.children[1].onend = undefined;
   assert_false(player._needsHandlerPass);
-  aTree.children[0].children[0].onstart = new function() { };
+  aTree.children[0].children[0].onstart = function() { };
   assert_true(player._needsHandlerPass);
-  aTree.children[0].children[1].oncancel = new function() { };
+  aTree.children[0].children[1].oncancel = function() { };
   assert_true(player._needsHandlerPass);
   aTree.children[0].children[0].onstart = null;
   assert_true(player._needsHandlerPass);
   aTree.children[0].children[1].oncancel = undefined;
   assert_false(player._needsHandlerPass);
-  aTree.oniteration = new function() { };
+  aTree.oniteration = function() { };
   assert_true(player._needsHandlerPass);
   aTree.oniteration = null;
   assert_false(player._needsHandlerPass);
@@ -86,7 +86,7 @@ test(function() {
 
 test(function() {
   var anAnimation = new Animation(body, {left: '100px'}, 1);
-  anAnimation.onstart = new function() { };
+  anAnimation.onstart = function() { };
   var aGroup = new ParGroup([anAnimation]);
   var player = document.timeline.play(aGroup);
   assert_true(player._needsHandlerPass);
@@ -94,7 +94,7 @@ test(function() {
 
 test(function() {
   var anAnimation = new Animation(body, {left: '100px'}, 1);
-  anAnimation.onstart = new function() { };
+  anAnimation.onstart = function() { };
   var aGroup = new ParGroup([]);
   aGroup.append(anAnimation);
   var player = document.timeline.play(aGroup);
@@ -103,7 +103,7 @@ test(function() {
 
 test(function() {
   var anAnimation = new Animation(body, {left: '100px'}, 1);
-  anAnimation.onstart = new function() { };
+  anAnimation.onstart = function() { };
   var aGroup = new ParGroup([]);
   var player = document.timeline.play(aGroup);
   aGroup.append(anAnimation);
