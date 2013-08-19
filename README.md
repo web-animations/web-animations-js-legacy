@@ -140,7 +140,7 @@ TimingDictionaries are used to control the internal timing of an animation (play
 - **delay**: the time between the animation's start time and the first animation effect of the animation
 - **playbackRate**: the rate at which the animation progresses relative to external time
 - **direction**: the direction in which successive iterations of the animation play back
-- **timingFunction**: fine-grained control over how external time impacts an animation across the total active duration of the animation.
+- **easing**: fine-grained control over how external time impacts an animation across the total active duration of the animation.
 
 The values provided within TimingDictionaries combine with the animation hierarchy
 to generate concrete start and end values for animation iterations, animation

@@ -142,7 +142,7 @@
           {"backgroundColor": "green"}, {duration: 0.5}),
     ], {}),
     new Animation(document.querySelector(".car"), {left: "100%"},
-        {duration: 3, timingFunction: "ease-in"}),
+        {duration: 3, easing: "ease-in"}),
     new ParGroup([
       new Animation(document.querySelector("#greenLight"),
           {"backgroundColor": lightOff}, {duration: 0.5}),
@@ -157,7 +157,7 @@
     ], {delay: 0.25}),
     new Animation(document.querySelector(".car"),
         [{left: "-500px"}, {left: "10px"}],
-        {duration: 2, timingFunction: "ease-out"}),
+        {duration: 2, easing: "ease-out"}),
   ]);
 
   document.querySelector("#buttonA").addEventListener('mousedown', function() {

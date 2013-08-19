@@ -60,6 +60,6 @@ var elems = document.querySelectorAll(".test");
 for (var i = 0; i < elems.length; i++) {
   var element = elems[i];
   document.timeline.play(new Animation(element, {left: "200px"},
-      {delay: 1, duration: 2, timingFunction: element.textContent}));
+      {delay: 1, duration: 2, easing: element.textContent}));
 }
 </script>
