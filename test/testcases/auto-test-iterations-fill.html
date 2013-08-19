@@ -130,7 +130,7 @@ for (var i = 0; i < directions.length; i++) {
   var dir = directions[i];
   groups.push(new ParGroup([], {
     delay: 1,
-    iterationDuration: 8,
+    duration: 8,
     iterationCount: 3,
     playbackRate: 2,
     direction: dir,
@@ -146,14 +146,14 @@ for (var i = 0; i < fillModes.length; i++) {
   for (var j = 0; j < divs.length; j++) {
     groups[j].append(new Animation(divs[j], [{left: "100px"}, {left: "200px"}], {
       delay: 1,
-      iterationDuration: 1,
+      duration: 1,
       iterationCount: 2,
       fillMode: fillModes[i],
       playbackRate: 0.8
     }));
     groups[j].append(new Animation(divs[j], {sample: sampleFunc}, {
       delay: 1,
-      iterationDuration: 1,
+      duration: 1,
       iterationCount: 2,
       fillMode: fillModes[i],
       playbackRate: 0.8

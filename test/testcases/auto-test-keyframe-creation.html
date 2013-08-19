@@ -84,26 +84,26 @@ limitations under the License.
 var dt = document.timeline;
 
 dt.play(new Animation(document.querySelector("#a"),
-    [{left: "100px"}, {left: "200px"}], {delay: 1, iterationDuration: 1}));
+    [{left: "100px"}, {left: "200px"}], {delay: 1, duration: 1}));
 dt.play(new Animation(document.querySelector("#b"), {left: "200px"},
-    {delay: 1, iterationDuration: 1}));
+    {delay: 1, duration: 1}));
 dt.play(new Animation(document.querySelector("#c"),
-    [{left: "100px"}, {left: "200px"}], {iterationDuration: 2}));
+    [{left: "100px"}, {left: "200px"}], {duration: 2}));
 dt.play(new Animation(document.querySelector("#d"), {left: "200px"},
-    {iterationDuration: 2}));
+    {duration: 2}));
 dt.play(new Animation(document.querySelector("#e"), [
   {offset: 0, left: "100px"},
   {offset: 1, left: "200px"},
-], {iterationDuration: 2}));
+], {duration: 2}));
 dt.play(new Animation(document.querySelector("#f"), [
   {offset: 0, left: "200px"},
   {offset: 0.25, left: "100px"},
   {offset: 1, left: "200px"}
-], {iterationDuration: 2}));
+], {duration: 2}));
 dt.play(new Animation(document.querySelector("#g"), new KeyframeAnimationEffect([
   {offset: 0.25, left: "200px"},
   {offset: 0.5, left: "100px"},
   {offset: 0.75, left: "200px"}
-], "add"), {iterationDuration: 2}));
+], "add"), {duration: 2}));
 
 </script>

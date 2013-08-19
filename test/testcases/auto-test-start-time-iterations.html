@@ -89,13 +89,13 @@ var directions = ["normal", "reverse", "alternate", "alternate-reverse"];
 var animation = [{left: "100px"}, {left: "500px"}];
 
 // We use a new group for each animation to avoid coupling due to the intrinsic
-// iterationDuration of a par group.
+// duration of a par group.
 var group = function(direction) {
   return new ParGroup([], {iterationCount: 2.0, direction: direction});
 };
 var groupWithFixedDuration = function(direction) {
   return new ParGroup([],
-      {iterationCount: 2.0, direction: direction, iterationDuration: 4.0});
+      {iterationCount: 2.0, direction: direction, duration: 4.0});
 };
 
 for (var i = 0; i < directions.length; i++) {
@@ -104,7 +104,7 @@ for (var i = 0; i < directions.length; i++) {
 
   // Interaction of default start time with parent iterations. At the time of
   // addition, the child picks up a start time of zero. The parent then updates
-  // its iterationDuration and its iteration time jumps, causing the child to start
+  // its duration and its iteration time jumps, causing the child to start
   // playing part way through the animation.
   var group1 = group(direction);
   document.timeline.play(group1);
@@ -115,9 +115,9 @@ for (var i = 0; i < directions.length; i++) {
       at(0.75, function(container, group1, group2) {
         return function() {
           group1.append(new Animation(container.getElementsByClassName("a")[0],
-              animation, {iterationDuration: 1.0}));
+              animation, {duration: 1.0}));
           group2.append(new Animation(container.getElementsByClassName("b")[0],
-              animation, {iterationDuration: 1.0}));
+              animation, {duration: 1.0}));
         };
       }(container, group1, group2))
     });

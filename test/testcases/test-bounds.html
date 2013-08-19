@@ -49,7 +49,7 @@ timing_test(function() {
 // Test that delay is applied correctly.
 var elem2 = document.getElementById("anim2");
 var player2 = document.timeline.play(
-  new Animation(elem2, animFunc, {iterationDuration: 1.0, delay: 1.0}));
+  new Animation(elem2, animFunc, {duration: 1.0, delay: 1.0}));
 
 timing_test(function() {
     at(0, function() { assert_equals(getComputedStyle(elem2).left, "0px"); });

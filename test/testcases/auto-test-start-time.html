@@ -76,15 +76,15 @@ var animation = [{left: "100px"}, {left: "300px"}];
 
 for (var i = 0; i < directions.length; i++) {
   var container = document.getElementById(containers[i]);
-  // Explicit parent iterationDuration.
+  // Explicit parent duration.
   document.timeline.play(new ParGroup(
       [new Animation(container.getElementsByClassName("a")[0], animation,
-          {iterationDuration: 1.0})],
-      {iterationCount: 2.0, direction: directions[i], iterationDuration: 1.0}));
-  // Parent calculates intrinsic iterationDuration.
+          {duration: 1.0})],
+      {iterationCount: 2.0, direction: directions[i], duration: 1.0}));
+  // Parent calculates intrinsic duration.
   document.timeline.play(new ParGroup(
       [new Animation(container.getElementsByClassName("b")[0], animation,
-          {iterationDuration: 1.0})],
+          {duration: 1.0})],
       {iterationCount: 2.0, direction: directions[i]}));
 }
 </script>

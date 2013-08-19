@@ -22,10 +22,10 @@ limitations under the License.
 
 document.timeline.play(new Animation(null, {}, 1));
 document.timeline.play(new Animation(null, {},
-	{iterationDuration: 1, fillMode: 'none'}));
+	{duration: 1, fillMode: 'none'}));
 var player = document.timeline.play(new Animation(anim, 
 	[{backgroundColor: 'red'}, {backgroundColor: 'white'}],
-	{iterationDuration: 1, fillMode: 'none'}));
+	{duration: 1, fillMode: 'none'}));
 
 timing_test(function() {
 	at(0.5, function() {
@@ -57,7 +57,7 @@ timing_test(function() {
 	})
 
 	at(5, function() {
-		player.source.specified.iterationDuration = 4;
+		player.source.specified.duration = 4;
 		assert_equals(document.timeline.getCurrentPlayers().length, 1,
 			"Only restarted animation current");
 		assert_equals(_WebAnimationsTestingUtilities._knownPlayers.length, 2,

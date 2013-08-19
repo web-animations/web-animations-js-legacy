@@ -186,20 +186,20 @@ test(function() {
 
 // Test intrinsic iteration duration before media loads.
 test(function() {
-  assert_equals(createTestMediaReference(createVideo()).iterationDuration,
+  assert_equals(createTestMediaReference(createVideo()).duration,
       Infinity);
-}, "Intrinsic iterationDuration should be Infinity before media loads");
+}, "Intrinsic duration should be Infinity before media loads");
 
 // Test intrinisc iteration duration.
 testOnceVideosLoaded(function() {
   assert_approx_equals(
-      createTestMediaReference(getNextVideo()).iterationDuration,
+      createTestMediaReference(getNextVideo()).duration,
       expectedVideoLength, 0.001);
 }, "Intrinsic iteration duration should be media duration");
 
 // Test that iteration duration can be overridden.
 testOnceVideosLoaded(function() {
-  assert_equals(createTestMediaReference(getNextVideo(), 1.0).iterationDuration,
+  assert_equals(createTestMediaReference(getNextVideo(), 1.0).duration,
       1.0);
 }, "Iteration duration should be overridable");
 
@@ -213,8 +213,8 @@ timing_test(function() {
   });
 }, "Basic use");
 
-// Test clipping where iterationDuration limits. Video should be frozen at end
-// of iterationDuration.
+// Test clipping where duration limits. Video should be frozen at end
+// of duration.
 timing_test(function() {
   var video = getNextVideo();
   at(0.0, function() {
@@ -228,10 +228,10 @@ timing_test(function() {
     assert_equals(video.currentTime, 3.0);
     assert_true(video.paused);
   });
-}, "Video should be frozen at iterationDuration");
+}, "Video should be frozen at duration");
 
 // Test clipping where video length limits. Video should be frozen at end for
-// remainder of iterationDuration.
+// remainder of duration.
 timing_test(function() {
   var video = getNextVideo();
   at(0.0, function() {
@@ -249,8 +249,8 @@ timing_test(function() {
   });
 }, "Video should be frozen at end");
 
-// Test fill with iterationDuration limiting. Video should be frozen at end of
-// iterationDuration.
+// Test fill with duration limiting. Video should be frozen at end of
+// duration.
 timing_test(function() {
   var video = getNextVideo();
   at(0.0, function() {
@@ -260,7 +260,7 @@ timing_test(function() {
     assert_equals(video.currentTime,  1.0);
     assert_equals(video.paused,  true);
   });
-}, "Should freeze video at iterationDuration for fill");
+}, "Should freeze video at duration for fill");
 
 // Test fill with video length limiting. Video should be at end.
 timing_test(function() {
@@ -292,7 +292,7 @@ timing_test(function() {
   var video = getNextVideo();
   at(0.0, function() {
     dt.play(createTestMediaReference(video,
-        {iterationCount: 2.0, iterationDuration: 1.0}));
+        {iterationCount: 2.0, duration: 1.0}));
   });
   at(1.5, function() {
     assert_equals(video.currentTime,  0.5);
@@ -304,7 +304,7 @@ timing_test(function() {
   var video = getNextVideo();
   at(0.0, function() {
     dt.play(createTestMediaReference(video,
-        {iterationStart: 0.5, iterationDuration: 2.0}));
+        {iterationStart: 0.5, duration: 2.0}));
   });
   at(0.5, function() {
     assert_equals(video.currentTime,  1.5);
@@ -387,7 +387,7 @@ timing_test(function() {
   });
 }, "Video should respect reversing and playbackRate");
 
-// Test zero iterationDuration.
+// Test zero duration.
 timing_test(function() {
   var video = getNextVideo();
   at(0.0, function() {
@@ -397,9 +397,9 @@ timing_test(function() {
   at(1.0, function() {
     assert_equals(video.currentTime,  0.0);
   });
-}, "Video should start at time zero when iterationDuration is zero");
+}, "Video should start at time zero when duration is zero");
 
-// Test zero intrinsic iterationDuration.
+// Test zero intrinsic duration.
 // TODO: Need to find a zero length video.
 
 // Test that media elements are removed from their MediaController.
