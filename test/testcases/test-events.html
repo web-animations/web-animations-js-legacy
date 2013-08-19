@@ -129,7 +129,7 @@ testTiming(simple({iterationDuration: 4, iterationStart: 0.75,
   [event('start', 0, 0, 0)].concat(iterList(1, 1, 1, 4, 3))
                         .concat([event('end', 10, 10, 3)]),
   "offset iterations (two complete iterations)");
-testTiming(simple({iterationDuration: 5, startDelay: 5}),
+testTiming(simple({iterationDuration: 5, delay: 5}),
   [event('start', 5, 5, 0), event('end', 10, 10, 0)],
   "delayed start");
 

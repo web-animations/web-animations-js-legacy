@@ -60,11 +60,11 @@ video.addEventListener("loadeddata", function() {
       new Animation(leftCurtain, {width: "0px"}, {iterationDuration: duration}),
       new Animation(rightCurtain, {width: "0px"}, {iterationDuration: duration}),
     ]),
-    new MediaReference(video, {startDelay: -duration}),
+    new MediaReference(video, {delay: -duration}),
     new ParGroup([
       new Animation(leftCurtain, {width: "50%"}, {iterationDuration: duration}),
       new Animation(rightCurtain, {width: "50%"}, {iterationDuration: duration}),
-    ], {startDelay: -duration}),
+    ], {delay: -duration}),
   ]));
 });
 
