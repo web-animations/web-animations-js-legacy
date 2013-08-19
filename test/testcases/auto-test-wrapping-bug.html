@@ -28,6 +28,14 @@ limitations under the License.
 <div class="anim" id="overflowControl"></div>
 <div class="anim" id="underflow"></div>
 <div class="anim" id="underflowControl"></div>
+<script>
+var expected_failures = {
+  '/.* t=(0.5|0.6)s/': {
+    msie: true,
+    message: "Weird values."
+  }
+};
+</script>
 <script src="../bootstrap.js"></script>
 <script>
 "use strict";

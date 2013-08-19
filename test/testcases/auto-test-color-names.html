@@ -27,7 +27,14 @@ td.anim {
 <tr><td id="g" class="anim"></td><td id="h" class="anim"></td><td id="i" class="anim"></td></tr>
 </table>
 
-
+<script>
+var expected_failures = {
+  '/Auto.*/': {
+    msie: true,
+    message: "IE returns rgba always."
+  }
+};
+</script>
 <script src="../bootstrap.js"></script>
 <script>
 "use strict";
