@@ -42,16 +42,13 @@ limitations under the License.
 
 var test = async_test('Check second animation has fired after being triggered inside onend callback');
 var element = document.querySelector('#target');
-var animation = new Animation(element, { left: '50px' }, 0.5);
+var animation = new Animation(element, {left: '50px'}, 0.5);
 animation.addEventListener('end', function() {
-  console.log('testpants');
-  var nextAnimation = new Animation(element, { left: '100px' }, 0.5);
+  var nextAnimation = new Animation(element, {left: '100px'}, 0.5);
   nextAnimation.addEventListener('start', function() {
-    console.log('testDuck');
   });
   nextAnimation.addEventListener('end', function() {
-    console.log('testChicken');
-    test.step(function() { assert_styles("#target", {'left':'100px'}); });
+    test.step(function() { assert_styles("#target", {left:'100px'}); });
     test.done();
   });
   document.timeline.play(nextAnimation);
