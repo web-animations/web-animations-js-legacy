@@ -92,14 +92,14 @@ limitations under the License.
         {"backgroundColor": "lightsteelblue"},
       ], 8);
       var around3 = new Animation(document.querySelector("#a"), {top: "250px"},
-          {startDelay: 2, iterationDuration: 2});
+          {delay: 2, duration: 2});
       var around4 = new Animation(document.querySelector("#a"), {left: "0px"},
-          {startDelay: 4, iterationDuration: 2});
+          {delay: 4, duration: 2});
       var around5 = new Animation(document.querySelector("#a"), {top: "0px"},
-          {startDelay: 6, iterationDuration: 2});
+          {delay: 6, duration: 2});
       var blueBallMove = new ParGroup(
           [around1, around2, around3, around4, around5],
-          {iterationCount: 2, direction: "alternate"});
+          {iterations: 2, direction: "alternate"});
 
       var redBallMove = new SeqGroup([
         new Animation(document.querySelector("#b"), {top: "0px", left: "0px"}, 2),

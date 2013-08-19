@@ -98,6 +98,6 @@ for (var i = 0; i < endPositions.length; i++) {
   document.timeline.play(new Animation(pre, new KeyframeAnimationEffect([
     { backgroundPosition: startPosition },
     { backgroundPosition: endPosition },
-  ]), { iterationDuration:2, timingFunction: 'ease-in'}));
+  ]), { duration:2, easing: 'ease-in'}));
 }
 </script>
