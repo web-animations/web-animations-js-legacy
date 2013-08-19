@@ -278,7 +278,7 @@ timing_test(function() {
 timing_test(function() {
   var video = getNextVideo();
   at(0.0, function() {
-    dt.play(createTestMediaReference(video, {fillMode: "none"}));
+    dt.play(createTestMediaReference(video, {fill: "none"}));
   });
   // We can't use video.duration here because the video isn't yet loaded.
   at(expectedVideoLength + 1, function() {

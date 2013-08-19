@@ -136,7 +136,7 @@ TimingDictionaries are used to control the internal timing of an animation (play
 - **duration**: the duration of a single iteration of the animation
 - **iterationCount**: the number of iterations of the animation that will be played (fractional iterationCounts are allowed)
 - **iterationStart**: the start offset of the first iteration
-- **fillMode**: whether the animation has effect before starting the first iteration and/or after finishing the final iteration
+- **fill**: whether the animation has effect before starting the first iteration and/or after finishing the final iteration
 - **delay**: the time between the animation's start time and the first animation effect of the animation
 - **playbackRate**: the rate at which the animation progresses relative to external time
 - **direction**: the direction in which successive iterations of the animation play back
@@ -148,9 +148,9 @@ backwards fills, and animation forwards fills. There are a few simple rules whic
 
 - Animations never extend beyond the start or end values of their parent iteration.
 - Animations only fill beyond their parent iteration if:
-    - the relevant fillMode value is selected for the animation;
-    - the matching fillMode value is selected for the parent; and
-    - this is the first parent iteration (for `fillMode: 'backward'`) or last parent iteration (for `fillMode: 'forward'`)
+    - the relevant fill value is selected for the animation;
+    - the matching fill value is selected for the parent; and
+    - this is the first parent iteration (for `fill: 'backward'`) or last parent iteration (for `fill: 'forward'`)
 - Missing `duration` values for TimingGroups are generated based on the calculated durations of the child animations.
 
 The following example illustrates these rules:
@@ -158,10 +158,10 @@ The following example illustrates these rules:
     var parGroup = new ParGroup([
       new SeqGroup([
         new Animation(..., {duration: 3}),
-        new Animation(..., {duration: 5, fillMode: 'both'})
-      ], {duration: 6, delay: 3, fillMode: 'none'}),
-      new Animation(..., {duration: 8, fillMode: 'forward'})
-    ], {iterationCount: 2, fillMode: 'forward'});
+        new Animation(..., {duration: 5, fill: 'both'})
+      ], {duration: 6, delay: 3, fill: 'none'}),
+      new Animation(..., {duration: 8, fill: 'forward'})
+    ], {iterationCount: 2, fill: 'forward'});
 
 In this example:
 
@@ -169,8 +169,8 @@ In this example:
 second child animation will only play for the first 3 of its 5 second duration
 - The `ParGroup` has no explicit duration, and will be provided with a
 calculated duration of the max (`duration + delay`) of its children - in this case 9 seconds.
-- Although `fillMode: "both"` is specified for the second `Animation` within the `SeqGroup`, the `SeqGroup` itself has a `fillMode` of "none". Hence, as the animation ends right at the end of the `SeqGroup`, the animation will only fill backwards, and only up until the boundary of the `SeqGroup` (i.e. 3 seconds after the start of the `ParGroup`).
-- The `Animation` inside the `ParGroup` and the `ParGroup` are both `fillMode: "forward"`. Therefore the animation will fill forward in two places: 
+- Although `fill: "both"` is specified for the second `Animation` within the `SeqGroup`, the `SeqGroup` itself has a `fill` of "none". Hence, as the animation ends right at the end of the `SeqGroup`, the animation will only fill backwards, and only up until the boundary of the `SeqGroup` (i.e. 3 seconds after the start of the `ParGroup`).
+- The `Animation` inside the `ParGroup` and the `ParGroup` are both `fill: "forward"`. Therefore the animation will fill forward in two places: 
     - from 8 seconds after the `ParGroup` starts until the second iteration of the `ParGroup` starts (i.e. for 1 second)
     - from 17 seconds after the `ParGroup` starts, extending forward indefinitely.
 

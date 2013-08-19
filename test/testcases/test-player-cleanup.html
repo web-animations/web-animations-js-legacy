@@ -22,10 +22,10 @@ limitations under the License.
 
 document.timeline.play(new Animation(null, {}, 1));
 document.timeline.play(new Animation(null, {},
-	{duration: 1, fillMode: 'none'}));
+	{duration: 1, fill: 'none'}));
 var player = document.timeline.play(new Animation(anim, 
 	[{backgroundColor: 'red'}, {backgroundColor: 'white'}],
-	{duration: 1, fillMode: 'none'}));
+	{duration: 1, fill: 'none'}));
 
 timing_test(function() {
 	at(0.5, function() {
