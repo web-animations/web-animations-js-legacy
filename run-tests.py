@@ -457,7 +457,7 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 test_id="CRITICAL-FAILURE",
                 test_status='fail',
                 test_tags=[args.browser],
-                file_name='message',
+                file_name='traceback',
                 file_bytes=msg,
                 mime_type='text/plain; charset=UTF-8',
                 eof=True)
@@ -467,13 +467,18 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 info = dict(result)
                 info.pop('_structured_clone', None)
 
+                if not isinstance(result['message'], (str, unicode)):
+                    msg = str(result['message'])
+                else:
+                    msg = result['message']
+
                 overall_status += result['status']
                 output.status(
                     test_id="%s:%s" % (test_id, result['name']),
                     test_status=self.STATUS[result['status']],
                     test_tags=[args.browser],
-                    file_name='message',
-                    file_bytes=repr(result['message']),
+                    file_name='traceback',
+                    file_bytes=msg,
                     mime_type='text/plain; charset=UTF-8',
                     eof=True)
 
