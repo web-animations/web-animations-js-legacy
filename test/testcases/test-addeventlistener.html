@@ -171,7 +171,6 @@ function createAnimation() {
   document.timeline.play(animation);
 });
 
-// This test at one second forces the automated test runner to simulate one second of execution.
-timing_test(function() {at(1.0, function () {});});
+timing_test(function(){at(1, function(){});}, 'Force testharness to execute to 1 second.');
 
 </script>
