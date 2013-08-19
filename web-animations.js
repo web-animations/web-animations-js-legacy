@@ -384,7 +384,7 @@ Player.prototype = {
     this._needsHandlerPass = true;
   },
   _checkForHandlers: function() {
-    this._needsHandlerPass = this.source !== null && this.source._hasHandler();
+    this._needsHandlerPass = this.source !== null && this.source._hasHandlers();
   },
   _generateEvents: function() {
     if (!isDefinedAndNotNull(this._lastCurrentTime)) {
@@ -427,6 +427,8 @@ var TimedItem = function(token, timingInput) {
   this._player = null;
   this._parent = null;
   this._updateInternalState();
+  this._handlers = {};
+  this._onHandlers = {};
 };
 
 TimedItem.prototype = {
@@ -730,50 +732,108 @@ TimedItem.prototype = {
   _hasFutureEffect: function() {
     return this._isCurrent() || this.specified.fill !== 'none';
   },
-  set onstart(fun) {
-    this._startHandler = fun;
-    this._newHandler(fun);
+  set onstart(func) {
+    this._setOnHandler('start', func);
   },
   get onstart() {
-    return this._startHandler;
+    return this._getOnHandler('start');
   },
-  set oniteration(fun) {
-    this._iterationHandler = fun;
-    this._newHandler(fun);
+  set oniteration(func) {
+    this._setOnHandler('iteration', func);
   },
   get oniteration() {
-    return this._iterationHandler;
+    return this._getOnHandler('iteration');
   },
-  set onend(fun) {
-    this._endHandler = fun;
-    this._newHandler(fun);
+  set onend(func) {
+    this._setOnHandler('end', func);
   },
   get onend() {
-    return this._endHandler;
+    return this._getOnHandler('end');
   },
-  set oncancel(fun) {
-    this._cancelHandler = fun;
-    this._newHandler(fun);
+  set oncancel(func) {
+    this._setOnHandler('cancel', func);
   },
   get oncancel() {
-    return this._cancelHander;
+    return this._getOnHandler('cancel');
   },
-  _newHandler: function(fun) {
-    if (isDefinedAndNotNull(fun)) {
+  _setOnHandler: function(type, func) {
+    if (typeof func === 'function') {
+      this._onHandlers[type] = {
+        callback: func,
+        index: (this._handlers[type] || []).length,
+      };
       if (this.player) {
         this.player._handlerAdded();
       }
     } else {
+      this._onHandlers[type] = null;
       if (this.player) {
         this.player._checkForHandlers();
       }
     }
   },
-  _hasHandler: function() {
-    return isDefinedAndNotNull(this._startHandler) ||
-      isDefinedAndNotNull(this._iterationHandler) ||
-      isDefinedAndNotNull(this._endHandler) ||
-      isDefinedAndNotNull(this._cancelHandler);
+  _getOnHandler: function(type) {
+    if (isDefinedAndNotNull(this._onHandler[type])) {
+      return this._onHandler[type].func;
+    }
+    return null;
+  },
+  addEventListener: function(type, func) {
+    if (typeof func !== 'function' || !(type === 'start' ||
+        type === 'iteration' || type === 'end' || type === 'cancel')) {
+      return;
+    }
+    if (!isDefinedAndNotNull(this._handlers[type])) {
+      this._handlers[type] = [];
+    } else if (this._handlers[type].indexOf(func) !== -1) {
+      return;
+    }
+    this._handlers[type].push(func);
+    if (this.player) {
+      this.player._handlerAdded();
+    }
+  },
+  removeEventListener: function(type, func) {
+    if (!this._handlers[type]) {
+      return;
+    }
+    var index = this._handlers[type].indexOf(func);
+    if (index === -1) {
+      return;
+    }
+    this._handlers[type].splice(index, 1);
+    if (isDefinedAndNotNull(this._onHandlers[type]) &&
+        (index < this._onHandlers[type].index)) {
+      this._onHandlers[type].index -= 1;
+    }
+    if (this.player) {
+      this.player._checkForHandlers();
+    }
+  },
+  _hasHandlers: function() {
+    return this._hasHandlersForEvent('start') ||
+        this._hasHandlersForEvent('iteration') ||
+        this._hasHandlersForEvent('end') || this._hasHandlersForEvent('cancel');
+  },
+  _hasHandlersForEvent: function(type) {
+    return (isDefinedAndNotNull(this._handlers[type]) &&
+        this._handlers[type].length > 0) ||
+        isDefinedAndNotNull(this._onHandlers[type]);
+  },
+  _callHandlers: function(type, event) {
+    var onIndex = -1;
+    if (isDefinedAndNotNull(this._onHandlers[type])) {
+      onIndex = this._onHandlers[type].index;
+    }
+    var handlersLength = (this._handlers[type] || []).length;
+    for (var i = 0; i <= handlersLength; i++) {
+      if (onIndex === i) {
+        this._onHandlers[type].callback.call(this, event);
+      }
+      if (i < handlersLength) {
+        this._handlers[type][i].call(this, event);
+      }
+    }
   },
   _generateChildEventsForRange: function() { },
   _toSubRanges: function(fromTime, toTime, iterationTimes) {
@@ -819,16 +879,17 @@ TimedItem.prototype = {
     }
     var startTime = this.startTime + this.specified.delay;
 
-    if (isDefinedAndNotNull(this.onstart)) {
+    if (this._hasHandlersForEvent('start')) {
       // Did we pass the start of this animation in the forward direction?
       if (fromTime <= startTime && toTime > startTime) {
-        this.onstart(new TimingEvent(constructorToken, this, 'start',
-            this.specified.delay, toGlobal(startTime), firstIteration));
+        this._callHandlers('start', new TimingEvent(constructorToken, this,
+            'start', this.specified.delay, toGlobal(startTime),
+            firstIteration));
       // Did we pass the end of this animation in the reverse direction?
       } else if (fromTime > this.endTime && toTime <= this.endTime) {
-        this.onstart(new TimingEvent(constructorToken, this, 'start',
-            this.endTime - this.startTime, toGlobal(this.endTime),
-            lastIteration));
+        this._callHandlers('start', new TimingEvent(constructorToken, this,
+              'start', this.endTime - this.startTime, toGlobal(this.endTime),
+              lastIteration));
       }
     }
 
@@ -855,10 +916,11 @@ TimedItem.prototype = {
       iterationTimes);
     for (var i = 0; i < subranges.ranges.length; i++) {
       var currentIter = subranges.start + i * subranges.delta;
-      if (isDefinedAndNotNull(this.oniteration) && i > 0) {
+      if (i > 0 && this._hasHandlersForEvent('iteration')) {
         var iterTime = subranges.ranges[i][0];
-        this.oniteration(new TimingEvent(constructorToken, this, 'iteration',
-            iterTime - this.startTime, toGlobal(iterTime), currentIter));
+        this._callHandlers('iteration', new TimingEvent(constructorToken, this,
+              'iteration', iterTime - this.startTime, toGlobal(iterTime),
+              currentIter));
       }
 
       var iterFraction;
@@ -874,16 +936,16 @@ TimedItem.prototype = {
           globalTime, deltaScale * this.specified.playbackRate);
     }
 
-    if (isDefinedAndNotNull(this.onend)) {
+    if (this._hasHandlersForEvent('end')) {
       // Did we pass the end of this animation in the forward direction?
       if (fromTime < this.endTime && toTime >= this.endTime) {
-        this.onend(new TimingEvent(constructorToken, this, 'end',
-            this.endTime - this.startTime, toGlobal(this.endTime),
-            lastIteration));
+        this._callHandlers('end', new TimingEvent(constructorToken, this, 'end',
+              this.endTime - this.startTime, toGlobal(this.endTime),
+              lastIteration));
       // Did we pass the start of this animation in the reverse direction?
       } else if (fromTime >= startTime && toTime < startTime) {
-        this.onend(new TimingEvent(constructorToken, this, 'end',
-            this.specified.delay, toGlobal(startTime), firstIteration));
+        this._callHandlers('end', new TimingEvent(constructorToken, this, 'end',
+              this.specified.delay, toGlobal(startTime), firstIteration));
       }
     }
   },
@@ -1258,10 +1320,10 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
         this.localTime + ') ' + ' [' +
         this._children.map(function(a) { return a.toString(); }) + ']'
   },
-  _hasHandler: function() {
-    return TimedItem.prototype._hasHandler.call(this) ||
+  _hasHandlers: function() {
+    return TimedItem.prototype._hasHandlers.call(this) ||
       (this._children.length > 0 &&
-        this._children.reduce(function(a, b) { return a || b._hasHandler() },
+        this._children.reduce(function(a, b) { return a || b._hasHandlers() },
           false));
   },
   _generateChildEventsForRange: function(localStart, localEnd, rangeStart,
