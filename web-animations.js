@@ -828,7 +828,7 @@ TimedItem.prototype = {
     var handlersLength = (this._handlers[type] || []).length;
     for (var i = 0; i <= handlersLength; i++) {
       if (onIndex === i) {
-        this._onHandlers[type].callback(event);
+        this._onHandlers[type].callback.call(this, event);
       }
       if (i < handlersLength) {
         this._handlers[type][i].call(this, event);
