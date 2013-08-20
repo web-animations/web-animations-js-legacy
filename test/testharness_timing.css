@@ -66,3 +66,10 @@ div.info pre {
   white-space: pre;
   font-family: monospace;
 }
+
+#debug {
+  width: 100%;
+  height: 400px;
+  overflow-y: scroll;
+  border: 1px solid black;
+}
