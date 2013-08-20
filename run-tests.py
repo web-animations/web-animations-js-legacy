@@ -477,6 +477,16 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                     mime_type='text/plain; charset=UTF-8',
                     eof=True)
 
+            if 'debug' in data and overall_status > 0:
+                output.status(
+                    test_id="%s:debug-log" % (test_id),
+                    test_status='fail',
+                    test_tags=[args.browser],
+                    file_name='traceback',
+                    file_bytes=data['debug'],
+                    mime_type='text/plain; charset=UTF-8',
+                    eof=True)
+
         # Take a screenshot of result if a failure occurred.
         if overall_status > 0 and args.virtual:
             time.sleep(1)
