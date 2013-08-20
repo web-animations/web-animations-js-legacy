@@ -604,7 +604,7 @@ function processResults(test, expected_failures) {
         expected_failure = browser_expected_failures[tname];
       }
     }
-    if (expected_failure !== null) {
+    if (expected_failure !== null && result.status != result.NOTRUN) {
       if (result.status != result.FAIL) {
         result.message = "Expected failure (" + expected_failure.message + "), actually " +
           {0: 'PASS', 2: 'TIMEOUT', 3:'NOTRUN'}[result.status] + " " +
