@@ -663,11 +663,14 @@ try:
             close_other_windows(browser, url)
 
         try:
-            if not browser.execute_script('return window.finished'):
-                time.sleep(1)
-                continue
-            else:
+            v = browser.execute_script('return window.finished')
+            if v:
                 break
+
+            status = browser.find_element_by_id('status-box').text.strip()
+            print "Still waiting tests to finish", repr(v), status
+            sys.stdout.flush()
+            time.sleep(1)
 
         # Deal with unexpected alerts, sometimes they are dismissed by
         # alternative means so we have to deal with that case too.
