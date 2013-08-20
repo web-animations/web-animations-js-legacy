@@ -333,6 +333,12 @@ function changeTestState(test, newState) {
   }
 
   var oldState = test.state;
+
+  // If we have FINISHED, don't go into the LOADED state
+  if (newState == 'LOADED' && oldState == 'FINISHED') {
+    return;
+  }
+
   if (typeof oldState != 'undefined') {
     var i = testStates[oldState].indexOf(test);
     testStates[oldState].splice(i, 1);
