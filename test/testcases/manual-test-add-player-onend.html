@@ -45,8 +45,6 @@ var element = document.querySelector('#target');
 var animation = new Animation(element, {left: '50px'}, 0.5);
 animation.addEventListener('end', function() {
   var nextAnimation = new Animation(element, {left: '100px'}, 0.5);
-  nextAnimation.addEventListener('start', function() {
-  });
   nextAnimation.addEventListener('end', function() {
     test.step(function() { assert_styles("#target", {left:'100px'}); });
     test.done();
