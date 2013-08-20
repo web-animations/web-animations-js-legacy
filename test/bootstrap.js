@@ -1234,8 +1234,8 @@ window.testharness_after_loaded = function() {
 
 };
 
-
 loadScript('../testharness/testharness.js', {coverage: false});
+document.write('<script type="text/javascript">window.testharness_after_loaded();</script>');
 loadCSS('../testharness/testharness.css');
 loadCSS('../testharness_timing.css');
 
@@ -1271,7 +1271,5 @@ if (testType() != 'unit') {
   window.performance.now = null;
   window.Date.now = testharness_timeline.now.bind(testharness_timeline);
 }
-
-document.write('<script type="text/javascript">window.testharness_after_loaded();</script>');
 
 })();
