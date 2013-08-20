@@ -30,7 +30,110 @@ div.anim {
 
 test(function() {
 
-var colorType = window._WebAnimationsTestingUtilities._types.colorType;
+function assert_object_equals(actual, expected, message) {
+    assert_equals(JSON.stringify(actual), JSON.stringify(expected), message);
+}
+function assert_shadow_equals(actual, expected, message) {
+  assert_not_equals(typeof actual, "undefined", "actual not undefined: " + message);
+  assert_equals(actual.length, expected.length, "actual and expected lengths match: " + message);
+  for (var i = 0; i < expected.length; i++) {
+    var a = actual[i];
+    var e = expected[i];
+
+    // hOffset and vOffset are always required
+    assert_object_equals(a["hOffset"], e["hOffset"], "hOffset matches: " + message);
+    assert_object_equals(a["vOffset"], e["vOffset"], "vOffset matches: " + message);
+
+    // Inset is always set
+    if (typeof e["inset"] != "undefined")
+      assert_equals(a["inset"], e["inset"], "inset matches: " + message);
+
+    if (typeof e["color"] != "undefined")
+      assert_array_equals(a["color"], e["color"], "color matches: " + message);
+
+    if (typeof e["blur"] != "undefined")
+      assert_object_equals(a["blur"], e["blur"], "blur matches: " + message);
+
+    if (typeof e["spread"] != "undefined")
+      assert_object_equals(a["spread"], e["spread"], "spread matches: " + message);
+  }
+}
+
+var shadowType = window._WebAnimationsTestingUtilities._types["textShadow"];
+
+// Test all the different color types as part of a shadow
+var expected = [{
+  color: [255, 0, 0, 1.0],
+  hOffset: {px: 10},
+  vOffset: {px: 15},
+  blur: {px: 5},
+  inset: false
+}];
+assert_shadow_equals(shadowType.fromCssValue("10px 15px 5px red"), expected, "10px 15px 5px red");
+assert_shadow_equals(shadowType.fromCssValue("10px 15px 5px rgba(255, 0, 0, 1.0)"), expected, "10px 15px 5px rgba(255, 0, 0, 1.0)");
+assert_shadow_equals(shadowType.fromCssValue("10px 15px 5px rgba(100%, 0, 0, 1.0)"), expected, "10px 15px 5px rgba(100%, 0, 0, 1.0)");
+assert_shadow_equals(shadowType.fromCssValue("10px 15px 5px rgb(255, 0, 0)"), expected, "10px 15px 5px rgb(255, 0, 0)");
+assert_shadow_equals(shadowType.fromCssValue("10px 15px 5px rgb(100%, 0, 0)"), expected, "10px 15px 5px rgb(100%, 0, 0)");
+assert_shadow_equals(shadowType.fromCssValue("10px 15px 5px hsl(0, 100%, 50%)"), expected, "10px 15px 5px hsl(0, 100%, 50%)");
+assert_shadow_equals(shadowType.fromCssValue("10px 15px 5px hsla(0, 100%, 50%, 1.0)"), expected, "10px 15px 5px hsla(0, 100%, 50%, 1.0)");
+assert_shadow_equals(shadowType.fromCssValue("10px 15px 5px #ff0000"), expected, "10px 15px 5px #ff0000");
+assert_shadow_equals(shadowType.fromCssValue("red 10px 15px 5px"), expected, "red 10px 15px 5px");
+assert_shadow_equals(shadowType.fromCssValue("rgba(255, 0, 0, 1.0) 10px 15px 5px"), expected, "rgba(255, 0, 0, 1.0) 10px 15px 5px");
+assert_shadow_equals(shadowType.fromCssValue("rgba(100%, 0, 0, 1.0) 10px 15px 5px"), expected, "rgba(100%, 0, 0, 1.0) 10px 15px 5px");
+assert_shadow_equals(shadowType.fromCssValue("rgb(255, 0, 0) 10px 15px 5px"), expected, "rgb(255, 0, 0) 10px 15px 5px");
+assert_shadow_equals(shadowType.fromCssValue("rgb(100%, 0, 0) 10px 15px 5px"), expected, "rgb(100%, 0, 0) 10px 15px 5px");
+assert_shadow_equals(shadowType.fromCssValue("hsl(0, 100%, 50%) 10px 15px 5px"), expected, "hsl(0, 100%, 50%) 10px 15px 5px");
+assert_shadow_equals(shadowType.fromCssValue("hsla(0, 100%, 50%, 1.0) 10px 15px 5px"), expected, "hsla(0, 100%, 50%, 1.0) 10px 15px 5px");
+assert_shadow_equals(shadowType.fromCssValue("#ff0000 10px 15px 5px"), expected, "#ff0000 10px 15px 5px");
+
+
+// [ <color>? <offset-x> <offset-y> <blur-radius>? ]
+// [ <offset-x> <offset-y> <blur-radius>? <color>? ]
+// [inset? && [ <offset-x> <offset-y> <blur-radius>? <spread-radius>? <color>? ] ]
+
+
+assert_shadow_equals(
+ shadowType.fromCssValue("10px 15px"), [{hOffset:{px: 10}, vOffset:{px: 15}}],
+ "just offsets");
+assert_shadow_equals(
+ shadowType.fromCssValue("10px 15px 5px"),
+ [{hOffset:{px: 10}, vOffset:{px: 15}, blur: {px: 5}}],
+ "no spread");
+
+// Test some "real world examples", taken from the MDN documentation
+assert_shadow_equals(
+ shadowType.fromCssValue("1px 2px 3px black, 0 0 1em blue, 0 0 0.2em blue"),
+ [{hOffset:{px: 1}, vOffset:{px: 2}, blur: {px: 3}, color: [0, 0, 0, 1.0]},
+  {hOffset:{"": 0}, vOffset:{"": 0}, blur: {em: 1}, color: [0, 0, 255, 1.0]},
+  {hOffset:{"": 0}, vOffset:{"": 0}, blur: {em: 0.2}, color: [0, 0, 255, 1.0]}],
+ "MDN Example 1");
+
+assert_shadow_equals(
+ shadowType.fromCssValue("rgba(0,0,0,0.1) -1px 0, rgba(0,0,0,0.1) 0 -1px, rgba(255,255,255,0.1) 1px 0, rgba(255,255,255,0.1) 0 1px, rgba(0,0,0,0.1) -1px -1px, rgba(255,255,255,0.1) 1px 1px"),
+ [{hOffset:{px: -1}, vOffset:{"": 0}, color: [0, 0, 0, 0.1]},
+  {hOffset:{"": 0}, vOffset:{px: -1}, color: [0, 0, 0, 0.1]},
+  {hOffset:{px: 1}, vOffset:{"": 0}, color: [255, 255, 255, 0.1]},
+  {hOffset:{"": 0}, vOffset:{px: 1}, color: [255, 255, 255, 0.1]},
+  {hOffset:{px: -1}, vOffset:{px: -1}, color: [0, 0, 0, 0.1]},
+  {hOffset:{px: 1}, vOffset:{px: 1}, color: [255, 255, 255, 0.1]}],
+ "MDN Example 2");
+
+assert_shadow_equals(
+ shadowType.fromCssValue("64px 64px 12px 40px rgba(0,0,0,0.4), 12px 12px 0px 8px rgba(0,0,0,0.4) inset"),
+ [{hOffset:{px: 64}, vOffset:{px: 64}, blur: {px: 12}, spread: {px: 40}, color: [0, 0, 0, 0.4]},
+  {hOffset:{px: 12}, vOffset:{px: 12}, blur: {px: 0}, spread: {px: 8}, color: [0, 0, 0, 0.4], inset: true}],
+ "MDN Example 3");
+
+assert_shadow_equals(
+ shadowType.fromCssValue("10px 10px 5px #888"),
+ [{hOffset:{px: 10}, vOffset:{px: 10}, blur: {px: 5}, color: [136, 136, 136, 1.0]}],
+ "MDN Example 4");
+
+}, "shadowType.cssFromValue");
+
+test(function() {
+
+var colorType = window._WebAnimationsTestingUtilities._types.color;
 
 assert_array_equals(colorType.fromCssValue("#000000"), [0, 0, 0, 1.0], "#000000");
 assert_array_equals(colorType.fromCssValue("#000"), [0, 0, 0, 1.0], "#000");
