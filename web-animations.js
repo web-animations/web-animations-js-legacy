@@ -821,19 +821,21 @@ TimedItem.prototype = {
         isDefinedAndNotNull(this._onHandlers[type]);
   },
   _callHandlers: function(type, event) {
-    var onIndex = -1;
+    var callbackList;
+    if (isDefinedAndNotNull(this._handlers[type])) {
+      callbackList = this._handlers[type].slice();
+    } else {
+      callbackList = [];
+    }
     if (isDefinedAndNotNull(this._onHandlers[type])) {
-      onIndex = this._onHandlers[type].index;
+      callbackList.splice(this._onHandlers[type].index, 0,
+          this._onHandlers[type].callback);
     }
-    var handlersLength = (this._handlers[type] || []).length;
-    for (var i = 0; i <= handlersLength; i++) {
-      if (onIndex === i) {
-        this._onHandlers[type].callback.call(this, event);
+    setTimeout(function() {
+      for (var i = 0; i < callbackList.length; i++) {
+        callbackList[i].call(this, event);
       }
-      if (i < handlersLength) {
-        this._handlers[type][i].call(this, event);
-      }
-    }
+    }, 0);
   },
   _generateChildEventsForRange: function() { },
   _toSubRanges: function(fromTime, toTime, iterationTimes) {
