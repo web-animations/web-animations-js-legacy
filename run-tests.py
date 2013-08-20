@@ -696,12 +696,21 @@ finally:
     if args.browser == "Chrome":
         shutil.copy(os.path.join(user_data_dir, "chrome_debug.log"), ".")
 
-while args.dontexit and browser.window_handles:
-    time.sleep(1)
-
 if summary.testsRun == 0:
    print
    print "FAIL: No tests run!"
+
+sys.stdout.flush()
+sys.stderr.flush()
+
+while args.dontexit and browser.window_handles:
+    print "Waiting for you to close the browser...."
+    sys.stdout.flush()
+    sys.stderr.flush()
+    time.sleep(1)
+
+sys.stdout.flush()
+sys.stderr.flush()
 
 if summary.wasSuccessful() and summary.testsRun > 0 and not major_failure:
     sys.exit(0)
