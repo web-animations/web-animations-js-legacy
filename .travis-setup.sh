@@ -49,4 +49,4 @@ Firefox)
 	;;
 esac
 
-pip install -r .requirements --use-mirrors
+pip install -r .requirements --use-mirrors || pip install -r .requirements
