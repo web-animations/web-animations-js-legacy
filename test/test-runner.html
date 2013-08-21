@@ -699,11 +699,19 @@ function processResults(test, expected_failures) {
   }
   test.querySelector('.log').appendChild(newResultsDiv);
 
+  var debug = '';
+  try {
+    debug = test.querySelector('iframe').contentDocument.getElementById('debug').innerText;
+  } catch (e) {
+    debug = 'No debug... :(';
+  }
+
   if (counts.total > 0) {
     test.results_processed = {
       type: 'result',
       testName: test.id,
       results: results,
+      debug: debug
     };
 
     if (counts.failed == 0) {
