@@ -62,6 +62,14 @@ li.fail {
   color: red;
 }
 
+tbody.timeout {
+  color: yellow;
+}
+
+li.timeout {
+  color: yellow;
+}
+
 
 /* Pass styles */
 tbody.pass {
@@ -77,6 +85,14 @@ tbody.pass-expected-failure {
 }
 
 li.pass-expected-failure {
+  color: #00aa00;
+}
+
+tbody.skipped {
+  color: #00aa00;
+}
+
+li.skipped {
   color: #00aa00;
 }
 
@@ -604,7 +620,7 @@ function processResults(test, expected_failures) {
         expected_failure = browser_expected_failures[tname];
       }
     }
-    if (expected_failure !== null) {
+    if (expected_failure !== null && result.status != result.NOTRUN) {
       if (result.status != result.FAIL) {
         result.message = "Expected failure (" + expected_failure.message + "), actually " +
           {0: 'PASS', 2: 'TIMEOUT', 3:'NOTRUN'}[result.status] + " " +
@@ -664,6 +680,8 @@ function processResults(test, expected_failures) {
     if (counts.failed == 0) {
       if (counts.expected_failed > 0) {
         test.className = 'pass-expected-failure';
+      } else if (counts.skipped > 0) {
+        test.className = 'skipped';
       } else {
         test.className = 'pass';
       }
