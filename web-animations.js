@@ -158,7 +158,7 @@ Timing._defineProperty = function(prop) {
       // for each property
       if (prop === 'easing') {
         // Cached timing function may be invalid now.
-        delete this._timingFunction;
+        this._invalidateTimingFunction();
       }
       this._changeHandler();
     }
