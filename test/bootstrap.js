@@ -558,7 +558,14 @@ TestTimelineGroup.prototype.call = function() {
     var status_ = statuses[statuses.length - callbacks.length - 1];
 
     if (typeof callback == 'function') {
-      callback();
+      try {
+        callback();
+      } catch (e) {
+        // On IE the only way to get the real stack is to do this
+        window.onerror(e.message, e.fileName, e.lineNumber, e);
+        // On other browsers we want to throw the error later
+        setTimeout(function () { throw e; }, 0);
+      }
     } else {
       var result = callback.step(callback.f);
       callback.done();
@@ -678,8 +685,11 @@ RealtimeRunner.prototype.animationFrame_ = function(timestamp) {
 
   // Do we still have time to go?
   if (virtualAnimationTime < endTime) {
-    this.timeline.setTime(virtualAnimationTime);
-    this.boundRequestAnimationFrame(this.animationFrame_);
+    try {
+      this.timeline.setTime(virtualAnimationTime);
+    } finally {
+      this.boundRequestAnimationFrame(this.animationFrame_);
+    }
 
   } else {
     // Have we gone past endTime_? Force the harness to its endTime_.
@@ -918,7 +928,14 @@ TestTimeline.prototype.animationFrame = function(millis) {
   callbacks.reverse();
   this.animationFrameCallbacks = [];
   for (var i = 0; i < callbacks.length; i++) {
-    callbacks[i](millis);
+    try {
+      callbacks[i](millis);
+    } catch (e) {
+      // On IE the only way to get the real stack is to do this
+      window.onerror(e.message, e.fileName, e.lineNumber, e);
+      // On other browsers we want to throw the error later
+      setTimeout(function () { throw e; }, 0);
+    }
   }
 };
 
@@ -1130,13 +1147,17 @@ window.testharness_after_loaded = function() {
    */
   var pageerror_test = async_test('Page contains no errors');
 
-  window.onerror = function(msg, url, line) {
-    var msg = 'Error in ' + url + '\n' +
+  window.onerror = function(msg, url, line, e) {
+    var msg = '\nError in ' + url + '\n' +
         'Line ' + line + ': ' + msg + '\n';
+
+    if (typeof e != "undefined") {
+      msg += e.stack;
+    }
 
     pageerror_test.is_done = true;
     pageerror_test.step(function() { 
-      assert_true(false, msg);
+      throw new AssertionError(msg);
     });
     pageerror_test.is_done = false;
   };
