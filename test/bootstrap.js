@@ -907,6 +907,10 @@ TestTimeline.prototype.setTime = function(millis) {
   }
 
   this.updateGUI();
+
+  if (millis >= this.endTime_) {
+    this.done();
+  }
 };
 
 /**
@@ -1033,6 +1037,9 @@ TestTimeline.prototype.start = function () {
   }.bind(this.timelinebar);
 };
 
+TestTimeline.prototype.done = function () {
+  done();
+};
 
 TestTimeline.prototype.autorun = function() {
   this.autorun_ = true;
@@ -1138,7 +1145,9 @@ window.testharness_after_loaded = function() {
   /**
    * These steps needs to occur after testharness is loaded.
    */
-  setup(function() {}, {explicit_timeout: true});
+  setup(function() {}, {
+      explicit_timeout: true,
+      explicit_done: ((typeof window.testharness_timeline) !== 'undefined')});
 
   /**
    * Create an testharness test which makes sure the page contains no
