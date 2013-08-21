@@ -585,7 +585,6 @@ TimedItem.prototype = {
             this.specified.iterationStart + this.specified._iterations(),
             1.0) :
         this._modulusWithClosedOpenRange(this.specified.iterationStart, 1.0));
-    var timingFunction = this.specified._timingFunction(this);
     this._timeFraction = (
         this._isCurrentDirectionForwards() ?
         unscaledFraction :
@@ -593,9 +592,8 @@ TimedItem.prototype = {
     ASSERT_ENABLED && console.assert(
         this._timeFraction >= 0.0 && this._timeFraction <= 1.0,
         'Time fraction should be in the range [0, 1]');
-    if (timingFunction) {
-      this._timeFraction = timingFunction.scaleTime(this._timeFraction);
-    }
+    this._timeFraction =
+        this.specified._timingFunction(this).scaleTime(this._timeFraction);
   },
   _getAdjustedAnimationTime: function(animationTime) {
     var startOffset =
@@ -634,10 +632,8 @@ TimedItem.prototype = {
         this._timeFraction + ' ' + this._iterationTime + ' ' +
         this.duration + ' ' + isAtEndOfIterations + ' ' +
         unscaledIterationTime);
-    var timingFunction = this.specified._timingFunction(this);
-    if (timingFunction) {
-      this._timeFraction = timingFunction.scaleTime(this._timeFraction);
-    }
+    this._timeFraction =
+        this.specified._timingFunction(this).scaleTime(this._timeFraction);
     this._iterationTime = this._timeFraction * this.duration;
   },
   _updateTimeMarkers: function() {
@@ -2338,6 +2334,18 @@ TimingFunction.createFromString = function(spec, timedItem) {
 
 
 /** @constructor */
+var LinearTimingFunction = function() {
+};
+
+LinearTimingFunction.prototype = createObject(TimingFunction.prototype, {
+  scaleTime: function(fraction) {
+    return fraction;
+  }
+});
+
+
+
+/** @constructor */
 var CubicBezierTimingFunction = function(spec) {
   this.params = spec;
   this.map = [];
@@ -2392,7 +2400,7 @@ StepTimingFunction.prototype = createObject(TimingFunction.prototype, {
 });
 
 var presetTimingFunctions = {
-  'linear': null,
+  'linear': new LinearTimingFunction(),
   'ease': new CubicBezierTimingFunction([0.25, 0.1, 0.25, 1.0]),
   'ease-in': new CubicBezierTimingFunction([0.42, 0, 1.0, 1.0]),
   'ease-out': new CubicBezierTimingFunction([0, 0, 0.58, 1.0]),
