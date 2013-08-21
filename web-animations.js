@@ -2325,7 +2325,7 @@ TimingFunction.createFromString = function(spec, timedItem) {
   var bezierMatch =
       /cubic-bezier\(([^,]*),([^,]*),([^,]*),([^)]*)\)/.exec(spec);
   if (bezierMatch) {
-    return new SplineTimingFunction([
+    return new CubicBezierTimingFunction([
       Number(bezierMatch[1]),
       Number(bezierMatch[2]),
       Number(bezierMatch[3]),
@@ -2338,7 +2338,7 @@ TimingFunction.createFromString = function(spec, timedItem) {
 
 
 /** @constructor */
-var SplineTimingFunction = function(spec) {
+var CubicBezierTimingFunction = function(spec) {
   this.params = spec;
   this.map = [];
   for (var ii = 0; ii <= 100; ii += 1) {
@@ -2352,7 +2352,7 @@ var SplineTimingFunction = function(spec) {
   }
 };
 
-SplineTimingFunction.prototype = createObject(TimingFunction.prototype, {
+CubicBezierTimingFunction.prototype = createObject(TimingFunction.prototype, {
   scaleTime: function(fraction) {
     var fst = 0;
     while (fst !== 100 && fraction > this.map[fst][0]) {
@@ -2393,10 +2393,10 @@ StepTimingFunction.prototype = createObject(TimingFunction.prototype, {
 
 var presetTimingFunctions = {
   'linear': null,
-  'ease': new SplineTimingFunction([0.25, 0.1, 0.25, 1.0]),
-  'ease-in': new SplineTimingFunction([0.42, 0, 1.0, 1.0]),
-  'ease-out': new SplineTimingFunction([0, 0, 0.58, 1.0]),
-  'ease-in-out': new SplineTimingFunction([0.42, 0, 0.58, 1.0]),
+  'ease': new CubicBezierTimingFunction([0.25, 0.1, 0.25, 1.0]),
+  'ease-in': new CubicBezierTimingFunction([0.42, 0, 1.0, 1.0]),
+  'ease-out': new CubicBezierTimingFunction([0, 0, 0.58, 1.0]),
+  'ease-in-out': new CubicBezierTimingFunction([0.42, 0, 0.58, 1.0]),
   'step-start': new StepTimingFunction(1, 'start'),
   'step-middle': new StepTimingFunction(1, 'middle'),
   'step-end': new StepTimingFunction(1, 'end')
