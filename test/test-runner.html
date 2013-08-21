@@ -334,8 +334,9 @@ function changeTestState(test, newState) {
 
   var oldState = test.state;
 
-  // If we have FINISHED, don't go into the LOADED state
-  if (newState == 'LOADED' && oldState == 'FINISHED') {
+  // If we have already posted, we should never leave...
+  if (oldState == 'POSTED') {
+    throw 'Unexpected state change! Trying to leave POSTED state to ' + newState;
     return;
   }
 
@@ -389,7 +390,8 @@ function changeTestState(test, newState) {
       timingInfo.textContent = '(Load only)';
     }
 
-    processResults(test, test.querySelector('iframe').contentWindow.expected_failures);
+    var test_iframe = test.querySelector('iframe');
+    processResults(test, test_iframe.contentWindow.expected_failures);
 
     break;
 
@@ -494,6 +496,13 @@ window.onload = function createTestRunners() {
       });
   }
 
+  function testSort(a, b) {
+    a = a.replace('.', '-');
+    b = b.replace('.', '-');
+    return a.localeCompare(b);
+  }
+  tests.sort(testSort);
+
   for (var i = 0; i < tests.length; i++) {
     var testName = tests[i];
     var testURL = 'testcases/' + testName;
@@ -505,8 +514,11 @@ window.onload = function createTestRunners() {
 
     document.querySelector('#results').appendChild(test);
     test.querySelector('iframe').contentWindow.onload = function() {
-      changeTestState(this, 'LOADED');
-      runTestsIfLoaded();
+      // You can get multiple onload events, only deal with the first one.
+      if (this.state == 'LOADING') {
+        changeTestState(this, 'LOADED');
+        runTestsIfLoaded();
+      }
     }.bind(test);
   }
 
@@ -533,6 +545,11 @@ function runTests() {
   for (var i in testStates['RUNNING']) {
     var test = testStates['RUNNING'][i];
     if (now() - test.start > 5000) {
+      // Only way to stop all the javascript and anything else running in the
+      // test is to clear the document.
+      var test_iframe = test.querySelector('iframe');
+      test_iframe.src = "data:text/html;charset=utf-8,<!DOCTYPE html><html><body>TIMEOUT</body></html>";
+
       test.results_raw = [];
       changeTestState(test, 'FINISHED');
     }
@@ -546,7 +563,13 @@ function runTests() {
 window.addEventListener(
   'message',
   function(evt) {
-    var testname = evt.source.location.pathname.split('/').pop().replace('.', '-');
+    // If the test timed out, this will fail with a cross-origin error.
+    try {
+      var testname = evt.source.location.pathname.split('/').pop().replace('.', '-');
+    } catch (e) {
+      return;
+    }
+
     var test = document.getElementById(testname);
 
     // We only respond to complete as postMessage doesn't guarantee order so
@@ -554,8 +577,14 @@ window.addEventListener(
     if (evt.data['type'] != 'complete')
        return;
 
-    test.results_raw = evt.data['tests'];
-    changeTestState(test, 'FINISHED');
+    // Try changing to state FINISHED, but this message may be after the a
+    // timeout or transition.
+    try {
+      test.results_raw = evt.data['tests'];
+      changeTestState(test, 'FINISHED');
+    } catch (e) {
+      console.warn(e);
+    }
   },
   false);
 
