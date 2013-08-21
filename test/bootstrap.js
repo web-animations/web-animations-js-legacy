@@ -17,6 +17,39 @@
 
 (function() {
 
+var log_element = document.createElement('pre');
+log_element.id = 'debug';
+
+var log_element_parent = setInterval(function() {
+  if (log_element.parentNode == null && document.body != null) {
+     document.body.appendChild(log_element);
+     clearInterval(log_element_parent);
+  }
+}, 100);
+
+function log() {
+
+  var output = [];
+  for (var i = 0; i < arguments.length; i++) {
+     if (typeof arguments[i] === "function") {
+       arguments[i] = '' + arguments[i];
+     }
+     if (typeof arguments[i] === "string") {
+       var bits = arguments[i].replace(/\s*$/, '').split('\n');
+       if (bits.length > 5) {
+         bits.splice(3, bits.length-5, '...');
+       }
+       output.push(bits.join('\n'));
+     } else if (typeof arguments[i] === "object" && typeof arguments[i].name === "string") {
+       output.push('"'+arguments[i].name+'"');
+     } else {
+       output.push(JSON.stringify(arguments[i], undefined, 2));
+     }
+     output.push(' ');
+  }
+  log_element.appendChild(document.createTextNode(output.join('') + '\n'));
+}
+
 var thisScript = document.querySelector("script[src$='bootstrap.js']");
 var coverageMode = Boolean(parent.window.__coverage__) || /coverage/.test(window.location.hash);
 
@@ -558,6 +591,7 @@ TestTimelineGroup.prototype.call = function() {
     var status_ = statuses[statuses.length - callbacks.length - 1];
 
     if (typeof callback == 'function') {
+      log('TestTimelineGroup', 'calling function', callback);
       try {
         callback();
       } catch (e) {
@@ -567,6 +601,7 @@ TestTimelineGroup.prototype.call = function() {
         setTimeout(function () { throw e; }, 0);
       }
     } else {
+      log('TestTimelineGroup', 'calling test', callback);
       var result = callback.step(callback.f);
       callback.done();
     }
@@ -722,6 +757,7 @@ RealtimeRunner.prototype.pause = function() {
  * @constructor
  */
 function TestTimeline(everyFrame) {
+  log('TestTimeline', 'constructor', everyFrame);
   /**
    * Stores the events which are upcoming.
    *
@@ -828,6 +864,7 @@ TestTimeline.prototype.sort_ = function() {
  *   be called.
  */
 TestTimeline.prototype.schedule = function(callback, millis) {
+  log('TestTimeline', 'schedule', millis, callback);
   if (millis < this.currentTime_) {
     // Can't schedule something in the past?
     return;
@@ -863,6 +900,7 @@ TestTimeline.prototype.schedule = function(callback, millis) {
  * Return the current time in milliseconds.
  */
 TestTimeline.prototype.now = function() {
+  log('TestTimeline', 'now', Math.max(this.currentTime_, 0));
   return Math.max(this.currentTime_, 0);
 };
 
@@ -872,6 +910,7 @@ TestTimeline.prototype.now = function() {
  * @param {number} millis Time in milliseconds to set the current time too.
  */
 TestTimeline.prototype.setTime = function(millis) {
+  log('TestTimeline', 'setTime', millis);
   // Time is going backwards, we actually have to reset and go forwards as
   // events can cause the creation of more events.
   if (this.currentTime_ > millis) {
@@ -897,6 +936,7 @@ TestTimeline.prototype.setTime = function(millis) {
 
     // Call the callback
     if (this.currentTime_ != moveTo) {
+      log('TestTimeline', 'setting time to', moveTo);
       this.currentTime_ = moveTo;
       this.animationFrame(this.currentTime_);
     }
@@ -932,6 +972,7 @@ TestTimeline.prototype.animationFrame = function(millis) {
   callbacks.reverse();
   this.animationFrameCallbacks = [];
   for (var i = 0; i < callbacks.length; i++) {
+    log('TestTimeline raf callback', callbacks[i], millis);
     try {
       callbacks[i](millis);
     } catch (e) {
@@ -1038,6 +1079,7 @@ TestTimeline.prototype.start = function () {
 };
 
 TestTimeline.prototype.done = function () {
+  log('TestTime', 'done');
   done();
 };
 
@@ -1049,6 +1091,7 @@ TestTimeline.prototype.autorun = function() {
 
 
 function testharness_timeline_setup() {
+  log('testharness_timeline_setup');
   testharness_timeline.createGUI(document.getElementsByTagName('body')[0]);
   testharness_timeline.start();
   testharness_timeline.updateGUI();
@@ -1142,6 +1185,7 @@ function at(seconds, f) {
 }
 
 window.testharness_after_loaded = function() {
+  log('testharness_after_loaded');
   /**
    * These steps needs to occur after testharness is loaded.
    */
