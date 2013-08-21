@@ -2897,44 +2897,53 @@ var shadowType = {
   toCssValue: function(value) {
     return value.map(this._toCssValueSingle).join(', ');
   },
-  // TODO: This should handle the case where the color comes before the
-  // lengths.
   fromCssValue: function(value) {
-    var shadows = value.split(/\s*,\s*/);
+    var shadowRE = /(([^(,]+(\([^)]*\))?)+)/g;
+    var match;
+    var shadows = [];
+    while (match = shadowRE.exec(value)) {
+      shadows.push(match[0]);
+    }
+
     var result = shadows.map(function(value) {
       if (value === 'none') {
         return shadowType.zero();
       }
       value = value.replace(/^\s+|\s+$/g, '');
-      var parts = value.split(/\s+/);
-      if (parts.length < 2 || parts.length > 6) {
+
+      var partsRE = /([^ (]+(\([^)]*\))?)/g
+      var parts = [];
+      while (match = partsRE.exec(value)) {
+        parts.push(match[0]);
+      }
+
+      if (parts.length < 2 || parts.length > 7) {
         return undefined;
       }
       var result = {
         inset: false
       };
-      if (parts[0] == 'inset') {
-        parts.shift();
-        result.inset = true;
-      }
-      var color;
+
       var lengths = [];
       while (parts.length) {
         var part = parts.shift();
-        color = colorType.fromCssValue(part);
+
+        var length = lengthType.fromCssValue(part);
+        if (length) {
+          lengths.push(length);
+          continue;
+        }
+
+        var color = colorType.fromCssValue(part);
         if (color) {
           result.color = color;
-          if (parts.length) {
-            return undefined;
-          }
-          break;
         }
-        var length = lengthType.fromCssValue(part);
-        if (!length) {
-          return undefined;
+
+        if (part == 'inset') {
+          result.inset = true;
         }
-        lengths.push(length);
       }
+
       if (lengths.length < 2 || lengths.length > 4) {
         return undefined;
       }
@@ -2946,11 +2955,9 @@ var shadowType = {
       if (lengths.length > 3) {
         result.spread = lengths[3];
       }
-      if (color) {
-        result.color = color;
-      }
       return result;
     });
+
     return result.every(isDefined) ? result : undefined;
   }
 };
@@ -4648,9 +4655,7 @@ window._WebAnimationsTestingUtilities = {
   _constructorToken : constructorToken,
   _positionListType: positionListType,
   _hsl2rgb: hsl2rgb,
-  _types: {
-    colorType: colorType,
-  },
+  _types: propertyTypes,
   _knownPlayers: PLAYERS,
 };
 
