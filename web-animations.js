@@ -773,8 +773,8 @@ TimedItem.prototype = {
     }
   },
   _getOnHandler: function(type) {
-    if (isDefinedAndNotNull(this._onHandler[type])) {
-      return this._onHandler[type].func;
+    if (isDefinedAndNotNull(this._onHandlers[type])) {
+      return this._onHandlers[type].func;
     }
     return null;
   },
