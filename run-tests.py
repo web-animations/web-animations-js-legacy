@@ -493,10 +493,15 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                     eof=True)
 
         # Take a screenshot of result if a failure occurred.
-        if overall_status > 0 and args.virtual:
+        if overall_status > 0 and (args.virtual or args.browser == "Remote"):
             time.sleep(1)
+
             screenshot = test_id + '.png'
-            disp.grab().save(screenshot)
+            if args.virtual:
+                disp.grab().save(screenshot)
+            elif args.browser == "Remote":
+                global browser
+                browser.save_screenshot(screenshot)
 
             if args.upload and not already_failed:
                 form = MultiPartForm()
@@ -522,14 +527,28 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         self.wfile.write(response)
         self.wfile.close()
 
-httpd = SocketServer.TCPServer(
-    ("127.0.0.1", 0),  # Bind to any port on localhost
-    ServerHandler)
+if args.sauce:
+    port = 55001
+else:
+    port = 0  # Bind to any port on localhost
+
+while True:
+    try:
+        httpd = SocketServer.TCPServer(
+            ("127.0.0.1", port),
+            ServerHandler)
+        break
+    except socket.error as e:
+      print e
+      time.sleep(5)
+
+port = httpd.socket.getsockname()[-1]
+print "Serving at", port
+
 httpd_thread = threading.Thread(target=httpd.serve_forever)
 httpd_thread.daemon = True
 httpd_thread.start()
 
-port = httpd.socket.getsockname()[-1]
 
 # Start up a virtual display, useful for testing on headless servers.
 # -----------------------------------------------------------------------------
@@ -626,8 +645,8 @@ elif args.browser == "Remote":
     driver_arguments['desired_capabilities'] = caps
 
 major_failure = False
+browser = None
 try:
-    browser = None
     try:
         if args.verbose:
             print driver_arguments

@@ -61,7 +61,11 @@ function assertEventsMatch(anim, events, expectations) {
   for (var i = 0; i < expectations.length; i++) {
     expectations[i].target = expectations[i].target(anim);
     for (var key in expectations[i]) {
-      assert_equals(events[i][key], expectations[i][key], i + ': ' + key);
+      if (typeof expectations[i][key] == "number") {
+        assert_approx_equals(events[i][key], expectations[i][key], 1e-6, i + ': ' + key);
+      } else {
+        assert_equals(events[i][key], expectations[i][key], i + ': ' + key);
+      }
     }
   }
 }
