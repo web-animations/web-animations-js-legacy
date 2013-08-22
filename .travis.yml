@@ -34,7 +34,7 @@ script:
   - if [ x$BROWSER == "xRemote" -a x$SAUCE_ACCESS_KEY == "x" ]; then
       true;
     else
-      echo python run-tests.py -a $ARGS | bash;
+      echo ./run-tests.sh $ARGS | bash;
     fi
 
 after_failure:

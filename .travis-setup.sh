@@ -10,7 +10,7 @@ ls -l /dev/shm
 sudo apt-get update --fix-missing
 
 # Install python-imaging from the environment rather then build it.
-# If the below fails, pip will build it via the .requirements
+# If the below fails, pip will build it via the requirements.txt
 sudo apt-get install python-imaging
 VIRTUAL_ENV_site_packages=$(echo $VIRTUAL_ENV/lib/*/site-packages)
 VIRTUAL_ENV_python_version=$(echo $VIRTUAL_ENV_site_packages | sed -e's@.*/\(.*\)/site-packages@\1@')
@@ -52,4 +52,5 @@ Firefox)
 	;;
 esac
 
-pip install -r .requirements --use-mirrors || pip install -r .requirements
+R=tools/python/requirements.txt
+pip install -r $R --use-mirrors || pip install -r $R
