@@ -2,6 +2,8 @@ testtools>=0.9.30
 python-subunit # subunit
 selenium
 
+-e svn+http://closure-linter.googlecode.com/svn/trunk/#egg=closer-linter
+
 # Requirements for using -x
 pyvirtualdisplay
 pyscreenshot

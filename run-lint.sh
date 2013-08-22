@@ -12,4 +12,8 @@ if [ x$VIRTUAL_ENV == x"" ]; then
   cd ../..
 fi
 
-exec python tools/python/run-tests.py "$@"
+# Comment out the (function() {} ) wrapper
+sed -e'17s-^-//-' -e'$s-^-//-' web-animations.js > web-animations-4lint.js
+
+gjslint --summary --nojsdoc --strict web-animations-4lint.js
+exit $?
