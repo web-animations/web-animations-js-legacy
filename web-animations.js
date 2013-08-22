@@ -959,7 +959,6 @@ var TimingEvent = function(token, target, type, localTime, timelineTime, iterati
   }
   this._target = target;
   this._type = type;
-  this.returnValue = true;
   this.localTime = localTime;
   this.timelineTime = timelineTime;
   this.iterationIndex = iterationIndex;
@@ -991,6 +990,11 @@ TimingEvent.prototype = Object.create(Event.prototype, {
     get: function() {
       return 0;
     },
+  },
+  returnValue: {
+    get: function() {
+      return true;
+    }
   },
   type: {
     get: function() {
