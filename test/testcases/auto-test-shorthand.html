@@ -56,6 +56,18 @@ var expected_failures = {
     firefox: true,
     message: "Floating point issues."
   },
+  '/#((?!(borderWidth|borderRadius|margin|padding)).*) at t=(0|0.5|1|1.5|2)s/': {
+    msie: true,
+    message: "IE returns rgba."
+  },
+  '/#borderWidth at t=(0.5|1|1.5)s/': {
+    msie: true,
+    message: "IE returns rgba."
+  },
+  '/#borderRadius at t=(1|1.5)s/': {
+    msie: true,
+    message: "IE returns rgba."
+  }
 };
 </script>
 <script src="../bootstrap.js"></script>

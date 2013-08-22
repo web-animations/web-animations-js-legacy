@@ -959,7 +959,6 @@ var TimingEvent = function(token, target, type, localTime, timelineTime, iterati
   }
   this._target = target;
   this._type = type;
-  this.cancelBubble = false;
   this.returnValue = true;
   this.localTime = localTime;
   this.timelineTime = timelineTime;
@@ -974,6 +973,11 @@ TimingEvent.prototype = Object.create(Event.prototype, {
     },
   },
   cancelable: {
+    get: function() {
+      return false;
+    },
+  },
+  cancelBubble: {
     get: function() {
       return false;
     },

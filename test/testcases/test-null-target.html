@@ -28,6 +28,14 @@ limitations under the License.
     }
 </style>
 <div class="anim" id="a"></div>
+<script>
+var expected_failures = {
+  '/.* at t=0.8s/': {
+    msie: true,
+    message: "Floating point issues."
+  }
+};
+</script>
 <script src="../bootstrap.js"></script>
 <script>
   "use strict";

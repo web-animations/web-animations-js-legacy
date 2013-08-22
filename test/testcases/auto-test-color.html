@@ -78,6 +78,14 @@ All three boxes should end up the same color as the outline.
   <div id="g" class="anim"></div>
 </div>
 
+<script>
+var expected_failures = {
+  '/Auto .*/': {
+    msie: true,
+    message: "IE returns rgba always."
+  }
+};
+</script>
 <script src="../bootstrap.js"></script>
 <script>
 "use strict";
