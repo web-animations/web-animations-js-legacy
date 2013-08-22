@@ -457,7 +457,7 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 test_id="CRITICAL-FAILURE",
                 test_status='fail',
                 test_tags=[args.browser],
-                file_name='message',
+                file_name='traceback',
                 file_bytes=msg,
                 mime_type='text/plain; charset=UTF-8',
                 eof=True)
@@ -467,13 +467,18 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 info = dict(result)
                 info.pop('_structured_clone', None)
 
+                if not isinstance(result['message'], (str, unicode)):
+                    msg = str(result['message'])
+                else:
+                    msg = result['message']
+
                 overall_status += result['status']
                 output.status(
                     test_id="%s:%s" % (test_id, result['name']),
                     test_status=self.STATUS[result['status']],
                     test_tags=[args.browser],
-                    file_name='message',
-                    file_bytes=repr(result['message']),
+                    file_name='traceback',
+                    file_bytes=msg,
                     mime_type='text/plain; charset=UTF-8',
                     eof=True)
 
@@ -663,11 +668,14 @@ try:
             close_other_windows(browser, url)
 
         try:
-            if not browser.execute_script('return window.finished'):
-                time.sleep(1)
-                continue
-            else:
+            v = browser.execute_script('return window.finished')
+            if v:
                 break
+
+            status = browser.find_element_by_id('status-box').text.strip()
+            print "Still waiting tests to finish", repr(v), status
+            sys.stdout.flush()
+            time.sleep(1)
 
         # Deal with unexpected alerts, sometimes they are dismissed by
         # alternative means so we have to deal with that case too.
@@ -696,12 +704,21 @@ finally:
     if args.browser == "Chrome":
         shutil.copy(os.path.join(user_data_dir, "chrome_debug.log"), ".")
 
-while args.dontexit and browser.window_handles:
-    time.sleep(1)
-
 if summary.testsRun == 0:
    print
    print "FAIL: No tests run!"
+
+sys.stdout.flush()
+sys.stderr.flush()
+
+while args.dontexit and browser.window_handles:
+    print "Waiting for you to close the browser...."
+    sys.stdout.flush()
+    sys.stderr.flush()
+    time.sleep(1)
+
+sys.stdout.flush()
+sys.stderr.flush()
 
 if summary.wasSuccessful() and summary.testsRun > 0 and not major_failure:
     sys.exit(0)
