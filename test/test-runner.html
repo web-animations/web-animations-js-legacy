@@ -107,6 +107,7 @@ tbody.no-tests {
 
 <div id=status-box>
 <h1 id=status>Pending</h1>
+Tests: <span id=tests></span>
 Loading: <span id=loading></span> (<span id=loaded></span>)
 Running: <span id=running></span> (<span id=finished></span>)
 Posting: <span id=posting></span> (<span id=posted></span>)
@@ -455,6 +456,8 @@ function changeTestState(test, newState) {
  */
 /* @type {Element} */ var statusElement = document.querySelector('#status');
 
+/* @type {Element} */ var testElement = document.querySelector('#tests');
+
 /* @type {Element} */ var loadingElement = document.querySelector('#loading');
 /* @type {Element} */ var loadedElement = document.querySelector('#loaded');
 
@@ -468,6 +471,8 @@ function changeTestState(test, newState) {
  * Update the status dialog with information about the current status.
  */
 function updateStatus() {
+  testElement.textContent = tests.length;
+
   loadingElement.textContent = testStates['LOADING'].length;
   loadedElement.textContent = testStates['LOADED'].length;
 
