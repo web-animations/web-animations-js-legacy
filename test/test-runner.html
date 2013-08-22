@@ -278,7 +278,7 @@ function createTestRows(testName, testURL) {
   return tableGroup;
 }
 
-/* @type {?number} */ var intervalId = null;
+/* @type {?number} */ var runTestsId = null;
 
 /**
  * Checks all the tests are in the loaded state and then kicks of running
@@ -288,8 +288,8 @@ function runTestsIfLoaded() {
   if (testStates['LOADING'].length > 0)
     return;
 
-  if (intervalId == null) {
-    intervalId = window.setInterval(runTests, 10);
+  if (runTestsId == null) {
+    runTestsId = window.setInterval(runTests, 10);
   }
 }
 
@@ -448,8 +448,6 @@ function changeTestState(test, newState) {
     }
     break;
   }
-
-  updateStatus();
 }
 
 /**
@@ -488,13 +486,16 @@ function updateStatus() {
   } else if (testStates['POSTED'].length == tests.length) {
     statusElement.textContent = 'Finished';
 
-    window.clearInterval(intervalId);
+    window.clearInterval(updateStatusId);
+    window.clearInterval(runTestsId);
     window.finished = true;
     if (window.__coverage__) {
       generateCoverageReport();
     }
   }
 }
+
+/* @type {?number} */ var updateStatusId = setInterval(updateStatus, 100);
 
 
 var testRunners = [];
