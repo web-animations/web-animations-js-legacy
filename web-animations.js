@@ -1038,7 +1038,6 @@ var isCustomAnimationEffect = function(animationEffect) {
   // TODO: How does WebIDL actually differentiate different callback interfaces?
   return isDefinedAndNotNull(animationEffect) &&
       typeof animationEffect === 'object' &&
-      animationEffect.hasOwnProperty('sample') &&
       typeof animationEffect.sample === 'function';
 };
 
