@@ -1,3 +1,19 @@
+<!--
+Copyright 2013 Google Inc. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+
+limitations under the License.
+--> 
 <!DOCTYPE html>
 <style>
 body {
@@ -13,21 +29,21 @@ canvas {
 }
 
 </style>
-<svg xmlns="http://www.w3.org/2000/svg" version="1.1" style="width: 100%; height: 100%;" viewBox="0 0 800 800">
+<svg xmlns='http://www.w3.org/2000/svg' version='1.1' style='width: 100%; height: 100%;' viewBox='0 0 800 800'>
 <defs id='defs'>
 </defs>
-<g transform="translate(400, 400) scale(-1, -1)">
-  <g id="screenPanel">
-    <g id='contentsPanel' transform="scale(-1, -1)">
-      <path id="animPath" 
-            stroke="gray" stroke-width="2px" fill="#A99" transform='translate(0, 21)'/>
-      <image id="cursor" x="-25" y="-25" width="50" height="50" xlink:href='ball.png'/>
+<g transform='translate(400, 400) scale(-1, -1)'>
+  <g id='screenPanel'>
+    <g id='contentsPanel' transform='scale(-1, -1)'>
+      <path id='animPath' 
+            stroke='gray' stroke-width='2px' fill='#A99' transform='translate(0, 21)'/>
+      <image id='cursor' x='-25' y='-25' width='50' height='50' xlink:href='ball.png'/>
     </g>
   </g>
 </g>
 </svg>
 
-<script src="web-animations.js"></script>
+<script src='web-animations.js'></script>
 <script>
 
 // The number of traversable path segments to generate.
@@ -51,7 +67,7 @@ function generatePathSegments() {
   // animatable segments.
   for (var i = 0; i < numPathSegments + 2; i++) {
     var numBeziers = randInt(2) + 1;
-    var s = "";
+    var s = '';
     for (var j = 0; j < numBeziers; j++) {
       if (lastXDelta == undefined) {
         var x1 = (randInt(100) + minWidth) / numBeziers;
@@ -66,7 +82,7 @@ function generatePathSegments() {
       var y3 = randInt(100) - 50 + y2;
       lastXDelta = x3 - x2;
       lastYDelta = y3 - y2;
-      s += "c " + x1 + " " + y1 + " " + x2 + " " + y2 + " " + x3 + " " + y3 + " ";
+      s += 'c ' + x1 + ' ' + y1 + ' ' + x2 + ' ' + y2 + ' ' + x3 + ' ' + y3 + ' ';
     }
     pathSegments.push(s);
   }
@@ -258,8 +274,8 @@ function generateApproximation() {
   for (var ii = 0; ii <= 100; ii += 1) {
     var i = ii / 100;
     map.push([
-      3*i*(1-i)*(1-i)*bx + 3*i*i*(1-i)*cx + i*i*i,
-      3*i*(1-i)*(1-i)*by + 3*i*i*(1-i)*cy + i*i*i
+      3 * i * (1 - i) * (1 - i) * bx + 3 * i * i * (1 - i) * cx + i * i * i,
+      3 * i * (1 - i) * (1 - i) * by + 3 * i * i * (1 - i) * cy + i * i * i
     ]);
   }
   return map;
