@@ -31,7 +31,7 @@ install:
 script:
   - python ./test/update-testcases.py --dry-run || (echo "Please run update-testcases!"; false)
   # For pull requests we don't have access to secure environment variables, so we just return true.
-  - if [ x$BROWSER == "xRemote" -a x$TRAVIS_SECURE_ENV_VARS != "xtrue" ]; then
+  - if [ x$BROWSER == "xRemote" -a x$SAUCE_ACCESS_KEY == "x" ]; then
       true;
     else
       echo python run-tests.py -a $ARGS | bash;
