@@ -33,10 +33,6 @@ parser.add_argument(
     help="At end of testing, don't exit.")
 
 parser.add_argument(
-    "-a", "--auto-install", action='store_true', default=True,
-    help="Auto install any dependencies.")
-
-parser.add_argument(
     "-v", "--verbose", action='store_true', default=False,
     help="Output more information.")
 
@@ -83,69 +79,6 @@ if args.verbose and args.subunit:
 # -----------------------------------------------------------------------------
 
 import subprocess
-
-# Set up the git repository
-if args.auto_install:
-    subprocess.check_call(["git", "submodule", "init"])
-    subprocess.check_call(["git", "submodule", "update"])
-
-
-# Install the python modules
-def autoinstall(name, package=None):
-    if not package:
-        package = name
-
-    if args.auto_install:
-        try:
-            import pip
-        except ImportError:
-            raise SystemExit("""\
-Can not autoinstall as PIP is not avaliable.
-
-To install 'pip' please ask your administrator to install the package
-'python-pip' or run:
-# sudo apt-get install python-pip
-""")
-
-        from pip.req import InstallRequirement
-        install = InstallRequirement(package, None)
-        install.check_if_exists()
-
-        if install.satisfied_by is None:
-            print "Unable to find %s, autoinstalling" % (name,)
-
-            if install.conflicts_with:
-                raise SystemExit("""
-Can't install %s because it conflicts with already installed %s.
-
-Please try installing %s manually with:
-# sudo pip install --upgrade %s
-""" % (name, install.conflicts_with, name, package.replace(">", "\>")))
-
-            ret = subprocess.call(["pip", "install", "--user", package])
-            if ret == 0:  # UNKNOWN_ERROR
-                # Restart python is a nasty way, only method to get imports to
-                # refresh.
-                python = sys.executable
-                os.execl(python, python, *sys.argv)
-            else:
-                raise SystemExit("""
-Unknown error occurred.
-
-Please install the Python %s module.
-# sudo pip install %s
-""" % (name, package.replace(">", "\n")))
-
-for line in file(".requirements").readlines():
-    if line.startswith('#') or not line.strip():
-        continue
-
-    if line.find('#') >= 0:
-        package, name = line.split('#')
-
-        autoinstall(name.strip(), package.strip())
-    else:
-        autoinstall(line.strip())
 
 if not args.sauce:
     # Get any selenium drivers we might need

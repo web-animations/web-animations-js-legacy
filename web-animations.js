@@ -15,21 +15,21 @@
  * limitations under the License.
  */
 (function() {
-"use strict";
+'use strict';
 
 var ASSERT_ENABLED = false;
 
 function detectFeatures() {
   var style = document.createElement('style');
   style.textContent = '' +
-     'dummyRuleForTesting {' +
-     'width: calc(0px);' +
-     'width: -webkit-calc(0px); }';
+      'dummyRuleForTesting {' +
+      'width: calc(0px);' +
+      'width: -webkit-calc(0px); }';
   document.head.appendChild(style);
   var transformCandidates = [
-      'transform',
-      'webkitTransform',
-      'msTransform'
+    'transform',
+    'webkitTransform',
+    'msTransform'
   ];
   var transformProperty = transformCandidates.filter(function(property) {
     return property in style.sheet.cssRules[0].style;
@@ -48,27 +48,29 @@ var constructorToken = {};
 var createObject = function(proto, obj) {
   var newObject = Object.create(proto);
   Object.getOwnPropertyNames(obj).forEach(function(name) {
-    Object.defineProperty(newObject, name,
-                          Object.getOwnPropertyDescriptor(obj, name));
+    Object.defineProperty(
+        newObject, name, Object.getOwnPropertyDescriptor(obj, name));
   });
   return newObject;
 };
 
 var abstractMethod = function() {
-  throw "Abstract method not implemented.";
+  throw 'Abstract method not implemented.';
 };
 
 var IndexSizeError = function(message) {
   Error.call(this);
-  this.name = "IndexSizeError";
+  this.name = 'IndexSizeError';
   this.message = message;
 };
 
 IndexSizeError.prototype = Object.create(Error.prototype);
 
+
+
 /** @constructor */
 var TimingDict = function(timingInput) {
-  if (typeof timingInput == 'object') {
+  if (typeof timingInput === 'object') {
     for (var k in timingInput) {
       if (k in TimingDict.prototype) {
         this[k] = timingInput[k];
@@ -88,8 +90,10 @@ TimingDict.prototype = {
   activeDuration: 'auto',
   playbackRate: 1,
   direction: 'normal',
-  easing: 'linear',
-}
+  easing: 'linear'
+};
+
+
 
 /** @constructor */
 var Timing = function(token, timingInput, changeHandler) {
@@ -118,22 +122,23 @@ Timing.prototype = {
   },
   _duration: function() {
     var value = this._dict.duration;
-    return typeof value == 'number' ? value : 'auto';
+    return typeof value === 'number' ? value : 'auto';
   },
   _activeDuration: function() {
     var value = this._dict.activeDuration;
-    return typeof value == 'number' ? value : 'auto';
+    return typeof value === 'number' ? value : 'auto';
   },
   _clone: function() {
-    return new Timing(constructorToken, this._dict, this._updateInternalState.bind(this));
-  },
+    return new Timing(
+        constructorToken, this._dict, this._updateInternalState.bind(this));
+  }
 };
 
 // Configures an accessor descriptor for use with Object.defineProperty() to
 // allow the property to be changed and enumerated, to match __defineGetter__()
 // and __defineSetter__().
 var configureDescriptor = function(descriptor) {
-  descriptor.configurable = true,
+  descriptor.configurable = true;
   descriptor.enumerable = true;
   return descriptor;
 };
@@ -151,7 +156,7 @@ Timing._defineProperty = function(prop) {
       }
       // FIXME: probably need to implement specialized handling parsing
       // for each property
-      if (prop == 'easing') {
+      if (prop === 'easing') {
         // Cached timing function may be invalid now.
         delete this._timingFunction;
       }
@@ -171,6 +176,7 @@ var isDefined = function(val) {
 var isDefinedAndNotNull = function(val) {
   return isDefined(val) && (val !== null);
 };
+
 
 
 /** @constructor */
@@ -208,21 +214,24 @@ Timeline.prototype = {
   toTimelineTime: function(otherTime, other) {
     if ((this.currentTime === null) || (other.currentTime === null)) {
       return null;
+    } else {
+      return otherTime + other._startTime - this._startTime;
     }
-    else return (otherTime + other._startTime - this._startTime);
   },
   _pauseAnimationsForTesting: function(pauseAt) {
     PLAYERS.forEach(function(player) {
       player.paused = true;
       player.currentTime = pauseAt;
     });
-  },
+  }
 };
 
 // TODO: Remove dead Players from here?
 var PLAYERS = [];
 var playersAreSorted = false;
 var playerSequenceNumber = 0;
+
+
 
 /** @constructor */
 var Player = function(token, source, timeline) {
@@ -307,8 +316,8 @@ Player.prototype = {
   set startTime(startTime) {
     enterModifyCurrentAnimationState();
     try {
-      // This seeks by updating _startTime and hence the currentTime. It does not
-      // affect _drift.
+      // This seeks by updating _startTime and hence the currentTime. It does
+      // not affect _drift.
       this._startTime = startTime;
       playersAreSorted = false;
       this._update();
@@ -365,7 +374,7 @@ Player.prototype = {
     return this.source && this.source._isCurrent();
   },
   _hasFutureEffect: function() {
-      return this.source && this.source._hasFutureEffect();
+    return this.source && this.source._hasFutureEffect();
   },
   _getLeafItemsInEffect: function(items) {
     if (this.source) {
@@ -394,7 +403,9 @@ Player.prototype = {
     if (this._needsHandlerPass) {
       var timeDelta = this._currentTime - this._lastCurrentTime;
       if (timeDelta > 0) {
-        this.source._generateEvents(this._lastCurrentTime, this._currentTime, this.timeline.currentTime, 1);
+        this.source._generateEvents(
+            this._lastCurrentTime, this._currentTime,
+            this.timeline.currentTime, 1);
       }
     }
 
@@ -413,12 +424,15 @@ Player.prototype = {
 };
 
 
+
 /** @constructor */
 var TimedItem = function(token, timingInput) {
   if (token !== constructorToken) {
     throw new TypeError('Illegal constructor');
   }
-  this.specified = new Timing(constructorToken, timingInput, this._specifiedTimingModified.bind(this));
+  this.specified = new Timing(
+      constructorToken, timingInput,
+      this._specifiedTimingModified.bind(this));
   this._inheritedTime = null;
   this.currentIteration = null;
   this._iterationTime = null;
@@ -435,8 +449,7 @@ TimedItem.prototype = {
   // TODO: It would be good to avoid the need for this. We would need to modify
   // call sites to instead rely on a call from the parent.
   get _effectiveParentTime() {
-    return
-        this.parent !== null && this.parent._iterationTime !== null ?
+    return this.parent !== null && this.parent._iterationTime !== null ?
         this.parent._iterationTime : 0;
   },
   get localTime() {
@@ -448,13 +461,14 @@ TimedItem.prototype = {
   },
   get duration() {
     var result = this.specified._duration();
-    if (result == 'auto')
-        result = this._intrinsicDuration();
+    if (result === 'auto') {
+      result = this._intrinsicDuration();
+    }
     return result;
   },
   get activeDuration() {
     var result = this.specified._activeDuration();
-    if (result == 'auto') {
+    if (result === 'auto') {
       var repeatedDuration = this.duration * this.specified._iterations();
       result = repeatedDuration / Math.abs(this.specified.playbackRate);
     }
@@ -501,7 +515,8 @@ TimedItem.prototype = {
       // TODO: Consider optimising this case by skipping this call.
       this._updateTimeMarkers();
     } finally {
-      exitModifyCurrentAnimationState(Boolean(this.player) && this.player._hasTicked);
+      exitModifyCurrentAnimationState(
+          Boolean(this.player) && this.player._hasTicked);
     }
   },
   _intrinsicDuration: function() {
@@ -520,7 +535,8 @@ TimedItem.prototype = {
     try {
       this._updateInternalState();
     } finally {
-      exitModifyCurrentAnimationState(Boolean(this.player) && this.player._hasTicked);
+      exitModifyCurrentAnimationState(
+          Boolean(this.player) && this.player._hasTicked);
     }
   },
   // We push time down to children. We could instead have children pull from
@@ -554,22 +570,28 @@ TimedItem.prototype = {
   },
   _updateIterationParamsZeroDuration: function() {
     this._iterationTime = 0;
-    var isAtEndOfIterations = this.specified._iterations() != 0 &&
+    var isAtEndOfIterations = this.specified._iterations() !== 0 &&
         this.localTime >= this.specified.delay;
-    this.currentIteration = isAtEndOfIterations ?
-       this._floorWithOpenClosedRange(this.specified.iterationStart +
-           this.specified._iterations(), 1.0) :
-       this._floorWithClosedOpenRange(this.specified.iterationStart, 1.0);
+    this.currentIteration = (
+        isAtEndOfIterations ?
+        this._floorWithOpenClosedRange(
+            this.specified.iterationStart + this.specified._iterations(),
+            1.0) :
+        this._floorWithClosedOpenRange(this.specified.iterationStart, 1.0));
     // Equivalent to unscaledIterationTime below.
-    var unscaledFraction = isAtEndOfIterations ?
-        this._modulusWithOpenClosedRange(this.specified.iterationStart +
-            this.specified._iterations(), 1.0) :
-        this._modulusWithClosedOpenRange(this.specified.iterationStart, 1.0);
+    var unscaledFraction = (
+        isAtEndOfIterations ?
+        this._modulusWithOpenClosedRange(
+            this.specified.iterationStart + this.specified._iterations(),
+            1.0) :
+        this._modulusWithClosedOpenRange(this.specified.iterationStart, 1.0));
     var timingFunction = this.specified._timingFunction(this);
-    this._timeFraction = this._isCurrentDirectionForwards() ?
-            unscaledFraction :
-            1.0 - unscaledFraction;
-    ASSERT_ENABLED && console.assert(this._timeFraction >= 0.0 && this._timeFraction <= 1.0,
+    this._timeFraction = (
+        this._isCurrentDirectionForwards() ?
+        unscaledFraction :
+        1.0 - unscaledFraction);
+    ASSERT_ENABLED && console.assert(
+        this._timeFraction >= 0.0 && this._timeFraction <= 1.0,
         'Time fraction should be in the range [0, 1]');
     if (timingFunction) {
       this._timeFraction = timingFunction.scaleTime(this._timeFraction);
@@ -592,8 +614,8 @@ TimedItem.prototype = {
         this._getAdjustedAnimationTime(this._animationTime);
     var repeatedDuration = this.duration * this.specified._iterations();
     var startOffset = this.specified.iterationStart * this.duration;
-    var isAtEndOfIterations = (this.specified._iterations() != 0) &&
-        (adjustedAnimationTime - startOffset == repeatedDuration);
+    var isAtEndOfIterations = (this.specified._iterations() !== 0) &&
+        (adjustedAnimationTime - startOffset === repeatedDuration);
     this.currentIteration = isAtEndOfIterations ?
         this._floorWithOpenClosedRange(
             adjustedAnimationTime, this.duration) :
@@ -606,7 +628,8 @@ TimedItem.prototype = {
             adjustedAnimationTime, this.duration);
     this._iterationTime = this._scaleIterationTime(unscaledIterationTime);
     this._timeFraction = this._iterationTime / this.duration;
-    ASSERT_ENABLED && console.assert(this._timeFraction >= 0.0 && this._timeFraction <= 1.0,
+    ASSERT_ENABLED && console.assert(
+        this._timeFraction >= 0.0 && this._timeFraction <= 1.0,
         'Time fraction should be in the range [0, 1], got ' +
         this._timeFraction + ' ' + this._iterationTime + ' ' +
         this.duration + ' ' + isAtEndOfIterations + ' ' +
@@ -630,7 +653,7 @@ TimedItem.prototype = {
       this._iterationTime = null;
       this.currentIteration = null;
       this._timeFraction = null;
-    } else if (this.duration == 0) {
+    } else if (this.duration === 0) {
       this._updateIterationParamsZeroDuration();
     } else {
       this._updateIterationParams();
@@ -644,33 +667,36 @@ TimedItem.prototype = {
     return Math.ceil(x / range) - 1;
   },
   _modulusWithClosedOpenRange: function(x, range) {
-    ASSERT_ENABLED && console.assert(range > 0, 'Range must be strictly positive');
+    ASSERT_ENABLED && console.assert(
+        range > 0, 'Range must be strictly positive');
     var modulus = x % range;
     var result = modulus < 0 ? modulus + range : modulus;
-    ASSERT_ENABLED && console.assert(result >= 0.0 && result < range,
+    ASSERT_ENABLED && console.assert(
+        result >= 0.0 && result < range,
         'Result should be in the range [0, range)');
     return result;
   },
   _modulusWithOpenClosedRange: function(x, range) {
     var modulus = this._modulusWithClosedOpenRange(x, range);
-    var result = modulus == 0 ? range : modulus;
-    ASSERT_ENABLED && console.assert(result > 0.0 && result <= range,
+    var result = modulus === 0 ? range : modulus;
+    ASSERT_ENABLED && console.assert(
+        result > 0.0 && result <= range,
         'Result should be in the range (0, range]');
     return result;
   },
   _isCurrentDirectionForwards: function() {
-    if (this.specified.direction == 'normal') {
+    if (this.specified.direction === 'normal') {
       return true;
     }
-    if (this.specified.direction == 'reverse') {
+    if (this.specified.direction === 'reverse') {
       return false;
     }
     var d = this.currentIteration;
-    if (this.specified.direction == 'alternate-reverse') {
+    if (this.specified.direction === 'alternate-reverse') {
       d += 1;
     }
     // TODO: 6.13.3 step 3. wtf?
-    return d % 2 == 0;
+    return d % 2 === 0;
   },
   clone: abstractMethod,
   before: function() {
@@ -728,7 +754,7 @@ TimedItem.prototype = {
   // Note that this restriction is currently incomplete - for example,
   // Animations which are playing forwards and have a fill of backwards
   // are not in effect unless current.
-  // TODO: Complete this restriction. 
+  // TODO: Complete this restriction.
   _hasFutureEffect: function() {
     return this._isCurrent() || this.specified.fill !== 'none';
   },
@@ -760,7 +786,7 @@ TimedItem.prototype = {
     if (typeof func === 'function') {
       this._onHandlers[type] = {
         callback: func,
-        index: (this._handlers[type] || []).length,
+        index: (this._handlers[type] || []).length
       };
       if (this.player) {
         this.player._handlerAdded();
@@ -841,7 +867,7 @@ TimedItem.prototype = {
   _toSubRanges: function(fromTime, toTime, iterationTimes) {
     if (fromTime > toTime) {
       var revRanges = this._toSubRanges(toTime, fromTime, iterationTimes);
-      revRanges.ranges.forEach(function(a) { a.reverse(); })
+      revRanges.ranges.forEach(function(a) { a.reverse(); });
       revRanges.ranges.reverse();
       revRanges.start = iterationTimes.length - revRanges.start - 1;
       revRanges.delta = -1;
@@ -871,13 +897,12 @@ TimedItem.prototype = {
     function toGlobal(time) {
       return (globalTime - (toTime - (time / deltaScale)));
     }
-    var localScale = this.specified.playbackRate;
     var firstIteration = Math.floor(this.specified.iterationStart);
     var lastIteration = Math.floor(this.specified.iterationStart +
         this.specified.iterations);
-    if (lastIteration == this.specified.iterationStart + 
-      this.specified.iterations) {
-        lastIteration -= 1;
+    if (lastIteration === this.specified.iterationStart +
+        this.specified.iterations) {
+      lastIteration -= 1;
     }
     var startTime = this.startTime + this.specified.delay;
 
@@ -889,9 +914,11 @@ TimedItem.prototype = {
             firstIteration));
       // Did we pass the end of this animation in the reverse direction?
       } else if (fromTime > this.endTime && toTime <= this.endTime) {
-        this._callHandlers('start', new TimingEvent(constructorToken, this,
-              'start', this.endTime - this.startTime, toGlobal(this.endTime),
-              lastIteration));
+        this._callHandlers(
+            'start',
+            new TimingEvent(
+                constructorToken, this, 'start', this.endTime - this.startTime,
+                toGlobal(this.endTime), lastIteration));
       }
     }
 
@@ -914,22 +941,25 @@ TimedItem.prototype = {
       clippedFromTime = Math.min(fromTime, this.endTime);
       clippedToTime = Math.max(toTime, startTime);
     }
-    var subranges = this._toSubRanges(clippedFromTime, clippedToTime,
-      iterationTimes);
+    var subranges = this._toSubRanges(
+        clippedFromTime, clippedToTime, iterationTimes);
+
     for (var i = 0; i < subranges.ranges.length; i++) {
       var currentIter = subranges.start + i * subranges.delta;
       if (i > 0 && this._hasHandlersForEvent('iteration')) {
         var iterTime = subranges.ranges[i][0];
-        this._callHandlers('iteration', new TimingEvent(constructorToken, this,
-              'iteration', iterTime - this.startTime, toGlobal(iterTime),
-              currentIter));
+        this._callHandlers(
+            'iteration',
+            new TimingEvent(
+                constructorToken, this, 'iteration', iterTime - this.startTime,
+                toGlobal(iterTime), currentIter));
       }
 
       var iterFraction;
       if (subranges.delta > 0) {
         iterFraction = this.specified.iterationStart % 1;
       } else {
-        iterFraction = 1 - 
+        iterFraction = 1 -
             (this.specified.iterationStart + this.specified.iterations) % 1;
       }
       this._generateChildEventsForRange(
@@ -941,19 +971,25 @@ TimedItem.prototype = {
     if (this._hasHandlersForEvent('end')) {
       // Did we pass the end of this animation in the forward direction?
       if (fromTime < this.endTime && toTime >= this.endTime) {
-        this._callHandlers('end', new TimingEvent(constructorToken, this, 'end',
-              this.endTime - this.startTime, toGlobal(this.endTime),
-              lastIteration));
+        this._callHandlers(
+            'end',
+            new TimingEvent(
+                constructorToken, this, 'end', this.endTime - this.startTime,
+                toGlobal(this.endTime), lastIteration));
       // Did we pass the start of this animation in the reverse direction?
       } else if (fromTime >= startTime && toTime < startTime) {
-        this._callHandlers('end', new TimingEvent(constructorToken, this, 'end',
-              this.specified.delay, toGlobal(startTime), firstIteration));
+        this._callHandlers(
+            'end',
+            new TimingEvent(
+                constructorToken, this, 'end', this.specified.delay,
+                toGlobal(startTime), firstIteration));
       }
     }
-  },
+  }
 };
 
-var TimingEvent = function(token, target, type, localTime, timelineTime, iterationIndex, seeked) {
+var TimingEvent = function(
+    token, target, type, localTime, timelineTime, iterationIndex, seeked) {
   if (token !== constructorToken) {
     throw new TypeError('Illegal constructor');
   }
@@ -963,47 +999,47 @@ var TimingEvent = function(token, target, type, localTime, timelineTime, iterati
   this.timelineTime = timelineTime;
   this.iterationIndex = iterationIndex;
   this.seeked = seeked ? true : false;
-}
+};
 
-TimingEvent.prototype = Object.create(Event.prototype, {
+TimingEvent.prototype = Object.create(window.Event.prototype, {
   target: {
     get: function() {
       return this._target;
-    },
+    }
   },
   cancelable: {
     get: function() {
       return false;
-    },
+    }
   },
   cancelBubble: {
     get: function() {
       return false;
-    },
+    }
   },
   defaultPrevented: {
     get: function() {
       return false;
-    },
+    }
   },
   eventPhase: {
     get: function() {
       return 0;
-    },
+    }
   },
   type: {
     get: function() {
       return this._type;
-    },
-  },
+    }
+  }
 });
 
 var isCustomAnimationEffect = function(animationEffect) {
   // TODO: How does WebIDL actually differentiate different callback interfaces?
   return isDefinedAndNotNull(animationEffect) &&
-      typeof animationEffect === "object" &&
-      animationEffect.hasOwnProperty("sample") &&
-      typeof animationEffect.sample === "function";
+      typeof animationEffect === 'object' &&
+      animationEffect.hasOwnProperty('sample') &&
+      typeof animationEffect.sample === 'function';
 };
 
 var interpretAnimationEffect = function(animationEffect) {
@@ -1024,7 +1060,7 @@ var cloneAnimationEffect = function(animationEffect) {
   if (animationEffect instanceof AnimationEffect) {
     return animationEffect.clone();
   } else if (isCustomAnimationEffect(animationEffect)) {
-    if (typeof animationEffect.clone === "function") {
+    if (typeof animationEffect.clone === 'function') {
       return animationEffect.clone();
     } else {
       return animationEffect;
@@ -1033,6 +1069,8 @@ var cloneAnimationEffect = function(animationEffect) {
     return null;
   }
 };
+
+
 
 /** @constructor */
 var Animation = function(target, animationEffect, timingInput) {
@@ -1052,8 +1090,14 @@ Animation.prototype = createObject(TimedItem.prototype, {
         !(this.target instanceof PseudoElementReference)) {
       var sampleMethod = isCustomAnimationEffect(this.effect) ?
           this.effect.sample : this.effect._sample;
-      sampleMethod.apply(this.effect, [this._timeFraction,
-          this.currentIteration, this.target, this.underlyingValue]);
+      sampleMethod.apply(
+          this.effect, [
+            this._timeFraction,
+            this.currentIteration,
+            this.target,
+            this.underlyingValue
+          ]
+      );
     }
   },
   _getLeafItemsInEffectImpl: function(items) {
@@ -1076,7 +1120,8 @@ Animation.prototype = createObject(TimedItem.prototype, {
       this._effect = effect;
       this.specified._invalidateTimingFunction();
     } finally {
-      exitModifyCurrentAnimationState(Boolean(this.player) && this.player._hasTicked);
+      exitModifyCurrentAnimationState(
+          Boolean(this.player) && this.player._hasTicked);
     }
   },
   get effect() {
@@ -1095,13 +1140,15 @@ Animation.prototype = createObject(TimedItem.prototype, {
     }
     return 'Animation ' + this.startTime + '-' + this.endTime + ' (' +
         this.localTime + ') ' + effectString;
-  },
+  }
 });
 
 function throwNewHierarchyRequestError() {
   var element = document.createElement('span');
   element.appendChild(element);
 }
+
+
 
 /** @constructor */
 var TimedItemList = function(token, children) {
@@ -1130,6 +1177,8 @@ TimedItemList.prototype = {
     });
   }
 };
+
+
 
 /** @constructor */
 var TimingGroup = function(token, type, children, timing) {
@@ -1192,7 +1241,7 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
     }
   },
   _updateChildStartTimes: function() {
-    if (this.type == 'seq') {
+    if (this.type === 'seq') {
       var cumulativeStartTime = 0;
       for (var i = 0; i < this._children.length; i++) {
         var child = this._children[i];
@@ -1213,7 +1262,8 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
   },
   get children() {
     if (!this._cachedTimedItemList) {
-      this._cachedTimedItemList = new TimedItemList(constructorToken, this._children);
+      this._cachedTimedItemList = new TimedItemList(
+          constructorToken, this._children);
     }
     return this._cachedTimedItemList;
   },
@@ -1224,12 +1274,12 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
     return this._children[this.children.length - 1];
   },
   _intrinsicDuration: function() {
-    if (this.type == 'par') {
+    if (this.type === 'par') {
       var dur = Math.max.apply(undefined, this._children.map(function(a) {
         return a.endTime;
       }));
       return Math.max(0, dur);
-    } else if (this.type == 'seq') {
+    } else if (this.type === 'seq') {
       var result = 0;
       this._children.forEach(function(a) {
         result += a.activeDuration + a.specified.delay;
@@ -1249,8 +1299,8 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
     this._children.forEach(function(child) {
       children.push(child.clone());
     });
-    return this.type === "par" ?
-        new ParGroup(children, this.specified._dict):
+    return this.type === 'par' ?
+        new ParGroup(children, this.specified._dict) :
         new SeqGroup(children, this.specified._dict);
   },
   clear: function() {
@@ -1281,7 +1331,7 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
     enterModifyCurrentAnimationState();
     try {
       var args = arguments;
-      if (args.length == 3) {
+      if (args.length === 3) {
         args = [start, deleteCount].concat(newItems);
       }
       for (var i = 2; i < args.length; i++) {
@@ -1291,19 +1341,19 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
         }
         newChild._reparent(this);
       }
-      var result = Array.prototype['splice'].apply(this._children, args);
+      var result = Array.prototype.splice.apply(this._children, args);
       for (var i = 0; i < result.length; i++) {
         result[i]._parent = null;
       }
       this._childrenStateModified();
       return result;
     } finally {
-      exitModifyCurrentAnimationState(Boolean(this.player) && this.player._hasTicked);
+      exitModifyCurrentAnimationState(
+          Boolean(this.player) && this.player._hasTicked);
     }
   },
   _isInclusiveAncestor: function(item) {
-    for (var ancestor = this; ancestor != null;
-      ancestor = ancestor.parent) {
+    for (var ancestor = this; ancestor !== null; ancestor = ancestor.parent) {
       if (ancestor === item) {
         return true;
       }
@@ -1323,13 +1373,14 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
   toString: function() {
     return this.type + ' ' + this.startTime + '-' + this.endTime + ' (' +
         this.localTime + ') ' + ' [' +
-        this._children.map(function(a) { return a.toString(); }) + ']'
+        this._children.map(function(a) { return a.toString(); }) + ']';
   },
   _hasHandlers: function() {
-    return TimedItem.prototype._hasHandlers.call(this) ||
-      (this._children.length > 0 &&
-        this._children.reduce(function(a, b) { return a || b._hasHandlers() },
-          false));
+    return TimedItem.prototype._hasHandlers.call(this) || (
+        this._children.length > 0 &&
+        this._children.reduce(
+            function(a, b) { return a || b._hasHandlers(); },
+            false));
   },
   _generateChildEventsForRange: function(localStart, localEnd, rangeStart,
       rangeEnd, iteration, globalTime, deltaScale) {
@@ -1355,17 +1406,22 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
     end -= iteration * this.duration / deltaScale;
 
     for (var i = 0; i < this._children.length; i++) {
-      this._children[i]._generateEvents(start, end, globalTime - endDelta, deltaScale);
+      this._children[i]._generateEvents(
+          start, end, globalTime - endDelta, deltaScale);
     }
-  },
+  }
 });
 
+
+
 /** @constructor */
-var  ParGroup = function(children, timing, parent) {
+var ParGroup = function(children, timing, parent) {
   TimingGroup.call(this, constructorToken, 'par', children, timing, parent);
 };
 
 ParGroup.prototype = Object.create(TimingGroup.prototype);
+
+
 
 /** @constructor */
 var SeqGroup = function(children, timing, parent) {
@@ -1374,12 +1430,16 @@ var SeqGroup = function(children, timing, parent) {
 
 SeqGroup.prototype = Object.create(TimingGroup.prototype);
 
+
+
 /** @constructor */
 var PseudoElementReference = function(element, pseudoElement) {
-    this.element = element;
-    this.pseudoElement = pseudoElement;
-    console.warn("PseudoElementReference is not supported.");
+  this.element = element;
+  this.pseudoElement = pseudoElement;
+  console.warn('PseudoElementReference is not supported.');
 };
+
+
 
 /** @constructor */
 var MediaReference = function(mediaElement, timing, parent, delta) {
@@ -1529,12 +1589,13 @@ MediaReference.prototype = createObject(TimedItem.prototype, {
   _isTargetingElement: function(element) {
     return this._media === element;
   },
-  _getAnimationsTargetingElement: function(element, animations) { },
+  _getAnimationsTargetingElement: function() { },
   _attach: function(player) {
     this._ensurePaused();
     TimedItem.prototype._attach.call(this, player);
-  },
+  }
 });
+
 
 
 /** @constructor */
@@ -1565,12 +1626,14 @@ AnimationEffect.prototype = {
   },
   _sample: abstractMethod,
   clone: abstractMethod,
-  toString: abstractMethod,
+  toString: abstractMethod
 };
 
 var clamp = function(x, min, max) {
   return Math.max(Math.min(x, max), min);
-}
+};
+
+
 
 /** @constructor */
 var PathAnimationEffect = function(path, autoRotate, angle, composite,
@@ -1586,12 +1649,12 @@ var PathAnimationEffect = function(path, autoRotate, angle, composite,
     // SVGPathSegList doesn't have a constructor.
     this.autoRotate = isDefined(autoRotate) ? autoRotate : 'none';
     this.angle = isDefined(angle) ? angle : 0;
-    this._path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    this._path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     if (path instanceof SVGPathSegList) {
       this.segments = path;
     } else {
       var tempPath = document.createElementNS(
-          'http://www.w3.org/2000/svg','path');
+          'http://www.w3.org/2000/svg', 'path');
       tempPath.setAttribute('d', String(path));
       this.segments = tempPath.pathSegList;
     }
@@ -1622,7 +1685,7 @@ PathAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     // TODO: calc(point.x - 50%) doesn't work?
     var value = [{t: 'translate', d: [{px: x}, {px: y}]}];
     var angle = this.angle;
-    if (this._autoRotate == 'auto-rotate') {
+    if (this._autoRotate === 'auto-rotate') {
       // Super hacks
       var lastPoint = this._path.getPointAtLength(lengthAtTimeFraction - 0.01);
       var dx = point.x - lastPoint.x;
@@ -1630,8 +1693,8 @@ PathAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
       var rotation = Math.atan2(dy, dx);
       angle += rotation / 2 / Math.PI * 360;
     }
-    value.push({t:'rotate', d: [angle]});
-    compositor.setAnimatedValue(target, "transform",
+    value.push({t: 'rotate', d: [angle]});
+    compositor.setAnimatedValue(target, 'transform',
         new AddReplaceCompositableValue(value, this.composite));
   },
   _lengthAtTimeFraction: function(timeFraction) {
@@ -1640,7 +1703,7 @@ PathAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
       return 0;
     }
     var scaledFraction = timeFraction * segmentCount;
-    var index = clamp(Math.floor(scaledFraction), 0, segmentCount)
+    var index = clamp(Math.floor(scaledFraction), 0, segmentCount);
     return this._cumulativeLengths[index] + ((scaledFraction % 1) * (
         this._cumulativeLengths[index + 1] - this._cumulativeLengths[index]));
   },
@@ -1710,7 +1773,7 @@ var shorthandToLonghand = {
     'backgroundAttachment',
     'backgroundOrigin',
     'backgroundClip',
-    'backgroundColor',
+    'backgroundColor'
   ],
   border: [
     'borderTopColor',
@@ -1724,45 +1787,45 @@ var shorthandToLonghand = {
     'borderBottomWidth',
     'borderLeftColor',
     'borderLeftStyle',
-    'borderLeftWidth',
+    'borderLeftWidth'
   ],
   borderBottom: [
     'borderBottomWidth',
     'borderBottomStyle',
-    'borderBottomColor',
+    'borderBottomColor'
   ],
   borderColor: [
     'borderTopColor',
     'borderRightColor',
     'borderBottomColor',
-    'borderLeftColor',
+    'borderLeftColor'
   ],
   borderLeft: [
     'borderLeftWidth',
     'borderLeftStyle',
-    'borderLeftColor',
+    'borderLeftColor'
   ],
   borderRadius: [
     'borderTopLeftRadius',
     'borderTopRightRadius',
     'borderBottomRightRadius',
-    'borderBottomLeftRadius',
+    'borderBottomLeftRadius'
   ],
   borderRight: [
     'borderRightWidth',
     'borderRightStyle',
-    'borderRightColor',
+    'borderRightColor'
   ],
   borderTop: [
     'borderTopWidth',
     'borderTopStyle',
-    'borderTopColor',
+    'borderTopColor'
   ],
   borderWidth: [
     'borderTopWidth',
     'borderRightWidth',
     'borderBottomWidth',
-    'borderLeftWidth',
+    'borderLeftWidth'
   ],
   font: [
     'fontFamily',
@@ -1770,32 +1833,32 @@ var shorthandToLonghand = {
     'fontStyle',
     'fontVariant',
     'fontWeight',
-    'lineHeight',
+    'lineHeight'
   ],
   margin: [
     'marginTop',
     'marginRight',
     'marginBottom',
-    'marginLeft',
+    'marginLeft'
   ],
   outline: [
     'outlineColor',
     'outlineStyle',
-    'outlineWidth',
+    'outlineWidth'
   ],
   padding: [
     'paddingTop',
     'paddingRight',
     'paddingBottom',
-    'paddingLeft',
-  ],
+    'paddingLeft'
+  ]
 };
 
 // This delegates parsing shorthand value syntax to the browser.
-var shorthandExpanderDiv = document.createElement("div");
+var shorthandExpanderDiv = document.createElement('div');
 var expandShorthand = function(property, value, result) {
   shorthandExpanderDiv.style[property] = value;
-  var longProperties = shorthandToLonghand[property]
+  var longProperties = shorthandToLonghand[property];
   for (var i in longProperties) {
     var longProperty = longProperties[i];
     var longhandValue = shorthandExpanderDiv.style[longProperty];
@@ -1806,7 +1869,7 @@ var expandShorthand = function(property, value, result) {
 var normalizeKeyframeDictionary = function(properties) {
   var result = {
     offset: null,
-    composite: null,
+    composite: null
   };
   var animationProperties = [];
   for (var property in properties) {
@@ -1816,7 +1879,8 @@ var normalizeKeyframeDictionary = function(properties) {
         result.offset = properties.offset;
       }
     } else if (property === 'composite') {
-      if (properties.composite === 'add' || properties.composite === 'replace') {
+      if (properties.composite === 'add' ||
+          properties.composite === 'replace') {
         result.composite = properties.composite;
       }
     } else {
@@ -1842,6 +1906,7 @@ var normalizeKeyframeDictionary = function(properties) {
   }
   return result;
 };
+
 
 
 /** @constructor */
@@ -1893,7 +1958,8 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     var frames = this._propertySpecificKeyframes();
     for (var property in frames) {
       compositor.setAnimatedValue(target, property,
-          this._sampleForProperty(frames[property], timeFraction, currentIteration));
+          this._sampleForProperty(
+              frames[property], timeFraction, currentIteration));
     }
   },
   _sampleForProperty: function(frames, timeFraction, currentIteration) {
@@ -1913,7 +1979,8 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     return unaccumulatedValue;
   },
   _getAccumulatingValue: function(frames) {
-    ASSERT_ENABLED && console.assert(this._allKeyframesUseSameCompositeOperation(frames),
+    ASSERT_ENABLED && console.assert(
+        this._allKeyframesUseSameCompositeOperation(frames),
         'Accumulation only valid if all frames use same composite operation');
 
     // This is a BlendedCompositableValue, though because the offset is 1.0, we
@@ -1922,7 +1989,8 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     // change such that there is no guarantee that a keyframe with offset 1.0 is
     // present.
     // TODO: Consider caching this.
-    var unaccumulatedValueAtOffsetOne = this._getUnaccumulatedValue(frames, 1.0);
+    var unaccumulatedValueAtOffsetOne = this._getUnaccumulatedValue(
+        frames, 1.0);
 
     if (this._compositeForKeyframe(frames[0]) === 'add') {
       return unaccumulatedValueAtOffsetOne;
@@ -1932,12 +2000,14 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     // to get a concrete value (note that the choice of underlying value is
     // irrelevant since it uses replace composition). We then form a new
     // AddReplaceCompositable value to add-composite this concrete value.
-    ASSERT_ENABLED && console.assert(!unaccumulatedValueAtOffsetOne.dependsOnUnderlyingValue());
+    ASSERT_ENABLED && console.assert(
+        !unaccumulatedValueAtOffsetOne.dependsOnUnderlyingValue());
     return new AddReplaceCompositableValue(
         unaccumulatedValueAtOffsetOne.compositeOnto(null, null), 'add');
   },
   _getUnaccumulatedValue: function(frames, timeFraction) {
-    ASSERT_ENABLED && console.assert(frames.length >= 2,
+    ASSERT_ENABLED && console.assert(
+        frames.length >= 2,
         'Interpolation requires at least two keyframes');
 
     var startKeyframeIndex;
@@ -1969,11 +2039,11 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     }
     var startKeyframe = frames[startKeyframeIndex];
     var endKeyframe = frames[startKeyframeIndex + 1];
-    if (startKeyframe.offset == timeFraction) {
+    if (startKeyframe.offset === timeFraction) {
       return new AddReplaceCompositableValue(startKeyframe.rawValue(),
           this._compositeForKeyframe(startKeyframe));
     }
-    if (endKeyframe.offset == timeFraction) {
+    if (endKeyframe.offset === timeFraction) {
       return new AddReplaceCompositableValue(endKeyframe.rawValue(),
           this._compositeForKeyframe(endKeyframe));
     }
@@ -2007,7 +2077,8 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
 
     for (var property in this._cachedPropertySpecificKeyframes) {
       var frames = this._cachedPropertySpecificKeyframes[property];
-      ASSERT_ENABLED && console.assert(frames.length > 0,
+      ASSERT_ENABLED && console.assert(
+          frames.length > 0,
           'There should always be keyframes for each property');
 
       // Add synthetic keyframes at offsets of 0 and 1 if required.
@@ -2021,8 +2092,10 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
             property, cssNeutralValue);
         frames.push(keyframe);
       }
-      ASSERT_ENABLED && console.assert(frames.length >= 2,
-          'There should be at least two keyframes including synthetic keyframes');
+      ASSERT_ENABLED && console.assert(
+          frames.length >= 2,
+          'There should be at least two keyframes including' +
+          ' synthetic keyframes');
     }
 
     return this._cachedPropertySpecificKeyframes;
@@ -2041,7 +2114,8 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
         keyframe.composite : this.composite;
   },
   _allKeyframesUseSameCompositeOperation: function(keyframes) {
-    ASSERT_ENABLED && console.assert(keyframes.length >= 1, 'This requires at least one keyframe');
+    ASSERT_ENABLED && console.assert(
+        keyframes.length >= 1, 'This requires at least one keyframe');
     var composite = this._compositeForKeyframe(keyframes[0]);
     for (var i = 1; i < keyframes.length; i++) {
       if (this._compositeForKeyframe(keyframes[i]) !== composite) {
@@ -2150,17 +2224,23 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     }
 
     return distributedKeyframes;
-  },
+  }
 });
 
 
-// An internal representation of a keyframe. The Keyframe type from the spec is
-// just a dictionary and is not exposed.
-/** @constructor */
+
+/**
+ * An internal representation of a keyframe. The Keyframe type from the spec is
+ * just a dictionary and is not exposed.
+ *
+ * @constructor
+ */
 var KeyframeInternal = function(offset, composite) {
-  ASSERT_ENABLED && console.assert(typeof offset === 'number' || offset === null,
+  ASSERT_ENABLED && console.assert(
+      typeof offset === 'number' || offset === null,
       'Invalid offset value');
-  ASSERT_ENABLED && console.assert(composite === 'add' || composite === 'replace' || composite === null,
+  ASSERT_ENABLED && console.assert(
+      composite === 'add' || composite === 'replace' || composite === null,
       'Invalid composite value');
   this.offset = offset;
   this.composite = composite;
@@ -2174,11 +2254,12 @@ KeyframeInternal.prototype = {
   },
   hasValueForProperty: function(property) {
     return property in this.cssValues;
-  },
+  }
 };
 
 KeyframeInternal.isSupportedPropertyValue = function(value) {
-  ASSERT_ENABLED && console.assert(typeof value === 'string' || value === cssNeutralValue);
+  ASSERT_ENABLED && console.assert(
+      typeof value === 'string' || value === cssNeutralValue);
   // TODO: Check this properly!
   return value !== '';
 };
@@ -2196,6 +2277,8 @@ KeyframeInternal.createFromNormalizedProperties = function(properties) {
   return keyframe;
 };
 
+
+
 /** @constructor */
 var PropertySpecificKeyframe = function(offset, composite, property, cssValue) {
   this.offset = offset;
@@ -2212,8 +2295,10 @@ PropertySpecificKeyframe.prototype = {
       this.cachedRawValue = fromCssValue(this.property, this.cssValue);
     }
     return this.cachedRawValue;
-  },
+  }
 };
+
+
 
 /** @constructor */
 var TimingFunction = function() {
@@ -2242,23 +2327,28 @@ TimingFunction.createFromString = function(spec, timedItem) {
       /cubic-bezier\(([^,]*),([^,]*),([^,]*),([^)]*)\)/.exec(spec);
   if (bezierMatch) {
     return new SplineTimingFunction([
-        Number(bezierMatch[1]),
-        Number(bezierMatch[2]),
-        Number(bezierMatch[3]),
-        Number(bezierMatch[4])]);
+      Number(bezierMatch[1]),
+      Number(bezierMatch[2]),
+      Number(bezierMatch[3]),
+      Number(bezierMatch[4])
+    ]);
   }
   return presetTimingFunctions.linear;
 };
 
+
+
 /** @constructor */
 var SplineTimingFunction = function(spec) {
   this.params = spec;
-  this.map = []
+  this.map = [];
   for (var ii = 0; ii <= 100; ii += 1) {
     var i = ii / 100;
     this.map.push([
-      3*i*(1-i)*(1-i)*this.params[0] + 3*i*i*(1-i)*this.params[2] + i*i*i,
-      3*i*(1-i)*(1-i)*this.params[1] + 3*i*i*(1-i)*this.params[3] + i*i*i
+      3 * i * (1 - i) * (1 - i) * this.params[0] +
+          3 * i * i * (1 - i) * this.params[2] + i * i * i,
+      3 * i * (1 - i) * (1 - i) * this.params[1] +
+          3 * i * i * (1 - i) * this.params[3] + i * i * i
     ]);
   }
 };
@@ -2266,10 +2356,10 @@ var SplineTimingFunction = function(spec) {
 SplineTimingFunction.prototype = createObject(TimingFunction.prototype, {
   scaleTime: function(fraction) {
     var fst = 0;
-    while (fst != 100 && fraction > this.map[fst][0]) {
+    while (fst !== 100 && fraction > this.map[fst][0]) {
       fst += 1;
     }
-    if (fraction == this.map[fst][0] || fst == 0) {
+    if (fraction === this.map[fst][0] || fst === 0) {
       return this.map[fst][1];
     }
     var yDiff = this.map[fst][1] - this.map[fst - 1][1];
@@ -2279,6 +2369,8 @@ SplineTimingFunction.prototype = createObject(TimingFunction.prototype, {
   }
 });
 
+
+
 /** @constructor */
 var StepTimingFunction = function(numSteps, position) {
   this.numSteps = numSteps;
@@ -2287,16 +2379,17 @@ var StepTimingFunction = function(numSteps, position) {
 
 StepTimingFunction.prototype = createObject(TimingFunction.prototype, {
   scaleTime: function(fraction) {
-    if (fraction >= 1)
+    if (fraction >= 1) {
       return 1;
+    }
     var stepSize = 1 / this.numSteps;
-    if (this.position == 'start') {
+    if (this.position === 'start') {
       fraction += stepSize;
-    } else if (this.position == 'middle') {
+    } else if (this.position === 'middle') {
       fraction += stepSize / 2;
     }
     return fraction - fraction % stepSize;
-  },
+  }
 });
 
 var presetTimingFunctions = {
@@ -2307,8 +2400,10 @@ var presetTimingFunctions = {
   'ease-in-out': new SplineTimingFunction([0.42, 0, 0.58, 1.0]),
   'step-start': new StepTimingFunction(1, 'start'),
   'step-middle': new StepTimingFunction(1, 'middle'),
-  'step-end': new StepTimingFunction(1, 'end'),
+  'step-end': new StepTimingFunction(1, 'end')
 };
+
+
 
 /** @constructor */
 var PacedTimingFunction = function(timedItem) {
@@ -2347,27 +2442,30 @@ PacedTimingFunction.prototype = createObject(TimingFunction.prototype, {
       }
     }
     return leftIndex;
-  },
+  }
 });
 
 var interp = function(from, to, f, type) {
   if (Array.isArray(from) || Array.isArray(to)) {
     return interpArray(from, to, f, type);
   }
-  var zero = type == 'scale' ? 1.0 : 0.0;
-  to   = isDefinedAndNotNull(to) ? to : zero;
+  var zero = type === 'scale' ? 1.0 : 0.0;
+  to = isDefinedAndNotNull(to) ? to : zero;
   from = isDefinedAndNotNull(from) ? from : zero;
 
   return to * f + from * (1 - f);
 };
 
 var interpArray = function(from, to, f, type) {
-  ASSERT_ENABLED && console.assert(Array.isArray(from) || from === null,
+  ASSERT_ENABLED && console.assert(
+      Array.isArray(from) || from === null,
       'From is not an array or null');
-  ASSERT_ENABLED && console.assert(Array.isArray(to) || to === null,
+  ASSERT_ENABLED && console.assert(
+      Array.isArray(to) || to === null,
       'To is not an array or null');
-  ASSERT_ENABLED && console.assert(from === null || to === null || from.length === to.length,
-      'Arrays differ in length ' + from + " : " + to);
+  ASSERT_ENABLED && console.assert(
+      from === null || to === null || from.length === to.length,
+      'Arrays differ in length ' + from + ' : ' + to);
   var length = from ? from.length : to.length;
 
   var result = [];
@@ -2400,7 +2498,7 @@ var typeWithKeywords = function(keywords, type) {
     },
     fromCssValue: function(value) {
       return isKeyword[value] ? value : type.fromCssValue(value);
-    },
+    }
   });
 };
 
@@ -2426,7 +2524,7 @@ var numberType = {
     }
     var result = Number(value);
     return isNaN(result) ? undefined : result;
-  },
+  }
 };
 
 var integerType = createObject(numberType, {
@@ -2445,7 +2543,7 @@ var fontWeightType = {
     return interp(from, to, f);
   },
   toCssValue: function(value) {
-    value = Math.round(value / 100) * 100
+    value = Math.round(value / 100) * 100;
     value = clamp(value, 100, 900);
     if (value === 400) {
       return 'normal';
@@ -2504,23 +2602,24 @@ var percentLengthType = {
   },
   toCssValue: function(value) {
     var s = '';
-    var single_value = true;
+    var singleValue = true;
     for (var item in value) {
       if (s === '') {
         s = value[item] + item;
-      } else if (single_value) {
-        if (value[item] != 0) {
-          s = features.calcFunction + '(' + s + ' + ' + value[item] + item + ')';
-          single_value = false;
+      } else if (singleValue) {
+        if (value[item] !== 0) {
+          s = features.calcFunction +
+              '(' + s + ' + ' + value[item] + item + ')';
+          singleValue = false;
         }
-      } else if (value[item] != 0) {
+      } else if (value[item] !== 0) {
         s = s.substring(0, s.length - 1) + ' + ' + value[item] + item + ')';
       }
     }
     return s;
   },
   fromCssValue: function(value) {
-    var result = percentLengthType.consumeValueFromString(value)
+    var result = percentLengthType.consumeValueFromString(value);
     if (result) {
       return result.value;
     }
@@ -2534,35 +2633,35 @@ var percentLengthType = {
     if (autoMatch) {
       return {
         value: { auto: true },
-        remaining: value.substring(autoMatch[0].length),
+        remaining: value.substring(autoMatch[0].length)
       };
     }
-    var out = {}
+    var out = {};
     var calcMatch = outerCalcRE.exec(value);
     if (!calcMatch) {
       var singleValue = valueRE.exec(value);
-      if (singleValue && (singleValue.length == 4)) {
+      if (singleValue && (singleValue.length === 4)) {
         out[singleValue[3]] = Number(singleValue[1]);
         return {
           value: out,
-          remaining: value.substring(singleValue[0].length),
+          remaining: value.substring(singleValue[0].length)
         };
       }
       return undefined;
     }
     var remaining = value.substring(calcMatch[0].length);
     var calcInnards = calcMatch[2];
-    var first_time = true;
+    var firstTime = true;
     while (true) {
       var reversed = false;
-      if (first_time) {
-        first_time = false;
+      if (firstTime) {
+        firstTime = false;
       } else {
         var op = operatorRE.exec(calcInnards);
         if (!op) {
           return undefined;
         }
-        if (op[1] == '-') {
+        if (op[1] === '-') {
           reversed = true;
         }
         calcInnards = calcInnards.substring(op[0].length);
@@ -2582,7 +2681,7 @@ var percentLengthType = {
         out[valueUnit] += valueNumber;
       }
       calcInnards = calcInnards.substring(value[0].length);
-      if (/\s*/.exec(calcInnards)[0].length == calcInnards.length) {
+      if (/\s*/.exec(calcInnards)[0].length === calcInnards.length) {
         return {
           value: out,
           remaining: remaining
@@ -2603,17 +2702,17 @@ var percentLengthAutoType = typeWithKeywords(['auto'], percentLengthType);
 
 var positionKeywordRE = /^\s*left|^\s*center|^\s*right|^\s*top|^\s*bottom/i;
 var positionType = {
-  zero: function() { return [ { px: 0 }, { px: 0 } ]; },
+  zero: function() { return [{ px: 0 }, { px: 0 }]; },
   add: function(base, delta) {
     return [
       percentLengthType.add(base[0], delta[0]),
-      percentLengthType.add(base[1], delta[1]),
+      percentLengthType.add(base[1], delta[1])
     ];
   },
   interpolate: function(from, to, f) {
     return [
       percentLengthType.interpolate(from[0], to[0], f),
-      percentLengthType.interpolate(from[1], to[1], f),
+      percentLengthType.interpolate(from[1], to[1], f)
     ];
   },
   toCssValue: function(value) {
@@ -2649,7 +2748,7 @@ var positionType = {
       return tokens.map(positionType.resolveToken);
     }
 
-    if (tokens.filter(positionType.isKeyword).length != 2) {
+    if (tokens.filter(positionType.isKeyword).length !== 2) {
       return undefined;
     }
 
@@ -2665,7 +2764,7 @@ var positionType = {
           return undefined;
         }
         center = true;
-        continue
+        continue;
       }
       var axis = Number(positionType.isVerticalToken(token));
       if (out[axis]) {
@@ -2698,8 +2797,8 @@ var positionType = {
     if (keywordMatch) {
       return {
         value: keywordMatch[0].trim().toLowerCase(),
-        remaining: value.substring(keywordMatch[0].length),
-      }
+        remaining: value.substring(keywordMatch[0].length)
+      };
     }
     return percentLengthType.consumeValueFromString(value);
   },
@@ -2710,7 +2809,7 @@ var positionType = {
         center: '50%',
         right: '100%',
         top: '0%',
-        bottom: '100%',
+        bottom: '100%'
       }[token]);
     }
     return token;
@@ -2734,7 +2833,7 @@ var positionType = {
 
 // Spec: http://dev.w3.org/csswg/css-backgrounds/#background-position
 var positionListType = {
-  zero: function() { return [ positionType.zero() ]; },
+  zero: function() { return [positionType.zero()]; },
   add: function(base, delta) {
     var out = [];
     var maxLength = Math.max(base.length, delta.length);
@@ -2768,8 +2867,8 @@ var positionListType = {
     var positionValues = value.split(',');
     var out = positionValues.map(positionType.fromCssValue);
     return out.every(isDefinedAndNotNull) ? out : undefined;
-  },
-}
+  }
+};
 
 var rectangleRE = /rect\(([^,]+),([^,]+),([^,]+),([^)]+)\)/;
 var rectangleType = {
@@ -2818,11 +2917,11 @@ var shadowType = {
   zero: function() {
     return {
       hOffset: lengthType.zero(),
-      vOffset: lengthType.zero(),
+      vOffset: lengthType.zero()
     };
   },
   _addSingle: function(base, delta) {
-    if (base && delta && base.inset != delta.inset) {
+    if (base && delta && base.inset !== delta.inset) {
       return delta;
     }
     var result = {
@@ -2835,7 +2934,7 @@ var shadowType = {
           delta ? delta.vOffset : lengthType.zero()),
       blur: lengthType.add(
           base && base.blur || lengthType.zero(),
-          delta && delta.blur || lengthType.zero()),
+          delta && delta.blur || lengthType.zero())
     };
     if (base && base.spread || delta && delta.spread) {
       result.spread = lengthType.add(
@@ -2857,7 +2956,7 @@ var shadowType = {
     return result;
   },
   _interpolateSingle: function(from, to, f) {
-    if (from && to && from.inset != to.inset) {
+    if (from && to && from.inset !== to.inset) {
       return f < 0.5 ? from : to;
     }
     var result = {
@@ -2870,7 +2969,7 @@ var shadowType = {
           to ? to.vOffset : lengthType.zero(), f),
       blur: lengthType.interpolate(
           from && from.blur || lengthType.zero(),
-          to && to.blur || lengthType.zero(), f),
+          to && to.blur || lengthType.zero(), f)
     };
     if (from && from.spread || to && to.spread) {
       result.spread = lengthType.interpolate(
@@ -2906,7 +3005,7 @@ var shadowType = {
     var shadowRE = /(([^(,]+(\([^)]*\))?)+)/g;
     var match;
     var shadows = [];
-    while (match = shadowRE.exec(value)) {
+    while ((match = shadowRE.exec(value)) !== null) {
       shadows.push(match[0]);
     }
 
@@ -2916,9 +3015,9 @@ var shadowType = {
       }
       value = value.replace(/^\s+|\s+$/g, '');
 
-      var partsRE = /([^ (]+(\([^)]*\))?)/g
+      var partsRE = /([^ (]+(\([^)]*\))?)/g;
       var parts = [];
-      while (match = partsRE.exec(value)) {
+      while ((match = partsRE.exec(value)) !== null) {
         parts.push(match[0]);
       }
 
@@ -2944,7 +3043,7 @@ var shadowType = {
           result.color = color;
         }
 
-        if (part == 'inset') {
+        if (part === 'inset') {
           result.inset = true;
         }
       }
@@ -2979,12 +3078,12 @@ var nonNumericType = {
   },
   fromCssValue: function(value) {
     return value;
-  },
+  }
 };
 
 var visibilityType = createObject(nonNumericType, {
   interpolate: function(from, to, f) {
-    if (from != 'visible' && to != 'visible') {
+    if (from !== 'visible' && to !== 'visible') {
       return nonNumericType.interpolate(from, to, f);
     }
     if (f <= 0) {
@@ -3000,134 +3099,217 @@ var visibilityType = createObject(nonNumericType, {
       return value;
     }
     return undefined;
-  },
+  }
 });
 
 var lengthType = percentLengthType;
 var lengthAutoType = typeWithKeywords(['auto'], lengthType);
 
-var colorRE = /(hsla?|rgba?)\(([\-0-9]+%?),?\s*([\-0-9]+%?),?\s*([\-0-9]+%?)(?:,?\s*([\-0-9\.]+%?))?\)/;
-var colorHashRE = /#([0-9A-Fa-f][0-9A-Fa-f]?)([0-9A-Fa-f][0-9A-Fa-f]?)([0-9A-Fa-f][0-9A-Fa-f]?)/;
+var colorRE = new RegExp(
+    '(hsla?|rgba?)\\(' +
+    '([\\-0-9]+%?),?\\s*' +
+    '([\\-0-9]+%?),?\\s*' +
+    '([\\-0-9]+%?)(?:,?\\s*([\\-0-9\\.]+%?))?' +
+    '\\)');
+var colorHashRE = new RegExp(
+    '#([0-9A-Fa-f][0-9A-Fa-f]?)' +
+    '([0-9A-Fa-f][0-9A-Fa-f]?)' +
+    '([0-9A-Fa-f][0-9A-Fa-f]?)');
 
 function hsl2rgb(h, s, l) {
   // Cribbed from http://dev.w3.org/csswg/css-color/#hsl-color
-  // Wrap to 0->360 degrees (IE -10 == 350) then normalize
+  // Wrap to 0->360 degrees (IE -10 === 350) then normalize
   h = (((h % 360) + 360) % 360) / 360;
   s = s / 100;
   l = l / 100;
   function hue2rgb(m1, m2, h) {
-     if (h < 0) {
-       h += 1;
-     }
-     if (h > 1) {
-       h -= 1;
-     }
-     if (h * 6 < 1) {
-        return m1 + (m2 - m1) * h * 6;
-     }
-     if (h * 2 < 1) {
-        return m2;
-     }
-     if (h * 3 < 2) {
-        return m1 + (m2 - m1) * (2 / 3 - h) * 6;
-     }
-     return m1;
+    if (h < 0) {
+      h += 1;
+    }
+    if (h > 1) {
+      h -= 1;
+    }
+    if (h * 6 < 1) {
+      return m1 + (m2 - m1) * h * 6;
+    }
+    if (h * 2 < 1) {
+      return m2;
+    }
+    if (h * 3 < 2) {
+      return m1 + (m2 - m1) * (2 / 3 - h) * 6;
+    }
+    return m1;
   }
+  var m2;
   if (l <= 0.5) {
-    var m2 = l * (s + 1)
+    m2 = l * (s + 1);
   } else {
-    var m2 = l + s - l * s;
+    m2 = l + s - l * s;
   }
 
   var m1 = l * 2 - m2;
   var r = Math.ceil(hue2rgb(m1, m2, h + 1 / 3) * 255);
   var g = Math.ceil(hue2rgb(m1, m2, h) * 255);
   var b = Math.ceil(hue2rgb(m1, m2, h - 1 / 3) * 255);
-  return [r, g, b]
+  return [r, g, b];
 }
 
 var namedColors = {
-  aliceblue: [240, 248, 255, 1], antiquewhite: [250, 235, 215, 1],
-  aqua: [0, 255, 255, 1], aquamarine: [127, 255, 212, 1],
-  azure: [240, 255, 255, 1], beige: [245, 245, 220, 1],
-  bisque: [255, 228, 196, 1], black: [0, 0, 0, 1],
-  blanchedalmond: [255, 235, 205, 1], blue: [0, 0, 255, 1],
-  blueviolet: [138, 43, 226, 1], brown: [165, 42, 42, 1],
-  burlywood: [222, 184, 135, 1], cadetblue: [95, 158, 160, 1],
-  chartreuse: [127, 255, 0, 1], chocolate: [210, 105, 30, 1],
-  coral: [255, 127, 80, 1], cornflowerblue: [100, 149, 237, 1],
-  cornsilk: [255, 248, 220, 1], crimson: [220, 20, 60, 1],
-  cyan: [0, 255, 255, 1], darkblue: [0, 0, 139, 1],
-  darkcyan: [0, 139, 139, 1], darkgoldenrod: [184, 134, 11, 1],
-  darkgray: [169, 169, 169, 1], darkgreen: [0, 100, 0, 1],
-  darkgrey: [169, 169, 169, 1], darkkhaki: [189, 183, 107, 1],
-  darkmagenta: [139, 0, 139, 1], darkolivegreen: [85, 107, 47, 1],
-  darkorange: [255, 140, 0, 1], darkorchid: [153, 50, 204, 1],
-  darkred: [139, 0, 0, 1], darksalmon: [233, 150, 122, 1],
-  darkseagreen: [143, 188, 143, 1], darkslateblue: [72, 61, 139, 1],
-  darkslategray: [47, 79, 79, 1], darkslategrey: [47, 79, 79, 1],
-  darkturquoise: [0, 206, 209, 1], darkviolet: [148, 0, 211, 1],
-  deeppink: [255, 20, 147, 1], deepskyblue: [0, 191, 255, 1],
-  dimgray: [105, 105, 105, 1], dimgrey: [105, 105, 105, 1],
-  dodgerblue: [30, 144, 255, 1], firebrick: [178, 34, 34, 1],
-  floralwhite: [255, 250, 240, 1], forestgreen: [34, 139, 34, 1],
-  fuchsia: [255, 0, 255, 1], gainsboro: [220, 220, 220, 1],
-  ghostwhite: [248, 248, 255, 1], gold: [255, 215, 0, 1],
-  goldenrod: [218, 165, 32, 1], gray: [128, 128, 128, 1],
-  green: [0, 128, 0, 1], greenyellow: [173, 255, 47, 1],
-  grey: [128, 128, 128, 1], honeydew: [240, 255, 240, 1],
-  hotpink: [255, 105, 180, 1], indianred: [205, 92, 92, 1],
-  indigo: [75, 0, 130, 1], ivory: [255, 255, 240, 1],
-  khaki: [240, 230, 140, 1], lavender: [230, 230, 250, 1],
-  lavenderblush: [255, 240, 245, 1], lawngreen: [124, 252, 0, 1],
-  lemonchiffon: [255, 250, 205, 1], lightblue: [173, 216, 230, 1],
-  lightcoral: [240, 128, 128, 1], lightcyan: [224, 255, 255, 1],
-  lightgoldenrodyellow: [250, 250, 210, 1], lightgray: [211, 211, 211, 1],
-  lightgreen: [144, 238, 144, 1], lightgrey: [211, 211, 211, 1],
-  lightpink: [255, 182, 193, 1], lightsalmon: [255, 160, 122, 1],
-  lightseagreen: [32, 178, 170, 1], lightskyblue: [135, 206, 250, 1],
-  lightslategray: [119, 136, 153, 1], lightslategrey: [119, 136, 153, 1],
-  lightsteelblue: [176, 196, 222, 1], lightyellow: [255, 255, 224, 1],
-  lime: [0, 255, 0, 1], limegreen: [50, 205, 50, 1],
-  linen: [250, 240, 230, 1], magenta: [255, 0, 255, 1],
-  maroon: [128, 0, 0, 1], mediumaquamarine: [102, 205, 170, 1],
-  mediumblue: [0, 0, 205, 1], mediumorchid: [186, 85, 211, 1],
-  mediumpurple: [147, 112, 219, 1], mediumseagreen: [60, 179, 113, 1],
-  mediumslateblue: [123, 104, 238, 1], mediumspringgreen: [0, 250, 154, 1],
-  mediumturquoise: [72, 209, 204, 1], mediumvioletred: [199, 21, 133, 1],
-  midnightblue: [25, 25, 112, 1], mintcream: [245, 255, 250, 1],
-  mistyrose: [255, 228, 225, 1], moccasin: [255, 228, 181, 1],
-  navajowhite: [255, 222, 173, 1], navy: [0, 0, 128, 1],
-  oldlace: [253, 245, 230, 1], olive: [128, 128, 0, 1],
-  olivedrab: [107, 142, 35, 1], orange: [255, 165, 0, 1],
-  orangered: [255, 69, 0, 1], orchid: [218, 112, 214, 1],
-  palegoldenrod: [238, 232, 170, 1], palegreen: [152, 251, 152, 1],
-  paleturquoise: [175, 238, 238, 1], palevioletred: [219, 112, 147, 1],
-  papayawhip: [255, 239, 213, 1], peachpuff: [255, 218, 185, 1],
-  peru: [205, 133, 63, 1], pink: [255, 192, 203, 1],
-  plum: [221, 160, 221, 1], powderblue: [176, 224, 230, 1],
-  purple: [128, 0, 128, 1], red: [255, 0, 0, 1],
-  rosybrown: [188, 143, 143, 1], royalblue: [65, 105, 225, 1],
-  saddlebrown: [139, 69, 19, 1], salmon: [250, 128, 114, 1],
-  sandybrown: [244, 164, 96, 1], seagreen: [46, 139, 87, 1],
-  seashell: [255, 245, 238, 1], sienna: [160, 82, 45, 1],
-  silver: [192, 192, 192, 1], skyblue: [135, 206, 235, 1],
-  slateblue: [106, 90, 205, 1], slategray: [112, 128, 144, 1],
-  slategrey: [112, 128, 144, 1], snow: [255, 250, 250, 1],
-  springgreen: [0, 255, 127, 1], steelblue: [70, 130, 180, 1],
-  tan: [210, 180, 140, 1], teal: [0, 128, 128, 1],
-  thistle: [216, 191, 216, 1], tomato: [255, 99, 71, 1],
-  transparent: [0, 0, 0, 0], turquoise: [64, 224, 208, 1],
-  violet: [238, 130, 238, 1], wheat: [245, 222, 179, 1],
-  white: [255, 255, 255, 1], whitesmoke: [245, 245, 245, 1],
-  yellow: [255, 255, 0, 1], yellowgreen: [154, 205, 50, 1],
+  aliceblue: [240, 248, 255, 1],
+  antiquewhite: [250, 235, 215, 1],
+  aqua: [0, 255, 255, 1],
+  aquamarine: [127, 255, 212, 1],
+  azure: [240, 255, 255, 1],
+  beige: [245, 245, 220, 1],
+  bisque: [255, 228, 196, 1],
+  black: [0, 0, 0, 1],
+  blanchedalmond: [255, 235, 205, 1],
+  blue: [0, 0, 255, 1],
+  blueviolet: [138, 43, 226, 1],
+  brown: [165, 42, 42, 1],
+  burlywood: [222, 184, 135, 1],
+  cadetblue: [95, 158, 160, 1],
+  chartreuse: [127, 255, 0, 1],
+  chocolate: [210, 105, 30, 1],
+  coral: [255, 127, 80, 1],
+  cornflowerblue: [100, 149, 237, 1],
+  cornsilk: [255, 248, 220, 1],
+  crimson: [220, 20, 60, 1],
+  cyan: [0, 255, 255, 1],
+  darkblue: [0, 0, 139, 1],
+  darkcyan: [0, 139, 139, 1],
+  darkgoldenrod: [184, 134, 11, 1],
+  darkgray: [169, 169, 169, 1],
+  darkgreen: [0, 100, 0, 1],
+  darkgrey: [169, 169, 169, 1],
+  darkkhaki: [189, 183, 107, 1],
+  darkmagenta: [139, 0, 139, 1],
+  darkolivegreen: [85, 107, 47, 1],
+  darkorange: [255, 140, 0, 1],
+  darkorchid: [153, 50, 204, 1],
+  darkred: [139, 0, 0, 1],
+  darksalmon: [233, 150, 122, 1],
+  darkseagreen: [143, 188, 143, 1],
+  darkslateblue: [72, 61, 139, 1],
+  darkslategray: [47, 79, 79, 1],
+  darkslategrey: [47, 79, 79, 1],
+  darkturquoise: [0, 206, 209, 1],
+  darkviolet: [148, 0, 211, 1],
+  deeppink: [255, 20, 147, 1],
+  deepskyblue: [0, 191, 255, 1],
+  dimgray: [105, 105, 105, 1],
+  dimgrey: [105, 105, 105, 1],
+  dodgerblue: [30, 144, 255, 1],
+  firebrick: [178, 34, 34, 1],
+  floralwhite: [255, 250, 240, 1],
+  forestgreen: [34, 139, 34, 1],
+  fuchsia: [255, 0, 255, 1],
+  gainsboro: [220, 220, 220, 1],
+  ghostwhite: [248, 248, 255, 1],
+  gold: [255, 215, 0, 1],
+  goldenrod: [218, 165, 32, 1],
+  gray: [128, 128, 128, 1],
+  green: [0, 128, 0, 1],
+  greenyellow: [173, 255, 47, 1],
+  grey: [128, 128, 128, 1],
+  honeydew: [240, 255, 240, 1],
+  hotpink: [255, 105, 180, 1],
+  indianred: [205, 92, 92, 1],
+  indigo: [75, 0, 130, 1],
+  ivory: [255, 255, 240, 1],
+  khaki: [240, 230, 140, 1],
+  lavender: [230, 230, 250, 1],
+  lavenderblush: [255, 240, 245, 1],
+  lawngreen: [124, 252, 0, 1],
+  lemonchiffon: [255, 250, 205, 1],
+  lightblue: [173, 216, 230, 1],
+  lightcoral: [240, 128, 128, 1],
+  lightcyan: [224, 255, 255, 1],
+  lightgoldenrodyellow: [250, 250, 210, 1],
+  lightgray: [211, 211, 211, 1],
+  lightgreen: [144, 238, 144, 1],
+  lightgrey: [211, 211, 211, 1],
+  lightpink: [255, 182, 193, 1],
+  lightsalmon: [255, 160, 122, 1],
+  lightseagreen: [32, 178, 170, 1],
+  lightskyblue: [135, 206, 250, 1],
+  lightslategray: [119, 136, 153, 1],
+  lightslategrey: [119, 136, 153, 1],
+  lightsteelblue: [176, 196, 222, 1],
+  lightyellow: [255, 255, 224, 1],
+  lime: [0, 255, 0, 1],
+  limegreen: [50, 205, 50, 1],
+  linen: [250, 240, 230, 1],
+  magenta: [255, 0, 255, 1],
+  maroon: [128, 0, 0, 1],
+  mediumaquamarine: [102, 205, 170, 1],
+  mediumblue: [0, 0, 205, 1],
+  mediumorchid: [186, 85, 211, 1],
+  mediumpurple: [147, 112, 219, 1],
+  mediumseagreen: [60, 179, 113, 1],
+  mediumslateblue: [123, 104, 238, 1],
+  mediumspringgreen: [0, 250, 154, 1],
+  mediumturquoise: [72, 209, 204, 1],
+  mediumvioletred: [199, 21, 133, 1],
+  midnightblue: [25, 25, 112, 1],
+  mintcream: [245, 255, 250, 1],
+  mistyrose: [255, 228, 225, 1],
+  moccasin: [255, 228, 181, 1],
+  navajowhite: [255, 222, 173, 1],
+  navy: [0, 0, 128, 1],
+  oldlace: [253, 245, 230, 1],
+  olive: [128, 128, 0, 1],
+  olivedrab: [107, 142, 35, 1],
+  orange: [255, 165, 0, 1],
+  orangered: [255, 69, 0, 1],
+  orchid: [218, 112, 214, 1],
+  palegoldenrod: [238, 232, 170, 1],
+  palegreen: [152, 251, 152, 1],
+  paleturquoise: [175, 238, 238, 1],
+  palevioletred: [219, 112, 147, 1],
+  papayawhip: [255, 239, 213, 1],
+  peachpuff: [255, 218, 185, 1],
+  peru: [205, 133, 63, 1],
+  pink: [255, 192, 203, 1],
+  plum: [221, 160, 221, 1],
+  powderblue: [176, 224, 230, 1],
+  purple: [128, 0, 128, 1],
+  red: [255, 0, 0, 1],
+  rosybrown: [188, 143, 143, 1],
+  royalblue: [65, 105, 225, 1],
+  saddlebrown: [139, 69, 19, 1],
+  salmon: [250, 128, 114, 1],
+  sandybrown: [244, 164, 96, 1],
+  seagreen: [46, 139, 87, 1],
+  seashell: [255, 245, 238, 1],
+  sienna: [160, 82, 45, 1],
+  silver: [192, 192, 192, 1],
+  skyblue: [135, 206, 235, 1],
+  slateblue: [106, 90, 205, 1],
+  slategray: [112, 128, 144, 1],
+  slategrey: [112, 128, 144, 1],
+  snow: [255, 250, 250, 1],
+  springgreen: [0, 255, 127, 1],
+  steelblue: [70, 130, 180, 1],
+  tan: [210, 180, 140, 1],
+  teal: [0, 128, 128, 1],
+  thistle: [216, 191, 216, 1],
+  tomato: [255, 99, 71, 1],
+  transparent: [0, 0, 0, 0],
+  turquoise: [64, 224, 208, 1],
+  violet: [238, 130, 238, 1],
+  wheat: [245, 222, 179, 1],
+  white: [255, 255, 255, 1],
+  whitesmoke: [245, 245, 245, 1],
+  yellow: [255, 255, 0, 1],
+  yellowgreen: [154, 205, 50, 1]
 };
 
 var colorType = typeWithKeywords(['currentColor'], {
-  zero: function() { return [0,0,0,0]; },
+  zero: function() { return [0, 0, 0, 0]; },
   _premultiply: function(value) {
-      var alpha = value[3];
-      return [value[0] * alpha, value[1] * alpha, value[2] * alpha];
+    var alpha = value[3];
+    return [value[0] * alpha, value[1] * alpha, value[2] * alpha];
   },
   add: function(base, delta) {
     var alpha = Math.min(base[3] + delta[3], 1);
@@ -3152,7 +3334,7 @@ var colorType = typeWithKeywords(['currentColor'], {
   },
   toCssValue: function(value) {
     return 'rgba(' + Math.round(value[0]) + ', ' + Math.round(value[1]) +
-              ', ' + Math.round(value[2]) + ', ' + value[3] + ')';
+        ', ' + Math.round(value[2]) + ', ' + value[3] + ')';
   },
   fromCssValue: function(value) {
     // http://dev.w3.org/csswg/css-color/#color
@@ -3160,14 +3342,14 @@ var colorType = typeWithKeywords(['currentColor'], {
 
     var regexResult = colorHashRE.exec(value);
     if (regexResult) {
-      if (value.length != 4 && value.length != 7) {
+      if (value.length !== 4 && value.length !== 7) {
         return undefined;
       }
 
       var out = [];
       regexResult.shift();
       for (var i = 0; i < 3; i++) {
-        if (regexResult[i].length == 1) {
+        if (regexResult[i].length === 1) {
           regexResult[i] = regexResult[i] + regexResult[i];
         }
         var v = Math.max(Math.min(parseInt(regexResult[i], 16), 255), 0);
@@ -3182,23 +3364,23 @@ var colorType = typeWithKeywords(['currentColor'], {
       var type = regexResult.shift().substr(0, 3);
       for (var i = 0; i < 3; i++) {
         var m = 1;
-        if (regexResult[i][regexResult[i].length - 1] == '%') {
+        if (regexResult[i][regexResult[i].length - 1] === '%') {
           regexResult[i] = regexResult[i].substr(0, regexResult[i].length - 1);
           m = 255.0 / 100.0;
         }
-        if (type == 'rgb') {
-          out[i] = Math.max(Math.min(Math.round(parseInt(regexResult[i])*m), 255), 0);
+        if (type === 'rgb') {
+          out[i] = clamp(Math.round(parseInt(regexResult[i], 10) * m), 0, 255);
         } else {
-          out[i] = parseInt(regexResult[i]);
+          out[i] = parseInt(regexResult[i], 10);
         }
       }
 
       // Convert hsl values to rgb value
-      if (type == 'hsl') {
+      if (type === 'hsl') {
         out = hsl2rgb.apply(null, out);
       }
 
-      if (typeof regexResult[3] != 'undefined') {
+      if (typeof regexResult[3] !== 'undefined') {
         out[3] = Math.max(Math.min(parseFloat(regexResult[3]), 1.0), 0.0);
       } else {
         out.push(1.0);
@@ -3217,14 +3399,14 @@ var colorType = typeWithKeywords(['currentColor'], {
 
 var convertToDeg = function(num, type) {
   switch (type) {
-  case 'grad':
-    return num / 400 * 360;
-  case 'rad':
-    return num / 2 / Math.PI * 360;
-  case 'turn':
-    return num * 360;
-  default:
-    return num;
+    case 'grad':
+      return num / 400 * 360;
+    case 'rad':
+      return num / 2 / Math.PI * 360;
+    case 'turn':
+      return num * 360;
+    default:
+      return num;
   }
 };
 
@@ -3234,13 +3416,13 @@ var extractValue = function(values, pos, hasUnits) {
     return value;
   }
   var type = values[pos + 1];
-  if (type == '') { type = 'px'; }
+  if (type === '') { type = 'px'; }
   var result = {};
   result[type] = value;
   return result;
-}
+};
 
-var extractValues = function(values, numValues, hasOptionalValue, 
+var extractValues = function(values, numValues, hasOptionalValue,
     hasUnits) {
   var result = [];
   for (var i = 0; i < numValues; i++) {
@@ -3263,10 +3445,10 @@ var START = '^';
 function capture(x) { return '(' + x + ')'; }
 function optional(x) { return '(?:' + x + ')?'; }
 
-var OPEN_BRACKET = [SPACES, RAW_OPEN_BRACKET, SPACES].join("");
-var CLOSE_BRACKET = [SPACES, RAW_CLOSE_BRACKET, SPACES].join("");
-var COMMA = [SPACES, RAW_COMMA, SPACES].join("");
-var UNIT_NUMBER = [capture(NUMBER), capture(UNIT)].join("");
+var OPEN_BRACKET = [SPACES, RAW_OPEN_BRACKET, SPACES].join('');
+var CLOSE_BRACKET = [SPACES, RAW_CLOSE_BRACKET, SPACES].join('');
+var COMMA = [SPACES, RAW_COMMA, SPACES].join('');
+var UNIT_NUMBER = [capture(NUMBER), capture(UNIT)].join('');
 
 function transformRE(name, numParms, hasOptionalParm) {
   var tokenList = [START, SPACES, name, OPEN_BRACKET];
@@ -3276,78 +3458,76 @@ function transformRE(name, numParms, hasOptionalParm) {
   }
   tokenList.push(UNIT_NUMBER);
   if (hasOptionalParm) {
-    tokenList.push(optional([COMMA, UNIT_NUMBER].join("")));
+    tokenList.push(optional([COMMA, UNIT_NUMBER].join('')));
   }
   tokenList.push(CLOSE_BRACKET);
-  return new RegExp(tokenList.join("")); 
+  return new RegExp(tokenList.join(''));
 }
 
 function buildMatcher(name, numValues, hasOptionalValue, hasUnits,
     baseValue) {
   var baseName = name;
   if (baseValue) {
-    if (name[name.length - 1] == 'X' || name[name.length - 1] == 'Y') {
+    if (name[name.length - 1] === 'X' || name[name.length - 1] === 'Y') {
       baseName = name.substring(0, name.length - 1);
-    } else if (name[name.length - 1] == 'Z') {
-      baseName = name.substring(0, name.length - 1) + "3d";
+    } else if (name[name.length - 1] === 'Z') {
+      baseName = name.substring(0, name.length - 1) + '3d';
     }
   }
-  
-  return [transformRE(name, numValues, hasOptionalValue),
-      function(x) { 
-        var r = extractValues(x, numValues, hasOptionalValue, hasUnits);
-        if (baseValue !== undefined) {
-          if (name[name.length - 1] == 'X') {
+
+  var f = function(x) {
+    var r = extractValues(x, numValues, hasOptionalValue, hasUnits);
+    if (baseValue !== undefined) {
+      if (name[name.length - 1] === 'X') {
+        r.push(baseValue);
+      } else if (name[name.length - 1] === 'Y') {
+        r = [baseValue].concat(r);
+      } else if (name[name.length - 1] === 'Z') {
+        r = [baseValue, baseValue].concat(r);
+      } else if (hasOptionalValue) {
+        while (r.length < 2) {
+          if (baseValue === 'copy') {
+            r.push(r[0]);
+          } else {
             r.push(baseValue);
-          } else if (name[name.length - 1] == 'Y') {
-            r = [baseValue].concat(r);
-          } else if (name[name.length - 1] == 'Z') {
-            r = [baseValue, baseValue].concat(r);
-          } else if (hasOptionalValue) {
-            while (r.length < 2) {
-              if (baseValue == "copy") {
-                r.push(r[0]);
-              } else {
-                r.push(baseValue);
-              }
-            }
           }
         }
-        return r;
-      },
-      baseName];
+      }
+    }
+    return r;
+  };
+  return [transformRE(name, numValues, hasOptionalValue), f, baseName];
 }
 
-function buildRotationMatcher(name, numValues, hasOptionalValue, 
+function buildRotationMatcher(name, numValues, hasOptionalValue,
     baseValue) {
   var m = buildMatcher(name, numValues, hasOptionalValue, true, baseValue);
-  return [m[0], 
-      function(x) {
-        var r = m[1](x);
-        return r.map(function(v) {
-          var result = 0;
-          for (var type in v) {
-            result += convertToDeg(v[type], type);
-          }
-          return result;
-        });
-      },
-      m[2]];
+
+  var f = function(x) {
+    var r = m[1](x);
+    return r.map(function(v) {
+      var result = 0;
+      for (var type in v) {
+        result += convertToDeg(v[type], type);
+      }
+      return result;
+    });
+  };
+  return [m[0], f, m[2]];
 }
 
 function build3DRotationMatcher() {
   var m = buildMatcher('rotate3d', 4, false, true);
-  return [m[0],
-    function(x) {
-      var r = m[1](x);
-      var out = [];
-      for (var i = 0; i < 3; i++) {
-        out.push(r[i].px);
-      }
-      out.push(r[3]);
-      return out;
-    },
-    m[2]];
+  var f = function(x) {
+    var r = m[1](x);
+    var out = [];
+    for (var i = 0; i < 3; i++) {
+      out.push(r[i].px);
+    }
+    out.push(r[3]);
+    return out;
+  };
+  return [m[0], f, m[2]];
 }
 
 var transformREs = [
@@ -3364,7 +3544,7 @@ var transformREs = [
   buildMatcher('translateZ', 1, false, true, {px: 0}),
   buildMatcher('translate', 1, true, true, {px: 0}),
   buildMatcher('translate3d', 3, false, true),
-  buildMatcher('scale', 1, true, false, "copy"),
+  buildMatcher('scale', 1, true, false, 'copy'),
   buildMatcher('scaleX', 1, false, false, 1),
   buildMatcher('scaleY', 1, false, false, 1),
   buildMatcher('scaleZ', 1, false, false, 1),
@@ -3373,11 +3553,11 @@ var transformREs = [
   buildMatcher('matrix', 6, false, false)
 ];
 
-var decomposeMatrix = function() {
+var decomposeMatrix = (function() {
   // this is only ever used on the perspective matrix, which has 0, 0, 0, 1 as
   // last column
   function determinant(m) {
-    return m[0][0] * m[1][1] * m[2][2] + 
+    return m[0][0] * m[1][1] * m[2][2] +
            m[1][0] * m[2][1] * m[0][2] +
            m[2][0] * m[0][1] * m[1][2] -
            m[0][2] * m[1][1] * m[2][0] -
@@ -3402,11 +3582,15 @@ var decomposeMatrix = function() {
     var a = m[0][0], b = m[0][1], c = m[0][2];
     var d = m[1][0], e = m[1][1], f = m[1][2];
     var g = m[2][0], h = m[2][1], k = m[2][2];
-    var Ainv = [[(e*k - f*h) * iDet, (c*h - b*k) * iDet, (b*f - c*e) * iDet, 0],
-                [(f*g - d*k) * iDet, (a*k - c*g) * iDet, (c*d - a*f) * iDet, 0],
-                [(d*h - e*g) * iDet, (g*b - a*h) * iDet, (a*e - b*d) * iDet, 0]
-               ];
-    var lastRow = []
+    var Ainv = [
+      [(e * k - f * h) * iDet, (c * h - b * k) * iDet,
+       (b * f - c * e) * iDet, 0],
+      [(f * g - d * k) * iDet, (a * k - c * g) * iDet,
+       (c * d - a * f) * iDet, 0],
+      [(d * h - e * g) * iDet, (g * b - a * h) * iDet,
+       (a * e - b * d) * iDet, 0]
+    ];
+    var lastRow = [];
     for (var i = 0; i < 3; i++) {
       var val = 0;
       for (var j = 0; j < 3; j++) {
@@ -3448,7 +3632,7 @@ var decomposeMatrix = function() {
   }
 
   function combine(v1, v2, v1s, v2s) {
-    return [v1s * v1[0] + v2s * v2[0], v1s * v1[1] + v2s * v2[1], 
+    return [v1s * v1[0] + v2s * v2[0], v1s * v1[1] + v2s * v2[1],
             v1s * v1[2] + v2s * v2[2]];
   }
 
@@ -3461,24 +3645,27 @@ var decomposeMatrix = function() {
   function decomposeMatrix(matrix) {
     var m3d = [[matrix[0], matrix[1], 0, 0],
                [matrix[2], matrix[3], 0, 0],
-               [0,         0,         1, 0],
+               [0, 0, 1, 0],
                [matrix[4], matrix[5], 0, 1]];
 
     // skip normalization step as m3d[3][3] should always be 1
-    if (m3d[3][3] != 1) {
+    if (m3d[3][3] !== 1) {
       throw 'attempt to decompose non-normalized matrix';
     }
 
     var perspectiveMatrix = m3d.concat(); // copy m3d
-    for (var i = 0; i < 3; i++)
+    for (var i = 0; i < 3; i++) {
       perspectiveMatrix[i][3] = 0;
+    }
 
-    if (determinant(perspectiveMatrix) == 0)
+    if (determinant(perspectiveMatrix) === 0) {
       return false;
+    }
 
     var rhs = [];
 
-    if (m3d[0][3] != 0 || m3d[1][3] != 0 || m3d[2][3] != 0) {
+    var perspective;
+    if (m3d[0][3] !== 0 || m3d[1][3] !== 0 || m3d[2][3] !== 0) {
       rhs.push(m3d[0][3]);
       rhs.push(m3d[1][3]);
       rhs.push(m3d[2][3]);
@@ -3487,9 +3674,9 @@ var decomposeMatrix = function() {
       var inversePerspectiveMatrix = inverse(perspectiveMatrix);
       var transposedInversePerspectiveMatrix =
           transposeMatrix4(inversePerspectiveMatrix);
-      var perspective = multVecMatrix(rhs, transposedInversePerspectiveMatrix);
+      perspective = multVecMatrix(rhs, transposedInversePerspectiveMatrix);
     } else {
-      var perspective = [0, 0, 0, 1];
+      perspective = [0, 0, 0, 1];
     }
 
     var translate = m3d[3].slice(0, 3);
@@ -3528,8 +3715,8 @@ var decomposeMatrix = function() {
         row[i][1] *= -1;
         row[i][2] *= -1;
       }
-    } 
-    
+    }
+
     var t = row[0][0] + row[1][1] + row[2][2] + 1;
     var s;
     var quaternion;
@@ -3568,11 +3755,13 @@ var decomposeMatrix = function() {
       ];
     }
 
-    return {translate: translate, scale: scale, skew: skew, 
-            quaternion: quaternion, perspective: perspective};
+    return {
+      translate: translate, scale: scale, skew: skew,
+      quaternion: quaternion, perspective: perspective
+    };
   }
   return decomposeMatrix;
-}();
+})();
 
 function dot(v1, v2) {
   var result = 0;
@@ -3589,10 +3778,10 @@ function multiplyMatrices(a, b) {
 }
 
 function convertItemToMatrix(item) {
-  switch(item.t) {
+  switch (item.t) {
     case 'rotate':
       var amount = item.d * Math.PI / 180;
-      return [Math.cos(amount), Math.sin(amount), 
+      return [Math.cos(amount), Math.sin(amount),
               -Math.sin(amount), Math.cos(amount), 0, 0];
     case 'scale':
       return [item.d[0], 0, 0, item.d[1], 0, 0];
@@ -3608,7 +3797,7 @@ function convertToMatrix(transformList) {
   return transformList.map(convertItemToMatrix).reduce(multiplyMatrices);
 }
 
-var composeMatrix = function() {
+var composeMatrix = (function() {
   function multiply(a, b) {
     var result = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]];
     for (var i = 0; i < 4; i++) {
@@ -3635,7 +3824,7 @@ var composeMatrix = function() {
     }
 
     var x = quat[0], y = quat[1], z = quat[2], w = quat[3];
-    
+
     var rotMatrix = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]];
 
     rotMatrix[0][0] = 1 - 2 * (y * y + z * z);
@@ -3662,8 +3851,8 @@ var composeMatrix = function() {
       matrix = multiply(matrix, temp);
     }
 
-    for (i = 0; i < 3; i++) {
-      for (j = 0; j < 3; j++) {
+    for (var i = 0; i < 3; i++) {
+      for (var j = 0; j < 3; j++) {
         matrix[i][j] *= scale[i];
       }
     }
@@ -3673,7 +3862,7 @@ var composeMatrix = function() {
                              matrix[3][0], matrix[3][1]]};
   }
   return composeMatrix;
-}();
+})();
 
 function interpolateTransformsWithMatrices(from, to, f) {
   var fromM = decomposeMatrix(convertToMatrix(from));
@@ -3681,13 +3870,14 @@ function interpolateTransformsWithMatrices(from, to, f) {
 
   var product = dot(fromM.quaternion, toM.quaternion);
   product = clamp(product, -1.0, 1.0);
-  if (product == 1.0) {
-    var quat = fromM.quaternion;
+
+  var quat = [];
+  if (product === 1.0) {
+    quat = fromM.quaternion;
   } else {
     var theta = Math.acos(product);
     var w = Math.sin(f * theta) * 1 / Math.sqrt(1 - product * product);
 
-    var quat = [];
     for (var i = 0; i < 4; i++) {
       quat.push(fromM.quaternion[i] * (Math.cos(f * theta) - product * w) +
                 toM.quaternion[i] * w);
@@ -3704,7 +3894,7 @@ function interpolateTransformsWithMatrices(from, to, f) {
 
 function interpTransformValue(from, to, f) {
   var type = from.t ? from.t : to.t;
-  switch(type) {
+  switch (type) {
     // Transforms with unitless parameters.
     case 'rotate':
     case 'rotateX':
@@ -3719,17 +3909,17 @@ function interpTransformValue(from, to, f) {
     case 'skewX':
     case 'skewY':
     case 'matrix':
-      return {t: type, d:interp(from.d, to.d, f, type)};
-      break;
+      return {t: type, d: interp(from.d, to.d, f, type)};
     default:
       // Transforms with lengthType parameters.
       var result = [];
+      var maxVal;
       if (from.d && to.d) {
-        var maxVal = Math.max(from.d.length, to.d.length);
+        maxVal = Math.max(from.d.length, to.d.length);
       } else if (from.d) {
-        var maxVal = from.d.length;
-      }  else {
-        var maxVal = to.d.length;
+        maxVal = from.d.length;
+      } else {
+        maxVal = to.d.length;
       }
       for (var j = 0; j < maxVal; j++) {
         var fromVal = from.d ? from.d[j] : {};
@@ -3737,15 +3927,14 @@ function interpTransformValue(from, to, f) {
         result.push(lengthType.interpolate(fromVal, toVal, f));
       }
       return {t: type, d: result};
-      break;
   }
 }
 
-// The CSSWG decided to disallow scientific notation in CSS property strings 
+// The CSSWG decided to disallow scientific notation in CSS property strings
 // (see http://lists.w3.org/Archives/Public/www-style/2010Feb/0050.html).
 // We need this function to hakonitize all numbers before adding them to
 // property strings.
-// TODO: Apply this function to all property strings 
+// TODO: Apply this function to all property strings
 function n(num) {
   return Number(num).toFixed(4);
 }
@@ -3753,32 +3942,34 @@ function n(num) {
 var transformType = {
   add: function(base, delta) { return base.concat(delta); },
   interpolate: function(from, to, f) {
-    var out = []
+    var out = [];
     for (var i = 0; i < Math.min(from.length, to.length); i++) {
-      if (from[i].t != to[i].t) {
+      if (from[i].t !== to[i].t) {
         break;
       }
       out.push(interpTransformValue(from[i], to[i], f));
     }
 
     if (i < Math.min(from.length, to.length)) {
-      out.push(interpolateTransformsWithMatrices(from.slice(i), to.slice(i), 
+      out.push(interpolateTransformsWithMatrices(from.slice(i), to.slice(i),
           f));
       return out;
     }
 
-    for (; i < from.length; i++)
+    for (; i < from.length; i++) {
       out.push(interpTransformValue(from[i], {t: null, d: null}, f));
-
-    for (; i < to.length; i++)
+    }
+    for (; i < to.length; i++) {
       out.push(interpTransformValue({t: null, d: null}, to[i], f));
+    }
     return out;
   },
   toCssValue: function(value, svgMode) {
     // TODO: fix this :)
-    var out = ''
+    var out = '';
     for (var i = 0; i < value.length; i++) {
-      ASSERT_ENABLED && console.assert(value[i].t, 'transform type should be resolved by now');
+      ASSERT_ENABLED && console.assert(
+          value[i].t, 'transform type should be resolved by now');
       switch (value[i].t) {
         case 'rotate':
         case 'rotateX':
@@ -3802,25 +3993,26 @@ var transformType = {
         case 'translateY':
         case 'translateZ':
         case 'perspective':
-          out += value[i].t + '(' + lengthType.toCssValue(value[i].d[0])
-              + ') ';
+          out += value[i].t + '(' + lengthType.toCssValue(value[i].d[0]) +
+              ') ';
           break;
         case 'translate':
           if (svgMode) {
             if (value[i].d[1] === undefined) {
-              out += value[i].t + '(' + value[i].d[0]['px'] + ') ';
+              out += value[i].t + '(' + value[i].d[0].px + ') ';
             } else {
-              out += value[i].t + '(' + value[i].d[0]['px'] + ', ' +
-                    value[i].d[1]['px'] + ') ';
+              out += (
+                  value[i].t + '(' + value[i].d[0].px + ', ' +
+                  value[i].d[1].px + ') ');
             }
             break;
           }
           if (value[i].d[1] === undefined) {
-            out += value[i].t + '(' + lengthType.toCssValue(value[i].d[0])
-                + ') ';
+            out += value[i].t + '(' + lengthType.toCssValue(value[i].d[0]) +
+                ') ';
           } else {
-            out += value[i].t + '(' + lengthType.toCssValue(value[i].d[0])
-                + ', ' + lengthType.toCssValue(value[i].d[1]) + ') ';
+            out += value[i].t + '(' + lengthType.toCssValue(value[i].d[0]) +
+                ', ' + lengthType.toCssValue(value[i].d[1]) + ') ';
           }
           break;
         case 'translate3d':
@@ -3846,8 +4038,9 @@ var transformType = {
               value[i].d[1] + ', ' + value[i].d[2] + ') ';
           break;
         case 'matrix':
-          out += value[i].t + '(' + n(value[i].d[0]) + ', ' + n(value[i].d[1])
-              + ', ' + n(value[i].d[2]) + ', ' + n(value[i].d[3]) + ', ' + 
+          out += value[i].t + '(' +
+              n(value[i].d[0]) + ', ' + n(value[i].d[1]) + ', ' +
+              n(value[i].d[2]) + ', ' + n(value[i].d[3]) + ', ' +
               n(value[i].d[4]) + ', ' + n(value[i].d[5]) + ') ';
           break;
       }
@@ -3859,9 +4052,9 @@ var transformType = {
     if (value === undefined) {
       return undefined;
     }
-    var result = []
+    var result = [];
     while (value.length > 0) {
-      var r = undefined;
+      var r;
       for (var i = 0; i < transformREs.length; i++) {
         var reSpec = transformREs[i];
         r = reSpec[0].exec(value);
@@ -3871,8 +4064,9 @@ var transformType = {
           break;
         }
       }
-      if (!isDefinedAndNotNull(r))
+      if (!isDefinedAndNotNull(r)) {
         return result;
+      }
     }
     return result;
   }
@@ -3937,43 +4131,43 @@ var propertyTypes = {
   top: percentLengthAutoType,
   transform: transformType,
   verticalAlign: typeWithKeywords([
-        'baseline',
-        'sub',
-        'super',
-        'text-top',
-        'text-bottom',
-        'middle',
-        'top',
-        'bottom'],
-      percentLengthType),
+    'baseline',
+    'sub',
+    'super',
+    'text-top',
+    'text-bottom',
+    'middle',
+    'top',
+    'bottom'
+  ], percentLengthType),
   visibility: visibilityType,
   width: typeWithKeywords([
-        'border-box',
-        'content-box',
-        'auto',
-        'max-content',
-        'min-content',
-        'available',
-        'fit-content'],
-      percentLengthType),
+    'border-box',
+    'content-box',
+    'auto',
+    'max-content',
+    'min-content',
+    'available',
+    'fit-content'
+  ], percentLengthType),
   wordSpacing: typeWithKeywords(['normal'], percentLengthType),
   x: lengthType,
   y: lengthType,
-  zIndex: typeWithKeywords(['auto'], integerType),
+  zIndex: typeWithKeywords(['auto'], integerType)
 };
 
 var svgProperties = {
   'cx': 1,
   'width': 1,
   'x': 1,
-  'y': 1,
+  'y': 1
 };
 
 var borderWidthAliases = {
   initial: '3px',
   thin: '1px',
   medium: '3px',
-  thick: '5px',
+  thick: '5px'
 };
 
 var propertyValueAliases = {
@@ -3987,7 +4181,8 @@ var propertyValueAliases = {
   borderLeftWidth: borderWidthAliases,
   borderRightColor: { initial: 'currentColor' },
   borderRightWidth: borderWidthAliases,
-  borderSpacing: { initial: '2px' }, // Spec says this should be 0 but in practise it is 2px.
+  // Spec says this should be 0 but in practise it is 2px.
+  borderSpacing: { initial: '2px' },
   borderTopColor: { initial: 'currentColor' },
   borderTopLeftRadius: { initial: '0px' },
   borderTopRightRadius: { initial: '0px' },
@@ -4003,19 +4198,19 @@ var propertyValueAliases = {
     'medium': '100%',
     'large': '120%',
     'x-large': '150%',
-    'xx-large': '200%',
+    'xx-large': '200%'
   },
   fontWeight: {
     initial: '400',
     normal: '400',
-    bold: '700',
+    bold: '700'
   },
   height: { initial: 'auto' },
   left: { initial: 'auto' },
   letterSpacing: { initial: 'normal' },
   lineHeight: {
     initial: '120%',
-    normal: '120%',
+    normal: '120%'
   },
   marginBottom: { initial: '0px' },
   marginLeft: { initial: '0px' },
@@ -4037,28 +4232,28 @@ var propertyValueAliases = {
   textIndent: { initial: '0px' },
   textShadow: {
     initial: '0px 0px 0px transparent',
-    none: '0px 0px 0px transparent',
+    none: '0px 0px 0px transparent'
   },
   top: { initial: 'auto' },
   transform: {
     initial: '',
-    none: '',
+    none: ''
   },
   verticalAlign: { initial: '0px' },
   visibility: { initial: 'visible' },
   width: { initial: 'auto' },
   wordSpacing: { initial: 'normal' },
-  zIndex: { initial: 'auto' },
-}
+  zIndex: { initial: 'auto' }
+};
 
 var propertyIsSVGAttrib = function(property, target) {
-  return target.namespaceURI == 'http://www.w3.org/2000/svg' &&
+  return target.namespaceURI === 'http://www.w3.org/2000/svg' &&
       property in svgProperties;
 };
 
 var getType = function(property) {
   return propertyTypes[property] || nonNumericType;
-}
+};
 
 var add = function(property, base, delta) {
   if (delta === rawNeutralValue) {
@@ -4068,7 +4263,7 @@ var add = function(property, base, delta) {
     return nonNumericType.add(base, delta);
   }
   return getType(property).add(base, delta);
-}
+};
 
 /**
  * Interpolate the given property name (f*100)% of the way from 'from' to 'to'.
@@ -4082,19 +4277,20 @@ var add = function(property, base, delta) {
  *   will return 'rotate(43deg)'.
  */
 var interpolate = function(property, from, to, f) {
-  ASSERT_ENABLED && console.assert(isDefinedAndNotNull(from) && isDefinedAndNotNull(to),
+  ASSERT_ENABLED && console.assert(
+      isDefinedAndNotNull(from) && isDefinedAndNotNull(to),
       'Both to and from values should be specified for interpolation');
   if (from === 'inherit' || to === 'inherit') {
     return nonNumericType.interpolate(from, to, f);
   }
-  if (f == 0) {
+  if (f === 0) {
     return from;
   }
-  if (f == 1) {
+  if (f === 1) {
     return to;
   }
   return getType(property).interpolate(from, to, f);
-}
+};
 
 /**
  * Convert the provided interpolable value for the provided property to a CSS
@@ -4106,7 +4302,7 @@ var toCssValue = function(property, value, svgMode) {
     return value;
   }
   return getType(property).toCssValue(value, svgMode);
-}
+};
 
 var fromCssValue = function(property, value) {
   if (value === cssNeutralValue) {
@@ -4115,7 +4311,8 @@ var fromCssValue = function(property, value) {
   if (value === 'inherit') {
     return value;
   }
-  if (property in propertyValueAliases && value in propertyValueAliases[property]) {
+  if (property in propertyValueAliases &&
+      value in propertyValueAliases[property]) {
     value = propertyValueAliases[property][value];
   }
   var result = getType(property).fromCssValue(value);
@@ -4125,11 +4322,13 @@ var fromCssValue = function(property, value) {
   ASSERT_ENABLED && console.assert(isDefinedAndNotNull(result),
       'Invalid property value "' + value + '" for property "' + property + '"');
   return result;
-}
+};
 
 // Sentinel values
 var cssNeutralValue = {};
 var rawNeutralValue = {};
+
+
 
 /** @constructor */
 var CompositableValue = function() {
@@ -4140,8 +4339,9 @@ CompositableValue.prototype = {
   // This is purely an optimization.
   dependsOnUnderlyingValue: function() {
     return true;
-  },
+  }
 };
+
 
 
 /** @constructor */
@@ -4153,22 +4353,24 @@ var AddReplaceCompositableValue = function(value, composite) {
       'Should never replace-composite the neutral value');
 };
 
-AddReplaceCompositableValue.prototype =
-    createObject(CompositableValue.prototype, {
-  compositeOnto: function(property, underlyingValue) {
-    switch (this.composite) {
-      case 'replace':
-        return this.value;
-      case 'add':
-        return add(property, underlyingValue, this.value);
-      default:
-        ASSERT_ENABLED && console.assert(false, 'Invalid composite operation ' + this.composite);
-    }
-  },
-  dependsOnUnderlyingValue: function() {
-    return this.composite === 'add';
-  },
-});
+AddReplaceCompositableValue.prototype = createObject(
+    CompositableValue.prototype, {
+      compositeOnto: function(property, underlyingValue) {
+        switch (this.composite) {
+          case 'replace':
+            return this.value;
+          case 'add':
+            return add(property, underlyingValue, this.value);
+          default:
+            ASSERT_ENABLED && console.assert(
+                false, 'Invalid composite operation ' + this.composite);
+        }
+      },
+      dependsOnUnderlyingValue: function() {
+        return this.composite === 'add';
+      }
+    });
+
 
 
 /** @constructor */
@@ -4178,24 +4380,25 @@ var BlendedCompositableValue = function(beforeValue, afterValue, fraction) {
   this.fraction = fraction;
 };
 
-BlendedCompositableValue.prototype =
-    createObject(CompositableValue.prototype, {
-  compositeOnto: function(property, underlyingValue) {
-    return interpolate(property,
-        this.beforeValue.compositeOnto(property, underlyingValue),
-        this.afterValue.compositeOnto(property, underlyingValue),
-        this.fraction);
-  },
-  dependsOnUnderlyingValue: function() {
-    return this.beforeValue.dependsOnUnderlyingValue() ||
-        this.afterValue.dependsOnUnderlyingValue();
-  },
-});
+BlendedCompositableValue.prototype = createObject(
+    CompositableValue.prototype, {
+      compositeOnto: function(property, underlyingValue) {
+        return interpolate(property,
+            this.beforeValue.compositeOnto(property, underlyingValue),
+            this.afterValue.compositeOnto(property, underlyingValue),
+            this.fraction);
+      },
+      dependsOnUnderlyingValue: function() {
+        return this.beforeValue.dependsOnUnderlyingValue() ||
+            this.afterValue.dependsOnUnderlyingValue();
+      }
+    });
+
 
 
 /** @constructor */
-var AccumulatedCompositableValue = function(bottomValue, accumulatingValue,
-    accumulationCount) {
+var AccumulatedCompositableValue = function(
+    bottomValue, accumulatingValue, accumulationCount) {
   this.bottomValue = bottomValue;
   this.accumulatingValue = accumulatingValue;
   this.accumulationCount = accumulationCount;
@@ -4203,22 +4406,23 @@ var AccumulatedCompositableValue = function(bottomValue, accumulatingValue,
       'Accumumlation count should be strictly positive');
 };
 
-AccumulatedCompositableValue.prototype =
-    createObject(CompositableValue.prototype, {
-  compositeOnto: function(property, underlyingValue) {
-    // The spec defines accumulation recursively, but we do it iteratively to
-    // better handle large numbers of iterations.
-    var result = this.bottomValue.compositeOnto(property, underlyingValue);
-    for (var i = 0; i < this.accumulationCount; i++) {
-      result = this.accumulatingValue.compositeOnto(property, result);
-    }
-    return result;
-  },
-  dependsOnUnderlyingValue: function() {
-    return this.bottomValue.dependsOnUnderlyingValue() &&
-        this.accumulatingValue.dependsOnUnderlyingValue();
-  },
-});
+AccumulatedCompositableValue.prototype = createObject(
+    CompositableValue.prototype, {
+      compositeOnto: function(property, underlyingValue) {
+        // The spec defines accumulation recursively, but we do it iteratively
+        // to better handle large numbers of iterations.
+        var result = this.bottomValue.compositeOnto(property, underlyingValue);
+        for (var i = 0; i < this.accumulationCount; i++) {
+          result = this.accumulatingValue.compositeOnto(property, result);
+        }
+        return result;
+      },
+      dependsOnUnderlyingValue: function() {
+        return this.bottomValue.dependsOnUnderlyingValue() &&
+            this.accumulatingValue.dependsOnUnderlyingValue();
+      }
+    });
+
 
 
 /** @constructor */
@@ -4258,7 +4462,8 @@ CompositedPropertyMap.prototype = {
       if (this.stackDependsOnUnderlyingValue(this.properties[property])) {
         var baseValue = fromCssValue(property, getValue(this.target, property));
         // TODO: Decide what to do with elements not in the DOM.
-        ASSERT_ENABLED && console.assert(isDefinedAndNotNull(baseValue) && baseValue !== '',
+        ASSERT_ENABLED && console.assert(
+            isDefinedAndNotNull(baseValue) && baseValue !== '',
             'Base value should always be set. ' +
             'Is the target element in the DOM?');
         this.baseValues[property] = baseValue;
@@ -4274,43 +4479,43 @@ CompositedPropertyMap.prototype = {
       for (var i = 0; i < valuesToComposite.length; i++) {
         baseValue = valuesToComposite[i].compositeOnto(property, baseValue);
       }
-      ASSERT_ENABLED && console.assert(isDefinedAndNotNull(baseValue) && baseValue !== '',
+      ASSERT_ENABLED && console.assert(
+          isDefinedAndNotNull(baseValue) && baseValue !== '',
           'Value should always be set after compositing');
       var isSvgMode = propertyIsSVGAttrib(property, this.target);
       setValue(this.target, property, toCssValue(property, baseValue,
           isSvgMode));
       this.properties[property] = [];
     }
-  },
+  }
 };
+
+
 
 /** @constructor */
 var Compositor = function() {
-  this.targets = []
+  this.targets = [];
 };
 
 Compositor.prototype = {
   setAnimatedValue: function(target, property, animValue) {
     if (target !== null) {
-      if (target._anim_properties === undefined) {
-        target._anim_properties = new CompositedPropertyMap(target);
+      if (target._animProperties === undefined) {
+        target._animProperties = new CompositedPropertyMap(target);
         this.targets.push(target);
       }
-      target._anim_properties.addValue(property, animValue);
+      target._animProperties.addValue(property, animValue);
     }
   },
   applyAnimatedValues: function() {
     for (var i = 0; i < this.targets.length; i++) {
-      var target = this.targets[i];
-      target._anim_properties.clear();
+      this.targets[i]._animProperties.clear();
     }
     for (var i = 0; i < this.targets.length; i++) {
-      var target = this.targets[i];
-      target._anim_properties.captureBaseValues();
+      this.targets[i]._animProperties.captureBaseValues();
     }
     for (var i = 0; i < this.targets.length; i++) {
-      var target = this.targets[i];
-      target._anim_properties.applyAnimatedValues();
+      this.targets[i]._animProperties.applyAnimatedValues();
     }
   }
 };
@@ -4344,25 +4549,25 @@ var initializeIfSVGAndUninitialized = function(property, target) {
 
       Object.defineProperty(target.actuals, property, configureDescriptor({
         set: function(value) {
-          if (value == null) {
+          if (value === null) {
             target._actuals[property] = target._bases[property];
             target._setAttribute(property, target._bases[property]);
           } else {
             target._actuals[property] = value;
-            target._setAttribute(property, value)
+            target._setAttribute(property, value);
           }
         },
         get: function() {
           return target._actuals[property];
-        },
+        }
       }));
     }
   }
-}
+};
 
 var setValue = function(target, property, value) {
   initializeIfSVGAndUninitialized(property, target);
-  if (property === "transform") {
+  if (property === 'transform') {
     property = features.transformProperty;
   }
   if (propertyIsSVGAttrib(property, target)) {
@@ -4370,11 +4575,11 @@ var setValue = function(target, property, value) {
   } else {
     target.style[property] = value;
   }
-}
+};
 
 var clearValue = function(target, property) {
   initializeIfSVGAndUninitialized(property, target);
-  if (property == "transform") {
+  if (property === 'transform') {
     property = features.transformProperty;
   }
   if (propertyIsSVGAttrib(property, target)) {
@@ -4382,11 +4587,11 @@ var clearValue = function(target, property) {
   } else {
     target.style[property] = null;
   }
-}
+};
 
 var getValue = function(target, property) {
   initializeIfSVGAndUninitialized(property, target);
-  if (property == "transform") {
+  if (property === 'transform') {
     property = features.transformProperty;
   }
   if (propertyIsSVGAttrib(property, target)) {
@@ -4394,36 +4599,36 @@ var getValue = function(target, property) {
   } else {
     return getComputedStyle(target)[property];
   }
-}
+};
 
 var rafScheduled = false;
 
 var compositor = new Compositor();
 
 var usePerformanceTiming =
-    typeof performance === "object" &&
-    typeof performance.timing === "object" &&
-    typeof performance.now === "function";
+    typeof window.performance === 'object' &&
+    typeof window.performance.timing === 'object' &&
+    typeof window.performance.now === 'function';
 
 // Don't use a local named requestAnimationFrame, to avoid potential problems
 // with hoisting.
 var raf = window.requestAnimationFrame;
 if (!raf) {
-  var nativeRaf =  window.webkitRequestAnimationFrame ||
+  var nativeRaf = window.webkitRequestAnimationFrame ||
       window.mozRequestAnimationFrame;
   if (!nativeRaf) {
     // requestAnimationFrame is not available, simulate it.
     raf = function(callback) {
       setTimeout(function() {
         callback(clockMillis());
-      }, 1000/60);
+      }, 1000 / 60);
     };
   } else if (usePerformanceTiming) {
     // platform requestAnimationFrame provides only millisecond accuracy, wrap
     // it and use performance.now()
     raf = function(callback) {
       nativeRaf(function() {
-        callback(performance.now());
+        callback(window.performance.now());
       });
     };
   } else {
@@ -4434,17 +4639,19 @@ if (!raf) {
 }
 
 var clockMillis = function() {
-  return usePerformanceTiming ? performance.now() : Date.now();
+  return usePerformanceTiming ? window.performance.now() : Date.now();
 };
 // Set up the zero times for document time. Document time is relative to the
 // document load event.
-var documentTimeZeroAsRafTime = undefined;
-var documentTimeZeroAsClockTime = undefined;
+var documentTimeZeroAsRafTime;
+var documentTimeZeroAsClockTime;
+var load;
 if (usePerformanceTiming) {
-  var load = function() {
+  load = function() {
     // RAF time is relative to the navigationStart event.
     documentTimeZeroAsRafTime =
-        performance.timing.loadEventStart - performance.timing.navigationStart;
+        window.performance.timing.loadEventStart -
+        window.performance.timing.navigationStart;
     // performance.now() uses the same origin as RAF time.
     documentTimeZeroAsClockTime = documentTimeZeroAsRafTime;
   };
@@ -4460,13 +4667,14 @@ if (usePerformanceTiming) {
 }
 // Start timing when load event fires or if this script is processed when
 // document loading is already complete.
-if (document.readyState == 'complete') {
+if (document.readyState === 'complete') {
   // When performance timing is unavailable and this script is loaded
   // dynamically, document zero time is incorrect.
   // Warn the user in this case.
   if (!usePerformanceTiming) {
-    console.warn('Web animations can\'t discover document zero time when ' +
-      'asynchronously loaded in the absence of performance timing.');
+    console.warn(
+        'Web animations can\'t discover document zero time when ' +
+        'asynchronously loaded in the absence of performance timing.');
   }
   load();
 } else {
@@ -4483,14 +4691,14 @@ if (document.readyState == 'complete') {
 }
 
 // A cached document time for use during the current callstack.
-var cachedClockTimeMillis = undefined;
+var cachedClockTimeMillis;
 // Calculates one time relative to another, returning null if the zero time is
 // undefined.
 var relativeTime = function(time, zeroTime) {
   return isDefined(zeroTime) ? time - zeroTime : null;
-}
+};
 
-var lastClockTimeMillis = undefined;
+var lastClockTimeMillis;
 
 var cachedClockTime = function() {
   // Cache a document time for the remainder of this callstack.
@@ -4517,7 +4725,7 @@ var exitModifyCurrentAnimationState = function(shouldRepeat) {
   // of shouldRepeat from the outermost call is considered, this allows certain
   // locatations (eg. constructors) to override nested calls that would
   // otherwise set shouldRepeat unconditionally.
-  if (modifyCurrentAnimationStateDepth == 0 && shouldRepeat) {
+  if (modifyCurrentAnimationStateDepth === 0 && shouldRepeat) {
     repeatLastTick();
   }
 };
@@ -4530,7 +4738,7 @@ var repeatLastTick = function() {
 
 var playerSortFunction = function(a, b) {
   var result = a.startTime - b.startTime;
-  return result != 0 ? result : a._sequenceNumber - b.sequenceNumber;
+  return result !== 0 ? result : a._sequenceNumber - b.sequenceNumber;
 };
 
 var lastTickTime;
@@ -4657,11 +4865,11 @@ window.TimingEvent = TimingEvent;
 window.TimingGroup = TimingGroup;
 
 window._WebAnimationsTestingUtilities = {
-  _constructorToken : constructorToken,
+  _constructorToken: constructorToken,
   _positionListType: positionListType,
   _hsl2rgb: hsl2rgb,
   _types: propertyTypes,
-  _knownPlayers: PLAYERS,
+  _knownPlayers: PLAYERS
 };
 
 })();
