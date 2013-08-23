@@ -991,6 +991,11 @@ TimingEvent.prototype = Object.create(Event.prototype, {
       return 0;
     },
   },
+  returnValue: {
+    get: function() {
+      return true;
+    }
+  },
   type: {
     get: function() {
       return this._type;
