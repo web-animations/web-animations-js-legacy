@@ -41,6 +41,7 @@ var tests = [
   'auto-test-visibility.html',
   'auto-test-wrapping-bug.html',
   'impl-test-from-css-value.html',
+  'impl-test-paced-timing-function.html',
   'impl-test-player-sees-handlers.html',
   'impl-test-totimelinetime.html',
   'impl-unit-test-position-type.html',

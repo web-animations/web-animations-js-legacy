@@ -158,7 +158,7 @@ Timing._defineProperty = function(prop) {
       // for each property
       if (prop === 'easing') {
         // Cached timing function may be invalid now.
-        delete this._timingFunction;
+        this._invalidateTimingFunction();
       }
       this._changeHandler();
     }
@@ -1038,7 +1038,6 @@ var isCustomAnimationEffect = function(animationEffect) {
   // TODO: How does WebIDL actually differentiate different callback interfaces?
   return isDefinedAndNotNull(animationEffect) &&
       typeof animationEffect === 'object' &&
-      animationEffect.hasOwnProperty('sample') &&
       typeof animationEffect.sample === 'function';
 };
 
@@ -2315,7 +2314,7 @@ TimingFunction.createFromString = function(spec, timedItem) {
   if (spec === 'paced') {
     if (timedItem instanceof Animation &&
         timedItem.effect instanceof PathAnimationEffect) {
-      return new PacedTimingFunction(timedItem);
+      return new PacedTimingFunction(timedItem.effect);
     }
     return presetTimingFunctions.linear;
   }
@@ -2326,7 +2325,7 @@ TimingFunction.createFromString = function(spec, timedItem) {
   var bezierMatch =
       /cubic-bezier\(([^,]*),([^,]*),([^,]*),([^)]*)\)/.exec(spec);
   if (bezierMatch) {
-    return new SplineTimingFunction([
+    return new CubicBezierTimingFunction([
       Number(bezierMatch[1]),
       Number(bezierMatch[2]),
       Number(bezierMatch[3]),
@@ -2339,7 +2338,7 @@ TimingFunction.createFromString = function(spec, timedItem) {
 
 
 /** @constructor */
-var SplineTimingFunction = function(spec) {
+var CubicBezierTimingFunction = function(spec) {
   this.params = spec;
   this.map = [];
   for (var ii = 0; ii <= 100; ii += 1) {
@@ -2353,7 +2352,7 @@ var SplineTimingFunction = function(spec) {
   }
 };
 
-SplineTimingFunction.prototype = createObject(TimingFunction.prototype, {
+CubicBezierTimingFunction.prototype = createObject(TimingFunction.prototype, {
   scaleTime: function(fraction) {
     var fst = 0;
     while (fst !== 100 && fraction > this.map[fst][0]) {
@@ -2394,10 +2393,10 @@ StepTimingFunction.prototype = createObject(TimingFunction.prototype, {
 
 var presetTimingFunctions = {
   'linear': null,
-  'ease': new SplineTimingFunction([0.25, 0.1, 0.25, 1.0]),
-  'ease-in': new SplineTimingFunction([0.42, 0, 1.0, 1.0]),
-  'ease-out': new SplineTimingFunction([0, 0, 0.58, 1.0]),
-  'ease-in-out': new SplineTimingFunction([0.42, 0, 0.58, 1.0]),
+  'ease': new CubicBezierTimingFunction([0.25, 0.1, 0.25, 1.0]),
+  'ease-in': new CubicBezierTimingFunction([0.42, 0, 1.0, 1.0]),
+  'ease-out': new CubicBezierTimingFunction([0, 0, 0.58, 1.0]),
+  'ease-in-out': new CubicBezierTimingFunction([0.42, 0, 0.58, 1.0]),
   'step-start': new StepTimingFunction(1, 'start'),
   'step-middle': new StepTimingFunction(1, 'middle'),
   'step-end': new StepTimingFunction(1, 'end')
@@ -2406,31 +2405,42 @@ var presetTimingFunctions = {
 
 
 /** @constructor */
-var PacedTimingFunction = function(timedItem) {
-  this._timedItem = timedItem;
+var PacedTimingFunction = function(pathEffect) {
+  ASSERT_ENABLED && console.assert(pathEffect instanceof PathAnimationEffect);
+  this._pathEffect = pathEffect;
+  // Range is the portion of the effect over which we pace, normalized to
+  // [0, 1].
+  this._range = {min: 0, max: 1};
 };
 
 PacedTimingFunction.prototype = createObject(TimingFunction.prototype, {
+  setRange: function(range) {
+    ASSERT_ENABLED && console.assert(range.min >= 0 && range.min <= 1);
+    ASSERT_ENABLED && console.assert(range.max >= 0 && range.max <= 1);
+    ASSERT_ENABLED && console.assert(range.min < range.max);
+    this._range = range;
+  },
   scaleTime: function(fraction) {
-    var cumulativeLengths = this._timedItem.effect._cumulativeLengths;
-    var totalLength = cumulativeLengths[cumulativeLengths.length - 1];
-    if (!totalLength || fraction <= 0) {
-      return 0;
+    var cumulativeLengths = this._pathEffect._cumulativeLengths;
+    var numSegments = cumulativeLengths.length - 1;
+    if (!cumulativeLengths[numSegments] || fraction <= 0) {
+      return this._range.min;
     }
-    var length = fraction * totalLength;
-    var leftIndex = this._findLeftIndex(cumulativeLengths, length);
-    if (leftIndex >= cumulativeLengths.length - 1) {
-      return 1;
+    if (fraction >= 1) {
+      return this._range.max;
     }
+    var minLength = this.lengthAtIndex(this._range.min * numSegments);
+    var maxLength = this.lengthAtIndex(this._range.max * numSegments);
+    var length = interp(minLength, maxLength, fraction);
+    var leftIndex = this.findLeftIndex(cumulativeLengths, length);
     var leftLength = cumulativeLengths[leftIndex];
     var segmentLength = cumulativeLengths[leftIndex + 1] - leftLength;
     if (segmentLength > 0) {
-      return (leftIndex + ((length - leftLength) / segmentLength)) /
-          (cumulativeLengths.length - 1);
+      return (leftIndex + (length - leftLength) / segmentLength) / numSegments;
     }
     return leftLength / cumulativeLengths.length;
   },
-  _findLeftIndex: function(array, value) {
+  findLeftIndex: function(array, value) {
     var leftIndex = 0;
     var rightIndex = array.length;
     while (rightIndex - leftIndex > 1) {
@@ -2442,6 +2452,15 @@ PacedTimingFunction.prototype = createObject(TimingFunction.prototype, {
       }
     }
     return leftIndex;
+  },
+  lengthAtIndex: function(i) {
+    ASSERT_ENABLED &&
+        console.assert(i >= 0 && i <= cumulativeLengths.length - 1);
+    var leftIndex = Math.floor(i);
+    var startLength = this._pathEffect._cumulativeLengths[leftIndex];
+    var endLength = this._pathEffect._cumulativeLengths[leftIndex + 1];
+    var indexFraction = i % 1;
+    return interp(startLength, endLength, indexFraction);
   }
 });
 
@@ -4265,6 +4284,7 @@ var add = function(property, base, delta) {
   return getType(property).add(base, delta);
 };
 
+
 /**
  * Interpolate the given property name (f*100)% of the way from 'from' to 'to'.
  * 'from' and 'to' are both raw values already converted from CSS value
@@ -4291,6 +4311,7 @@ var interpolate = function(property, from, to, f) {
   }
   return getType(property).interpolate(from, to, f);
 };
+
 
 /**
  * Convert the provided interpolable value for the provided property to a CSS
@@ -4869,7 +4890,8 @@ window._WebAnimationsTestingUtilities = {
   _positionListType: positionListType,
   _hsl2rgb: hsl2rgb,
   _types: propertyTypes,
-  _knownPlayers: PLAYERS
+  _knownPlayers: PLAYERS,
+  _pacedTimingFunction: PacedTimingFunction
 };
 
 })();
