@@ -1,0 +1,72 @@
+<!--
+Copyright 2013 Google Inc. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<!DOCTYPE html><meta charset="UTF-8">
+<script src="../bootstrap.js"></script>
+<script>
+'use strict';
+
+function assert_keyframe_normalization(input, output) {
+// FIXME: This may only work in Chrome.
+  assert_equals(
+      JSON.stringify(new Animation(null, input).effect.getFrames()),
+      JSON.stringify(output));
+}
+
+test(function() {
+  assert_keyframe_normalization({left: '0px'}, [{offset: null, composite: null, left: '0px'}]);
+}, 'Output of getFrames is not normalized for offset-indexed keyframes');
+
+test(function() {
+  assert_keyframe_normalization(
+      {left: [{value: '0px', composite: 'add', offset: 0.5}]},
+      [{offset: 0.5, composite: 'add', left: '0px'}]);
+}, 'Property-indexed with offset and composite');
+
+test(function() {
+  assert_keyframe_normalization(
+      {left: ['0px']},
+      [{offset: 1, composite: null, left: '0px'}]);
+  assert_keyframe_normalization(
+      {left: ['0px', '1px']},
+      [{offset: 0, composite: null, left: '0px'},
+       {offset: 1, composite: null, left: '1px'}]);
+  assert_keyframe_normalization(
+      {left: [{offset: 0.5, value: '0px'}, '1px']},
+      [{offset: 0.5, composite: null, left: '0px'},
+       {offset: 1, composite: null, left: '1px'}]);
+  assert_keyframe_normalization(
+      {left: [{offset: 0.5, value: '0px'}, '1px', {offset: 0.6, value: '2px'}]},
+      [{offset: 0.5, composite: null, left: '0px'},
+       {offset: 0.55, composite: null, left: '1px'},
+       {offset: 0.6, composite: null, left: '2px'}]);
+}, 'Property-indexed distribution');
+
+test(function() {
+  assert_keyframe_normalization(
+      {left: ['0px', '1px'], opacity: [0, 1]},
+      [{offset: 0, composite: null, left: '0px'},
+       {offset: 0, composite: null, opacity: '0'},
+       {offset: 1, composite: null, left: '1px'},
+       {offset: 1, composite: null, opacity: '1'}]);
+  assert_keyframe_normalization(
+      {left: [{offset: 0.5, value: '0px'}, '1px'], opacity: [{offset: 0.6, value: 0}, 1]},
+      [{offset: 0.5, composite: null, left: '0px'},
+       {offset: 0.6, composite: null, opacity: '0'},
+       {offset: 1, composite: null, left: '1px'},
+       {offset: 1, composite: null, opacity: '1'}]);
+}, 'Property-indexed multiple-property distribution');
+</script>
