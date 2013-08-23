@@ -959,7 +959,6 @@ var TimingEvent = function(token, target, type, localTime, timelineTime, iterati
   }
   this._target = target;
   this._type = type;
-  this.returnValue = true;
   this.localTime = localTime;
   this.timelineTime = timelineTime;
   this.iterationIndex = iterationIndex;
@@ -2280,15 +2279,6 @@ SplineTimingFunction.prototype = createObject(TimingFunction.prototype, {
   }
 });
 
-var presetTimingFunctions = {
-  'linear': null,
-  'ease': new SplineTimingFunction([0.25, 0.1, 0.25, 1.0]),
-  'ease-in': new SplineTimingFunction([0.42, 0, 1.0, 1.0]),
-  'ease-out': new SplineTimingFunction([0, 0, 0.58, 1.0]),
-  'ease-in-out': new SplineTimingFunction([0.42, 0, 0.58, 1.0]),
-};
-
-
 /** @constructor */
 var StepTimingFunction = function(numSteps, position) {
   this.numSteps = numSteps;
@@ -2308,6 +2298,17 @@ StepTimingFunction.prototype = createObject(TimingFunction.prototype, {
     return fraction - fraction % stepSize;
   },
 });
+
+var presetTimingFunctions = {
+  'linear': null,
+  'ease': new SplineTimingFunction([0.25, 0.1, 0.25, 1.0]),
+  'ease-in': new SplineTimingFunction([0.42, 0, 1.0, 1.0]),
+  'ease-out': new SplineTimingFunction([0, 0, 0.58, 1.0]),
+  'ease-in-out': new SplineTimingFunction([0.42, 0, 0.58, 1.0]),
+  'step-start': new StepTimingFunction(1, 'start'),
+  'step-middle': new StepTimingFunction(1, 'middle'),
+  'step-end': new StepTimingFunction(1, 'end'),
+};
 
 /** @constructor */
 var PacedTimingFunction = function(timedItem) {
