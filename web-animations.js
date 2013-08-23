@@ -959,7 +959,6 @@ var TimingEvent = function(token, target, type, localTime, timelineTime, iterati
   }
   this._target = target;
   this._type = type;
-  this.returnValue = true;
   this.localTime = localTime;
   this.timelineTime = timelineTime;
   this.iterationIndex = iterationIndex;
