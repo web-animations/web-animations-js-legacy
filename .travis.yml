@@ -7,6 +7,7 @@ env:
     - SAUCE_USERNAME=mithro
 
   matrix:
+    - MODE='check'
     - BROWSER=Chrome-stable ARGS='-x -b Chrome -u'
     - BROWSER=Chrome-beta ARGS='-x -b Chrome -u'
     - BROWSER=Chrome-unstable ARGS='-x -b Chrome -u'
@@ -29,13 +30,7 @@ install:
   - ./.travis-setup.sh
 
 script:
-  - python ./test/update-testcases.py --dry-run || (echo "Please run update-testcases!"; false)
-  # For pull requests we don't have access to secure environment variables, so we just return true.
-  - if [ x$BROWSER == "xRemote" -a x$SAUCE_ACCESS_KEY == "x" ]; then
-      true;
-    else
-      echo python run-tests.py -a $ARGS | bash;
-    fi
+  - ./.travis-run.sh
 
 after_failure:
   - for file in *.log; do echo $file; echo "======================"; cat $file; done || true
