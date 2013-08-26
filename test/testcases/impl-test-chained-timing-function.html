@@ -44,6 +44,14 @@ test(function() {
 }, 'Specify a single timing function, it spans entire range');
 
 test(function() {
+  var result = createNormalizedChain('ease foo linear');
+  assert_equals(result.length, 1);
+  assert_true(result[0].timingFunction instanceof LinearTimingFunction);
+  assert_equals(result[0].range.min, 0.0);
+  assert_equals(result[0].range.max, 1.0);
+}, 'Specify an invalid timing function, get a single linear segment');
+
+test(function() {
   var result = createNormalizedChain(null, [0.0, 0.3, 0.6, 1.0]);
   assert_equals(result.length, 3);
   assert_true(result[0].timingFunction instanceof LinearTimingFunction);
@@ -72,6 +80,21 @@ test(function() {
   assert_equals(result[2].range.min, 0.6);
   assert_equals(result[2].range.max, 1.0);
 }, 'Specify points with too few timing functions, get last timing function repeated');
+
+test(function() {
+  var result = createNormalizedChain('ease foo linear', [0.0, 0.3, 0.6, 1.0]);
+  assert_equals(result.length, 3);
+  assert_true(result[0].timingFunction instanceof LinearTimingFunction);
+  assert_equals(result[0].range.min, 0.0);
+  assert_equals(result[0].range.max, 0.3);
+  assert_true(result[1].timingFunction instanceof LinearTimingFunction);
+  assert_equals(result[1].range.min, 0.3);
+  assert_equals(result[1].range.max, 0.6);
+  assert_true(result[2].timingFunction instanceof LinearTimingFunction);
+  assert_equals(result[2].range.min, 0.6);
+  assert_equals(result[2].range.max, 1.0);
+}, 'Specify points with an invalid timing function, get linear timing function ' +
+    'repeated');
 
 test(function() {
   var result = createNormalizedChain('ease linear ease linear',

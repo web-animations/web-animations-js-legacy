@@ -2371,14 +2371,17 @@ TimingFunction.createNormalizedChain = function(easing, easingPoints,
 
 TimingFunction.createChain = function(easing, timedItem) {
   var chain = [];
-  while (typeof easing === 'string') {
+  if (typeof easing === 'string') {
     easing = easing.trim();
-    var result = TimingFunction.createComponentFromString(easing, timedItem);
-    if (result === null) {
-      break;
+    while (easing.length > 0) {
+      var result = TimingFunction.createComponentFromString(easing, timedItem);
+      if (result === null) {
+        chain = [];
+        break;
+      }
+      chain.push(result.component);
+      easing = result.remainingString.trim();
     }
-    chain.push(result.component);
-    easing = result.remainingString;
   }
   if (chain.length === 0) {
     return [presetTimingFunctions.linear];
