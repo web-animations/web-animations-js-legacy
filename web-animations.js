@@ -4729,15 +4729,18 @@ var AnimatedCSSStyleDeclaration = function(element) {
   ASSERT_ENABLED && assert(
       !(element.style instanceof AnimatedCSSStyleDeclaration),
       'Element must not already have an animated style attached.');
-  var style = element.style;
-  var surrogateElement = document.createElement('div');
+  this._element = element;
+  this._surrogateElement = document.createElement('div');
+  this._style = element.style;
+  this._length = 0;
+
   // Populate the surrogate element's inline style.
-  for (var i = 0; i < style.length; i++) {
-    var property = style[i];
-    surrogateElement.style[property] = style[property];
+  for (var i = 0; i < this._style.length; i++) {
+    var property = this._style[i];
+    this._surrogateElement.style[property] = this._style[property];
   }
   // Delegate all property accessors to the surrogate element's inline style.
-  for (var property in style) {
+  for (var property in this._style) {
     if (cssStyleDeclarationAttribute[property] ||
         cssStyleDeclarationMethod[property]) {
       continue;
@@ -4745,10 +4748,10 @@ var AnimatedCSSStyleDeclaration = function(element) {
     (function(animatedStyle, property) {
       Object.defineProperty(animatedStyle, property, configureDescriptor({
         get: function() {
-          return surrogateElement.style[property];
+          return this._surrogateElement.style[property];
         },
         set: function(value) {
-          surrogateElement.style[property] = value;
+          this._surrogateElement.style[property] = value;
           if (property in shorthandToLonghand) {
             for (var longhand in shorthandToLonghand[property]) {
               this._inlineStylePropertyChanged(longhand);
@@ -4761,9 +4764,6 @@ var AnimatedCSSStyleDeclaration = function(element) {
       }));
     })(this, property);
   }
-  this._surrogateElement = surrogateElement;
-  this._style = style;
-  this._length = 0;
   this._updateIndices();
 };
 
@@ -4800,12 +4800,12 @@ AnimatedCSSStyleDeclaration.prototype = {
       this._length++;
     }
     while (this._length > this._surrogateElement.style.length) {
+      this._length--;
       Object.defineProperty(this, this._length, {
         configurable: true,
         enumerable: false,
         value: undefined
       });
-      this._length--;
     }
   },
   _inlineStylePropertyChanged: function(property) {
