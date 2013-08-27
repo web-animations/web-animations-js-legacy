@@ -4704,16 +4704,6 @@ CompositedPropertyMap.prototype = {
       this.properties[property] = [];
     }
   },
-  ensureHasAnimatedStyle: function(element) {
-    if (element.style instanceof AnimatedCSSStyleDeclaration) {
-      return;
-    }
-    var animatedStyle = new AnimatedCSSStyleDeclaration(element);
-    Object.defineProperty(element, 'style', configureDescriptor({
-      get: function() { return animatedStyle; }
-    }));
-    this.animatedStyles.push(animatedStyle);
-  },
 };
 
 
@@ -4822,8 +4812,11 @@ AnimatedCSSStyleDeclaration.prototype = {
     this._style[property] = this._surrogateElement.style[property];
     // FIXME: Animated values should be reapplied for this property.
   },
-  _addAnimatedValue: function(property, animValue) {
-
+  _clearAnimatedProperty: function(property) {
+    this._style[property] = this._surrogateElement.style[property];
+  },
+  _setAnimatedProperty: function(property, value) {
+    this._style[property] = value;
   }
 };
 
@@ -4925,7 +4918,7 @@ var setValue = function(target, property, value) {
   if (propertyIsSVGAttrib(property, target)) {
     target.actuals[property] = value;
   } else {
-    target.style[property] = value;
+    target.style._setAnimatedProperty(property, value);
   }
 };
 
@@ -4937,7 +4930,7 @@ var clearValue = function(target, property) {
   if (propertyIsSVGAttrib(property, target)) {
     target.actuals[property] = null;
   } else {
-    target.style[property] = null;
+    target.style._clearAnimatedProperty(property);
   }
 };
 
