@@ -4731,7 +4731,7 @@ var cssStyleDeclarationMethod = {
   removeProperty: true,
   getPropertyPriority: true,
   setProperty: true,
-  item: true,
+  item: true
 };
 
 /** @constructor */
@@ -4754,7 +4754,9 @@ var AnimatedCSSStyleDeclaration = function(element) {
     }
     (function(animatedStyle, property) {
       Object.defineProperty(animatedStyle, property, configureDescriptor({
-        get: function() { return style[property]; },
+        get: function() {
+          return surrogateElement.style[property];
+        },
         set: function(value) {
           surrogateElement.style[property] = value;
           if (property in shorthandToLonghand) {
@@ -4782,9 +4784,8 @@ AnimatedCSSStyleDeclaration.prototype = {
   set cssText(text) {
     this._surrogateElement.style.cssText = text;
     this._style.cssText = text;
-    // FIXME:
-    // Reapply all animated values.
     this._updateIndices();
+    // FIXME: Reapply all animated values.
   },
   get length() {
     return this._surrogateElement.style.length;
@@ -4818,8 +4819,8 @@ AnimatedCSSStyleDeclaration.prototype = {
     }
   },
   _inlineStylePropertyChanged: function(property) {
-    // FIXME:
-    // Animated values should be reapplied for this property.
+    this._style[property] = this._surrogateElement.style[property];
+    // FIXME: Animated values should be reapplied for this property.
   },
   _addAnimatedValue: function(property, animValue) {
 
@@ -4863,7 +4864,7 @@ Compositor.prototype = {
   }
 };
 
-var initializeIfUninitialized = function(property, target) {
+var ensureTargetInitialised = function(property, target) {
   if (propertyIsSVGAttrib(property, target)) {
     if (!isDefinedAndNotNull(target._actuals)) {
       target._actuals = {};
@@ -4917,7 +4918,7 @@ var initializeIfUninitialized = function(property, target) {
 };
 
 var setValue = function(target, property, value) {
-  initializeIfUninitialized(property, target);
+  ensureTargetInitialised(property, target);
   if (property === 'transform') {
     property = features.transformProperty;
   }
@@ -4929,7 +4930,7 @@ var setValue = function(target, property, value) {
 };
 
 var clearValue = function(target, property) {
-  initializeIfUninitialized(property, target);
+  ensureTargetInitialised(property, target);
   if (property === 'transform') {
     property = features.transformProperty;
   }
@@ -4941,7 +4942,7 @@ var clearValue = function(target, property) {
 };
 
 var getValue = function(target, property) {
-  initializeIfUninitialized(property, target);
+  ensureTargetInitialised(property, target);
   if (property === 'transform') {
     property = features.transformProperty;
   }
