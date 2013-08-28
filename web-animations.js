@@ -4703,16 +4703,14 @@ CompositedPropertyMap.prototype = {
           isSvgMode));
       this.properties[property] = [];
     }
-  },
+  }
 };
-
-
 
 var cssStyleDeclarationAttribute = {
   cssText: true,
   length: true,
   parentRule: true,
-  var: true
+  'var': true
 };
 
 var cssStyleDeclarationMethod = {
@@ -4723,6 +4721,8 @@ var cssStyleDeclarationMethod = {
   setProperty: true,
   item: true
 };
+
+
 
 /** @constructor */
 var AnimatedCSSStyleDeclaration = function(element) {
@@ -4778,7 +4778,7 @@ AnimatedCSSStyleDeclaration.prototype = {
   get parentRule() {
     return this._style.parentRule;
   },
-  get var() {
+  get 'var'() {
     return this._style.var;
   },
   _updateIndices: function() {
@@ -4815,10 +4815,12 @@ for (var method in cssStyleDeclarationMethod) {
   AnimatedCSSStyleDeclaration.prototype[method] = (function(method) {
     return function() {
       return this._surrogateElement.style[method].apply(
-        this._surrogateElement.style, arguments);
+          this._surrogateElement.style, arguments);
     }
   })(method);
 }
+
+
 
 /** @constructor */
 var Compositor = function() {
