@@ -4590,9 +4590,9 @@ AddReplaceCompositableValue.prototype = createObject(
 
 
 /** @constructor */
-var BlendedCompositableValue = function(beforeValue, afterValue, fraction) {
-  this.beforeValue = beforeValue;
-  this.afterValue = afterValue;
+var BlendedCompositableValue = function(startValue, endValue, fraction) {
+  this.startValue = startValue;
+  this.endValue = endValue;
   this.fraction = fraction;
 };
 
@@ -4600,13 +4600,13 @@ BlendedCompositableValue.prototype = createObject(
     CompositableValue.prototype, {
       compositeOnto: function(property, underlyingValue) {
         return interpolate(property,
-            this.beforeValue.compositeOnto(property, underlyingValue),
-            this.afterValue.compositeOnto(property, underlyingValue),
+            this.startValue.compositeOnto(property, underlyingValue),
+            this.endValue.compositeOnto(property, underlyingValue),
             this.fraction);
       },
       dependsOnUnderlyingValue: function() {
-        return this.beforeValue.dependsOnUnderlyingValue() ||
-            this.afterValue.dependsOnUnderlyingValue();
+        return this.startValue.dependsOnUnderlyingValue() ||
+            this.endValue.dependsOnUnderlyingValue();
       }
     });
 
