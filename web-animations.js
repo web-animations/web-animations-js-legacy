@@ -4751,7 +4751,6 @@ AnimatedCSSStyleDeclaration.prototype = {
     return this._surrogateElement.style.cssText;
   },
   set cssText(text) {
-    var animatedPropertyAffected = false;
     var isAffectedProperty = {};
     for (var i = 0; i < this._surrogateElement.style.length; i++) {
       isAffectedProperty[this._surrogateElement.style[i]] = true;
@@ -4763,7 +4762,8 @@ AnimatedCSSStyleDeclaration.prototype = {
     }
     for (var property in isAffectedProperty) {
       if (!this._isAnimatedProperty[property]) {
-        this._style[property] = this._surrogateElement.style[property];
+        this._style.setProperty(property,
+            this._surrogateElement.style.getPropertyValue(property));
       }
     }
     // FIXME: This will wait for the next animation frame before updating
