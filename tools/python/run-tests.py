@@ -624,7 +624,10 @@ try:
             if v:
                 break
 
-            status = browser.find_element_by_id('status-box').text.strip()
+            try:
+                status = browser.find_element_by_id('status-box').text.strip()
+            except selenium_exceptions.NoSuchElementException, e:
+                status = "Unknown"
             print "Still waiting tests to finish", repr(v), status
             sys.stdout.flush()
             time.sleep(1)
