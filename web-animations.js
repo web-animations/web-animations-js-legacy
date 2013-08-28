@@ -4752,14 +4752,9 @@ var AnimatedCSSStyleDeclaration = function(element) {
         },
         set: function(value) {
           this._surrogateElement.style[property] = value;
-          if (property in shorthandToLonghand) {
-            for (var longhand in shorthandToLonghand[property]) {
-              this._inlineStylePropertyChanged(longhand);
-            }
-          } else {
-            this._inlineStylePropertyChanged(property);
-          }
+          this._style[property] = value;
           this._updateIndices();
+          maybeRestartAnimation();
         }
       }));
     })(this, property);
@@ -4807,10 +4802,6 @@ AnimatedCSSStyleDeclaration.prototype = {
         value: undefined
       });
     }
-  },
-  _inlineStylePropertyChanged: function(property) {
-    this._style[property] = this._surrogateElement.style[property];
-    // FIXME: Animated values should be reapplied for this property.
   },
   _clearAnimatedProperty: function(property) {
     this._style[property] = this._surrogateElement.style[property];
