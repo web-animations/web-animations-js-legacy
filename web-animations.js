@@ -4800,7 +4800,7 @@ for (var method in cssStyleDeclarationMethod) {
   })(method);
 }
 
-for (var property in document.body.style) {
+for (var property in document.createElement('div').style) {
   if (cssStyleDeclarationAttribute[property] ||
       cssStyleDeclarationMethod[property]) {
     continue;
