@@ -4739,26 +4739,6 @@ var AnimatedCSSStyleDeclaration = function(element) {
     var property = this._style[i];
     this._surrogateElement.style[property] = this._style[property];
   }
-  // Delegate all property accessors to the surrogate element's inline style.
-  for (var property in this._style) {
-    if (cssStyleDeclarationAttribute[property] ||
-        cssStyleDeclarationMethod[property]) {
-      continue;
-    }
-    (function(animatedStyle, property) {
-      Object.defineProperty(animatedStyle, property, configureDescriptor({
-        get: function() {
-          return this._surrogateElement.style[property];
-        },
-        set: function(value) {
-          this._surrogateElement.style[property] = value;
-          this._style[property] = value;
-          this._updateIndices();
-          maybeRestartAnimation();
-        }
-      }));
-    })(this, property);
-  }
   this._updateIndices();
 };
 
@@ -4818,6 +4798,27 @@ for (var method in cssStyleDeclarationMethod) {
           this._surrogateElement.style, arguments);
     }
   })(method);
+}
+
+for (var property in document.body.style) {
+  if (cssStyleDeclarationAttribute[property] ||
+      cssStyleDeclarationMethod[property]) {
+    continue;
+  }
+  (function(property) {
+    Object.defineProperty(AnimatedCSSStyleDeclaration.prototype, property,
+        configureDescriptor({
+          get: function() {
+            return this._surrogateElement.style[property];
+          },
+          set: function(value) {
+            this._surrogateElement.style[property] = value;
+            this._style[property] = value;
+            this._updateIndices();
+            maybeRestartAnimation();
+          }
+        }));
+  })(property);
 }
 
 
