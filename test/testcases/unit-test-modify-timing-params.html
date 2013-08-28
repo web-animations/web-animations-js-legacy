@@ -27,19 +27,19 @@ var anim = new Animation(document.getElementById("anim"), {left: "100px"},
 // Test that updates to a TimedItem's startTime, duration or activeDuration
 // cause corresponding updates to its endTime.
 test(function() {assert_equals(anim.endTime,  1.0)},
-     "Incorrect endTime");
+     "endTime should reflect initial duration");
 try { anim.startTime = 2.0; } catch (error) { }
 test(function() {assert_equals(anim.startTime,  0.0)},
      "startTime should be read only");
 anim.specified.duration = 3.0;
 test(function() {assert_equals(anim.endTime,  3.0)},
-     "endTime does not reflect Timing.duration");
+     "endTime should reflect Timing.duration");
 anim.specified.duration = 4.0;
 test(function() {assert_equals(anim.endTime,  4.0)},
-     "endTime does not reflect duration");
+     "endTime should reflect duration");
 anim.specified.activeDuration = 5.0;
 test(function() {assert_equals(anim.endTime,  5.0)},
-     "endTime does not reflect activeDuration");
+     "endTime should reflect activeDuration");
 
 try { anim.endTime = 6.0; } catch (error) { }
 test(function() {assert_equals(anim.endTime,  5.0)},

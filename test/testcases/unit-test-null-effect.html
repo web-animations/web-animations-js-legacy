@@ -27,7 +27,7 @@ limitations under the License.
 var target = document.getElementById("anim");
 
 test(function() { new Animation(target, null, 1.0); },
-    "Creating an animation with a null effect does not cause an exception");
+    "Creating an animation with a null effect should not cause an exception");
 
 test(function() {
   assert_equals(new Animation(target, null, 1.0).effect, null);
@@ -38,6 +38,6 @@ test(function() {
 }, "Cloning an animation with a null effect should yield a null effect");
 
 test(function() { document.timeline.play(new Animation(target, null, 1.0)); },
-    "Playing an animation with a null effect does not cause an exception");
+    "Playing an animation with a null effect should not cause an exception");
 
 </script>
