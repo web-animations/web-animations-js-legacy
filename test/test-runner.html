@@ -190,6 +190,9 @@ function now() {
  * @return {Element} tbody containing newly created table rows.
  */
 function createTestRows(testName, testURL) {
+  // Prevent caching of the test file.
+  testURL += '?' + Date.now();
+
   var tableGroup = document.createElement('tbody');
   tableGroup.id = testName.replace('.', '-');
 
