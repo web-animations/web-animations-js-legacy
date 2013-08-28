@@ -4736,6 +4736,7 @@ var AnimatedCSSStyleDeclaration = function(element) {
   this._surrogateElement = document.createElement('div');
   this._style = element.style;
   this._length = 0;
+  this._isAnimatedProperty = {};
 
   // Populate the surrogate element's inline style.
   for (var i = 0; i < this._style.length; i++) {
@@ -4750,9 +4751,23 @@ AnimatedCSSStyleDeclaration.prototype = {
     return this._surrogateElement.style.cssText;
   },
   set cssText(text) {
+    var animatedPropertyAffected = false;
+    var isAffectedProperty = {};
+    for (var i = 0; i < this._surrogateElement.style.length; i++) {
+      isAffectedProperty[this._surrogateElement.style[i]] = true;
+    }
     this._surrogateElement.style.cssText = text;
-    this._style.cssText = text;
     this._updateIndices();
+    for (var i = 0; i < this._surrogateElement.style.length; i++) {
+      isAffectedProperty[this._surrogateElement.style[i]] = true;
+    }
+    for (var property in isAffectedProperty) {
+      if (!this._isAnimatedProperty[property]) {
+        this._style[property] = this._surrogateElement.style[property];
+      }
+    }
+    // FIXME: This will wait for the next animation frame before updating
+    // animation styles to take the new inline style into account.
     maybeRestartAnimation();
   },
   get length() {
@@ -4788,9 +4803,11 @@ AnimatedCSSStyleDeclaration.prototype = {
   },
   _clearAnimatedProperty: function(property) {
     this._style[property] = this._surrogateElement.style[property];
+    this._isAnimatedProperty[property] = false;
   },
   _setAnimatedProperty: function(property, value) {
     this._style[property] = value;
+    this._isAnimatedProperty[property] = true;
   }
 };
 
@@ -4816,8 +4833,13 @@ for (var property in document.documentElement.style) {
           },
           set: function(value) {
             this._surrogateElement.style[property] = value;
-            this._style[property] = value;
             this._updateIndices();
+            if (!this._isAnimatedProperty[property]) {
+              this._style[property] = value;
+            }
+            // FIXME: This will wait for the next animation frame before
+            // updating animation styles to take the new inline style into
+            // account.
             maybeRestartAnimation();
           }
         }));
