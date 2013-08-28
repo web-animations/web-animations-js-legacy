@@ -4697,8 +4697,15 @@ CompositedPropertyMap.prototype = {
   applyAnimatedValues: function() {
     for (var property in this.properties) {
       var valuesToComposite = this.properties[property];
+      if (valuesToComposite.length === 0) {
+        continue;
+      }
       var baseValue = this.baseValues[property];
-      for (var i = 0; i < valuesToComposite.length; i++) {
+      var i = valuesToComposite.length - 1;
+      while (i > 0 && valuesToComposite[i].dependsOnUnderlyingValue()) {
+        i--;
+      }
+      for (; i < valuesToComposite.length; i++) {
         baseValue = valuesToComposite[i].compositeOnto(property, baseValue);
       }
       ASSERT_ENABLED && assert(
