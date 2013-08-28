@@ -1253,6 +1253,11 @@ if (!hasFlag('nopolyfill')) {
   loadScript('../../web-animations.js');
 }
 
+addEventListener('load', function() {
+  if (window._WebAnimationsTestingUtilities) {
+    _WebAnimationsTestingUtilities._enableAsserts();
+  }
+});
 
 // Don't export the timing functions in unittests.
 if (testType() != 'unit') {
