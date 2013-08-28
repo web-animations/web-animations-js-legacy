@@ -19,6 +19,14 @@
 
 var ASSERT_ENABLED = false;
 
+function assert(check, message) {
+  console.assert(ASSERT_ENABLED,
+      'assert should not be called when ASSERT_ENABLED is false');
+  console.assert(check, message);
+  // Some implementations of console.assert don't actually throw
+  if (!check) { throw message; }
+}
+
 function detectFeatures() {
   var style = document.createElement('style');
   style.textContent = '' +
@@ -597,7 +605,7 @@ TimedItem.prototype = {
         this._isCurrentDirectionForwards() ?
         unscaledFraction :
         1.0 - unscaledFraction);
-    ASSERT_ENABLED && console.assert(
+    ASSERT_ENABLED && assert(
         this._timeFraction >= 0.0 && this._timeFraction <= 1.0,
         'Time fraction should be in the range [0, 1]');
     this._timeFraction =
@@ -634,7 +642,7 @@ TimedItem.prototype = {
             adjustedAnimationTime, this.duration);
     this._iterationTime = this._scaleIterationTime(unscaledIterationTime);
     this._timeFraction = this._iterationTime / this.duration;
-    ASSERT_ENABLED && console.assert(
+    ASSERT_ENABLED && assert(
         this._timeFraction >= 0.0 && this._timeFraction <= 1.0,
         'Time fraction should be in the range [0, 1], got ' +
         this._timeFraction + ' ' + this._iterationTime + ' ' +
@@ -671,11 +679,11 @@ TimedItem.prototype = {
     return Math.ceil(x / range) - 1;
   },
   _modulusWithClosedOpenRange: function(x, range) {
-    ASSERT_ENABLED && console.assert(
+    ASSERT_ENABLED && assert(
         range > 0, 'Range must be strictly positive');
     var modulus = x % range;
     var result = modulus < 0 ? modulus + range : modulus;
-    ASSERT_ENABLED && console.assert(
+    ASSERT_ENABLED && assert(
         result >= 0.0 && result < range,
         'Result should be in the range [0, range)');
     return result;
@@ -683,7 +691,7 @@ TimedItem.prototype = {
   _modulusWithOpenClosedRange: function(x, range) {
     var modulus = this._modulusWithClosedOpenRange(x, range);
     var result = modulus === 0 ? range : modulus;
-    ASSERT_ENABLED && console.assert(
+    ASSERT_ENABLED && assert(
         result > 0.0 && result <= range,
         'Result should be in the range (0, range]');
     return result;
@@ -1988,7 +1996,7 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     return unaccumulatedValue;
   },
   _getAccumulatingValue: function(frames) {
-    ASSERT_ENABLED && console.assert(
+    ASSERT_ENABLED && assert(
         this._allKeyframesUseSameCompositeOperation(frames),
         'Accumulation only valid if all frames use same composite operation');
 
@@ -2009,13 +2017,13 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     // to get a concrete value (note that the choice of underlying value is
     // irrelevant since it uses replace composition). We then form a new
     // AddReplaceCompositable value to add-composite this concrete value.
-    ASSERT_ENABLED && console.assert(
+    ASSERT_ENABLED && assert(
         !unaccumulatedValueAtOffsetOne.dependsOnUnderlyingValue());
     return new AddReplaceCompositableValue(
         unaccumulatedValueAtOffsetOne.compositeOnto(null, null), 'add');
   },
   _getUnaccumulatedValue: function(frames, timeFraction) {
-    ASSERT_ENABLED && console.assert(
+    ASSERT_ENABLED && assert(
         frames.length >= 2,
         'Interpolation requires at least two keyframes');
 
@@ -2040,7 +2048,7 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     } else {
       for (var i = length - 1; i >= 0; i--) {
         if (frames[i].offset <= timeFraction) {
-          ASSERT_ENABLED && console.assert(frames[i].offset !== 1.0);
+          ASSERT_ENABLED && assert(frames[i].offset !== 1.0);
           startKeyframeIndex = i;
           break;
         }
@@ -2086,7 +2094,7 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
 
     for (var property in this._cachedPropertySpecificKeyframes) {
       var frames = this._cachedPropertySpecificKeyframes[property];
-      ASSERT_ENABLED && console.assert(
+      ASSERT_ENABLED && assert(
           frames.length > 0,
           'There should always be keyframes for each property');
 
@@ -2101,7 +2109,7 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
             property, cssNeutralValue);
         frames.push(keyframe);
       }
-      ASSERT_ENABLED && console.assert(
+      ASSERT_ENABLED && assert(
           frames.length >= 2,
           'There should be at least two keyframes including' +
           ' synthetic keyframes');
@@ -2123,7 +2131,7 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
         keyframe.composite : this.composite;
   },
   _allKeyframesUseSameCompositeOperation: function(keyframes) {
-    ASSERT_ENABLED && console.assert(
+    ASSERT_ENABLED && assert(
         keyframes.length >= 1, 'This requires at least one keyframe');
     var composite = this._compositeForKeyframe(keyframes[0]);
     for (var i = 1; i < keyframes.length; i++) {
@@ -2211,9 +2219,9 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
       var lastOffset = distributedKeyframes[lastOffsetIndex].offset;
       var nextOffset = distributedKeyframes[nextOffsetIndex].offset;
       var unspecifiedKeyframes = nextOffsetIndex - lastOffsetIndex - 1;
-      ASSERT_ENABLED && console.assert(unspecifiedKeyframes > 0);
+      ASSERT_ENABLED && assert(unspecifiedKeyframes > 0);
       var localIndex = i - lastOffsetIndex;
-      ASSERT_ENABLED && console.assert(localIndex > 0);
+      ASSERT_ENABLED && assert(localIndex > 0);
       distributedKeyframes[i].offset = lastOffset +
           (nextOffset - lastOffset) * localIndex / (unspecifiedKeyframes + 1);
     }
@@ -2256,10 +2264,10 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
  * @constructor
  */
 var KeyframeInternal = function(offset, composite) {
-  ASSERT_ENABLED && console.assert(
+  ASSERT_ENABLED && assert(
       typeof offset === 'number' || offset === null,
       'Invalid offset value');
-  ASSERT_ENABLED && console.assert(
+  ASSERT_ENABLED && assert(
       composite === 'add' || composite === 'replace' || composite === null,
       'Invalid composite value');
   this.offset = offset;
@@ -2269,7 +2277,7 @@ var KeyframeInternal = function(offset, composite) {
 
 KeyframeInternal.prototype = {
   addPropertyValuePair: function(property, value) {
-    ASSERT_ENABLED && console.assert(!this.cssValues.hasOwnProperty(property));
+    ASSERT_ENABLED && assert(!this.cssValues.hasOwnProperty(property));
     this.cssValues[property] = value;
   },
   hasValueForProperty: function(property) {
@@ -2278,14 +2286,14 @@ KeyframeInternal.prototype = {
 };
 
 KeyframeInternal.isSupportedPropertyValue = function(value) {
-  ASSERT_ENABLED && console.assert(
+  ASSERT_ENABLED && assert(
       typeof value === 'string' || value === cssNeutralValue);
   // TODO: Check this properly!
   return value !== '';
 };
 
 KeyframeInternal.createFromNormalizedProperties = function(properties) {
-  ASSERT_ENABLED && console.assert(
+  ASSERT_ENABLED && assert(
       isDefinedAndNotNull(properties) && typeof properties === 'object',
       'Properties must be an object');
   var keyframe = new KeyframeInternal(properties.offset, properties.composite);
@@ -2331,10 +2339,10 @@ TimingFunction.prototype.clone = abstractMethod;
 TimingFunction.createFromString = function(easing, easingPoints, timedItem) {
   var normalizedChain = TimingFunction.createNormalizedChain(easing,
       easingPoints, timedItem);
-  ASSERT_ENABLED && console.assert(normalizedChain.length > 0);
+  ASSERT_ENABLED && assert(normalizedChain.length > 0);
   if (normalizedChain.length === 1) {
-    ASSERT_ENABLED && console.assert(normalizedChain[0].range.min === 0);
-    ASSERT_ENABLED && console.assert(normalizedChain[0].range.max === 1);
+    ASSERT_ENABLED && assert(normalizedChain[0].range.min === 0);
+    ASSERT_ENABLED && assert(normalizedChain[0].range.max === 1);
     return normalizedChain[0].timingFunction;
   }
   return new ChainedTimingFunction(normalizedChain);
@@ -2345,11 +2353,11 @@ TimingFunction.createFromString = function(easing, easingPoints, timedItem) {
 TimingFunction.createNormalizedChain = function(easing, easingPoints,
     timedItem) {
   var chain = TimingFunction.createChain(easing, timedItem);
-  ASSERT_ENABLED && console.assert(chain.length > 0);
+  ASSERT_ENABLED && assert(chain.length > 0);
 
   var normalizedPositionList = TimingFunction.createNormalizedPositionList(
       easingPoints, chain.length, timedItem);
-  ASSERT_ENABLED && console.assert(TimingFunction.isValidPositionList(
+  ASSERT_ENABLED && assert(TimingFunction.isValidPositionList(
       normalizedPositionList));
 
   var normalizedChain = [];
@@ -2497,8 +2505,7 @@ ChainedTimingFunction.prototype = createObject(TimingFunction.prototype, {
                 this._relativeRange(component.range, fraction)));
       }
     }
-    ASSERT_ENABLED &&
-        console.assert(false, 'Logic error in ChainedTimingFunction');
+    ASSERT_ENABLED && assert(false, 'Logic error in ChainedTimingFunction');
   },
   _relativeRange: function(range, x) {
     return (x - range.min) / (range.max - range.min);
@@ -2597,7 +2604,7 @@ var presetTimingFunctions = {
 
 /** @constructor */
 var PacedTimingFunction = function(pathEffect) {
-  ASSERT_ENABLED && console.assert(pathEffect instanceof PathAnimationEffect);
+  ASSERT_ENABLED && assert(pathEffect instanceof PathAnimationEffect);
   this._pathEffect = pathEffect;
   // Range is the portion of the effect over which we pace, normalized to
   // [0, 1].
@@ -2606,9 +2613,9 @@ var PacedTimingFunction = function(pathEffect) {
 
 PacedTimingFunction.prototype = createObject(TimingFunction.prototype, {
   setRange: function(range) {
-    ASSERT_ENABLED && console.assert(range.min >= 0 && range.min <= 1);
-    ASSERT_ENABLED && console.assert(range.max >= 0 && range.max <= 1);
-    ASSERT_ENABLED && console.assert(range.min < range.max);
+    ASSERT_ENABLED && assert(range.min >= 0 && range.min <= 1);
+    ASSERT_ENABLED && assert(range.max >= 0 && range.max <= 1);
+    ASSERT_ENABLED && assert(range.min < range.max);
     this._range = range;
   },
   scaleTime: function(fraction) {
@@ -2646,8 +2653,7 @@ PacedTimingFunction.prototype = createObject(TimingFunction.prototype, {
   },
   lengthAtIndex: function(i) {
     var cumulativeLengths = this._pathEffect._cumulativeLengths;
-    ASSERT_ENABLED &&
-        console.assert(i >= 0 && i <= cumulativeLengths.length - 1);
+    ASSERT_ENABLED && assert(i >= 0 && i <= cumulativeLengths.length - 1);
     var leftIndex = Math.floor(i);
     var startLength = cumulativeLengths[leftIndex];
     var endLength = cumulativeLengths[leftIndex + 1];
@@ -2671,13 +2677,13 @@ var interp = function(from, to, f, type) {
 };
 
 var interpArray = function(from, to, f, type) {
-  ASSERT_ENABLED && console.assert(
+  ASSERT_ENABLED && assert(
       Array.isArray(from) || from === null,
       'From is not an array or null');
-  ASSERT_ENABLED && console.assert(
+  ASSERT_ENABLED && assert(
       Array.isArray(to) || to === null,
       'To is not an array or null');
-  ASSERT_ENABLED && console.assert(
+  ASSERT_ENABLED && assert(
       from === null || to === null || from.length === to.length,
       'Arrays differ in length ' + from + ' : ' + to);
   var length = from ? from.length : to.length;
@@ -4182,7 +4188,7 @@ var transformType = {
     // TODO: fix this :)
     var out = '';
     for (var i = 0; i < value.length; i++) {
-      ASSERT_ENABLED && console.assert(
+      ASSERT_ENABLED && assert(
           value[i].t, 'transform type should be resolved by now');
       switch (value[i].t) {
         case 'rotate':
@@ -4492,7 +4498,7 @@ var add = function(property, base, delta) {
  *   will return 'rotate(43deg)'.
  */
 var interpolate = function(property, from, to, f) {
-  ASSERT_ENABLED && console.assert(
+  ASSERT_ENABLED && assert(
       isDefinedAndNotNull(from) && isDefinedAndNotNull(to),
       'Both to and from values should be specified for interpolation');
   if (from === 'inherit' || to === 'inherit') {
@@ -4535,7 +4541,7 @@ var fromCssValue = function(property, value) {
   // Currently we'll hit this assert if input to the API is bad. To avoid this,
   // we should eliminate invalid values when normalizing the list of keyframes.
   // See the TODO in isSupportedPropertyValue().
-  ASSERT_ENABLED && console.assert(isDefinedAndNotNull(result),
+  ASSERT_ENABLED && assert(isDefinedAndNotNull(result),
       'Invalid property value "' + value + '" for property "' + property + '"');
   return result;
 };
@@ -4564,7 +4570,7 @@ CompositableValue.prototype = {
 var AddReplaceCompositableValue = function(value, composite) {
   this.value = value;
   this.composite = composite;
-  ASSERT_ENABLED && console.assert(
+  ASSERT_ENABLED && assert(
       !(this.value === cssNeutralValue && this.composite === 'replace'),
       'Should never replace-composite the neutral value');
 };
@@ -4578,7 +4584,7 @@ AddReplaceCompositableValue.prototype = createObject(
           case 'add':
             return add(property, underlyingValue, this.value);
           default:
-            ASSERT_ENABLED && console.assert(
+            ASSERT_ENABLED && assert(
                 false, 'Invalid composite operation ' + this.composite);
         }
       },
@@ -4618,7 +4624,7 @@ var AccumulatedCompositableValue = function(
   this.bottomValue = bottomValue;
   this.accumulatingValue = accumulatingValue;
   this.accumulationCount = accumulationCount;
-  ASSERT_ENABLED && console.assert(this.accumulationCount > 0,
+  ASSERT_ENABLED && assert(this.accumulationCount > 0,
       'Accumumlation count should be strictly positive');
 };
 
@@ -4678,7 +4684,7 @@ CompositedPropertyMap.prototype = {
       if (this.stackDependsOnUnderlyingValue(this.properties[property])) {
         var baseValue = fromCssValue(property, getValue(this.target, property));
         // TODO: Decide what to do with elements not in the DOM.
-        ASSERT_ENABLED && console.assert(
+        ASSERT_ENABLED && assert(
             isDefinedAndNotNull(baseValue) && baseValue !== '',
             'Base value should always be set. ' +
             'Is the target element in the DOM?');
@@ -4695,7 +4701,7 @@ CompositedPropertyMap.prototype = {
       for (var i = 0; i < valuesToComposite.length; i++) {
         baseValue = valuesToComposite[i].compositeOnto(property, baseValue);
       }
-      ASSERT_ENABLED && console.assert(
+      ASSERT_ENABLED && assert(
           isDefinedAndNotNull(baseValue) && baseValue !== '',
           'Value should always be set after compositing');
       var isSvgMode = propertyIsSVGAttrib(property, this.target);
@@ -5089,7 +5095,8 @@ window._WebAnimationsTestingUtilities = {
   _createNormalizedChain: TimingFunction.createNormalizedChain,
   _cubicBezierTimingFunction: CubicBezierTimingFunction,
   _linearTimingFunction: LinearTimingFunction,
-  _pacedTimingFunction: PacedTimingFunction
+  _pacedTimingFunction: PacedTimingFunction,
+  _enableAsserts: function() { ASSERT_ENABLED = true; }
 };
 
 })();
