@@ -45,13 +45,29 @@ var target = document.querySelector('#target');
 
 document.timeline.play(new Animation(target, {left: '100px', composite: 'replace'}, {duration: 1, iterations: 2, direction: 'alternate'}));
 
+at(0.5, function() {
+  assert_equals(0, target.style.length);
+  assert_equals('', target.style.left);
+});
+
 testharness_timeline.schedule(function() {
   target.style.left = '50px';
 }, 1000);
+
+at(1.5, function() {
+  assert_equals(1, target.style.length);
+  assert_equals('50px', target.style.left);
+});
 
 testharness_timeline.schedule(function() {
   target.style.left = '100px';
   target.style.backgroundColor = 'green';
 }, 2500);
+
+at(3, function() {
+  assert_equals(2, target.style.length);
+  assert_equals('100px', target.style.left);
+  assert_not_equals('', target.style.backgroundColor);
+});
 
 </script>
