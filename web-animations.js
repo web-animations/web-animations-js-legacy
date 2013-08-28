@@ -4766,9 +4766,7 @@ AnimatedCSSStyleDeclaration.prototype = {
             this._surrogateElement.style.getPropertyValue(property));
       }
     }
-    // FIXME: This will wait for the next animation frame before updating
-    // animation styles to take the new inline style into account.
-    maybeRestartAnimation();
+    repeatLastTick();
   },
   get length() {
     return this._surrogateElement.style.length;
@@ -4837,10 +4835,7 @@ for (var property in document.documentElement.style) {
             if (!this._isAnimatedProperty[property]) {
               this._style[property] = value;
             }
-            // FIXME: This will wait for the next animation frame before
-            // updating animation styles to take the new inline style into
-            // account.
-            maybeRestartAnimation();
+            repeatLastTick();
           }
         }));
   })(property);
