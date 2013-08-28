@@ -43,7 +43,7 @@ source bin/activate
 pip install --no-download -r requirements.txt > /dev/null 2>&1
 if [ $? -ne 0 ]; then
   # Install dependencies
-  pip install -r requirements.txt
+  pip install -r requirements.txt --upgrade
   if [ $? -ne 0 ]; then
     cat <<EOF
 Unable to install the required dependencies. Please see error output above.
