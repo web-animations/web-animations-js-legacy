@@ -4729,7 +4729,10 @@ var AnimatedCSSStyleDeclaration = function(element) {
   ASSERT_ENABLED && assert(
       !(element.style instanceof AnimatedCSSStyleDeclaration),
       'Element must not already have an animated style attached.');
-  this._element = element;
+
+  // Stores the inline style of the element on its behalf while the
+  // polyfill uses the element's inline style to simulate web animations.
+  // This is needed to fake regular inline style CSSOM access on the element.
   this._surrogateElement = document.createElement('div');
   this._style = element.style;
   this._length = 0;
@@ -4750,7 +4753,7 @@ AnimatedCSSStyleDeclaration.prototype = {
     this._surrogateElement.style.cssText = text;
     this._style.cssText = text;
     this._updateIndices();
-    // FIXME: Reapply all animated values.
+    maybeRestartAnimation();
   },
   get length() {
     return this._surrogateElement.style.length;
