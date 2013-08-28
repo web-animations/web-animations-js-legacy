@@ -69,6 +69,8 @@ function getSync(src) {
 }
 
 function loadScript(src, options) {
+  // Add changing parameter to prevent script caching.
+  src += '?' + window.Date.now();
   options = options || {coverage: true};
   if (window.__resources__[src]) {
     document.write('<script type="text/javascript">eval(window.__resources__["'+src+'"]);</script>');
