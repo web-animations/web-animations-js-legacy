@@ -52,39 +52,13 @@ seqGroup.specified.duration = 4.0;
 test(function() {assert_equals(seqGroup.duration,  4.0)},
      "SeqGroup duration should use specified value");
 
-// TimedItem.duration should override TimedItem.specified.duration until explicitly
-// set to undefined.
-// Animation
-anim.specified.duration = 5.0;
-test(function() {assert_equals(anim.duration,  5.0)},
-     "Animation failed to update duration");
-anim.specified.duration = 6.0;
-test(function() {assert_equals(anim.duration,  6.0)},
-     "Animation failed to override Timing.duration");
-anim.specified.duration = 7.0;
-test(function() {assert_equals(anim.duration,  7.0)},
-     "Animation Timing.duration should be overriden with 7.0");
-anim.specified.duration = null;
-test(function() {assert_equals(anim.duration, 0)},
-     "Animation Timing.duration should be overriden with 0");
-// ParGroup
-parGroup.append(anim);
-parGroup.specified.duration = 8.0;
-test(function() {assert_equals(parGroup.duration,  8.0)},
-     "ParGroup Failed to update duration");
-parGroup.specified.duration = 10.0;
-test(function() {assert_equals(parGroup.duration,  10.0)},
-     "ParGroup Timing.duration should be overriden with 10.0");
-// SeqGroup
-seqGroup.append(anim);
-seqGroup.specified.duration = 11.0;
-test(function() {assert_equals(seqGroup.duration,  11.0)},
-     "SeqGroup Failed to update duration");
-seqGroup.specified.duration = 13.0;
-test(function() {assert_equals(seqGroup.duration,  13.0)},
-     "SeqGroup Timing.duration should be overriden with 13.0");
+test(function() {
+  assert_throws(new TypeError(), function() {
+    anim.duration = 5.0;
+  });
+  assert_equals(anim.duration,  1.0);
+}, "Animation.duration should be read-only");
 
-// TimedItem.activeDuration should always reflect TimedItem.duration.
 anim.specified.duration = 14.0;
 test(function() {assert_equals(anim.activeDuration,  42.0)},
      "activeDuration incorrect");
