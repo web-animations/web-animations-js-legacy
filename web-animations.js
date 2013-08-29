@@ -1764,7 +1764,7 @@ PathAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
       //       is read only
       var items = segments.numberOfItems;
       while (targetSegments.numberOfItems < items) {
-        var segment = segments.getItem(0);
+        var segment = segments.removeItem(0);
         targetSegments.appendItem(segment);
         if (segment.pathSegType !== SVGPathSeg.PATHSEG_MOVETO_REL &&
             segment.pathSegType !== SVGPathSeg.PATHSEG_MOVETO_ABS) {
