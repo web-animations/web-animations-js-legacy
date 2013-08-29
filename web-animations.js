@@ -1658,7 +1658,6 @@ var PathAnimationEffect = function(path, autoRotate, angle, composite,
   try {
     AnimationEffect.call(this, constructorToken, accumulate);
 
-    // Use the default value if an invalid string is specified.
     this.composite = composite;
 
     // TODO: path argument is not in the spec -- seems useful since
