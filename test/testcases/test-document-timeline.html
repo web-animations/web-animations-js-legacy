@@ -23,10 +23,9 @@ limitations under the License.
 
 // Test that document.timeline.currentTime is read-only.
 test(function() {
-  try {
+  assert_throws(new TypeError(), function() {
     document.timeline.currentTime = 12345;
-  } catch (e) {
-  }
+  });
   assert_not_equals(document.timeline.currentTime, 12345);
 }, "document.timeline.currentTime should be read-only");
 

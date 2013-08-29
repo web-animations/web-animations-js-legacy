@@ -28,9 +28,12 @@ var anim = new Animation(document.getElementById("anim"), {left: "100px"},
 // cause corresponding updates to its endTime.
 test(function() {assert_equals(anim.endTime,  1.0)},
      "endTime should reflect initial duration");
-try { anim.startTime = 2.0; } catch (error) { }
-test(function() {assert_equals(anim.startTime,  0.0)},
-     "startTime should be read only");
+test(function() {
+  assert_throws(new TypeError(), function() {
+    anim.startTime = 2.0;
+  });
+  assert_equals(anim.startTime,  0.0);
+}, "startTime should be read-only");
 anim.specified.duration = 3.0;
 test(function() {assert_equals(anim.endTime,  3.0)},
      "endTime should reflect Timing.duration");
@@ -41,9 +44,12 @@ anim.specified.activeDuration = 5.0;
 test(function() {assert_equals(anim.endTime,  5.0)},
      "endTime should reflect activeDuration");
 
-try { anim.endTime = 6.0; } catch (error) { }
-test(function() {assert_equals(anim.endTime,  5.0)},
-     "TimedItem.endTime should be read-only");
+test(function() {
+  assert_throws(new TypeError(), function() {
+    anim.endTime = 6.0;
+  });
+  assert_equals(anim.endTime,  5.0);
+}, "TimedItem.endTime should be read-only");
 
 // Test that updates to a TimedItem's endTime cause re-layout of a parent
 // parallel group.
