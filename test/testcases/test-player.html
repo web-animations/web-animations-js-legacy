@@ -27,35 +27,33 @@ var dt = document.timeline;
 // Test Player.timeline.
 var player1 = dt.play(animation);
 test(function() {assert_equals(player1.timeline,  document.timeline)},
-     "Player.timeline incorrect");
+     "Player.timeline is document timeline");
 
 // Test that TimedItem.player and Player.source are consistent.
-test(function() {assert_not_equals(player1,  null)},
-     "Player should not be null");
 test(function() {assert_equals(player1.source,  animation)},
-     "Player.source incorrect");
+     "Player.source should be the Animation");
 test(function() {assert_equals(animation.player,  player1)},
-     "TimedItem.player incorrect");
+     "TimedItem.player should be the Player");
 
 // Test that play() always returns a new Player.
 var player2 = dt.play(animation);
 test(function() {assert_not_equals(player2,  player1)},
      "Repeated calls to play() should create a new Player");
 test(function() {assert_equals(animation.player,  player2)},
-     "Repeated play(): TimedItem.player incorrect");
+     "Repeated play(): TimedItem.player should be the Player");
 test(function() {assert_equals(player2.source,  animation)},
-     "Repeated play(): Player.source incorrect");
+     "Repeated play(): Player.source should be the Animation");
 test(function() {assert_equals(player2.startTime,  player1.startTime)},
-     "Repeated play(): players should have same start time");
+     "Repeated play(): Players should have same start time");
 
 // Test explicit setting of Player.source.
 player1.source = animation;
 test(function() {assert_equals(player2.source,  null)},
-     "Set Player.source: Old Player.source incorrect");
+     "Set Player.source: Old Player.source should be null");
 test(function() {assert_equals(player1.source,  animation)},
-     "Set Player.source: New Player.source incorrect");
+     "Set Player.source: New Player.source should be the Animation");
 test(function() {assert_equals(animation.player,  player1)},
-     "Set Player.source: TimedItem.player incorrect");
+     "Set Player.source: TimedItem.player should be the Player");
 
 // Test that TimedItem.player gives null on a detached tree.
 var animation2 =
