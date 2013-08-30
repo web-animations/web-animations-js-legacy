@@ -4611,8 +4611,13 @@ BlendedCompositableValue.prototype = createObject(
             this.fraction);
       },
       dependsOnUnderlyingValue: function() {
-        return this.startValue.dependsOnUnderlyingValue() ||
-            this.endValue.dependsOnUnderlyingValue();
+        try {
+          return this.startValue.dependsOnUnderlyingValue() ||
+              this.endValue.dependsOnUnderlyingValue();
+        }
+        catch (error) {
+          throw new Error(error + '\n JSON.stringify(this) = ' + JSON.stringify(this));
+        }
       }
     });
 
