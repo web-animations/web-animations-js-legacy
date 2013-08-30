@@ -123,6 +123,11 @@ function cleanUp() {
 }
 
 window.addEventListener('load', function () {
+  var spacing = document.createElement('div');
+  spacing.style.display = 'inline-block';
+  spacing.style.width = '600px';
+  document.body.appendChild(spacing);
+
   var parGroup = new ParGroup([], { iterations: Infinity, direction: 'alternate' });
   for (var i = 0; i < maxParticles; i++) {
     var particle = new Particle();

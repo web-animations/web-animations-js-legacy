@@ -1,37 +1,77 @@
 (function(){
 'use strict';
 
-var framesPerTimerReading = 10;
-var maxFrameTimes = 30;
+var disregardFramesCount = 10;
+var framesPerReading = 10;
+var maxFPSReadings = 10;
 
 var frameCount = 0;
-var frameTimes = [];
+var prevTime;
+var fpsReadings = [];
 var onCompleteHandler;
+var outputElement;
+
+var getTime = (typeof window.performance === 'object' &&
+    typeof window.performance.now === 'function') ?
+    function() { return window.performance.now(); } :
+    function() { return Date.now(); };
+
+var raf = window.requestAnimationFrame ||
+    window.webkitRequestAnimationFrame ||
+    window.mozRequestAnimationFrame ||
+    function(callback) { setTimeout(callback, 1000 / 60); };
+
+function disregardFrames() {
+  raf((--disregardFramesCount > 0) ? disregardFrames : initTrackingFrameRate);
+}
+
+function initTrackingFrameRate() {
+  prevTime = getTime();
+  raf(trackFrameRate);
+}
 
 function trackFrameRate()
 {
-  var currTime = PerfTestRunner.now();
-
-  if ((frameCount++ % framesPerTimerReading) == 0) {
-    // Limit the frame time array to the last 30 frames
-    while (frameTimes.length > maxFrameTimes)
-      frameTimes.splice(0, 1);
-
-    // Calculate the framerate based upon the difference between the absolute times of the oldest and newest frames,
-    // subdivided by how many frames were drawn inbetween.
-    var frameRate = framesPerTimerReading * 1000 / ((currTime - frameTimes[0]) / frameTimes.length);
-    if (!isNaN(frameRate))
-      PerfTestRunner.measureValueAsync(frameRate);
-
-    frameTimes.push(currTime);
+  frameCount++;
+  if (frameCount % framesPerReading === 0) {
+    var currTime = getTime();
+    var reading = 1000 * framesPerReading / (currTime - prevTime);
+    fpsReadings.push(reading);
+    outputReading(reading);
+    if (fpsReadings.length >= maxFPSReadings) {
+      outputSummary();
+      if (typeof onCompleteHandler === 'function') {
+        onCompleteHandler();
+      }
+      return;
+    }
+    prevTime = currTime;
   }
+  raf(trackFrameRate);
+}
 
-  if (testRunning)
-    requestAnimationFrame(trackFrameRate);
+function output(text) {
+  outputElement.value += text;
+}
+
+function outputReading(reading) {
+  output(reading + ' FPS\n');
+}
+
+function outputSummary() {
+  var total = 0;
+  fpsReadings.forEach(function(reading) { total += reading; });
+  output('Average: ' + (total / maxFPSReadings) + ' FPS\n');
 }
 
 var start = function() {
+  outputElement = document.createElement('textarea');
+  outputElement.setAttribute('rows', maxFPSReadings + 5);
+  outputElement.setAttribute('cols', 32);
+  document.body.appendChild(outputElement);
 
+  output('Disregarding initial ' + disregardFramesCount + ' frames.\n')
+  raf(disregardFrames);
 };
 
 window.Perf = {
