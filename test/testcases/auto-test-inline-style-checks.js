@@ -5,11 +5,8 @@ timing_test(function() {
   at(0.5, function() {
     assert_styles("#target",{'left':'50px','backgroundColor':'rgb(176, 196, 222)'});
   });
-  at(1, function() {
-    assert_styles("#target",{'left':'100px','backgroundColor':'rgb(176, 196, 222)'});
-  });
   at(1.5, function() {
-    assert_styles("#target",{'left':'75px','backgroundColor':'rgb(176, 196, 222)'});
+    assert_styles("#target",{'left':'100px','backgroundColor':'rgb(176, 196, 222)'});
   });
   at(2, function() {
     assert_styles("#target",{'left':'50px','backgroundColor':'rgb(176, 196, 222)'});

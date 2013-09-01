@@ -43,7 +43,7 @@ var expected_failures = {
 
 var target = document.querySelector('#target');
 
-document.timeline.play(new Animation(target, {left: '100px', composite: 'replace'}, {duration: 1, iterations: 2, direction: 'alternate'}));
+document.timeline.play(new Animation(target, {left: '100px', composite: 'add'}, {duration: 1, iterations: 2, direction: 'alternate'}));
 
 at(0.5, function() {
   assert_equals(0, target.style.length);
@@ -52,6 +52,7 @@ at(0.5, function() {
 
 testharness_timeline.schedule(function() {
   target.style.left = '50px';
+  assert_styles(target, {left: '150px'}, 'getComputedStyle() should return correct value after setting inline style.');
 }, 1000);
 
 at(1.5, function() {
