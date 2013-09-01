@@ -4828,7 +4828,7 @@ AnimatedCSSStyleDeclaration.prototype = {
     // animation frame.
     // We modify getComputedStyle() to re-evaluate the animations only if it is
     // called instead of re-evaluating them here potentially unnecessarily.
-    ensureGetComputedStyleAugmented();
+    ensureRetickBeforeGetComputedStyle();
   }
 };
 
@@ -4872,7 +4872,7 @@ var retickThenGetComputedStyle = function() {
 
 var originalGetComputedStyle = window.getComputedStyle;
 
-var ensureGetComputedStyleAugmented = function() {
+var ensureRetickBeforeGetComputedStyle = function() {
   if (window.getComputedStyle !== retickThenGetComputedStyle) {
     Object.defineProperty(window, 'getComputedStyle', configureDescriptor({
       value: retickThenGetComputedStyle
@@ -4880,7 +4880,7 @@ var ensureGetComputedStyleAugmented = function() {
   }
 };
 
-var ensureGetComputedStyleRestored = function() {
+var ensureOriginalGetComputedStyle = function() {
   if (window.getComputedStyle === retickThenGetComputedStyle) {
     Object.defineProperty(window, 'getComputedStyle', configureDescriptor({
       value: originalGetComputedStyle
@@ -5164,7 +5164,7 @@ var ticker = function(rafTime, isRepeat) {
   }
 
   // Clear any modifications to getComputedStyle.
-  ensureGetComputedStyleRestored();
+  ensureOriginalGetComputedStyle();
 
   // Get animations for this sample. We order by Player then by DFS order within
   // each Player's tree.
