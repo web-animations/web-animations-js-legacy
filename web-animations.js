@@ -4779,7 +4779,7 @@ AnimatedCSSStyleDeclaration.prototype = {
             this._surrogateElement.style.getPropertyValue(property));
       }
     }
-    repeatLastTick();
+    this._inlineStyleChanged();
   },
   get length() {
     return this._surrogateElement.style.length;
@@ -4819,6 +4819,16 @@ AnimatedCSSStyleDeclaration.prototype = {
   _setAnimatedProperty: function(property, value) {
     this._style[property] = value;
     this._isAnimatedProperty[property] = true;
+  },
+  _inlineStyleChanged: function() {
+    maybeRestartAnimation();
+    // Changing the inline style of an element under animation may require the
+    // animation to be recomputed ontop of the new inline style if
+    // getComputedStyle() is called inbetween setting the style and the next
+    // animation frame.
+    // We modify getComputedStyle() to re-evaluate the animations only if it is
+    // called instead of re-evaluating them here potentially unnecessarily.
+    ensureRetickBeforeGetComputedStyle();
   }
 };
 
@@ -4848,11 +4858,35 @@ for (var property in document.documentElement.style) {
             if (!this._isAnimatedProperty[property]) {
               this._style[property] = value;
             }
-            repeatLastTick();
+            this._inlineStyleChanged();
           }
         }));
   })(property);
 }
+
+var retickThenGetComputedStyle = function() {
+  repeatLastTick();
+  // ticker() will restore getComputedStyle() back to normal.
+  return window.getComputedStyle.apply(this, arguments);
+};
+
+var originalGetComputedStyle = window.getComputedStyle;
+
+var ensureRetickBeforeGetComputedStyle = function() {
+  if (window.getComputedStyle !== retickThenGetComputedStyle) {
+    Object.defineProperty(window, 'getComputedStyle', configureDescriptor({
+      value: retickThenGetComputedStyle
+    }));
+  }
+};
+
+var ensureOriginalGetComputedStyle = function() {
+  if (window.getComputedStyle === retickThenGetComputedStyle) {
+    Object.defineProperty(window, 'getComputedStyle', configureDescriptor({
+      value: originalGetComputedStyle
+    }));
+  }
+};
 
 
 
@@ -5128,6 +5162,9 @@ var ticker = function(rafTime, isRepeat) {
     lastTickTime = rafTime;
     cachedClockTimeMillis = rafTime;
   }
+
+  // Clear any modifications to getComputedStyle.
+  ensureOriginalGetComputedStyle();
 
   // Get animations for this sample. We order by Player then by DFS order within
   // each Player's tree.
