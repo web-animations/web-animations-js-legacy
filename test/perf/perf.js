@@ -43,17 +43,17 @@ var raf = window.requestAnimationFrame ||
 var visibilityChangeEvent = null;
 var hidden = null;
 if (typeof document.hidden !== 'undefined') {
-  visibilityChangeEvent = "visibilitychange";
-  hidden = "hidden";
+  visibilityChangeEvent = 'visibilitychange';
+  hidden = 'hidden';
 } else if (typeof document.mozHidden !== 'undefined') {
-  visibilityChangeEvent = "mozvisibilitychange";
-  hidden = "mozHidden";
+  visibilityChangeEvent = 'mozvisibilitychange';
+  hidden = 'mozHidden';
 } else if (typeof document.msHidden !== 'undefined') {
-  visibilityChangeEvent = "msvisibilitychange";
-  hidden = "msHidden";
+  visibilityChangeEvent = 'msvisibilitychange';
+  hidden = 'msHidden';
 } else if (typeof document.webkitHidden !== 'undefined') {
-  visibilityChangeEvent = "webkitvisibilitychange";
-  hidden = "webkitHidden";
+  visibilityChangeEvent = 'webkitvisibilitychange';
+  hidden = 'webkitHidden';
 }
 if (visibilityChangeEvent) {
   document.addEventListener(visibilityChangeEvent, function() {
