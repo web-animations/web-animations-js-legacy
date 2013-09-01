@@ -72,13 +72,11 @@ function outputSummary() {
   fpsReadings.sort();
   output('Min: ' + fpsReadings[0] + ' FPS\n');
   output('Max: ' + fpsReadings[fpsReadings.length - 1] + ' FPS\n');
-  if (fpsReadings.length % 2 === 0) {
-    output('Median: ' + ((fpsReadings[fpsReadings.length >> 1] +
-        fpsReadings[(fpsReadings.length >> 1) + 1]) / 2) + ' FPS\n');
-  } else {
-    output('Median: ' + fpsReadings[fpsReadings.length >> 1] + ' FPS\n');
+  var median = fpsReadings[fpsReadings.length >> 1];
+  if (fpsReadings.length % 2 !== 0) {
+    median = (median + fpsReadings[(fpsReadings.length >> 1) + 1]) / 2;
   }
-
+  output('Median: ' + median + ' FPS\n');
 }
 
 var start = function() {
