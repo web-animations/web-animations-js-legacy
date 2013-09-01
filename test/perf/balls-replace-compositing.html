@@ -34,11 +34,11 @@ This test is based on code written by Cameron Adams and imported from
 
 var stageWidth = 600;
 var stageHeight = 600;
-var maxParticles = 2500;
+var particleCount = 2500;
 var minVelocity = 50;
 var maxVelocity = 500;
 var particleRadius = 6;
-var colors = ["#cc0000", "#ffcc00", "#aaff00", "#0099cc", "#194c99", "#661999"];
+var colors = ['#cc0000', '#ffcc00', '#aaff00', '#0099cc', '#194c99', '#661999'];
 var animationDuration = 10;
 
 var particles = [];
@@ -49,7 +49,7 @@ var Particle = function() {
   this.element.className = 'ball';
   this.element.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
   document.body.appendChild(this.element);
-}
+};
 
 Particle.prototype.generateAnimation = function(duration) {
   var keyframes = [];
@@ -61,7 +61,7 @@ Particle.prototype.generateAnimation = function(duration) {
   var dx = Math.cos(angle) * velocity;
   var dy = Math.sin(angle) * velocity;
 
-  var detectCollision = function(lineX, normalX, lineY, normalY) {
+  var nextCollision = function(lineX, normalX, lineY, normalY) {
     var dtx = Infinity;
     var dty = Infinity;
     if (dx * normalX < 0)
@@ -82,8 +82,8 @@ Particle.prototype.generateAnimation = function(duration) {
   var t = 0;
   keyframes.push(this.createKeyframe(0, x, y));
   while (t < duration) {
-    var collisionA = detectCollision(0, 1, 0, 1);
-    var collisionB = detectCollision(stageWidth, -1, stageHeight, -1);
+    var collisionA = nextCollision(0, 1, 0, 1);
+    var collisionB = nextCollision(stageWidth, -1, stageHeight, -1);
     var collision = collisionA.dt < collisionB.dt ? collisionA : collisionB;
     if (t + collision.dt > duration) {
       var dt = duration - t;
@@ -117,8 +117,9 @@ Particle.prototype.destroy = function() {
 
 function cleanUp() {
   player.source = null;
-  for (var i = 0; i < particles.length; i++)
+  for (var i = 0; i < particles.length; i++) {
     particles[i].destroy();
+  }
   particles = [];
 }
 
@@ -128,8 +129,8 @@ window.addEventListener('load', function () {
   spacing.style.width = '600px';
   document.body.appendChild(spacing);
 
-  var parGroup = new ParGroup([], { iterations: Infinity, direction: 'alternate' });
-  for (var i = 0; i < maxParticles; i++) {
+  var parGroup = new ParGroup([], {iterations: Infinity, direction: 'alternate'});
+  for (var i = 0; i < particleCount; i++) {
     var particle = new Particle();
     parGroup.append(particle.generateAnimation(animationDuration));
     particles.push(particle);
