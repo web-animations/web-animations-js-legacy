@@ -27,6 +27,8 @@ var timeReadings = [];
 var fpsReadings = [];
 var onCompleteHandler;
 var outputElement;
+var running = false;
+var visibilityLost = false;
 
 var getTime = (typeof window.performance === 'object' &&
     typeof window.performance.now === 'function') ?
@@ -37,6 +39,29 @@ var raf = window.requestAnimationFrame ||
     window.webkitRequestAnimationFrame ||
     window.mozRequestAnimationFrame ||
     function(callback) { setTimeout(callback, 1000 / 60); };
+
+var visibilityChangeEvent = null;
+var hidden = null;
+if (typeof document.hidden !== 'undefined') {
+  visibilityChangeEvent = "visibilitychange";
+  hidden = "hidden";
+} else if (typeof document.mozHidden !== 'undefined') {
+  visibilityChangeEvent = "mozvisibilitychange";
+  hidden = "mozHidden";
+} else if (typeof document.msHidden !== 'undefined') {
+  visibilityChangeEvent = "msvisibilitychange";
+  hidden = "msHidden";
+} else if (typeof document.webkitHidden !== 'undefined') {
+  visibilityChangeEvent = "webkitvisibilitychange";
+  hidden = "webkitHidden";
+}
+if (visibilityChangeEvent) {
+  document.addEventListener(visibilityChangeEvent, function() {
+    if (running && document[hidden]) {
+      visibilityLost = true;
+    }
+  });
+}
 
 function disregardFrames() {
   raf((frameCount++ < disregardFramesCount) ? disregardFrames : trackFrameRate);
@@ -57,6 +82,7 @@ function trackFrameRate()
       output(fpsReading + ' FPS\n');
       if (fpsReadings.length >= maxFPSReadings) {
         outputSummary();
+        running = false;
         if (typeof onCompleteHandler === 'function') {
           onCompleteHandler();
         }
@@ -72,6 +98,10 @@ function output(text) {
 }
 
 function outputSummary() {
+  if (visibilityLost) {
+    output('Warning: Document lost visibility during test, ' +
+        'results may be inaccurate.\n');
+  }
   var total = 0;
   fpsReadings.forEach(function(fpsReading) { total += fpsReading; });
   var average = total / maxFPSReadings;
@@ -99,6 +129,8 @@ var start = function() {
 
   output('Disregarding initial ' + disregardFramesCount + ' frames.\n')
   raf(disregardFrames);
+
+  running = true;
 };
 
 window.Perf = {
