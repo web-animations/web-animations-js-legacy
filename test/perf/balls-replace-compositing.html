@@ -47,15 +47,15 @@ var player;
 var Particle = function() {
   this.element = document.createElement('div');
   this.element.className = 'ball';
-  this.element.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+  this.element.style.backgroundColor = colors[Math.floor(Perf.random() * colors.length)];
   document.body.appendChild(this.element);
 };
 
 Particle.prototype.generateAnimation = function(duration) {
   var keyframes = [];
 
-  var angle = Math.PI * 2 * Math.random();
-  var velocity = minVelocity + ((maxVelocity - minVelocity) * Math.random());
+  var angle = Math.PI * 2 * Perf.random();
+  var velocity = minVelocity + ((maxVelocity - minVelocity) * Perf.random());
   var x = stageWidth / 2 - particleRadius;
   var y = stageHeight / 2 - particleRadius;
   var dx = Math.cos(angle) * velocity;

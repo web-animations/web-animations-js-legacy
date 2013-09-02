@@ -63,6 +63,20 @@ if (visibilityChangeEvent) {
   });
 }
 
+var randomSeed = 3384413;
+function random() {
+    var temp = randomSeed;
+    // Robert Jenkins' 32 bit integer hash function.
+    temp = ((temp + 0x7ed55d16) + (temp << 12))  & 0xffffffff;
+    temp = ((temp ^ 0xc761c23c) ^ (temp >>> 19)) & 0xffffffff;
+    temp = ((temp + 0x165667b1) + (temp << 5))   & 0xffffffff;
+    temp = ((temp + 0xd3a2646c) ^ (temp << 9))   & 0xffffffff;
+    temp = ((temp + 0xfd7046c5) + (temp << 3))   & 0xffffffff;
+    temp = ((temp ^ 0xb55a4f09) ^ (temp >>> 16)) & 0xffffffff;
+    randomSeed = temp;
+    return (randomSeed & 0xfffffff) / 0x10000000;
+}
+
 function disregardFrames() {
   raf((frameCount++ < disregardFramesCount) ? disregardFrames : trackFrameRate);
 }
@@ -138,6 +152,7 @@ window.Perf = {
     onCompleteHandler = callback;
   },
   start: start,
+  random: random,
 };
 
 })();
