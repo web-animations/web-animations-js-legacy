@@ -2701,28 +2701,35 @@ var interpArray = function(from, to, f, type) {
 };
 
 var typeWithKeywords = function(keywords, type) {
-  var isKeyword = {};
-  for (var i in keywords) {
-    isKeyword[keywords[i]] = true;
+  var isKeyword;
+  if (keywords.length === 1) {
+    var keyword = keywords[0];
+    isKeyword = function(value) {
+      return value === keyword;
+    };
+  } else {
+    isKeyword = function(value) {
+      return keywords.indexOf(value) >= 0;
+    };
   }
   return createObject(type, {
     add: function(base, delta) {
-      if (isKeyword[base] || isKeyword[delta]) {
+      if (isKeyword(base) || isKeyword(delta)) {
         return delta;
       }
       return type.add(base, delta);
     },
     interpolate: function(from, to, f) {
-      if (isKeyword[from] || isKeyword[to]) {
+      if (isKeyword(from) || isKeyword(to)) {
         return nonNumericType.interpolate(from, to, f);
       }
       return type.interpolate(from, to, f);
     },
     toCssValue: function(value, svgMode) {
-      return isKeyword[value] ? value : type.toCssValue(value, svgMode);
+      return isKeyword(value) ? value : type.toCssValue(value, svgMode);
     },
     fromCssValue: function(value) {
-      return isKeyword[value] ? value : type.fromCssValue(value);
+      return isKeyword(value) ? value : type.fromCssValue(value);
     }
   });
 };
