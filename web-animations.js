@@ -1206,6 +1206,7 @@ var TimingGroup = function(token, type, children, timing) {
   this.type = type || 'par';
   this._children = [];
   this._cachedTimedItemList = null;
+  this._cachedIntrinsicDuration = null;
   TimedItem.call(this, constructorToken, timing);
   // We add children after setting the parent. This means that if an ancestor
   // (including the parent) is specified as a child, it will be removed from our
@@ -1220,6 +1221,7 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
     if (this._cachedTimedItemList) {
       this._cachedTimedItemList._ensureGetters();
     }
+    this._cachedIntrinsicDuration = null;
 
     // We need to walk up and down the tree to re-layout. endTime and the
     // various durations (which are all calculated lazily) are the only
@@ -1285,20 +1287,23 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
     return this._children[this.children.length - 1];
   },
   _intrinsicDuration: function() {
-    if (this.type === 'par') {
-      var dur = Math.max.apply(undefined, this._children.map(function(a) {
-        return a.endTime;
-      }));
-      return Math.max(0, dur);
-    } else if (this.type === 'seq') {
-      var result = 0;
-      this._children.forEach(function(a) {
-        result += a.activeDuration + a.specified.delay;
-      });
-      return result;
-    } else {
-      throw 'Unsupported type ' + this.type;
+    if (!isDefinedAndNotNull(this._cachedIntrinsicDuration)) {
+      if (this.type === 'par') {
+        var dur = Math.max.apply(undefined, this._children.map(function(a) {
+          return a.endTime;
+        }));
+        this._cachedIntrinsicDuration = Math.max(0, dur);
+      } else if (this.type === 'seq') {
+        var result = 0;
+        this._children.forEach(function(a) {
+          result += a.activeDuration + a.specified.delay;
+        });
+        this._cachedIntrinsicDuration = result;
+      } else {
+        throw 'Unsupported type ' + this.type;
+      }
     }
+    return this._cachedIntrinsicDuration;
   },
   _getLeafItemsInEffectImpl: function(items) {
     for (var i = 0; i < this._children.length; i++) {
