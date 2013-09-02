@@ -4616,8 +4616,16 @@ BlendedCompositableValue.prototype = createObject(
             this.fraction);
       },
       dependsOnUnderlyingValue: function() {
-        return this.startValue.dependsOnUnderlyingValue() ||
-            this.endValue.dependsOnUnderlyingValue();
+        // Travis crashes here randomly in Chrome beta and unstable,
+        // this try catch is to help debug the problem.
+        try {
+          return this.startValue.dependsOnUnderlyingValue() ||
+              this.endValue.dependsOnUnderlyingValue();
+        }
+        catch (error) {
+          throw new Error(
+              error + '\n JSON.stringify(this) = ' + JSON.stringify(this));
+        }
       }
     });
 
