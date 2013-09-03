@@ -2,6 +2,7 @@ language: python
 
 env:
   global:
+    - secure: "Reac9e9yTuL+hv9ADkFvrj60k2YBResNaIF9L+BniYFJ1IQJ9Z5ONs3bTtZCZ5PFwq8+29Fy+j/I5gpdh0qAIrnYxNuz6DIM9DBX+19jLFYNF1hYtopgweDJ9nMQ9TCHgMr1db7lnUv479twqmWJmbeDKFGA6v7JzK0DgiGH2sI=" # dstockwell/web-animations-js
     - secure: "VBZ2zI5kTGL3TSJ6QWKiUnLLJiSl97t4sE51YsYTWrk0C5FTfzizP/PuHLlYxb00URqGLXVQxr5HsfOPXtmrIfVDTRjlZlSdzNAjBHDb1Ogm+LUquV6sne/yLe3HhWiiNztyOt7lci53iXwEL15eRJWTweBnvZizElvXq6rE9bE=" # mithro/web-animations-js
     - secure: "SkkMENmCBobwyCMGU9giQiNJ2QWTNaszrbjp8VJUAfRrqx7QzLxHzcOXDc4iUtz3UUKPJEbOxbIy950Wv2bp3tOOrYHVLOZcIGWN3qxQ6gy2xs3N7foR3Y/kgmEq2c6apcF8t6xiXn7M06yf13SKONXLsQVuSE8r5ToM736mhPs=" # web-animations/web-animations-js
     - SAUCE_USERNAME=mithro
