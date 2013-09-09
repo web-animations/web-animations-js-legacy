@@ -5,6 +5,7 @@ env:
     - secure: "GySwb9k2LVdRXwj6Ben8kt9qJ9q682TNHUVd/b2R7PR723o08jMGNoQldLAHTmTuLD77g8yb6JQGZRW9TTB1Rz/gqNHRWV3Uwj98HZ+RAUhgb4M+sEDcoEi5GXSZBzAX5bK3Eqa2WOLxWSno7yOBIxpFfJEixFo8l3R/EpXcOYQ=" # dstockwell/web-animations-js
     - secure: "CavzDoVPfR5zYYudQJdRMxrfyMuXzwDv6lGuhti4TFW4MbK4u+cXFnuryhADVGBZacISs/TtIGJ9fzbvYvqEDovDBUNaXvpr6bL7Qxg2T74Q+EE/f+LLgkhz4jtKEFqxLuz+vQDapzfBAIE+nZpQMIr1FX32yewNqleFsSW1oXs=" # mithro/web-animations-js
     - secure: "OWULN5n4QlXak8aAyH8YjSndZI736zlYJTLNpPpM2m2RDZGPwfNr27as5VBWkmXRcfOgtfD5bUvmbZMP4n0zpphz4Y4rFHZ0Qj/ftzJmA9NrKSOfVmubXWIq9GdaeGlzop+Zpo0uvrl1/U1ro4aNojZZQ+wW1LKysziaGGhukHU=" # web-animations/web-animations-js
+    - secure: "bM0peKHrlwFKXxrajgJb/qP+au1JnrUHtqGrwSe1pGV4vdK24P0/JWwa02wBgysqLkWyhOZSdPARP+AQwuyeo2uTBZsNArkNBob+3kBZJMIMa8UY2xuPM7km+XmQLur9X9Z9iR89hC/5hUbv0z2C57O2BzsRCTSK2dNs4K/dc5A="
 
   matrix:
     - MODE='check'
