@@ -87,7 +87,11 @@ var expected_failures = {
     msie: true,
     message: "IE returns rbga values."
   },
-  '/#(text|outline) at t=(0|1|2)s/' : {
+  '/#text at t=0s/' : {
+    msie: true,
+    message: "IE returns rbga values."
+  },
+  '/#(text|outline) at t=(1|2)s/' : {
     msie: true,
     message: "IE returns rbga values."
   }
