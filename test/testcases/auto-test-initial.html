@@ -59,14 +59,9 @@ word word word word</pre>
 
 <script>
 var expected_failures = {
-  '#outline at t=0s' : {
-    chrome: ["28.0", "29.0"],
-    msie: true,
-    message: "Output changes from rgb to rgba in later Chrome, rbga(0, 0, 0, 0) gets converted to 'transparent' in IE."
-  },
-  '/(#background|#outline) at t=0s/' : {
+  '/(#background) at t=0s/' : {
     firefox: true,
-    message: "rbga(0, 0, 0, 0) gets converted to 'transparent' in Firefox."
+    message: "rgb(0, 0, 0) gets converted to 'transparent' in Firefox."
   },
   '#background at t=1s' : {
     firefox: true,
