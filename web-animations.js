@@ -27,6 +27,30 @@ function assert(check, message) {
   if (!check) { throw message; }
 }
 
+function webAnimationsInspector_notifyPlayers(players) {
+  function describePlayer(player) {
+    return {
+      currentTime: player.currentTime,
+      isCurrent: player._isCurrent(),
+      isPastEndOfActiveInterval: player._isPastEndOfActiveInterval(),
+      paused: player.paused,
+      playbackRate: player.playbackRate,
+      startTime: player.startTime,
+      timeDrift: player._timeDrift,
+      timeline: player.timeline
+    };
+  }
+
+  var hiddenDiv = document.getElementById('WebAnimationsInspector_state');
+  if (hiddenDiv) {
+    var playersDiv = document.getElementById('WebAnimationsInspector_players');
+    if (playersDiv) {
+      var content = JSON.stringify(PLAYERS.map(describePlayer));
+      playersDiv.textContent = content;
+    }
+  }
+}
+
 function detectFeatures() {
   var style = document.createElement('style');
   style.textContent = '' +
@@ -431,11 +455,13 @@ Player.prototype = {
     if (!this._registeredOnTimeline) {
       PLAYERS.push(this);
       this._registeredOnTimeline = true;
+      webAnimationsInspector_notifyPlayers(PLAYERS);
     }
   },
   _deregisterFromTimeline: function() {
     PLAYERS.splice(PLAYERS.indexOf(this), 1);
     this._registeredOnTimeline = false;
+    webAnimationsInspector_notifyPlayers(PLAYERS);
   }
 };
 
