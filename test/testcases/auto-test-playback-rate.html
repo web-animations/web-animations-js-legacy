@@ -108,7 +108,7 @@ for (var i = 0; i < containers.length; i++) {
   var container = document.getElementById(containers[i]);
   // Test basic use.
   groups[i].append(new Animation(container.getElementsByClassName("a")[0],
-      effect100To300, {duration: 1.0}, groups[i]));
+      effect100To300, {duration: 1.0}));
   groups[i].append(new Animation(container.getElementsByClassName("b")[0],
       effect100To300, {duration: 0.5, playbackRate: 0.5}));
   groups[i].append(new Animation(container.getElementsByClassName("c")[0],
