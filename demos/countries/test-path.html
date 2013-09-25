@@ -1,0 +1,112 @@
+<!--
+Copyright 2013 Google Inc. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<!DOCTYPE html><meta charset="UTF-8">
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="850px" height="1200px">
+</svg>
+
+<style>
+  body {
+    font-family: sans-serif;
+  }
+  div#log {
+    position:absolute;
+    top: 500px;
+    left: 400px;
+    font-weight: bold;
+  }
+  svg path {
+    stroke-width: 2px;
+    /* TODO: Allow this to be toggled */
+    fill: lightgray;
+  }
+  svg path.move {
+    /* TODO: Allow this to be toggled */
+    stroke: blue;
+  }
+  svg path.line {
+    stroke: black;
+  }
+  svg path.animated {
+    stroke: black;
+    fill: red;
+  }
+</style>
+
+<div id="log"></div>
+
+<script src="web-animations.js"></script>
+<script>
+"use strict";
+
+// Assumes starts with line
+function createPathString(initialPosition, path, swapLinesAndMoves) {
+  var pathString = 'M' + initialPosition.x + ',' + initialPosition.y;
+  for (var i = 0; i < path.length; ++i) {
+    var type = (i  + (swapLinesAndMoves ? 1 : 0)) % 2 === 0 ? 'l' : 'm';
+    var segment = path[i];
+    for (var j = 0; j < segment.length; ++j)
+      pathString += ' ' + type + segment[j].x + ',' + segment[j].y;
+  }
+  return pathString;
+}
+  
+function createPath(pathString, className) {
+  var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('d', pathString);
+  path.setAttribute('class', className);
+  return path;
+}
+
+function testPath(caption, fromInitialPosition, fromPath, toInitialPosition, toPath) {
+var svg = document.getElementsByTagName('svg')[0];
+  var fromPathString = createPathString(fromInitialPosition, fromPath, false);
+  var toPathString = createPathString(toInitialPosition, toPath, false);
+
+  var text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  text.appendChild(document.createTextNode(caption));
+  text.setAttribute('x', fromInitialPosition.x);
+  text.setAttribute('y', fromInitialPosition.y - 20);
+  svg.appendChild(text);
+
+  svg.appendChild(createPath(createPathString(fromInitialPosition, fromPath, true), 'move'));
+  svg.appendChild(createPath(fromPathString, 'line'));
+  svg.appendChild(createPath(createPathString(toInitialPosition, toPath, true), 'move'));
+  svg.appendChild(createPath(toPathString, 'line'));
+
+  // Note the above trick doesn't work during the animation, because we do
+  // tricks to handle oves which aren't 'invertible'.
+  var path = createPath('M0,0', 'animated');
+  svg.appendChild(path);
+  return new Animation(
+    path,
+    [{d: fromPathString}, {d: toPathString}],
+    1);
+}
+
+var diamond = [{x: -50, y: 50}, {x: 50, y: 50}, {x: 50, y: -50}, {x: -50, y: -50}];
+var line = [{x: 100, y: 20}, {x: 100, y: -20}];
+var longLine = [{x: 300, y: 0}];
+var smallLine = [{x: 50, y: 10}, {x: 50, y: -10}];
+
+document.timeline.play(new ParGroup([
+  testPath('Closed to open', {x: 50, y: 50}, [diamond, line, diamond, line], {x: 50, y: 200}, [line, line, line]),
+  testPath('Closed to closed', {x: 50, y: 350}, [diamond, line, diamond, line], {x: 50, y: 500}, [diamond, line]),
+  testPath('Closed to mixed', {x: 50, y: 650}, [diamond, line, diamond, line], {x: 50, y: 800}, [diamond, line, line]),
+  testPath('Incomplete fill', {x: 50, y: 950}, [smallLine, smallLine, smallLine, smallLine, smallLine], {x: 50, y: 1000}, [diamond])
+], {playbackRate: 0.2, direction: 'alternate', iterations: Infinity, easing: 'ease-in-out'}));
+
+</script>
