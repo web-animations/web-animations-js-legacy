@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="text/javascript" src="web-animations.js"></script>
+    <script type="text/javascript">
+      // Ideas for future enhancements ...
+      // - Investigate fixing inaccuracy in overshoot when envelope is steep
+      // - Add dragable handles to set parameters
+      // - Add control over iteration duration
+      // - Avoid numerical errors when setting overshoot and dampingRatio for
+      //   zero intial velocity
+      // - Encode parameters in URL, like cubic-bezier.com
+      // - Allow scrubbing of input time
+
+      var Range = function(min, max) {
+        this._min = min;
+        this._max = max;
+      };
+      Range.prototype = {
+        min: function() {
+         return this._min;
+        },
+        max: function() {
+          return this._max;
+        },
+        length: function() {
+          return this._max - this._min;
+        },
+        fraction: function(x) {
+          return (x - this._min) / this.length();
+        },
+        interpolate: function(x) {
+          return this._min + this.length() * x;
+        },
+      };
+ 
+      var Rect = function(x, y, width, height) {
+        this._x = x;
+        this._y = y;
+        this._width = width;
+        this._height = height;
+      }
+      Rect.prototype = {
+        x: function() {
+          return this._x;
+        },
+        y: function() {
+          return this._y;
+        },
+        width: function() {
+          return this._width;
+        },
+        height: function() {
+          return this._height;
+        },
+        xInterpolate: function(x) {
+          return this._x + this._width * x;
+        },
+        yInterpolate: function(y) {
+          return this._y + this._height * y;
+        },
+      };
+
+      var Curve = function() {
+        abstractMethod();
+      };
+      Curve.prototype = {
+        // Plots the data in the specified range into the rect of the canvas.
+        // Rect is in pixel space of canvas.
+        plot: function(xRange, yRange, canvas, rect, color) {
+          abstractMethod();
+        },
+        _contextXPixel: function(rect, range, x) {
+          return rect.xInterpolate(range.fraction(x));
+        },
+        _contextYPixel: function(rect, range, y) {
+          return rect.yInterpolate(1 - range.fraction(y));
+        },
+      };
+
+      var SampledCurve = function() {
+        abstractMethod();
+      }
+      SampledCurve.prototype = createObject(Curve.prototype, {
+        plot: function(xRange, yRange, context, rect, color) {
+          var numPoints = 100;
+          context.strokeStyle = color;
+          context.beginPath();
+          // TODO: Should we clip to yRange?
+          context.moveTo(this._contextXPixel(rect, xRange, xRange.min()),
+                         this._contextYPixel(rect, yRange, this.evaluate(xRange.min())));
+          for (var i = 1; i <= numPoints; i++) {
+            var x = xRange.interpolate(i / numPoints);
+            context.lineTo(this._contextXPixel(rect, xRange, x), this._contextYPixel(rect, yRange, this.evaluate(x)));
+          }
+          context.stroke();
+        },
+        evaluate: function(x) {
+          abstractMethod();
+        },
+      });
+
+      // naturalFrequency is in rad/s
+      var DampedSinusoid = function(amplitude, naturalFrequency, dampingRatio, timeShift) {
+        this._amplitude = amplitude;
+        this._naturalFrequency = naturalFrequency;
+        this._dampingRatio = dampingRatio;
+        this._timeShift = timeShift;
+      };
+      DampedSinusoid.prototype = createObject(SampledCurve.prototype, {
+        _dampedFrequency: function() {
+          if (this._cachedDampedFrequency === undefined) {
+            this._cachedDampedFrequency = this._naturalFrequency * Math.sqrt(1 - Math.pow(this._dampingRatio, 2));
+          }
+          return this._cachedDampedFrequency;
+        },
+        evaluate: function(x) {
+          var t = x + this._timeShift;
+          return -this._amplitude * Math.exp(-this._dampingRatio * this._naturalFrequency * t) *
+              Math.cos(this._dampedFrequency() * t);
+        },
+      });
+
+      var ExponentialDecay = function(amplitude, decayRate, timeShift) {
+        this._amplitude = amplitude;
+        this._decayRate = decayRate
+        this._timeShift = timeShift;
+      };
+      ExponentialDecay.prototype = createObject(SampledCurve.prototype, {
+        evaluate: function(x) {
+          var t = x + this._timeShift;
+          return this._amplitude * Math.exp(-this._decayRate * t);
+        },
+      });
+
+      var HorizontalLine = function(y) {
+        this._y = y;
+      };
+      HorizontalLine.prototype = createObject(Curve.prototype, {
+        plot: function(xRange, yRange, context, rect, color) {
+          if (this._y >= yRange.min() && this._y <= yRange.max()) {
+            context.strokeStyle = color;
+            context.beginPath();
+            context.moveTo(this._contextXPixel(rect, xRange, xRange.min()), this._contextYPixel(rect, yRange, this._y));
+            context.lineTo(this._contextXPixel(rect, xRange, xRange.max()), this._contextYPixel(rect, yRange, this._y));
+            context.stroke();
+          }
+        },
+      });
+
+      var VerticalLine = function(x) {
+        this._x = x;
+      };
+      VerticalLine.prototype = createObject(Curve.prototype, {
+        plot: function(xRange, yRange, context, rect, color) {
+          if (this._x >= xRange.min() && this._x <= xRange.max()) {
+            context.strokeStyle = color;
+            context.beginPath();
+            context.moveTo(this._contextXPixel(rect, xRange, this._x), this._contextYPixel(rect, yRange, yRange.min()));
+            context.lineTo(this._contextXPixel(rect, xRange, this._x), this._contextYPixel(rect, yRange, yRange.max()));
+            context.stroke();
+          }
+        },
+      });
+
+      var BounceTimingFunction = function(overshoot, rebounds, peakRatio) {
+        this.setOvershoot(overshoot);
+        this.setRebounds(rebounds);
+        this.setPeakRatio(peakRatio);
+
+        this._xBottom = new HorizontalLine(-1);
+        this._xTop = new HorizontalLine(0);
+        this._yLeft = new VerticalLine(0);
+        this._yRight = new VerticalLine(1);
+      };
+      BounceTimingFunction.prototype = {
+        plot: function(t, context, rect) {
+          // We plot (0, -1) to (1, 1).
+          var xRange = new Range(0, 1);
+          var yRange = new Range(-1, 0);
+          var plotRect = new Rect(rect.x(), rect.y() + rect.height() / 2, rect.width(), rect.height() / 2);
+          this._xBottom.plot(xRange, yRange, context, plotRect, 'gray');
+          this._xTop.plot(xRange, yRange, context, plotRect, 'gray');
+          this._yLeft.plot(xRange, yRange, context, plotRect, 'gray');
+          this._yRight.plot(xRange, yRange, context, plotRect, 'gray');
+
+          var inputLine = new VerticalLine(t);
+          var outputLine = new HorizontalLine(this._bounce.evaluate(t));
+          yRange = new Range(-1, 1);
+          inputLine.plot(xRange, yRange, context, rect, '#0ab');
+          outputLine.plot(xRange, yRange, context, rect, '#f08');
+
+          this._overshootLine.plot(xRange, yRange, context, rect, 'gray');
+          this._upperEnvelope.plot(xRange, yRange, context, rect, 'gray');
+          this._lowerEnvelope.plot(xRange, yRange, context, rect, 'gray');
+
+          var width = rect.width() * t;
+          this._bounce.plot(new Range(0, t), new Range(-1, 1), context,
+              new Rect(rect.x(), rect.y(), width, rect.height()), 'black');
+          this._bounce.plot(new Range(t, 1), new Range(-1, 1), context,
+              new Rect(rect.x() + width, rect.y(), rect.width() - width, rect.height()), 'lightgray');
+        },
+        overshoot: function() {
+          return this._overshoot;
+        },
+        setOvershoot: function(overshoot) {
+          this._overshoot = overshoot;
+          this._updateBounce();
+          this._updateOvershootLine();
+        },
+        rebounds: function() {
+          return this._rebounds;
+        },
+        setRebounds: function(rebounds) {
+          this._rebounds = rebounds;
+          this._updateBounce();
+        },
+        peakRatio: function() {
+          return this._peakRatio;
+        },
+        setPeakRatio: function(peakRatio) {
+          this._peakRatio = peakRatio;
+          this._updateBounce();
+        },
+        _updateBounce: function() {
+          // Note that we can't verify input here, as the state may be invalid
+          // between grouped calls to the three setters.
+          var amplitude = this._overshoot / Math.sqrt(this._peakRatio);
+
+          var logarithmicDecrement = Math.log(1 / this._peakRatio) / Math.log(Math.E);
+          var dampingRatio = logarithmicDecrement / Math.sqrt(Math.pow(2 * Math.PI, 2) +
+              Math.pow(logarithmicDecrement, 2));
+
+          var dampedFrequency = 2 * Math.PI * this._rebounds;
+          var naturalFrequency = dampedFrequency / Math.sqrt(1 - Math.pow(dampingRatio, 2));
+
+          var timeShift = 0;
+          this._bounce = new DampedSinusoid(amplitude, naturalFrequency, dampingRatio, timeShift);
+
+          // If the amplitude is greater than 1, set the phase shift such that
+          // the value is -1 at time 0.
+          if (amplitude > 1) {
+            // We know the value will occur in the first quarter cycle and that
+            // the curve is monotonically increasing in this range, so we can use
+            // bisection.
+            var tLower = 0;
+            var tUpper = Math.PI / (2 * dampedFrequency);
+            var resolution = tUpper / 100;
+            var yLower = -amplitude;
+            var yUpper = 0;
+            while (tUpper - tLower > resolution) {
+              var t = (tLower + tUpper) / 2;
+              var y = this._bounce.evaluate(t);
+              if (y > -1) {
+                tUpper = t;
+                yUpper = y;
+              } else {
+                tLower = t;
+                yLower = y;
+              }
+            }
+            timeShift = (tLower + tUpper) / 2;
+            this._bounce = new DampedSinusoid(amplitude, naturalFrequency, dampingRatio, timeShift);
+          }
+
+          this._upperEnvelope = new ExponentialDecay(amplitude, dampingRatio * naturalFrequency, timeShift);
+          this._lowerEnvelope = new ExponentialDecay(-amplitude, dampingRatio * naturalFrequency, timeShift);
+        },
+        _updateOvershootLine: function() {
+          this._overshootLine = new HorizontalLine(this._overshoot);
+        },
+      };
+
+      function overshootToPeakRatio(overshoot) {
+        return Math.pow(overshoot, 2);
+      }
+
+      var Slider = function(name, min, max, step, initial, onChange, allowAuto, onUseAuto, getUpperLimit) {
+        this._onChange = onChange;
+        this._onUseAuto = onUseAuto;
+        this._getUpperLimit = getUpperLimit;
+
+        // This is not rounded.
+        this._inputValue = initial;
+        this._outputValue = initial;
+
+        this._auto  = document.createElement('input');
+        this._auto.type = "checkbox";
+        this._auto.addEventListener('change', function(me) {
+          return function() {
+            me._updateAuto();
+          }
+        }(this));
+
+        this._output  = document.createElement('span');
+        this._output.classList.add('output');
+        this._output.innerText = initial;
+
+        this._input = document.createElement('input');
+        this._input.type = 'range';
+        this._input.min = min;
+        this._input.max = max;
+        this._input.step = step;
+        this._input.value = initial;
+        this._input.classList.add('input');
+        this._input.addEventListener('change', function(me) {
+          return function() {
+            me._inputValue = me._input.value;
+            me.updateOutput();
+          };
+        }(this));
+
+        var text = document.createElement('span');
+        text.innerText = name;
+
+        this._domContent = document.createElement('div');
+        this._domContent.appendChild(this._auto);
+        this._domContent.appendChild(this._output);
+        this._domContent.appendChild(this._input);
+        this._domContent.appendChild(text);
+
+        if (allowAuto) {
+          this._auto.checked = true;
+          this._updateAuto();
+        } else {
+          this._auto.style.visibility = "hidden";
+        }
+      };
+      Slider.prototype = {
+        domContent: function() {
+          return this._domContent;
+        },
+        setValueIfAuto: function(x) {
+          if (this._auto.checked) {
+            this._input.value = x;
+            this._inputValue = x;
+            this.updateOutput();
+          }
+        },
+        _setOutput: function() {
+          this._output.innerText = new String(this._outputValue).substr(0, 4);
+        },
+        _updateAuto: function() {
+          this._input.disabled = this._auto.checked;
+          if (this._auto.checked) {
+            this._domContent.classList.add('auto');
+            this._onUseAuto(this);
+          } else {
+            this._domContent.classList.remove('auto');
+          }
+        },
+        updateOutput: function() {
+          if (this._getUpperLimit !== undefined && this._inputValue > this._getUpperLimit()) {
+            this._domContent.classList.add('clamped');
+            this._outputValue = this._getUpperLimit();
+          } else {
+            this._domContent.classList.remove('clamped');
+            this._outputValue = this._inputValue;
+          }
+          this._setOutput();
+          this._onChange(this, this._outputValue);
+        },
+      };
+
+      var TargetSlider = function(range, width) {
+        this._range = range;
+        this._width = width;
+        this._domContent = document.createElement('div');
+        this._domContent.style.width = this._width + 'px';
+        this._domContent.style.height = (this._range + this._width) + 'px';
+        this._domContent.classList.add('target_slider');
+        var inner = document.createElement('div');
+        inner.style.width = this._width + 'px';
+        inner.style.height = this._width + 'px';
+        this._domContent.appendChild(inner);
+      };
+      TargetSlider.prototype = {
+        setPosition: function(y) {
+          this._domContent.firstChild.style.bottom = (this._range * y) + 'px';
+        },
+        domContent: function() {
+          return this._domContent;
+        },
+      };
+
+      function update(target, timeFraction) {
+        var canvas = document.getElementById('canvas');
+        var context = canvas.getContext('2d');
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        var rect = new Rect(20, 20, 400, 800);
+        target.timingFunction.plot(timeFraction, context, rect);
+        target.slider.setPosition(new Range(-1, 1).fraction(target.timingFunction._bounce.evaluate(timeFraction)));
+      }
+
+      function go() {
+        var overshoot = 0.5;
+        var rebounds = 5.0;
+
+        var timingFunction = new BounceTimingFunction(overshoot, rebounds);
+        var slider = new TargetSlider(800, 40);
+        document.getElementById('wrapper').appendChild(slider.domContent());
+
+        var overshootSlider = new Slider('overshoot', 0.01, 1, 0.01, timingFunction.overshoot(), function(me, x) {
+          timingFunction.setOvershoot(x);
+          peakRatioSlider.setValueIfAuto(overshootToPeakRatio(x));
+          // May need to update clamping
+          peakRatioSlider.updateOutput();
+        });
+        var reboundsSlider = new Slider('rebounds', 1, 10, 0.1, timingFunction.rebounds(), function(me, x) {
+          timingFunction.setRebounds(x);
+        });
+        var warning = document.createElement('span');
+        var peakRatioSlider = new Slider('peak ratio', 0.01, 1, 0.01, overshootToPeakRatio(timingFunction.overshoot()), function(me, x) {
+          console.assert(x <= overshootToPeakRatio(timingFunction.overshoot()));
+          timingFunction.setPeakRatio(x);
+        }, true, function(me) {
+          me._domContent.classList.remove('clamped');
+          me.setValueIfAuto(overshootToPeakRatio(timingFunction.overshoot()));
+        }, function() {
+          return overshootToPeakRatio(timingFunction.overshoot());
+        });
+
+        var parameters = document.getElementById('parameters');
+        parameters.appendChild(overshootSlider.domContent());
+        parameters.appendChild(reboundsSlider.domContent());
+        parameters.appendChild(peakRatioSlider.domContent());
+        parameters.appendChild(warning);
+
+        document.timeline.play(new Animation({timingFunction: timingFunction, slider: slider}, {sample: function(timeFraction, currentIteration, target) {
+          update(target, timeFraction);
+        }}, {iterationDuration: 7.0, iterationCount: Infinity}));
+
+      }
+      function togglePause(button) {
+        var player = document.timeline.getCurrentPlayers()[0];
+        player.paused = !player.paused;
+        button.innerText = player.paused ? 'Play' : 'Pause';
+      }
+    </script>
+    <style type="text/css">
+      body {
+        margin: 0px;
+        font-family: 'Hiragino Kaku Gothic Pro', 'Segoe UI', 'Apple Gothic', Tahoma, 'Helvetica Neue', sans-serif;
+        color: #333;
+      }
+      div#wrapper {
+        position: relative;
+        margin: 20px;
+      }
+      div#wrapper div.target_slider {
+        position: absolute;
+        border-radius: 4px;
+        top: 0px;
+        left: 460px;
+        border: 1px solid lightgray;
+      }
+      div#wrapper div.target_slider div {
+        border-radius: 4px;
+        background-color: #f08;
+        position: absolute;
+        bottom: 0px;
+      }
+      div#wrapper form {
+        position: absolute;
+        top: 0px;
+        left: 600px;
+      }
+      div#wrapper button {
+        border-radius: 4px;
+        position: absolute;
+        top: 150px;
+        left: 600px;
+        width: 50px;
+      }
+      form div {
+        border-radius: 4px;
+        padding: 2px;
+        border: 1px solid lightgray;
+        margin-top: 2px;
+      }
+      form div.auto {
+        background-color: lightgray;
+      }
+      form div.clamped {
+        background-color: #FA6CB3;
+      }
+      form div input.input {
+        width: 150px;
+      }
+      form div span {
+        display: inline-block;
+        padding-left: 6px;
+        padding-right: 6px;
+      }
+      form div span.output {
+        width: 30px;
+      }
+    </style>
+  </head>
+  <body onload="go()">
+    <div id="wrapper">
+      <canvas width="440px" height="840px" id="canvas"></canvas>
+      <form id ="parameters"></form>
+      <button onclick="togglePause(this)">Pause</button>
+    </div>
+  <body>
+</html>
