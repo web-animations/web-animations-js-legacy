@@ -5432,7 +5432,8 @@ window._WebAnimationsTestingUtilities = {
   _cubicBezierTimingFunction: CubicBezierTimingFunction,
   _linearTimingFunction: LinearTimingFunction,
   _pacedTimingFunction: PacedTimingFunction,
-  _enableAsserts: function() { ASSERT_ENABLED = true; }
+  _enableAsserts: function() { ASSERT_ENABLED = true; },
+  _pathType: pathType
 };
 
 })();
