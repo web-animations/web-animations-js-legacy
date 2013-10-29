@@ -30,10 +30,8 @@ limitations under the License.
         margin: 0;
         padding: 0;
       }
-      h2 {
-        position: relative;
-        font-size: 30px;
-        z-index: 2;
+      html, body {
+        overflow-x: hidden;
       }
       h1 {
         position: relative;
@@ -44,6 +42,11 @@ limitations under the License.
         -webkit-text-stroke-width: 1px;
         -webkit-text-stroke-color: black;
         padding-top: .1em;
+        z-index: 2;
+      }
+      h2 {
+        position: relative;
+        font-size: 30px;
         z-index: 2;
       }
       ul {
@@ -77,24 +80,21 @@ limitations under the License.
         font-size: 14px;
         background: #4DBD33;
       }
-      html, body {
-        overflow-x: hidden;
-      }
-      div#sky {
+      #sky {
         background: #87CEFA;
         background: linear-gradient(to bottom, #B0E2FF, #87CEFA);
         height: 30vmin;
         overflow-x: hidden;
         text-align: center;
       }
-      div#grass {
+      #grass {
         background: #8CDD81;
         background: linear-gradient(to bottom, #8CDD81 20%, #4DBD33 100%);
         padding: 20px;
         z-index: 2;
         position: relative;
       }
-      div.hills {
+      .hills {
         top: 32vh;
         left: -12vw;
         background: #E8E8E8;
@@ -105,17 +105,14 @@ limitations under the License.
         z-index: 1;
         background: #8CDD81;
       }
-      div#hill1 {
+      #hill {
         top: 25vmin;
         left: -10vw;
       }
       #zeppelin {
         height: 10vmin;
         left: -20vw;
-      }
-      #zeppelin {
         position: absolute;
-        width: 20vw;
         -webkit-animation: zeppelin 100s linear -20s infinite;
         animation: zeppelin 100s linear -20s infinite;
       }
@@ -129,10 +126,15 @@ limitations under the License.
         99% { transform: translateX(400%); }
         100% { transform: translateX(600%); }
       }
+      @media (max-width: 600px) {
+        #github-banner {
+          display: none;
+        }
+      }
     </style>
   </head>
   <body>
-    <a href="https://github.com/web-animations">
+    <a id="github-banner" href="https://github.com/web-animations">
       <img style="position: absolute; top: 0; left: 0; border: 0; z-index: 4"
 	   src="https://s3.amazonaws.com/github/ribbons/forkme_left_darkblue_121621.png"
 	   alt="Fork me on GitHub">
@@ -142,7 +144,7 @@ limitations under the License.
       <h1>Web Animations</h1>
       <img id="zeppelin" src="zeppelin.svg" alt="Demos">
     </div>
-    <div id="hill1" class="hills"></div>
+    <div id="hill" class="hills"></div>
     <div id="grass">
       <ul>
 	<a class="demo-link" href="rolio/rolio.html"><li>Rolio</li></a>
