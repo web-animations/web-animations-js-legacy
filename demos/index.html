@@ -38,13 +38,12 @@ limitations under the License.
       h1 {
         position: relative;
         font-family: 'Roboto', sans-serif;
-        font-weight: 900;
+        font-size: 10vmin;
         font-style: italic;
         -webkit-text-fill-color: white;
         -webkit-text-stroke-width: 1px;
         -webkit-text-stroke-color: black;
         padding-top: .1em;
-        font-size: 50px;
         z-index: 2;
       }
       ul {
@@ -84,7 +83,7 @@ limitations under the License.
       div#sky {
         background: #87CEFA;
         background: linear-gradient(to bottom, #B0E2FF, #87CEFA);
-        height: 25vh;
+        height: 30vmin;
         overflow-x: hidden;
         text-align: center;
       }
@@ -100,57 +99,35 @@ limitations under the License.
         left: -12vw;
         background: #E8E8E8;
         border-radius: 80vw 80vw 0 0;
-        width: 80vw; height: 40vw;
+        width: 80vw;
+        height: 40vw;
         position: absolute;
         z-index: 1;
         background: #8CDD81;
       }
       div#hill1 {
-        top: 32vh;
+        top: 25vmin;
         left: -10vw;
       }
       #zeppelin {
-        width: 100px;
+        height: 10vmin;
         left: -20vw;
       }
-      @media (max-width: 800px) {
-        #zeppelin {
-          width: 200px;
-          margin: 0px auto;
-        }
+      #zeppelin {
+        position: absolute;
+        width: 20vw;
+        -webkit-animation: zeppelin 100s linear -20s infinite;
+        animation: zeppelin 100s linear -20s infinite;
       }
-      @media (max-width: 350px) {
-        h1 {
-          -webkit-text-stroke-width: 2px;
-          padding-top: .1em;
-          font-size: 40px;
-        }
+      @-webkit-keyframes zeppelin {
+        1% { -webkit-transform: translateX(200%); }
+        99% { -webkit-transform: translateX(400%); }
+        100% { -webkit-transform: translateX(600%); }
       }
-      @media (min-width: 800px) {
-        div#sky {
-          height: 40vh;
-        }
-        h1 {
-          -webkit-text-stroke-width: 3px;
-          padding-top: .1em;
-          font-size: 100px;
-        }
-        #zeppelin {
-          position: absolute;
-          width: 20vw;
-          -webkit-animation: zeppelin 100s linear -20s infinite;
-          animation: zeppelin 100s linear -20s infinite;
-        }
-        @-webkit-keyframes zeppelin {
-          1% { -webkit-transform: translateX(200%); }
-          99% { -webkit-transform: translateX(400%); }
-          100% { -webkit-transform: translateX(600%); }
-        }
-        @keyframes zeppelin {
-          1% { transform: translateX(200%); }
-          99% { transform: translateX(400%); }
-          100% { transform: translateX(600%); }
-        }
+      @keyframes zeppelin {
+        1% { transform: translateX(200%); }
+        99% { transform: translateX(400%); }
+        100% { transform: translateX(600%); }
       }
     </style>
   </head>
