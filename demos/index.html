@@ -131,6 +131,47 @@ limitations under the License.
           display: none;
         }
       }
+      #cloud {
+        -webkit-animation: cloud 300s linear 0s infinite;
+        animation: cloud 300s linear 0s infinite;
+        height: 5vw;
+        width: 18vw;
+        top: 10vw;
+        background: #E8E8E8;
+        border-radius: 10vw;
+        position: absolute;
+        z-index: 0;
+        left: 106vw;
+      }
+      #cloud:after, #cloud:before {
+        content: '';
+        position: absolute;
+        background: #E8E8E8;
+      }
+      #cloud:after {
+        border-radius: 6vw;  
+        width: 6vw;
+        height: 6vw;
+        top: -3vw;
+        left: 3vw;
+      }
+      #cloud:before {
+        width: 9vw;
+        height: 12vw;
+        -webkit-transform: rotate(150deg);
+        transform: rotate(150deg);
+        top: -5vw;
+        right: 2vw;
+        border-radius: 10vw;
+      }
+      @-webkit-keyframes cloud {
+          0% { -webkit-transform: translateX(0); }
+          100% { -webkit-transform: translateX(-700%); }
+      }
+      @keyframes cloud {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-700px); }
+      }
     </style>
   </head>
   <body>
