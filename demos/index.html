@@ -121,8 +121,11 @@ limitations under the License.
         100% { -webkit-transform: translateX(600%); }
       }
       @keyframes zeppelin {
+        1% { -webkit-transform: translateX(200%); }        
         1% { transform: translateX(200%); }
+        99% { -webkit-transform: translateX(400%); }
         99% { transform: translateX(400%); }
+        100% { -webkit-transform: translateX(600%); }
         100% { transform: translateX(600%); }
       }
       @media (max-width: 600px) {
@@ -168,7 +171,9 @@ limitations under the License.
           100% { -webkit-transform: translateX(-700%); }
       }
       @keyframes cloud {
+          0% { -webkit-transform: translateX(0); }
           0% { transform: translateX(0); }
+          100% { -webkit-transform: translateX(-700%); }
           100% { transform: translateX(-700px); }
       }
     </style>
@@ -190,6 +195,7 @@ limitations under the License.
         <a class="demo-link" href="rolio/rolio.html"><li>Rolio</li></a>
         <a class="demo-link" href="globe/"><li>Globe</li></a>
         <a class="demo-link" href="countries/"><li>Countries</li></a>
+        <a class="demo-link" href="touch/touch.html"><li>Touch</li></a>
         <a class="demo-link" href="car-demo.html"><li>Car</li></a>
         <a class="demo-link" href="curtains.html"><li>Curtains</li></a>
         <a class="demo-link" href="test-circle-square.html"><li>Shapes</li></a>
