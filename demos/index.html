@@ -110,23 +110,33 @@ limitations under the License.
       }
       #zeppelin {
         height: 10vmin;
-        left: 20vw;
         position: absolute;
         -webkit-animation: zeppelin 100s linear -20s infinite;
-        animation: zeppelin 100s linear -20s infinite;
+        animation: zeppelin 100s linear -20s infinite; 
       }
       @-webkit-keyframes zeppelin {
-        1% { -webkit-transform: translateX(200%); }
-        99% { -webkit-transform: translateX(400%); }
-        100% { -webkit-transform: translateX(600%); }
+        0% { -webkit-transform: translateX(-400%); }
+        1% { -webkit-transform: translateX(-100%); }
+        99% { -webkit-transform: translateX(100%); }
+        100% { -webkit-transform: translateX(300%); }
       }
       @keyframes zeppelin {
-        1% { -webkit-transform: translateX(200%); }        
-        1% { transform: translateX(200%); }
-        99% { -webkit-transform: translateX(400%); }
-        99% { transform: translateX(400%); }
-        100% { -webkit-transform: translateX(600%); }
-        100% { transform: translateX(600%); }
+        0% {
+          -webkit-transform: translateX(-400%);
+          transform: translateX(-400%);
+        }
+        1% {
+          -webkit-transform: translateX(-100%);
+          transform: translateX(-100%);
+        }
+        99% {
+          -webkit-transform: translateX(100%);
+          transform: translateX(100%);
+        }
+        100% {
+          -webkit-transform: translateX(300%);
+          transform: translateX(300%);
+        }
       }
       @media (max-width: 600px) {
         #github-banner {
@@ -138,7 +148,7 @@ limitations under the License.
         animation: cloud 300s linear 0s infinite;
         height: 5vw;
         width: 18vw;
-        top: 10vw;
+        top: 10vmin;
         background: #E8E8E8;
         border-radius: 10vw;
         position: absolute;
@@ -167,14 +177,18 @@ limitations under the License.
         border-radius: 10vw;
       }
       @-webkit-keyframes cloud {
-          0% { -webkit-transform: translateX(0); }
-          100% { -webkit-transform: translateX(-700%); }
+        0% { -webkit-transform: translateX(0); }
+        100% { -webkit-transform: translateX(-700%); }
       }
       @keyframes cloud {
-          0% { -webkit-transform: translateX(0); }
-          0% { transform: translateX(0); }
-          100% { -webkit-transform: translateX(-700%); }
-          100% { transform: translateX(-700px); }
+        0% {
+          -webkit-transform: translateX(0);
+          transform: translateX(0);
+        }
+        100% {
+          -webkit-transform: translateX(-700%);
+          transform: translateX(-700px);
+        }
       }
     </style>
   </head>
