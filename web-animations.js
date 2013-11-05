@@ -5037,30 +5037,21 @@ var usePerformanceTiming =
 
 // Don't use a local named requestAnimationFrame, to avoid potential problems
 // with hoisting.
-var raf = window.requestAnimationFrame;
-if (!raf) {
-  var nativeRaf = window.webkitRequestAnimationFrame ||
-      window.mozRequestAnimationFrame;
-  if (!nativeRaf) {
-    // requestAnimationFrame is not available, simulate it.
-    raf = function(callback) {
-      setTimeout(function() {
-        callback(clockMillis());
-      }, 1000 / 60);
-    };
-  } else if (usePerformanceTiming) {
-    // platform requestAnimationFrame provides only millisecond accuracy, wrap
-    // it and use performance.now()
-    raf = function(callback) {
-      nativeRaf(function() {
-        callback(window.performance.now());
-      });
-    };
-  } else {
-    // platform requestAnimationFrame provides only millisecond accuracy, and
-    // we can't do any better
-    raf = nativeRaf;
-  }
+var nativeRaf = window.requestAnimationFrame ||
+    window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame;
+var raf;
+if (nativeRaf) {
+  raf = function(callback) {
+    nativeRaf(function() {
+      callback(clockMillis());
+    });
+  };
+} else {
+  raf = function(callback) {
+    setTimeout(function() {
+      callback(clockMillis());
+    }, 1000 / 60);
+  };
 }
 
 var clockMillis = function() {
