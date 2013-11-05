@@ -1857,7 +1857,19 @@ MediaReference.prototype = createObject(TimedItem.prototype, {
   }
 });
 
+function toUsableValue(property, value) {
+  if (!value.dependsOnUnderlyingValue()) {
+    return propertyTypes[property].toCssValue(value.compositeOnto(property, undefined));
+  }
+}
 
+function toUsableValues(dict) {
+  var result = {}
+  for (var property in dict) {
+    result[property] = toUsableValue(property, dict[property]);
+  }
+  return result;
+}
 
 /** @constructor */
 var AnimationEffect = function(token, accumulate) {
@@ -1885,9 +1897,21 @@ AnimationEffect.prototype = {
       exitModifyCurrentAnimationState(repeatLastTick);
     }
   },
-  _sample: abstractMethod,
+  _sample: function(timeFraction, currentIteration, target) {
+    var sample = this._generateSample(timeFraction, currentIteration);
+    for (var property in sample) {
+      compositor.setAnimatedValue(target, property, sample[property]);
+    }
+  },
+  _generateSample: abstractMethod,
   clone: abstractMethod,
-  toString: abstractMethod
+  toString: abstractMethod,
+  valueAtTimeFraction: function(timeFraction, currentIteration) {
+    if (currentIteration === undefined) {
+      currentIteration = 0;
+    }
+    return toUsableValues(this._generateSample(timeFraction, currentIteration));
+  }
 };
 
 var clamp = function(x, min, max) {
@@ -1897,7 +1921,7 @@ var clamp = function(x, min, max) {
 
 
 /** @constructor */
-var MotionPathEffect = function(path, autoRotate, angle, composite,
+var MotionPathEffect = function(path, autoRotate, preTransform, composite,
     accumulate) {
   enterModifyCurrentAnimationState();
   try {
@@ -1908,7 +1932,7 @@ var MotionPathEffect = function(path, autoRotate, angle, composite,
     // TODO: path argument is not in the spec -- seems useful since
     // SVGPathSegList doesn't have a constructor.
     this.autoRotate = isDefined(autoRotate) ? autoRotate : 'none';
-    this.angle = isDefined(angle) ? angle : 0;
+    this.preTransform = isDefined(preTransform) ? transformType.fromCssValue(preTransform) : [];
     this._path = document.createElementNS(SVG_NS, 'path');
     if (path instanceof SVGPathSegList) {
       this.segments = path;
@@ -1935,26 +1959,22 @@ MotionPathEffect.prototype = createObject(AnimationEffect.prototype, {
       exitModifyCurrentAnimationState(repeatLastTick);
     }
   },
-  _sample: function(timeFraction, currentIteration, target) {
+  _generateSample: function(timeFraction, currentIteration) {
     // TODO: Handle accumulation.
     var lengthAtTimeFraction = this._lengthAtTimeFraction(timeFraction);
     var point = this._path.getPointAtLength(lengthAtTimeFraction);
-    var x = point.x - target.offsetWidth / 2;
-    var y = point.y - target.offsetHeight / 2;
-    // TODO: calc(point.x - 50%) doesn't work?
-    var value = [{t: 'translate', d: [{px: x}, {px: y}]}];
-    var angle = this.angle;
+    var value = [{t: 'translate', d: [{px: point.x}, {px: point.y}]}];
     if (this._autoRotate === 'auto-rotate') {
       // Super hacks
       var lastPoint = this._path.getPointAtLength(lengthAtTimeFraction - 0.01);
       var dx = point.x - lastPoint.x;
       var dy = point.y - lastPoint.y;
       var rotation = Math.atan2(dy, dx);
-      angle += rotation / 2 / Math.PI * 360;
+      var angle = rotation / 2 / Math.PI * 360;
     }
+    value = value.concat(this.preTransform);
     value.push({t: 'rotate', d: [angle]});
-    compositor.setAnimatedValue(target, 'transform',
-        new AddReplaceCompositableValue(value, this.composite));
+    return {transform: new AddReplaceCompositableValue(value, this.composite)};
   },
   _lengthAtTimeFraction: function(timeFraction) {
     var segmentCount = this._cumulativeLengths.length - 1;
@@ -2216,14 +2236,14 @@ KeyframeEffect.prototype = createObject(AnimationEffect.prototype, {
       exitModifyCurrentAnimationState(repeatLastTick);
     }
   },
-  _sample: function(timeFraction, currentIteration, target) {
-    var frames = this._propertySpecificKeyframes();
+  _generateSample: function(timeFraction, currentIteration) {
+    var returnValue = {};
+    var frames= this._propertySpecificKeyframes();
     for (var property in frames) {
-      compositor.setAnimatedValue(target, property,
-          this._sampleForProperty(
-              frames[property], timeFraction, currentIteration));
+      returnValue[property] = this._sampleForProperty(frames[property], timeFraction, currentIteration);
     }
-  },
+    return returnValue;
+  }, 
   _sampleForProperty: function(frames, timeFraction, currentIteration) {
     var unaccumulatedValue = this._getUnaccumulatedValue(frames, timeFraction);
 
