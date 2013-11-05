@@ -31,17 +31,20 @@ limitations under the License.
 
 var anim = new Animation(document.querySelector('.animation'),
     [
-      {transform: 'rotate(0deg) translate(300px, 0px) rotate(0deg)'},
-      {transform: 'rotate(-180deg) translate(300px, 0px) rotate(-180deg)'}
+      {transform: 'rotate(0deg) translate(300px, 0px) rotate(0deg)', backgroundColor: 'rgb(0,255,0)'},
+      {backgroundColor: 'red', width: '80px'},
+      {transform: 'rotate(-180deg) translate(300px, 0px) rotate(-180deg)', backgroundColor: 'blue'}
     ], 2);
 
 document.timeline.play(anim);
 
-for (var i = 0; i < 1; i += 0.1) {
+for (var i = 0; i < 1.01; i += 0.05) {
   var effectValue = anim.effect.valueAtTimeFraction(i);
   var div = document.createElement('div');
   div.classList.add('animation');
-  div.style.webkitTransform = effectValue['transform'];
+  div.style.webkitTransform = effectValue.transform();
+  div.style.backgroundColor = effectValue.backgroundColor();
+  div.style.width = effectValue.width('50px');
   div.style.opacity = i;
   document.documentElement.appendChild(div);
 }

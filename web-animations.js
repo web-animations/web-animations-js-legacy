@@ -1857,10 +1857,20 @@ MediaReference.prototype = createObject(TimedItem.prototype, {
   }
 });
 
+
 function toUsableValue(property, value) {
   if (!value.dependsOnUnderlyingValue()) {
-    return propertyTypes[property].toCssValue(value.compositeOnto(property, undefined));
-  }
+    var result = propertyTypes[property].toCssValue(value.compositeOnto(property, undefined));
+    return function() { return result; };
+  } else {
+    return function(underlying) {
+      if (underlying == undefined) {
+        throw new TypeError('Underlying value undefined');
+      }
+      var internalUnderlying = propertyTypes[property].fromCssValue(underlying);
+      return propertyTypes[property].toCssValue(value.compositeOnto(property, internalUnderlying));
+    }
+  }   
 }
 
 function toUsableValues(dict) {
