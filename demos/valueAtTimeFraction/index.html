@@ -1,0 +1,54 @@
+<!--
+Copyright 2013 Google Inc. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+
+limitations under the License.
+--> 
+<!DOCTYPE html>
+<style>
+.animation {
+  left: 400px;
+  top: 400px;
+  width: 50px;
+  height: 50px;
+  background: green;
+  position: absolute;
+}
+</style>
+<div class='animation'></div>
+<script src='../../web-animations.js'></script>
+<script>
+
+var anim = new Animation(document.querySelector('.animation'),
+    [
+      {transform: 'rotate(0deg) translate(300px, 0px) rotate(0deg)', backgroundColor: 'rgb(0,255,0)'},
+      {backgroundColor: 'red', width: '80px'},
+      {transform: 'rotate(-180deg) translate(300px, 0px) rotate(-180deg)', backgroundColor: 'blue'}
+    ], 2);
+
+document.timeline.play(anim);
+
+for (var i = 0; i < 1.01; i += 0.05) {
+  var effectValue = anim.effect.valueAtTimeFraction(i);
+  var div = document.createElement('div');
+  div.classList.add('animation');
+  div.style.webkitTransform = effectValue.transform();
+  div.style.backgroundColor = effectValue.backgroundColor();
+  div.style.width = effectValue.width('50px');
+  div.style.opacity = i;
+  document.documentElement.appendChild(div);
+}
+
+</script>
+
+      

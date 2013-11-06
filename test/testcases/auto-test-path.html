@@ -123,17 +123,17 @@ var expected_failures = {
 "use strict";
 
 var animFunc1 = new PathAnimationEffect(
-    document.querySelector('#path1').pathSegList, 'auto-rotate');
+    document.querySelector('#path1').pathSegList, 'auto-rotate', 'translate(-12.5px, -12.5px)');
 document.timeline.play(new Animation(document.querySelector("#anim1"),
     animFunc1, {duration: 10, iterations: 2}));
 
 var animFunc2 = new PathAnimationEffect(
-    document.querySelector('#path2').pathSegList, 'auto-rotate');
+    document.querySelector('#path2').pathSegList, 'auto-rotate', 'translate(-12.5px, -12.5px)');
 document.timeline.play(new Animation(document.querySelector("#anim2"),
     animFunc2, {duration: 10, iterations: 2}));
 
 var animFunc3 = new PathAnimationEffect(
-    document.querySelector('#path3').pathSegList, 'auto-rotate');
+    document.querySelector('#path3').pathSegList, 'auto-rotate', 'translate(-12.5px, -12.5px)');
 document.timeline.play(new Animation(
     document.querySelector("#anim3"), animFunc3,
     {duration: 10, iterations: 2, easing: "paced"}));
@@ -141,7 +141,7 @@ document.timeline.play(new Animation(
 var animFunc4KeyFrames = new KeyframeAnimationEffect(
     [{transform: "translate(387.5px, 287.5px) rotate(180deg)"}], "replace");
 var animFunc4Path = new PathAnimationEffect(
-    document.querySelector('#path4').pathSegList, 'auto-rotate');
+    document.querySelector('#path4').pathSegList, 'auto-rotate', 'translate(-12.5px, -12.5px)');
 var anim4 = new Animation(document.querySelector("#anim4"), animFunc4Path,
     {duration: 10, iterations: 2, easing: "paced"});
 document.timeline.play(anim4);
