@@ -11,6 +11,7 @@ var tests = [
   'auto-test-fill-values.html',
   'auto-test-font-weight.html',
   'auto-test-initial.html',
+  'auto-test-inline-style-methods.html',
   'auto-test-inline-style.html',
   'auto-test-integer.html',
   'auto-test-iteration-start.html',

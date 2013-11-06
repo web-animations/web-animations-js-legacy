@@ -4745,13 +4745,13 @@ var cssStyleDeclarationAttribute = {
   'var': true
 };
 
-var cssStyleDeclarationMethod = {
-  getPropertyValue: true,
-  getPropertyCSSValue: true,
+var cssStyleDeclarationMethodModifiesStyle = {
+  getPropertyValue: false,
+  getPropertyCSSValue: false,
   removeProperty: true,
-  getPropertyPriority: true,
+  getPropertyPriority: false,
   setProperty: true,
-  item: true
+  item: false
 };
 
 
@@ -4851,18 +4851,21 @@ AnimatedCSSStyleDeclaration.prototype = {
   }
 };
 
-for (var method in cssStyleDeclarationMethod) {
-  AnimatedCSSStyleDeclaration.prototype[method] = (function(method) {
+for (var method in cssStyleDeclarationMethodModifiesStyle) {
+  AnimatedCSSStyleDeclaration.prototype[method] = (function(method, modifiesStyle) {
     return function() {
+      if (modifiesStyle) {
+        this._inlineStyleChanged();
+      }
       return this._surrogateElement.style[method].apply(
           this._surrogateElement.style, arguments);
     }
-  })(method);
+  })(method, cssStyleDeclarationMethodModifiesStyle[method]);
 }
 
 for (var property in document.documentElement.style) {
   if (cssStyleDeclarationAttribute[property] ||
-      cssStyleDeclarationMethod[property]) {
+      property in cssStyleDeclarationMethodModifiesStyle) {
     continue;
   }
   (function(property) {
