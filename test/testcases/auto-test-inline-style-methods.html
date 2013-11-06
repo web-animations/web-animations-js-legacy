@@ -61,7 +61,8 @@ at(1.5, function() {
 });
 
 testharness_timeline.schedule(function() {
-  target.style.cssText = 'left: 100px; background-color: green;';
+  target.style.setProperty('left' , '100px');
+  target.style.setProperty('background-color' , 'green');
 }, 2500);
 
 at(3, function() {

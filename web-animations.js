@@ -4858,6 +4858,7 @@ for (var method in cssStyleDeclarationMethodModifiesStyle) {
       (function(method, modifiesStyle) {
     return function() {
       if (modifiesStyle) {
+        this._style[method].apply(this._style, arguments);
         this._inlineStyleChanged();
       }
       return this._surrogateElement.style[method].apply(
