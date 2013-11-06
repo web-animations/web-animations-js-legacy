@@ -4950,55 +4950,63 @@ Compositor.prototype = {
 
 var ensureTargetInitialised = function(property, target) {
   if (propertyIsSVGAttrib(property, target)) {
-    if (!isDefinedAndNotNull(target._actuals)) {
-      target._actuals = {};
-      target._bases = {};
-      target.actuals = {};
-      target._getAttribute = target.getAttribute;
-      target._setAttribute = target.setAttribute;
-      target.getAttribute = function(name) {
-        if (isDefinedAndNotNull(target._bases[name])) {
-          return target._bases[name];
-        }
-        return target._getAttribute(name);
-      };
-      target.setAttribute = function(name, value) {
-        if (isDefinedAndNotNull(target._actuals[name])) {
-          target._bases[name] = value;
-        } else {
-          target._setAttribute(name, value);
-        }
-      };
-    }
-    if (!isDefinedAndNotNull(target._actuals[property])) {
-      var baseVal = target.getAttribute(property);
-      target._actuals[property] = 0;
-      target._bases[property] = baseVal;
-
-      Object.defineProperty(target.actuals, property, configureDescriptor({
-        set: function(value) {
-          if (value === null) {
-            target._actuals[property] = target._bases[property];
-            target._setAttribute(property, target._bases[property]);
-          } else {
-            target._actuals[property] = value;
-            target._setAttribute(property, value);
-          }
-        },
-        get: function() {
-          return target._actuals[property];
-        }
-      }));
-    }
+    ensureTargetSVGInitialised(property, target);
   } else {
-    if (target.style instanceof AnimatedCSSStyleDeclaration) {
-      return;
-    }
-    var animatedStyle = new AnimatedCSSStyleDeclaration(target);
-    Object.defineProperty(target, 'style', configureDescriptor({
-      get: function() { return animatedStyle; }
+    ensureTargetCSSInitialised(target);
+  }
+};
+
+var ensureTargetSVGInitialised = function(property, target) {
+  if (!isDefinedAndNotNull(target._actuals)) {
+    target._actuals = {};
+    target._bases = {};
+    target.actuals = {};
+    target._getAttribute = target.getAttribute;
+    target._setAttribute = target.setAttribute;
+    target.getAttribute = function(name) {
+      if (isDefinedAndNotNull(target._bases[name])) {
+        return target._bases[name];
+      }
+      return target._getAttribute(name);
+    };
+    target.setAttribute = function(name, value) {
+      if (isDefinedAndNotNull(target._actuals[name])) {
+        target._bases[name] = value;
+      } else {
+        target._setAttribute(name, value);
+      }
+    };
+  }
+  if (!isDefinedAndNotNull(target._actuals[property])) {
+    var baseVal = target.getAttribute(property);
+    target._actuals[property] = 0;
+    target._bases[property] = baseVal;
+
+    Object.defineProperty(target.actuals, property, configureDescriptor({
+      set: function(value) {
+        if (value === null) {
+          target._actuals[property] = target._bases[property];
+          target._setAttribute(property, target._bases[property]);
+        } else {
+          target._actuals[property] = value;
+          target._setAttribute(property, value);
+        }
+      },
+      get: function() {
+        return target._actuals[property];
+      }
     }));
   }
+};
+
+var ensureTargetCSSInitialised = function(target) {
+  if (target.style instanceof AnimatedCSSStyleDeclaration) {
+    return;
+  }
+  var animatedStyle = new AnimatedCSSStyleDeclaration(target);
+  Object.defineProperty(target, 'style', configureDescriptor({
+    get: function() { return animatedStyle; }
+  }));
 };
 
 var setValue = function(target, property, value) {
