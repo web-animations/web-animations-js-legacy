@@ -1,0 +1,98 @@
+<!--
+Copyright 2013 Google Inc. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<!DOCTYPE html><meta charset="UTF-8">
+<div id="anim"></div>
+
+<script src="../bootstrap.js"></script>
+<script>
+"use strict";
+
+var pathType = _WebAnimationsTestingUtilities._pathType;
+
+// Assumes starts with line
+function createPathString(initialPosition, path) {
+  var pathString = 'M' + initialPosition.x + ',' + initialPosition.y;
+  for (var i = 0; i < path.length; ++i) {
+    var type = i  % 2 === 0 ? 'l' : 'm';
+    var segment = path[i];
+    for (var j = 0; j < segment.length; ++j)
+      pathString += ' ' + type + segment[j].x + ',' + segment[j].y;
+  }
+  return pathString;
+}
+
+function generateFractions(fromPoints, toPoints) {
+  var from = pathType.fromCssValue(createPathString({x: 0, y: 0}, fromPoints));
+  var to = pathType.fromCssValue(createPathString({x: 0, y: 0}, toPoints));
+  var sampleFractions = [{fraction: 0, isMove: true}, {fraction: 1, isMove: false}];
+  pathType.appendFractions(sampleFractions, pathType.cumulativeLengths(from));
+  pathType.appendFractions(sampleFractions, pathType.cumulativeLengths(to));
+  return sampleFractions;
+}
+
+var line = [{x: 100, y: 0}, {x: 100, y: 0}];
+var longLine = [{x: 120, y: 0}, {x: 120, y: 0}];
+
+test(function() {
+  var fractions = generateFractions([line], [line]);
+  assert_equals(fractions.length, 3);
+  assert_equals(fractions[0].fraction, 0);
+  assert_true(fractions[0].isMove);
+  assert_equals(fractions[1].fraction, 0.5);
+  assert_false(fractions[1].isMove);
+  assert_equals(fractions[2].fraction, 1);
+  assert_false(fractions[2].isMove);
+}, "Simple case");
+
+test(function() {
+  var fractions = generateFractions([line, line, line], [line, line, line]);
+  assert_equals(fractions.length, 6);
+  assert_equals(fractions[2].fraction, 0.5);
+  assert_false(fractions[2].isMove);
+  assert_equals(fractions[3].fraction, 0.500001);
+  assert_true(fractions[3].isMove);
+  assert_approx_equals(fractions[4].fraction, 0.75, 1e-6);
+  assert_false(fractions[4].isMove);
+}, "Matching moves");
+
+test(function() {
+  var fractions = generateFractions([line, longLine, line], [line, line, line]);
+  assert_equals(fractions.length, 6);
+  assert_equals(fractions[2].fraction, 0.5);
+  assert_false(fractions[2].isMove);
+  assert_equals(fractions[3].fraction, 0.500001);
+  assert_true(fractions[3].isMove);
+  assert_approx_equals(fractions[4].fraction, 0.75, 1e-6);
+  assert_false(fractions[4].isMove);
+}, "Length of move irelevant");
+
+test(function() {
+  var fractions = generateFractions([longLine, line, line], [line, line, line]);
+  assert_equals(fractions.length, 10);
+  assert_equals(fractions[3].fraction, 0.5);
+  assert_false(fractions[3].isMove);
+  assert_equals(fractions[4].fraction, 0.500001);
+  assert_true(fractions[4].isMove);
+  assert_approx_equals(fractions[5].fraction, 240 / 440, 1e-6);
+  assert_false(fractions[5].isMove);
+  assert_equals(fractions[6].fraction, 240 / 440 + 0.000001);
+  assert_true(fractions[6].isMove);
+  assert_approx_equals(fractions[7].fraction, 0.75, 1e-6);
+  assert_false(fractions[7].isMove);
+}, "Multiple moves");
+
+</script>

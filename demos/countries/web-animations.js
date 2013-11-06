@@ -4306,67 +4306,116 @@ var transformType = {
 
 var pathType = {
   // Properties ...
-  // - path: The target path element
-  // - points: The absolute points to set on the path
+  // - path: A path element generated from the specified path string
+  // - pathString: The calculated path string
   // - cachedCumulativeLengths: The lengths at the end of each segment
   add: function() { throw 'Addition not supported for path attribute' },
   cumulativeLengths: function(value) {
     if (isDefinedAndNotNull(value.cachedCumulativeLengths))
       return value.cachedCumulativeLengths;
     var path = value.path.cloneNode(true);
-    var cumulativeLengths = [];
+    value.cachedCumulativeLengths = [];
     while (path.pathSegList.numberOfItems > 0) {
-      // TODO: It would be good to skip moves here and when generating points.
-      cumulativeLengths.unshift(path.getTotalLength());
-      path.pathSegList.removeItem(path.pathSegList.numberOfItems - 1);
+      // getTotalLength() does not include moves.
+      var lastIndex = path.pathSegList.numberOfItems - 1;
+      // We collapse move commands, because getting the position of
+      // intermediate points in a series of move commands is hard. It would
+      // require messing with the segments of the path, and probably cloning
+      // the path to do so. We also remove leading and trailing moves.
+      var isMove = path.pathSegList.getItem(lastIndex).pathSegTypeAsLetter.toLowerCase() === 'm';
+      var hasSubsequentLine = value.cachedCumulativeLengths.length > 0;
+      var isPreviousLine = lastIndex > 0 && path.pathSegList.getItem(lastIndex - 1).pathSegTypeAsLetter.toLowerCase() !== 'm';
+      var length = path.getTotalLength();
+      var isLengthSameAsNext = hasSubsequentLine && value.cachedCumulativeLengths[value.cachedCumulativeLengths.length - 1].length === length;
+      if (!isLengthSameAsNext && (!isMove || (hasSubsequentLine && isPreviousLine))) {
+        value.cachedCumulativeLengths.unshift({
+          length: path.getTotalLength(),
+          isMove: isMove
+        });
+      }
+      path.pathSegList.removeItem(lastIndex);
     }
-    value.cachedCumulativeLengths = cumulativeLengths;
+    var l = value.cachedCumulativeLengths.length;
+    console.assert(l === 0 || value.cachedCumulativeLengths[0].length !== 0);
+    console.assert(l === 0 || !value.cachedCumulativeLengths[0].isMove);
+    console.assert(l === 0 || !value.cachedCumulativeLengths[l - 1].isMove);
     return value.cachedCumulativeLengths;
   },
   appendFractions: function(fractions, cumulativeLengths) {
-    console.assert(cumulativeLengths[0] === 0);
-    var totalLength = cumulativeLengths[cumulativeLengths.length - 1];
-    for (var i = 1; i < cumulativeLengths.length - 1; ++i)
-      fractions.push(cumulativeLengths[i] / totalLength);
+    if (cumulativeLengths.length === 0)
+      return;
+    var totalLength = cumulativeLengths[cumulativeLengths.length - 1].length;
+    // Assume encumbent already has at least 0 and 1.
+    var nextEncumbentIndex = 1;
+    var nextNewIndex = 0;
+    while (nextNewIndex < cumulativeLengths.length) {
+      var nextNewFraction = cumulativeLengths[nextNewIndex].length / totalLength;
+      console.assert(nextNewFraction < 1 || nextNewIndex === cumulativeLengths.length - 1, cumulativeLengths[nextNewIndex + 1] + ' ' + totalLength);
+      // TODO: this is ugly. See comment in cumulativeLengths()
+      if (cumulativeLengths[nextNewIndex].isMove)
+        nextNewFraction += 1e-6;  // TODO: Why doesn't Number.MIN_VALUE work?
+      var isNextMove = cumulativeLengths[nextNewIndex].isMove || fractions[nextEncumbentIndex].isMove;
+      if (nextNewFraction < fractions[nextEncumbentIndex].fraction) {
+        fractions.splice(nextEncumbentIndex, 0, {
+          fraction: nextNewFraction,
+          isMove: isNextMove
+        });
+        nextNewIndex++;
+      } else if (nextNewFraction === fractions[nextEncumbentIndex].fraction) {
+        fractions[nextEncumbentIndex].isMove = isNextMove;
+        nextNewIndex++;
+      } else {
+        fractions[nextEncumbentIndex].isMove = isNextMove;
+      }
+      nextEncumbentIndex++;
+    }
   },
   interpolate: function(from, to, f) {
     // TODO: Handle non-linear path segments.
     // Get the fractions at which we need to sample.
-    var sampleFractions = [0, 1];
+    var sampleFractions = [{fraction: 0, isMove: true}, {fraction: 1, isMove: false}];
     pathType.appendFractions(sampleFractions, pathType.cumulativeLengths(from));
     pathType.appendFractions(sampleFractions, pathType.cumulativeLengths(to));
-    sampleFractions.sort();
-    console.assert(sampleFractions[0] === 0);
-    console.assert(sampleFractions[sampleFractions.length - 1] === 1);
+    console.assert(sampleFractions[0].fraction === 0);
+    console.assert(sampleFractions[0].isMove);
+    console.assert(sampleFractions[sampleFractions.length - 1].fraction === 1);
+    console.assert(!sampleFractions[sampleFractions.length - 1].isMove);
 
     // FIXME: Cache the 'from' and 'to' points.
     var fromTotalLength = from.path.getTotalLength();
     var toTotalLength = to.path.getTotalLength();
     var points = [];
     for (var i = 0; i < sampleFractions.length; ++i) {
-      var fromPoint = from.path.getPointAtLength(fromTotalLength * sampleFractions[i]);
-      var toPoint = to.path.getPointAtLength(toTotalLength * sampleFractions[i]);
-      points.push({x: interp(fromPoint.x, toPoint.x, f), y: interp(fromPoint.y, toPoint.y, f)});
+      var fromPoint = from.path.getPointAtLength(fromTotalLength * sampleFractions[i].fraction);
+      var toPoint = to.path.getPointAtLength(toTotalLength * sampleFractions[i].fraction);
+      points.push({
+        x: interp(fromPoint.x, toPoint.x, f),
+        y: interp(fromPoint.y, toPoint.y, f),
+        isMove: sampleFractions[i].isMove
+      });
     }
-    return {points: points};
+    var pathString = '';
+    for (var i = 0; i < points.length; ++i)
+      pathString += pathType.pointToString(points[i]);
+    return {pathString: pathString};
   },
   pointToString: function(point) {
-    return point.x + ',' + point.y;
+    return (point.isMove ? 'M' : 'L') + point.x + ',' + point.y;
   },
   toCssValue: function(value, svgMode) {
     // TODO: It would be good to use PathSegList API on the target directly,
     // rather than generating this string, but that would require a hack to
     // setValue().
     console.assert(svgMode, 'Path type should only be used with SVG \'d\' attribute');
-    var ret = 'M' + pathType.pointToString(value.points[0]);
-    for (var i = 1; i < value.points.length; ++i)
-      ret += 'L' + pathType.pointToString(value.points[i]);
-    return ret;
+    return value.pathString;
   },
   fromCssValue: function(value) {
     var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     path.setAttribute('d', value);
-    return {path: path};
+    return {
+      pathString: value,
+      path: path
+    };
   }
 };
 
@@ -5067,7 +5116,6 @@ var setValue = function(target, property, value) {
   if (propertyIsSVGAttrib(property, target)) {
 /*
     if (property === 'd') {
-      console.log('Setting \'d\': points=', value.points);
       target.pathSegList.clear();
       target.pathSegList.appendItem(target.createSVGPathSegMovetoAbs(
           value.points[0].x,
@@ -5384,7 +5432,8 @@ window._WebAnimationsTestingUtilities = {
   _cubicBezierTimingFunction: CubicBezierTimingFunction,
   _linearTimingFunction: LinearTimingFunction,
   _pacedTimingFunction: PacedTimingFunction,
-  _enableAsserts: function() { ASSERT_ENABLED = true; }
+  _enableAsserts: function() { ASSERT_ENABLED = true; },
+  _pathType: pathType
 };
 
 })();
