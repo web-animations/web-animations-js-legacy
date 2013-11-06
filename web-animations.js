@@ -4852,7 +4852,8 @@ AnimatedCSSStyleDeclaration.prototype = {
 };
 
 for (var method in cssStyleDeclarationMethodModifiesStyle) {
-  AnimatedCSSStyleDeclaration.prototype[method] = (function(method, modifiesStyle) {
+  AnimatedCSSStyleDeclaration.prototype[method] =
+      (function(method, modifiesStyle) {
     return function() {
       if (modifiesStyle) {
         this._inlineStyleChanged();
