@@ -77,7 +77,9 @@ function loadScript(src, options) {
     instrument(src);
     loadScript(src);
   } else {
-    src += '?' + window.Date.now();
+    if (!in_explore_mode()) {
+      src += '?' + window.Date.now();
+    }
     document.write('<script type="text/javascript" src="'+ src + '"></script>');
   }
 }
@@ -1091,6 +1093,9 @@ TestTimeline.prototype.autorun = function() {
 };
 
 
+function in_explore_mode() {
+  return '#explore' == window.location.hash || window.location.hash.length == 0;
+}
 
 function testharness_timeline_setup() {
   log('testharness_timeline_setup');
@@ -1115,8 +1120,7 @@ function testharness_timeline_setup() {
     // Need non-zero timeout to allow chrome to run other code.
     setTimeout(testharness_timeline.autorun.bind(testharness_timeline), 1);
 
-  } else if('#explore' == window.location.hash ||
-        window.location.hash.length == 0) {
+  } else if (in_explore_mode()) {
 
     setTimeout(testharness_timeline.runner_.start.bind(testharness_timeline.runner_), 1);
   } else {
