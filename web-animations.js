@@ -1629,7 +1629,7 @@ function toUsableValue(property, value) {
 }
 
 function toUsableValues(dict) {
-  var result = {}
+  var result = {};
   for (var property in dict) {
     result[property] = toUsableValue(property, dict[property]);
   }
