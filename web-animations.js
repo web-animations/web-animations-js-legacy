@@ -4938,6 +4938,7 @@ for (var property in document.documentElement.style) {
 var patchInlineStyleForAnimation = function(style) {
   var surrogateElement = document.createElement('div');
   copyInlineStyle(style, surrogateElement.style);
+  var isAnimatedProperty = {};
   for (var method in cssStyleDeclarationMethodModifiesStyle) {
     if (!(method in style)) {
       continue;
@@ -4945,12 +4946,15 @@ var patchInlineStyleForAnimation = function(style) {
     Object.defineProperty(style, method, configureDescriptor({
       value: (function(method, originalMethod, modifiesStyle) {
         return function() {
-          if (modifiesStyle) {
-            animatedInlineStyleChanged();
-            originalMethod.apply(style, arguments);
-          }
-          return surrogateElement.style[method].apply(
+          var result = surrogateElement.style[method].apply(
               surrogateElement.style, arguments);
+          if (modifiesStyle) {
+            if (!isAnimatedProperty[arguments[0]]) {
+              originalMethod.apply(style, arguments);
+            }
+            animatedInlineStyleChanged();
+          }
+          return result;
         }
       })(method, style[method], cssStyleDeclarationMethodModifiesStyle[method])
     }));
@@ -4958,10 +4962,12 @@ var patchInlineStyleForAnimation = function(style) {
 
   style._clearAnimatedProperty = function(property) {
     this[property] = surrogateElement.style[property];
+    isAnimatedProperty[property] = false;
   };
 
   style._setAnimatedProperty = function(property, value) {
     this[property] = value;
+    isAnimatedProperty[property] = true;
   };
 };
 
