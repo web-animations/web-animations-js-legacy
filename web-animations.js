@@ -4857,12 +4857,16 @@ for (var method in cssStyleDeclarationMethodModifiesStyle) {
   AnimatedCSSStyleDeclaration.prototype[method] =
       (function(method, modifiesStyle) {
     return function() {
+      var result = this._surrogateElement.style[method].apply(
+          this._surrogateElement.style, arguments);
       if (modifiesStyle) {
-        this._style[method].apply(this._style, arguments);
+        if (!this._isAnimatedProperty[arguments[0]]) {
+          this._style[method].apply(this._style, arguments);
+        }
+        this._updateIndices();
         this._inlineStyleChanged();
       }
-      return this._surrogateElement.style[method].apply(
-          this._surrogateElement.style, arguments);
+      return result;
     }
   })(method, cssStyleDeclarationMethodModifiesStyle[method]);
 }
