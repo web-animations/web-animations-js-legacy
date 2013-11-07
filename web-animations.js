@@ -1878,13 +1878,13 @@ var shorthandToLonghand = {
 };
 
 // This delegates parsing shorthand value syntax to the browser.
-var shorthandExpanderDiv = document.createElement('div');
+var shorthandExpanderElem = createDummyElement();
 var expandShorthand = function(property, value, result) {
-  shorthandExpanderDiv.style[property] = value;
+  shorthandExpanderElem.style[property] = value;
   var longProperties = shorthandToLonghand[property];
   for (var i in longProperties) {
     var longProperty = longProperties[i];
-    var longhandValue = shorthandExpanderDiv.style[longProperty];
+    var longhandValue = shorthandExpanderElem.style[longProperty];
     result[longProperty] = longhandValue;
   }
 };
@@ -4767,7 +4767,7 @@ var AnimatedCSSStyleDeclaration = function(element) {
   // Stores the inline style of the element on its behalf while the
   // polyfill uses the element's inline style to simulate web animations.
   // This is needed to fake regular inline style CSSOM access on the element.
-  this._surrogateElement = document.createElement('div');
+  this._surrogateElement = createDummyElement();
   this._style = element.style;
   this._length = 0;
   this._isAnimatedProperty = {};
