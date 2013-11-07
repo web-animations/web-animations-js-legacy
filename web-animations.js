@@ -4769,20 +4769,24 @@ var retickThenGetComputedStyle = function() {
 };
 
 var originalGetComputedStyle = window.getComputedStyle;
+// This redundant flag is to support Safari which has trouble determining function object equality during an animation.
+var isGetComputedStylePatched = false;
 
 var ensureRetickBeforeGetComputedStyle = function() {
-  if (window.getComputedStyle !== retickThenGetComputedStyle) {
+  if (window.getComputedStyle !== retickThenGetComputedStyle || !isGetComputedStylePatched) {
     Object.defineProperty(window, 'getComputedStyle', configureDescriptor({
       value: retickThenGetComputedStyle
     }));
+    isGetComputedStylePatched = true;
   }
 };
 
 var ensureOriginalGetComputedStyle = function() {
-  if (window.getComputedStyle === retickThenGetComputedStyle) {
+  if (window.getComputedStyle !== originalGetComputedStyle || isGetComputedStylePatched) {
     Object.defineProperty(window, 'getComputedStyle', configureDescriptor({
       value: originalGetComputedStyle
     }));
+    isGetComputedStylePatched = false;
   }
 };
 
