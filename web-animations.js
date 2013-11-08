@@ -48,9 +48,9 @@ function detectFeatures() {
 }
 
 function createDummyElement() {
-  return document.documentElement.namespaceURI == SVG_NS
-         ? document.createElementNS(SVG_NS, 'g')
-         : document.createElement('div');
+  return document.documentElement.namespaceURI == SVG_NS ?
+         document.createElementNS(SVG_NS, 'g') :
+         document.createElement('div');
 }
 
 var features = detectFeatures();
