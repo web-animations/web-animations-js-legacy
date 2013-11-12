@@ -5062,8 +5062,7 @@ var ensureTargetCSSInitialised = function(target) {
     Object.defineProperty(target, 'style', configureDescriptor({
       get: function() { return animatedStyle; }
     }));
-  }
-  catch (error) {
+  } catch (error) {
     patchInlineStyleForAnimation(target.style);
   }
   target.style._webAnimationsStyleInitialised = true;
