@@ -18,6 +18,7 @@
 'use strict';
 
 var ASSERT_ENABLED = false;
+var SVG_NS = 'http://www.w3.org/2000/svg';
 
 function assert(check, message) {
   console.assert(ASSERT_ENABLED,
@@ -28,26 +29,28 @@ function assert(check, message) {
 }
 
 function detectFeatures() {
-  var style = document.createElement('style');
-  style.textContent = '' +
-      'dummyRuleForTesting {' +
-      'width: calc(0px);' +
-      'width: -webkit-calc(0px); }';
-  document.head.appendChild(style);
+  var el = createDummyElement();
+  el.style.cssText = 'width: calc(0px);' +
+                     'width: -webkit-calc(0px);';
+  var calcFunction = el.style.width.split('(')[0];
   var transformCandidates = [
     'transform',
     'webkitTransform',
     'msTransform'
   ];
   var transformProperty = transformCandidates.filter(function(property) {
-    return property in style.sheet.cssRules[0].style;
+    return property in el.style;
   })[0];
-  var calcFunction = style.sheet.cssRules[0].style.width.split('(')[0];
-  document.head.removeChild(style);
   return {
-    transformProperty: transformProperty,
-    calcFunction: calcFunction
+    calcFunction: calcFunction,
+    transformProperty: transformProperty
   };
+}
+
+function createDummyElement() {
+  return document.documentElement.namespaceURI == SVG_NS ?
+         document.createElementNS(SVG_NS, 'g') :
+         document.createElement('div');
 }
 
 var features = detectFeatures();
@@ -1664,12 +1667,11 @@ var PathAnimationEffect = function(path, autoRotate, angle, composite,
     // SVGPathSegList doesn't have a constructor.
     this.autoRotate = isDefined(autoRotate) ? autoRotate : 'none';
     this.angle = isDefined(angle) ? angle : 0;
-    this._path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    this._path = document.createElementNS(SVG_NS, 'path');
     if (path instanceof SVGPathSegList) {
       this.segments = path;
     } else {
-      var tempPath = document.createElementNS(
-          'http://www.w3.org/2000/svg', 'path');
+      var tempPath = document.createElementNS(SVG_NS, 'path');
       tempPath.setAttribute('d', String(path));
       this.segments = tempPath.pathSegList;
     }
@@ -1876,13 +1878,13 @@ var shorthandToLonghand = {
 };
 
 // This delegates parsing shorthand value syntax to the browser.
-var shorthandExpanderDiv = document.createElement('div');
+var shorthandExpanderElem = createDummyElement();
 var expandShorthand = function(property, value, result) {
-  shorthandExpanderDiv.style[property] = value;
+  shorthandExpanderElem.style[property] = value;
   var longProperties = shorthandToLonghand[property];
   for (var i in longProperties) {
     var longProperty = longProperties[i];
-    var longhandValue = shorthandExpanderDiv.style[longProperty];
+    var longhandValue = shorthandExpanderElem.style[longProperty];
     result[longProperty] = longhandValue;
   }
 };
@@ -4765,7 +4767,7 @@ var AnimatedCSSStyleDeclaration = function(element) {
   // Stores the inline style of the element on its behalf while the
   // polyfill uses the element's inline style to simulate web animations.
   // This is needed to fake regular inline style CSSOM access on the element.
-  this._surrogateElement = document.createElement('div');
+  this._surrogateElement = createDummyElement();
   this._style = element.style;
   this._length = 0;
   this._isAnimatedProperty = {};
