@@ -4740,6 +4740,7 @@ CompositedPropertyMap.prototype = {
   }
 };
 
+
 var cssStyleDeclarationAttribute = {
   cssText: true,
   length: true,
@@ -4754,6 +4755,53 @@ var cssStyleDeclarationMethodModifiesStyle = {
   getPropertyPriority: false,
   setProperty: true,
   item: false
+};
+
+var copyInlineStyle = function(sourceStyle, destinationStyle) {
+  for (var i = 0; i < sourceStyle.length; i++) {
+    var property = sourceStyle[i];
+    destinationStyle[property] = sourceStyle[property];
+  }
+};
+
+var retickThenGetComputedStyle = function() {
+  repeatLastTick();
+  // ticker() will restore getComputedStyle() back to normal.
+  return window.getComputedStyle.apply(this, arguments);
+};
+
+// This redundant flag is to support Safari which has trouble determining
+// function object equality during an animation.
+var isGetComputedStylePatched = false;
+var originalGetComputedStyle = window.getComputedStyle;
+
+var ensureRetickBeforeGetComputedStyle = function() {
+  if (!isGetComputedStylePatched) {
+    Object.defineProperty(window, 'getComputedStyle', configureDescriptor({
+      value: retickThenGetComputedStyle
+    }));
+    isGetComputedStylePatched = true;
+  }
+};
+
+var ensureOriginalGetComputedStyle = function() {
+  if (isGetComputedStylePatched) {
+    Object.defineProperty(window, 'getComputedStyle', configureDescriptor({
+      value: originalGetComputedStyle
+    }));
+    isGetComputedStylePatched = false;
+  }
+};
+
+// Changing the inline style of an element under animation may require the
+// animation to be recomputed ontop of the new inline style if
+// getComputedStyle() is called inbetween setting the style and the next
+// animation frame.
+// We modify getComputedStyle() to re-evaluate the animations only if it is
+// called instead of re-evaluating them here potentially unnecessarily.
+var animatedInlineStyleChanged = function() {
+  maybeRestartAnimation();
+  ensureRetickBeforeGetComputedStyle();
 };
 
 
@@ -4773,10 +4821,7 @@ var AnimatedCSSStyleDeclaration = function(element) {
   this._isAnimatedProperty = {};
 
   // Populate the surrogate element's inline style.
-  for (var i = 0; i < this._style.length; i++) {
-    var property = this._style[i];
-    this._surrogateElement.style[property] = this._style[property];
-  }
+  copyInlineStyle(this._style, this._surrogateElement.style);
   this._updateIndices();
 };
 
@@ -4800,7 +4845,7 @@ AnimatedCSSStyleDeclaration.prototype = {
             this._surrogateElement.style.getPropertyValue(property));
       }
     }
-    this._inlineStyleChanged();
+    animatedInlineStyleChanged();
   },
   get length() {
     return this._surrogateElement.style.length;
@@ -4840,16 +4885,6 @@ AnimatedCSSStyleDeclaration.prototype = {
   _setAnimatedProperty: function(property, value) {
     this._style[property] = value;
     this._isAnimatedProperty[property] = true;
-  },
-  _inlineStyleChanged: function() {
-    maybeRestartAnimation();
-    // Changing the inline style of an element under animation may require the
-    // animation to be recomputed ontop of the new inline style if
-    // getComputedStyle() is called inbetween setting the style and the next
-    // animation frame.
-    // We modify getComputedStyle() to re-evaluate the animations only if it is
-    // called instead of re-evaluating them here potentially unnecessarily.
-    ensureRetickBeforeGetComputedStyle();
   }
 };
 
@@ -4864,7 +4899,7 @@ for (var method in cssStyleDeclarationMethodModifiesStyle) {
           this._style[method].apply(this._style, arguments);
         }
         this._updateIndices();
-        this._inlineStyleChanged();
+        animatedInlineStyleChanged();
       }
       return result;
     }
@@ -4888,34 +4923,53 @@ for (var property in document.documentElement.style) {
             if (!this._isAnimatedProperty[property]) {
               this._style[property] = value;
             }
-            this._inlineStyleChanged();
+            animatedInlineStyleChanged();
           }
         }));
   })(property);
 }
 
-var retickThenGetComputedStyle = function() {
-  repeatLastTick();
-  // ticker() will restore getComputedStyle() back to normal.
-  return window.getComputedStyle.apply(this, arguments);
-};
-
-var originalGetComputedStyle = window.getComputedStyle;
-
-var ensureRetickBeforeGetComputedStyle = function() {
-  if (window.getComputedStyle !== retickThenGetComputedStyle) {
-    Object.defineProperty(window, 'getComputedStyle', configureDescriptor({
-      value: retickThenGetComputedStyle
+// This function is a fallback for when we can't replace an element's style with
+// AnimatatedCSSStyleDeclaration and must patch the existing style to behave
+// in a similar way.
+// Only the methods listed in cssStyleDeclarationMethodModifiesStyle will
+// be patched to behave in the same manner as a native implementation,
+// getter properties like style.left or style[0] will be tainted by the
+// polyfill's animation engine.
+var patchInlineStyleForAnimation = function(style) {
+  var surrogateElement = document.createElement('div');
+  copyInlineStyle(style, surrogateElement.style);
+  var isAnimatedProperty = {};
+  for (var method in cssStyleDeclarationMethodModifiesStyle) {
+    if (!(method in style)) {
+      continue;
+    }
+    Object.defineProperty(style, method, configureDescriptor({
+      value: (function(method, originalMethod, modifiesStyle) {
+        return function() {
+          var result = surrogateElement.style[method].apply(
+              surrogateElement.style, arguments);
+          if (modifiesStyle) {
+            if (!isAnimatedProperty[arguments[0]]) {
+              originalMethod.apply(style, arguments);
+            }
+            animatedInlineStyleChanged();
+          }
+          return result;
+        }
+      })(method, style[method], cssStyleDeclarationMethodModifiesStyle[method])
     }));
   }
-};
 
-var ensureOriginalGetComputedStyle = function() {
-  if (window.getComputedStyle === retickThenGetComputedStyle) {
-    Object.defineProperty(window, 'getComputedStyle', configureDescriptor({
-      value: originalGetComputedStyle
-    }));
-  }
+  style._clearAnimatedProperty = function(property) {
+    this[property] = surrogateElement.style[property];
+    isAnimatedProperty[property] = false;
+  };
+
+  style._setAnimatedProperty = function(property, value) {
+    this[property] = value;
+    isAnimatedProperty[property] = true;
+  };
 };
 
 
@@ -4950,55 +5004,68 @@ Compositor.prototype = {
 
 var ensureTargetInitialised = function(property, target) {
   if (propertyIsSVGAttrib(property, target)) {
-    if (!isDefinedAndNotNull(target._actuals)) {
-      target._actuals = {};
-      target._bases = {};
-      target.actuals = {};
-      target._getAttribute = target.getAttribute;
-      target._setAttribute = target.setAttribute;
-      target.getAttribute = function(name) {
-        if (isDefinedAndNotNull(target._bases[name])) {
-          return target._bases[name];
-        }
-        return target._getAttribute(name);
-      };
-      target.setAttribute = function(name, value) {
-        if (isDefinedAndNotNull(target._actuals[name])) {
-          target._bases[name] = value;
-        } else {
-          target._setAttribute(name, value);
-        }
-      };
-    }
-    if (!isDefinedAndNotNull(target._actuals[property])) {
-      var baseVal = target.getAttribute(property);
-      target._actuals[property] = 0;
-      target._bases[property] = baseVal;
-
-      Object.defineProperty(target.actuals, property, configureDescriptor({
-        set: function(value) {
-          if (value === null) {
-            target._actuals[property] = target._bases[property];
-            target._setAttribute(property, target._bases[property]);
-          } else {
-            target._actuals[property] = value;
-            target._setAttribute(property, value);
-          }
-        },
-        get: function() {
-          return target._actuals[property];
-        }
-      }));
-    }
+    ensureTargetSVGInitialised(property, target);
   } else {
-    if (target.style instanceof AnimatedCSSStyleDeclaration) {
-      return;
-    }
+    ensureTargetCSSInitialised(target);
+  }
+};
+
+var ensureTargetSVGInitialised = function(property, target) {
+  if (!isDefinedAndNotNull(target._actuals)) {
+    target._actuals = {};
+    target._bases = {};
+    target.actuals = {};
+    target._getAttribute = target.getAttribute;
+    target._setAttribute = target.setAttribute;
+    target.getAttribute = function(name) {
+      if (isDefinedAndNotNull(target._bases[name])) {
+        return target._bases[name];
+      }
+      return target._getAttribute(name);
+    };
+    target.setAttribute = function(name, value) {
+      if (isDefinedAndNotNull(target._actuals[name])) {
+        target._bases[name] = value;
+      } else {
+        target._setAttribute(name, value);
+      }
+    };
+  }
+  if (!isDefinedAndNotNull(target._actuals[property])) {
+    var baseVal = target.getAttribute(property);
+    target._actuals[property] = 0;
+    target._bases[property] = baseVal;
+
+    Object.defineProperty(target.actuals, property, configureDescriptor({
+      set: function(value) {
+        if (value === null) {
+          target._actuals[property] = target._bases[property];
+          target._setAttribute(property, target._bases[property]);
+        } else {
+          target._actuals[property] = value;
+          target._setAttribute(property, value);
+        }
+      },
+      get: function() {
+        return target._actuals[property];
+      }
+    }));
+  }
+};
+
+var ensureTargetCSSInitialised = function(target) {
+  if (target.style._webAnimationsStyleInitialised) {
+    return;
+  }
+  try {
     var animatedStyle = new AnimatedCSSStyleDeclaration(target);
     Object.defineProperty(target, 'style', configureDescriptor({
       get: function() { return animatedStyle; }
     }));
+  } catch (error) {
+    patchInlineStyleForAnimation(target.style);
   }
+  target.style._webAnimationsStyleInitialised = true;
 };
 
 var setValue = function(target, property, value) {
