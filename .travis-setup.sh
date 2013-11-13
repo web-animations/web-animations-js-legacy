@@ -1,6 +1,8 @@
 #! /bin/bash
 
+
 set -x
+set -e
 
 # Make sure /dev/shm has correct permissions.
 ls -l /dev/shm
