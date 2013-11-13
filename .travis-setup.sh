@@ -25,6 +25,8 @@ export BROWSER=$(echo $BROWSER | sed -e's/-.*//')
 echo BROWSER=$BROWSER
 echo VERSION=$VERSION
 
+sudo ln -sf $(which true) $(which xdg-desktop-menu)
+
 case $BROWSER in
 Chrome)
 	echo "Getting $VERSION of $BROWSER"
