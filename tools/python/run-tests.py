@@ -89,21 +89,21 @@ if not args.sauce:
     if args.browser == "Chrome":
         # Get ChromeDriver if it's not in the path...
         # https://code.google.com/p/chromedriver/downloads/list
-        chromedriver_bin = None
+        chromedriver_bin = "chromedriver"
+        chromedriver_url_tmpl = "http://chromedriver.storage.googleapis.com/2.6/chromedriver_%s%s.zip"  # noqa
+
         if platform.system() == "Linux":
-            chromedriver_bin = "chromedriver"
             if platform.processor() == "x86_64":
                 # 64 bit binary needed
-                chromedriver_url = "https://chromedriver.googlecode.com/files/chromedriver2_linux64_0.6.zip"  # noqa
+                chromedriver_url = chromedriver_url_tmpl % ("linux", "64")
             else:
                 # 32 bit binary needed
-                chromedriver_url = "https://chromedriver.googlecode.com/files/chromedriver_linux32_26.0.1383.0.zip"  # noqa
+                chromedriver_url = chromedriver_url_tmpl % ("linux", "32")
 
         elif platform.system() == "Darwin":
-            chromedriver_url = "https://chromedriver.googlecode.com/files/chromedriver2_mac32_0.7.zip"  # noqa
-            chromedriver_bin = "chromedriver"
+            chromedriver_url = chromedriver_url_tmpl % ("mac", "32")
         elif platform.system() == "win32":
-            chromedriver_bin = "https://chromedriver.googlecode.com/files/chromedriver2_win32_0.7.zip"  # noqa
+            chromedriver_url = chromedriver_url_tmpl % ("win", "32")
             chromedriver_url = "chromedriver.exe"
 
         try:
