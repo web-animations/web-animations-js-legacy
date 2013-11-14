@@ -262,7 +262,7 @@ var Player = function(token, source, timeline) {
   this._timeline = timeline;
   this._startTime =
       this.timeline.currentTime === null ? 0 : this.timeline.currentTime;
-  this._timeDrift = 0.0;
+  this._timeLag = 0.0;
   this._pauseTime = undefined;
   this._playbackRate = 1.0;
   this._hasTicked = false;
@@ -306,7 +306,7 @@ Player.prototype = {
       this._currentTime = currentTime;
     } finally {
       exitModifyCurrentAnimationState(
-          this._hasTicked || this.startTime + this._timeDrift <= lastTickTime);
+          this._hasTicked || this.startTime + this._timeLag <= lastTickTime);
     }
   },
   get currentTime() {
@@ -314,11 +314,11 @@ Player.prototype = {
   },
   // This is the current time.
   set _currentTime(currentTime) {
-    // This seeks by updating _drift. It does not affect the startTime.
+    // This seeks by updating _timeLag. It does not affect the startTime.
     if (isDefined(this._pauseTime)) {
       this._pauseTime = currentTime;
     } else {
-      this._timeDrift = (this.timeline.currentTime - this.startTime) *
+      this._timeLag = (this.timeline.currentTime - this.startTime) *
           this.playbackRate - currentTime;
     }
     this._update();
@@ -330,20 +330,20 @@ Player.prototype = {
     }
     return isDefined(this._pauseTime) ? this._pauseTime :
         (this.timeline.currentTime - this.startTime) * this.playbackRate -
-        this._timeDrift;
+        this._timeLag;
   },
   set startTime(startTime) {
     enterModifyCurrentAnimationState();
     try {
       // This seeks by updating _startTime and hence the currentTime. It does
-      // not affect _drift.
+      // not affect _timeLag.
       this._startTime = startTime;
       playersAreSorted = false;
       this._update();
       maybeRestartAnimation();
     } finally {
       exitModifyCurrentAnimationState(
-          this._hasTicked || this.startTime + this._timeDrift <= lastTickTime);
+          this._hasTicked || this.startTime + this._timeLag <= lastTickTime);
     }
   },
   get startTime() {
@@ -353,7 +353,7 @@ Player.prototype = {
     if (isPaused) {
       this._pauseTime = this.currentTime;
     } else if (isDefined(this._pauseTime)) {
-      this._timeDrift = (this.timeline.currentTime - this.startTime) *
+      this._timeLag = (this.timeline.currentTime - this.startTime) *
           this.playbackRate - this._pauseTime;
       this._pauseTime = undefined;
       maybeRestartAnimation();
