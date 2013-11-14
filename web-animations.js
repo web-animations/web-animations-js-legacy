@@ -415,6 +415,10 @@ Player.prototype = {
   get playbackRate() {
     return this._playbackRate;
   },
+  get playing() {
+    return this.currentTime > 0 &&
+        this.currentTime < (this.source ? this.source.endTime : 0);
+  },
   _update: function() {
     if (this.source !== null) {
       this.source._updateInheritedTime(this._currentTime);
