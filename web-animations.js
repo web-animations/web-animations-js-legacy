@@ -419,6 +419,17 @@ Player.prototype = {
     return this.currentTime > 0 &&
         this.currentTime < (this.source ? this.source.endTime : 0);
   },
+  finish: function() {
+    if (this.playbackRate < 0) {
+      this.currentTime = 0;
+    } else if (this.playbackRate > 0) {
+      var sourceEndTime = this.source ? this.source.endTime : 0;
+      if (sourceEndTime === Infinity) {
+        throw new Error('InvalidStateError');
+      }
+      this.currentTime = sourceEndTime;
+    }
+  },
   _update: function() {
     if (this.source !== null) {
       this.source._updateInheritedTime(this._currentTime);
