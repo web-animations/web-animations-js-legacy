@@ -443,6 +443,20 @@ Player.prototype = {
   pause: function() {
     this._paused = true;
   },
+  reverse: function() {
+    if (this.playbackRate === 0) {
+      return;
+    }
+    if (this.source) {
+      if (this.playbackRate > 0 && this.currentTime >= this.source.endTime) {
+        this.currentTime = this.source.endTime;
+      } else if (this.playbackRate < 0 && this.currentTime < 0) {
+        this.currentTime = 0;
+      }
+    }
+    this.playbackRate = -this.playbackRate;
+    this._pausedState = false;
+  },
   _update: function() {
     if (this.source !== null) {
       this.source._updateInheritedTime(this._currentTime);
