@@ -331,6 +331,7 @@ Player.prototype = {
     return (this.timeline.currentTime - this.startTime) * this.playbackRate -
         this.timeLag;
   },
+  // This is the current time.
   get _unboundedCurrentTime() {
     if (this.timeline.currentTime === null) {
       return 0;
@@ -429,6 +430,18 @@ Player.prototype = {
       }
       this.currentTime = sourceEndTime;
     }
+  },
+  play: function() {
+    this._paused = false;
+    if (!this.source || this.playbackRate === 0) {
+      return;
+    }
+    if (this.currentTime < 0 || this.currentTime >= this.source.endTime) {
+      this.currentTime = this.playbackRate > 0 ? 0 : this.source.endTime;
+    }
+  },
+  pause: function() {
+    this._paused = true;
   },
   _update: function() {
     if (this.source !== null) {
