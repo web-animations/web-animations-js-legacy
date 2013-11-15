@@ -455,7 +455,7 @@ Player.prototype = {
       }
     }
     this.playbackRate = -this.playbackRate;
-    this._pausedState = false;
+    this._paused = false;
   },
   _update: function() {
     if (this.source !== null) {
