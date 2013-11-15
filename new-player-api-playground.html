@@ -12,11 +12,20 @@
     background: rgba(0, 0, 0, 0.1);
     box-shadow: inset 2px 2px 2px 1px rgba(0, 0, 0, 0.1);
     border-radius: 20px;
-    width: calc(100% - 30px);
+    width: calc(100% - 20px);
     height: 20px;
     position: absolute;
     left: 10px;
     top: 10px;
+}
+#notch {
+    border: solid 4px transparent;
+    border-top-color: black;
+    width: 0;
+    height: 0;
+    position: absolute;
+    left: calc(15px + (100% - 40px) * 0.618);
+    top: 6px;
 }
 #input {
     position: absolute;
@@ -36,6 +45,7 @@
 }
 </style>
 <div id="track"></div>
+<div id="notch"></div>
 <div id="ball"></div>
 
 <textarea id="input" rows="10" wrap="off"></textarea>
@@ -46,7 +56,7 @@
 
 <script src="web-animations.js"></script>
 <script>
-var player = ball.animate({left: 'calc(100% - 40px)'}, 1.618).player;
+var player = ball.animate({left: 'calc(100% - 30px)'}, 1.618).player;
 
 input.value = [
     'player.timeline.currentTime',
@@ -78,6 +88,7 @@ var intervalId = setInterval(function() {
 var controls = {
     27: {help: 'ESC: Stop logging', action: function() { clearInterval(intervalId); }},
     32: {help: 'Space: Pause', action: function() { player.pause(); }},
+    49: {help: '1: Seek to 1s', action: function() { player.currentTime = 1; }},
     67: {help: 'C: Cancel', action: function() { player.cancel(); }},
     80: {help: 'P: Play', action: function() { player.play(); }},
     82: {help: 'R: Reverse', action: function() { player.reverse(); }},
