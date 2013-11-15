@@ -30,12 +30,12 @@
 #input {
     position: absolute;
     top: 40px;
-    width: 290px;
+    width: 240px;
 }
 #output {
     position: absolute;
     top: 40px;
-    left: 300px;
+    left: 250px;
     margin-top: 5px;
 }
 #keyboardShortcuts {
@@ -48,7 +48,7 @@
 <div id="notch"></div>
 <div id="ball"></div>
 
-<textarea id="input" rows="10" wrap="off"></textarea>
+<textarea id="input" rows="16" wrap="off"></textarea>
 <pre id="output"></pre>
 <pre id="keyboardShortcuts">Keyboard shortcuts:
 
@@ -62,7 +62,9 @@ input.value = [
     'player.timeline.currentTime',
     'player.currentTime',
     'player.currentTime > 1.618',
+    'player._unboundedCurrentTime',
     'player.timeLag',
+    'player._timeLag',
     'player._pauseTime',
     'player.paused',
     'player.playing',
@@ -70,26 +72,35 @@ input.value = [
     'player.source === null',
 ].join('\n');
 
-var intervalId = setInterval(function() {
-    var text = '';
-    input.value.split('\n').forEach(function(line) {
-        try {
-            if (line) {
-                text += eval(line);
-            }
-        } catch (_) {
-        } finally {
-            text += '\n';
-        }
-    })
-    output.textContent = text;
-}, 50);
+var intervalId = null;
+function toggleLogging() {
+    if (intervalId === null) {
+        intervalId = setInterval(function() {
+            var text = '';
+            input.value.split('\n').forEach(function(line) {
+                try {
+                    if (line) {
+                        text += eval(line);
+                    }
+                } catch (_) {
+                } finally {
+                    text += '\n';
+                }
+            })
+            output.textContent = text;
+        }, 50);
+    } else {
+        clearInterval(intervalId);
+        intervalId = null
+    }
+}
+toggleLogging();
 
 var controls = {
-    27: {help: 'ESC: Stop logging', action: function() { clearInterval(intervalId); }},
     32: {help: 'Space: Pause', action: function() { player.pause(); }},
     49: {help: '1: Seek to 1s', action: function() { player.currentTime = 1; }},
-    67: {help: 'C: Cancel', action: function() { player.cancel(); }},
+    67: {help: 'C: Cancel player', action: function() { player.cancel(); }},
+    76: {help: 'L: Toggle logging', action: function() { toggleLogging(); }},
     80: {help: 'P: Play', action: function() { player.play(); }},
     82: {help: 'R: Reverse', action: function() { player.reverse(); }},
     107: {help: '+: Speed up', action: function() { player.playbackRate *= 2; }},
