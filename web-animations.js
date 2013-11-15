@@ -420,6 +420,9 @@ Player.prototype = {
     return this.currentTime > 0 &&
         this.currentTime < (this.source ? this.source.endTime : 0);
   },
+  cancel: function() {
+    this.source = null;
+  },
   finish: function() {
     if (this.playbackRate < 0) {
       this.currentTime = 0;
