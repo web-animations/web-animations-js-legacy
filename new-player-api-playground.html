@@ -57,6 +57,7 @@ input.value = [
     'player.paused',
     'player.playing',
     'player.playbackRate',
+    'player.source === null',
 ].join('\n');
 
 var intervalId = setInterval(function() {
@@ -77,6 +78,7 @@ var intervalId = setInterval(function() {
 var controls = {
     27: {help: 'ESC: Stop logging', action: function() { clearInterval(intervalId); }},
     32: {help: 'Space: Pause', action: function() { player.pause(); }},
+    67: {help: 'C: Cancel', action: function() { player.cancel(); }},
     80: {help: 'P: Play', action: function() { player.play(); }},
     82: {help: 'R: Reverse', action: function() { player.reverse(); }},
     107: {help: '+: Speed up', action: function() { player.playbackRate *= 2; }},
