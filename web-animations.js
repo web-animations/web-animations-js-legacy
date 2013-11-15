@@ -422,6 +422,9 @@ Player.prototype = {
   cancel: function() {
     this.source = null;
   },
+  cancel: function() {
+    this.source = null;
+  },
   finish: function() {
     if (this.playbackRate < 0) {
       this.currentTime = 0;
