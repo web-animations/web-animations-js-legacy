@@ -1,0 +1,100 @@
+<style>
+#ball {
+    background: blue;
+    border-radius: 20px;
+    width: 20px;
+    height: 20px;
+    position: absolute;
+    left: 10px;
+    top: 10px;
+}
+#track {
+    background: rgba(0, 0, 0, 0.1);
+    box-shadow: inset 2px 2px 2px 1px rgba(0, 0, 0, 0.1);
+    border-radius: 20px;
+    width: calc(100% - 30px);
+    height: 20px;
+    position: absolute;
+    left: 10px;
+    top: 10px;
+}
+#input {
+    position: absolute;
+    top: 40px;
+    width: 290px;
+}
+#output {
+    position: absolute;
+    top: 40px;
+    left: 300px;
+    margin-top: 5px;
+}
+#keyboardShortcuts {
+    position: absolute;
+    top: 40px;
+    right: 40px;
+}
+</style>
+<div id="track"></div>
+<div id="ball"></div>
+
+<textarea id="input" rows="10" wrap="off"></textarea>
+<pre id="output"></pre>
+<pre id="keyboardShortcuts">Keyboard shortcuts:
+
+</pre>
+
+<script src="web-animations.js"></script>
+<script>
+var player = ball.animate({left: 'calc(100% - 40px)'}, 1.618).player;
+
+input.value = [
+    'player.timeline.currentTime',
+    'player.currentTime',
+    'player.currentTime > 1.618',
+    'player.timeLag',
+    'player._pauseTime',
+    'player.paused',
+    'player.playing',
+    'player.playbackRate',
+].join('\n');
+
+var intervalId = setInterval(function() {
+    var text = '';
+    input.value.split('\n').forEach(function(line) {
+        try {
+            if (line) {
+                text += eval(line);
+            }
+        } catch (_) {
+        } finally {
+            text += '\n';
+        }
+    })
+    output.textContent = text;
+}, 50);
+
+var controls = {
+    27: {help: 'ESC: Stop logging', action: function() { clearInterval(intervalId); }},
+    32: {help: 'Space: Pause', action: function() { player.pause(); }},
+    80: {help: 'P: Play', action: function() { player.play(); }},
+    82: {help: 'R: Reverse', action: function() { player.reverse(); }},
+    189: {help: '+: Speed up', action: function() { player.playbackRate *= 2; }},
+    187: {help: '-: Slow down', action: function() { player.playbackRate /= 2; }},
+}
+
+for (var i in controls) {
+    keyboardShortcuts.textContent += controls[i].help + '\n';
+}
+
+window.addEventListener('keydown', function(event) {
+    if (event.keyCode in controls) {
+        controls[event.keyCode].action();
+    }
+    // console.log(event.keyCode);
+});
+
+input.addEventListener('keydown', function(event) {
+    event.stopPropagation();
+});
+</script>
