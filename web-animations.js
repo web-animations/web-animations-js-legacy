@@ -320,6 +320,7 @@ Player.prototype = {
     } else {
       this._timeLag = ((this.timeline.currentTime || 0) - this.startTime) *
           this.playbackRate - seekTime;
+      this._pauseTime = null;
     }
     this._update();
     maybeRestartAnimation();
