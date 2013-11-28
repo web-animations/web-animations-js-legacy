@@ -344,14 +344,15 @@ Player.prototype = {
     if (this.paused) {
       return this._pauseTimeLag;
     }
-    if (this._unboundedCurrentTime < 0) {
+    if (this.playbackRate < 0 && this._unboundedCurrentTime < 0) {
       if (this._pauseTime === null) {
         this._pauseTime = 0;
       }
       return this._pauseTimeLag;
     }
     var sourceContentEnd = this.source ? this.source.endTime : 0;
-    if (this._unboundedCurrentTime > sourceContentEnd) {
+    if (this.playbackRate > 0
+      && this._unboundedCurrentTime > sourceContentEnd) {
       if (this._pauseTime === null) {
         this._pauseTime = sourceContentEnd;
       }
