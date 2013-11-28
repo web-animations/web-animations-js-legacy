@@ -107,6 +107,7 @@ var controls = {
     82: {help: 'R: Reverse', action: function() { player.reverse(); }},
     107: {help: '+: Speed up', action: function() { player.playbackRate *= 2; }},
     109: {help: '-: Slow down', action: function() { player.playbackRate /= 2; }},
+    192: {help: '~: Seek to -1s', action: function() { player.currentTime = -1; }},
 }
 
 for (var i in controls) {
