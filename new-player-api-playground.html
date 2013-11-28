@@ -98,16 +98,17 @@ function toggleLogging() {
 toggleLogging();
 
 var controls = {
-    32: {help: 'Space: Pause', action: function() { player.pause(); }},
+    192: {help: '~: Seek to -1s', action: function() { player.currentTime = -1; }},
     49: {help: '1: Seek to 1s', action: function() { player.currentTime = 1; }},
+    51: {help: '3: Seek to 3s', action: function() { player.currentTime = 3; }},
     67: {help: 'C: Cancel player', action: function() { player.cancel(); }},
     70: {help: 'F: Finish player', action: function() { player.finish(); }},
     76: {help: 'L: Toggle logging', action: function() { toggleLogging(); }},
     80: {help: 'P: Play', action: function() { player.play(); }},
+    32: {help: 'Space: Pause', action: function() { player.pause(); }},
     82: {help: 'R: Reverse', action: function() { player.reverse(); }},
     107: {help: '+: Speed up', action: function() { player.playbackRate *= 2; }},
     109: {help: '-: Slow down', action: function() { player.playbackRate /= 2; }},
-    192: {help: '~: Seek to -1s', action: function() { player.currentTime = -1; }},
 }
 
 for (var i in controls) {
