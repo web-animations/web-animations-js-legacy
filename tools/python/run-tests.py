@@ -597,6 +597,12 @@ if args.browser == "Chrome":
         '--enable-logging')
     driver_arguments['chrome_options'].add_argument(
         '--start-maximized')
+    driver_arguments['chrome_options'].add_argument(
+        '--disable-default-apps')
+    driver_arguments['chrome_options'].add_argument(
+        '--disable-extensions')
+    driver_arguments['chrome_options'].add_argument(
+        '--disable-plugins')
 
     #driver_arguments['chrome_options'].binary_location = (
     #    '/usr/bin/google-chrome')
