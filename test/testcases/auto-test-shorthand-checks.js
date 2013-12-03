@@ -54,7 +54,7 @@ timing_test(function() {
     assert_styles("#borderLeft.test",{'borderLeftWidth':'0px','borderLeftStyle':'none','borderLeftColor':'rgb(0, 32, 0)'});
   }, "#borderLeft");
   at(0.5, function() {
-    assert_styles("#borderRadius.test",{'borderTopLeftRadius':'2.5px','borderTopRightRadius':'5px','borderBottomRightRadius':'0px','borderBottomLeftRadius':'0px'});
+    assert_styles("#borderRadius.test",{'borderTopLeftRadius':'2.5px','borderTopRightRadius':'5px','borderBottomRightRadius':'calc(0px + 2.5%)','borderBottomLeftRadius':'calc(0px + 12.5%)'});
   }, "#borderRadius");
   at(0.5, function() {
     assert_styles("#borderRight.test",{'borderRightWidth':'0px','borderRightStyle':'none','borderRightColor':'rgb(0, 32, 0)'});
@@ -93,7 +93,7 @@ timing_test(function() {
     assert_styles("#borderLeft.test",{'borderLeftWidth':'2px','borderLeftStyle':'solid','borderLeftColor':'rgb(0, 64, 0)'});
   }, "#borderLeft");
   at(1, function() {
-    assert_styles("#borderRadius.test",{'borderTopLeftRadius':'5px','borderTopRightRadius':'10px','borderBottomRightRadius':'0px','borderBottomLeftRadius':'0px'});
+    assert_styles("#borderRadius.test",{'borderTopLeftRadius':'5px','borderTopRightRadius':'10px','borderBottomRightRadius':'calc(0px + 5%)','borderBottomLeftRadius':'calc(0px + 25%)'});
   }, "#borderRadius");
   at(1, function() {
     assert_styles("#borderRight.test",{'borderRightWidth':'2px','borderRightStyle':'solid','borderRightColor':'rgb(0, 64, 0)'});
@@ -132,7 +132,7 @@ timing_test(function() {
     assert_styles("#borderLeft.test",{'borderLeftWidth':'3px','borderLeftStyle':'solid','borderLeftColor':'rgb(0, 96, 0)'});
   }, "#borderLeft");
   at(1.5, function() {
-    assert_styles("#borderRadius.test",{'borderTopLeftRadius':'7.5px','borderTopRightRadius':'15px','borderBottomRightRadius':'0px','borderBottomLeftRadius':'0px'});
+    assert_styles("#borderRadius.test",{'borderTopLeftRadius':'7.5px','borderTopRightRadius':'15px','borderBottomRightRadius':'calc(0px + 7.5%)','borderBottomLeftRadius':'calc(0px + 37.5%)'});
   }, "#borderRadius");
   at(1.5, function() {
     assert_styles("#borderRight.test",{'borderRightWidth':'3px','borderRightStyle':'solid','borderRightColor':'rgb(0, 96, 0)'});
