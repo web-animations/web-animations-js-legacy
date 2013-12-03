@@ -177,9 +177,9 @@ window.test_features = (function() {
  */
 function _element_name(element) {
   if (element.id) {
-    return element.id;
+    return element.tagName.toLowerCase() + '#' + element.id;
   } else {
-    return 'An anonymous ' + element.tagName;
+    return 'An anonymous ' + element.tagName.toLowerCase();
   }
 }
 
@@ -281,14 +281,15 @@ function _assert_important_in_array(actual, expected, message) {
     if (element_errors.length == 0) {
       return;
     } else {
-      element_errors.reverse();
       errors.push(
-          'Expected value "' + expected_array + '" did not match\n' +
-          '  ' + element_errors.join('\n  '));
+          '  Expectation ' + JSON.stringify(expected_array) + ' did not match\n' +
+          '   ' + element_errors.join('\n   '));
     }
   }
-  errors.unshift('Value - ' + JSON.stringify(actual_array) + ', ' +
-                 'Expected - ' + JSON.stringify(expected_array_array));
+  if (expected_array_array.length > 1)
+    errors.unshift('  ' + expected_array_array.length + ' possible expectations');
+
+  errors.unshift('  Actual - ' + JSON.stringify(actual_array));
   if (typeof message !== 'undefined') {
     errors.unshift(message);
   }
@@ -309,6 +310,9 @@ window.assert_styles_assert_important_in_array = _assert_important_in_array;
  * @private
  */
 function _assert_style_element(object, style, description) {
+  if (typeof message == 'undefined')
+    description = '';
+
   // Create an element of the same type as testing so the style can be applied
   // from the test. This is so the css property (not the -webkit-does-something
   // tag) can be read.
@@ -385,7 +389,11 @@ function _assert_style_element(object, style, description) {
         var curr = current_style[output_prop_name];
       }
 
-      _assert_important_in_array(curr, [target], description);
+      var description_extra = '\n Property ' + prop_name;
+      if (prop_name != output_prop_name)
+          description_extra += '(actually ' + output_prop_name + ')';
+
+      _assert_important_in_array(curr, [target], description + description_extra);
     }
   } finally {
     if (reference_element.parentNode) {
@@ -417,7 +425,7 @@ function _assert_style_element_list(objects, style, description) {
       if (error) {
         error += '; ';
       }
-      error += _element_name(object) + ' at index ' + i + ' failed ' + e.message + '\n';
+      error += 'Element ' + _element_name(object) + ' at index ' + i + ' failed ' + e.message + '\n';
     }
   });
   if (error) {
