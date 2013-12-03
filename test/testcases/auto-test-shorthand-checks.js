@@ -27,7 +27,7 @@ timing_test(function() {
     assert_styles("#borderWidth.test",{'borderTopWidth':'3px','borderRightWidth':'3px','borderBottomWidth':'3px','borderLeftWidth':'3px'});
   }, "#borderWidth");
   at(0, function() {
-    assert_styles("#font.test",{'fontFamily':'\'DejaVu Sans\', \'Bitstream Vera Sans\', Arial, Sans','fontSize':'16px','fontStyle':'normal','fontVariant':'normal','fontWeight':'normal','lineHeight':'19px'});
+    assert_styles("#font.test",{'fontFamily':'\'DejaVu Sans\', \'Bitstream Vera Sans\', Arial, Sans','fontSize':'16px','fontStyle':'normal','fontVariant':'normal','fontWeight':'normal','lineHeight':'19.2000px'});
   }, "#font");
   at(0, function() {
     assert_styles("#margin.test",{'marginTop':'0px','marginRight':'10px','marginBottom':'0px','marginLeft':'0px'});
@@ -66,7 +66,7 @@ timing_test(function() {
     assert_styles("#borderWidth.test",{'borderTopWidth':'2px','borderRightWidth':'3px','borderBottomWidth':'3px','borderLeftWidth':'4px'});
   }, "#borderWidth");
   at(0.5, function() {
-    assert_styles("#font.test",{'fontFamily':'\'DejaVu Sans\', \'Bitstream Vera Sans\', Arial, Sans','fontSize':'19px','fontStyle':'normal','fontVariant':'normal','fontWeight':'500','lineHeight':'26px'});
+    assert_styles("#font.test",{'fontFamily':'\'DejaVu Sans\', \'Bitstream Vera Sans\', Arial, Sans','fontSize':'19.2000px','fontStyle':'normal','fontVariant':'normal','fontWeight':'500','lineHeight':'26.1333px'});
   }, "#font");
   at(0.5, function() {
     assert_styles("#margin.test",{'marginTop':'1.25px','marginRight':'10px','marginBottom':'3.75px','marginLeft':'5px'});
@@ -105,7 +105,7 @@ timing_test(function() {
     assert_styles("#borderWidth.test",{'borderTopWidth':'2px','borderRightWidth':'3px','borderBottomWidth':'4px','borderLeftWidth':'6px'});
   }, "#borderWidth");
   at(1, function() {
-    assert_styles("#font.test",{'fontFamily':'serif','fontSize':'21px','fontStyle':'italic','fontVariant':'normal','fontWeight':'600','lineHeight':'33px'});
+    assert_styles("#font.test",{'fontFamily':'serif','fontSize':'21px','fontStyle':'italic','fontVariant':'normal','fontWeight':'600','lineHeight':'34.1333px'});
   }, "#font");
   at(1, function() {
     assert_styles("#margin.test",{'marginTop':'2.5px','marginRight':'10px','marginBottom':'7.5px','marginLeft':'10px'});
@@ -144,7 +144,7 @@ timing_test(function() {
     assert_styles("#borderWidth.test",{'borderTopWidth':'1px','borderRightWidth':'3px','borderBottomWidth':'4px','borderLeftWidth':'8px'});
   }, "#borderWidth");
   at(1.5, function() {
-    assert_styles("#font.test",{'fontFamily':'serif','fontSize':'24px','fontStyle':'italic','fontVariant':'normal','fontWeight':'600','lineHeight':'43px'});
+    assert_styles("#font.test",{'fontFamily':'serif','fontSize':'24px','fontStyle':'italic','fontVariant':'normal','fontWeight':'600','lineHeight':'43.2000px'});
   }, "#font");
   at(1.5, function() {
     assert_styles("#margin.test",{'marginTop':'3.75px','marginRight':'10px','marginBottom':'11.25px','marginLeft':'15px'});
@@ -183,7 +183,7 @@ timing_test(function() {
     assert_styles("#borderWidth.test",{'borderTopWidth':'1px','borderRightWidth':'3px','borderBottomWidth':'5px','borderLeftWidth':'10px'});
   }, "#borderWidth");
   at(2, function() {
-    assert_styles("#font.test",{'fontFamily':'serif','fontSize':'27px','fontStyle':'italic','fontVariant':'normal','fontWeight':'bold','lineHeight':'54px'});
+    assert_styles("#font.test",{'fontFamily':'serif','fontSize':'27px','fontStyle':'italic','fontVariant':'normal','fontWeight':'bold','lineHeight':'53.3333px'});
   }, "#font");
   at(2, function() {
     assert_styles("#margin.test",{'marginTop':'5px','marginRight':'10px','marginBottom':'15px','marginLeft':'20px'});
