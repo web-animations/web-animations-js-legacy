@@ -30,7 +30,7 @@ limitations under the License.
         padding: 0;
       }
       html, body {
-        overflow: hidden;
+        overflow-x: hidden;
       }
       h1 {
         position: relative;
@@ -94,16 +94,18 @@ limitations under the License.
         position: relative;
       }
       #hill-container {
-        overflow: hidden;
-      }
-      #hill {
         top: 25vmin;
         left: -10vw;
+        overflow: hidden;
+        position: absolute;
+        width: 80vw;
+        height: 10vw;
+      }
+      #hill {
         background: #E8E8E8;
         border-radius: 80vw 80vw 0 0;
         width: 80vw;
         height: 40vw;
-        position: absolute;
         z-index: 1;
         background: #8CDD81;
       }
