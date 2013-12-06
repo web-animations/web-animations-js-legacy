@@ -4322,6 +4322,7 @@ var propertyTypes = {
   borderTopRightRadius: percentLengthType,
   borderTopWidth: lengthType,
   bottom: percentLengthAutoType,
+  boxShadow: shadowType,
   clip: typeWithKeywords(['auto'], rectangleType),
   color: colorType,
   cx: lengthType,
