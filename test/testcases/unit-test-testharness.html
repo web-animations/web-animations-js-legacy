@@ -54,7 +54,7 @@ test(function() {
     assert_styles(element, {'clip': 'rect(1px 2px 3px 4px)'});
     assert_unreached();
   } catch (e) {
-    assert_regexp_match(e.message, /^Value - /);
+    assert_regexp_match(e.message, /Actual - /);
   }
 }, 'assert_styles given invalid style');
 

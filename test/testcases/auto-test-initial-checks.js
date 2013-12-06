@@ -21,7 +21,7 @@ timing_test(function() {
     assert_styles("#transform",{'transform':'none'});
   }, "#transform");
   at(0, function() {
-    assert_styles("#text",{'color':'rgb(0, 0, 0)','fontSize':'13px','fontWeight':'normal','letterSpacing':'normal','lineHeight':'15px','textIndent':'0px','textShadow':'rgba(0, 0, 0, 0) 0px 0px 0px','wordSpacing':'0px'});
+    assert_styles("#text",{'color':'rgb(0, 0, 0)','fontSize':'13px','fontWeight':'normal','letterSpacing':'normal','lineHeight':'15.600px','textIndent':'0px','textShadow':'rgba(0, 0, 0, 0) 0px 0px 0px','wordSpacing':'0px'});
   }, "#text");
   at(1, function() {
     assert_styles("#background",{'backgroundColor':'rgba(0, 128, 0, 0.498039)'});
@@ -45,7 +45,7 @@ timing_test(function() {
     assert_styles("#transform",{'transform':'matrix(-1, 0.00000000000000012246063538223773, -0.00000000000000012246063538223773, -1, 0, 0)'});
   }, "#transform");
   at(1, function() {
-    assert_styles("#text",{'color':'rgb(0, 64, 0)','fontSize':'23px','fontWeight':'bold','letterSpacing':'5px','lineHeight':'36px','textIndent':'25px','textShadow':'rgba(0, 255, 0, 0.498039) 5px 5px 25px','wordSpacing':'100px'});
+    assert_styles("#text",{'color':'rgb(0, 64, 0)','fontSize':'23px','fontWeight':'bold','letterSpacing':'5px','lineHeight':'36.7999px','textIndent':'25px','textShadow':'rgba(0, 255, 0, 0.498039) 5px 5px 25px','wordSpacing':'100px'});
   }, "#text");
   at(2, function() {
     assert_styles("#background",{'backgroundColor':'rgb(0, 128, 0)'});
