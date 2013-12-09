@@ -445,7 +445,8 @@ Player.prototype = {
     if (!this.source || this.playbackRate === 0) {
       return;
     }
-    if (this.currentTime < 0 || this.currentTime >= this.source.endTime) {
+    if (this._unpausedCurrentTime < this._timeLag ||
+        this._unpausedCurrentTime -  this.source.endTime >= this._timeLag) {
       this.currentTime = this.playbackRate > 0 ? 0 : this.source.endTime;
     }
   },
