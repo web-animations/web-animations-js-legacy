@@ -329,13 +329,43 @@ Player.prototype = {
     if (this.timeline.currentTime === null) {
       return null;
     }
+
+    // The following is equivalent to doing:
+    // return (this.timeline.currentTime - this.startTime) *
+    //     this.playbackRate - this.timeLag;
+    // We avoid using this.timeLag to prevent floating point calculation
+    // inaccuracies from propagating.
+    if (this.paused) {
+      return this._pauseTime;
+    }
+    // This check is equivalent to "unbounded current time < zero".
+    if (this._unpausedCurrentTime < this._timeLag) {
+      if (this._pauseTime === null) {
+        this._pauseTime = 0;
+      }
+      return this._pauseTime;
+    }
+    var sourceContentEnd = this.source ? this.source.endTime : 0;
+
+    // This check is equivalent to "unbounded current time > source end time".
+    if (this._unpausedCurrentTime - sourceContentEnd > this._timeLag) {
+      if (this._pauseTime === null) {
+        this._pauseTime = sourceContentEnd;
+      }
+      return this._pauseTime;
+    }
+    if (this._pauseTime !== null) {
+      this._timeLag = this._pauseTimeLag;
+    }
+    this._pauseTime = null;
     return (this.timeline.currentTime - this.startTime) * this.playbackRate -
-        this.timeLag;
+        this._timeLag;
   },
   // The unbounded current time of a player (this) is equal to:
   // this._unpausedCurrentTime - this._timeLag
-  // This is used in place of calculating the unbounded current time directly to
-  // avoid introducing floating point calculation inaccuracies on this._timeLag.
+  // _unpausedCurrentTime is used in place of directly calculating the unbounded
+  // current time directly to avoid introducing floating point calculation
+  // inaccuracies on this._timeLag.
   get _unpausedCurrentTime() {
     return ((this.timeline.currentTime || 0) - this.startTime) *
         this.playbackRate;
@@ -364,7 +394,7 @@ Player.prototype = {
       this._timeLag = this._pauseTimeLag;
     }
     this._pauseTime = null;
-    return this._timeLag
+    return this._timeLag;
   },
   get _pauseTimeLag() {
     return ((this.timeline.currentTime || 0) - this.startTime) *
@@ -445,6 +475,8 @@ Player.prototype = {
     if (!this.source || this.playbackRate === 0) {
       return;
     }
+    // This check is equivalent to "unbounded current time < zero ||
+    // unbounded current time > source content end time".
     if (this._unpausedCurrentTime < this._timeLag ||
         this._unpausedCurrentTime -  this.source.endTime >= this._timeLag) {
       this.currentTime = this.playbackRate > 0 ? 0 : this.source.endTime;
