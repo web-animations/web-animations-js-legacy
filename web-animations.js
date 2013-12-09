@@ -416,7 +416,7 @@ Player.prototype = {
   },
   _generateEvents: function() {
     if (!isDefinedAndNotNull(this._lastCurrentTime)) {
-      this._lastCurrentTime = this._startTime;
+      this._lastCurrentTime = 0;
     }
 
     if (this._needsHandlerPass) {
