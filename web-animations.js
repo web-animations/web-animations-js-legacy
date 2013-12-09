@@ -332,7 +332,6 @@ Player.prototype = {
     return (this.timeline.currentTime - this.startTime) * this.playbackRate -
         this.timeLag;
   },
-  // This is the current time.
   get _unboundedCurrentTime() {
     if (this.timeline.currentTime === null) {
       return 0;
@@ -344,15 +343,19 @@ Player.prototype = {
     if (this.paused) {
       return this._pauseTimeLag;
     }
-    if (this.playbackRate < 0 && this._unboundedCurrentTime < 0) {
+    if (this._unboundedCurrentTime < 0) {
       if (this._pauseTime === null) {
         this._pauseTime = 0;
       }
       return this._pauseTimeLag;
     }
     var sourceContentEnd = this.source ? this.source.endTime : 0;
-    if (this.playbackRate > 0
-      && this._unboundedCurrentTime > sourceContentEnd) {
+
+    // This check is equivalent to this._unboundedCurrentTime > sourceContentEnd
+    // rearranged to prevent floating point calculation errors from becoming
+    // problematic.
+    if (((this.timeline.currentTime || 0) - this.startTime) *
+        this.playbackRate - sourceContentEnd > this._timeLag) {
       if (this._pauseTime === null) {
         this._pauseTime = sourceContentEnd;
       }
