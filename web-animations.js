@@ -332,18 +332,20 @@ Player.prototype = {
     return (this.timeline.currentTime - this.startTime) * this.playbackRate -
         this.timeLag;
   },
-  get _unboundedCurrentTime() {
-    if (this.timeline.currentTime === null) {
-      return 0;
-    }
-    return (this.timeline.currentTime - this.startTime) * this.playbackRate -
-        this._timeLag;
+  // The unbounded current time of a player (this) is equal to:
+  // this._unpausedCurrentTime - this._timeLag
+  // This is used in place of calculating the unbounded current time directly to
+  // avoid introducing floating point calculation inaccuracies on this._timeLag.
+  get _unpausedCurrentTime() {
+    return ((this.timeline.currentTime || 0) - this.startTime) *
+        this.playbackRate;
   },
   get timeLag() {
     if (this.paused) {
       return this._pauseTimeLag;
     }
-    if (this._unboundedCurrentTime < 0) {
+    // This check is equivalent to "unbounded current time < zero".
+    if (this._unpausedCurrentTime < this._timeLag) {
       if (this._pauseTime === null) {
         this._pauseTime = 0;
       }
@@ -351,11 +353,8 @@ Player.prototype = {
     }
     var sourceContentEnd = this.source ? this.source.endTime : 0;
 
-    // This check is equivalent to this._unboundedCurrentTime > sourceContentEnd
-    // rearranged to prevent floating point calculation errors from becoming
-    // problematic.
-    if (((this.timeline.currentTime || 0) - this.startTime) *
-        this.playbackRate - sourceContentEnd > this._timeLag) {
+    // This check is equivalent to "unbounded current time > source end time".
+    if (this._unpausedCurrentTime - sourceContentEnd > this._timeLag) {
       if (this._pauseTime === null) {
         this._pauseTime = sourceContentEnd;
       }
