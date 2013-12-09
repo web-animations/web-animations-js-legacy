@@ -4,7 +4,10 @@
 # vim: set ts=4 sw=4 et sts=4 ai:
 
 import atexit
+import base64
 import cStringIO as StringIO
+import getpass
+import httplib
 import json as simplejson
 import os
 import platform
@@ -80,26 +83,27 @@ if args.verbose and args.subunit:
 
 import subprocess
 
+caps = {}
 if not args.sauce:
     # Get any selenium drivers we might need
     if args.browser == "Chrome":
         # Get ChromeDriver if it's not in the path...
         # https://code.google.com/p/chromedriver/downloads/list
-        chromedriver_bin = None
+        chromedriver_bin = "chromedriver"
+        chromedriver_url_tmpl = "http://chromedriver.storage.googleapis.com/2.6/chromedriver_%s%s.zip"  # noqa
+
         if platform.system() == "Linux":
-            chromedriver_bin = "chromedriver"
             if platform.processor() == "x86_64":
                 # 64 bit binary needed
-                chromedriver_url = "https://chromedriver.googlecode.com/files/chromedriver2_linux64_0.6.zip"  # noqa
+                chromedriver_url = chromedriver_url_tmpl % ("linux", "64")
             else:
                 # 32 bit binary needed
-                chromedriver_url = "https://chromedriver.googlecode.com/files/chromedriver_linux32_26.0.1383.0.zip"  # noqa
+                chromedriver_url = chromedriver_url_tmpl % ("linux", "32")
 
         elif platform.system() == "Darwin":
-            chromedriver_url = "https://chromedriver.googlecode.com/files/chromedriver2_mac32_0.7.zip"  # noqa
-            chromedriver_bin = "chromedriver"
+            chromedriver_url = chromedriver_url_tmpl % ("mac", "32")
         elif platform.system() == "win32":
-            chromedriver_bin = "https://chromedriver.googlecode.com/files/chromedriver2_win32_0.7.zip"  # noqa
+            chromedriver_url = chromedriver_url_tmpl % ("win", "32")
             chromedriver_url = "chromedriver.exe"
 
         try:
@@ -166,8 +170,8 @@ if not args.sauce:
 else:
     assert os.environ['SAUCE_USERNAME']
     assert os.environ['SAUCE_ACCESS_KEY']
-    username = os.environ['SAUCE_USERNAME']
-    key = os.environ['SAUCE_ACCESS_KEY']
+    sauce_username = os.environ['SAUCE_USERNAME']
+    sauce_access_key = os.environ['SAUCE_ACCESS_KEY']
 
     # Download the Sauce Connect script
     sauce_connect_url = "http://saucelabs.com/downloads/Sauce-Connect-latest.zip"  # noqa
@@ -204,7 +208,7 @@ else:
             ["java", "-jar", sauce_connect_local,
              "--readyfile", readyfile,
              "--tunnel-identifier", tunnel_id,
-             username, key],
+             sauce_username, sauce_access_key],
             stdout=sauce_log, stderr=sauce_log)
 
         atexit.register(kill_tunnel, sauce_tunnel)
@@ -219,11 +223,66 @@ else:
         raise
 
     args.remote_executor = "http://%s:%s@localhost:4445/wd/hub" % (
-        username, key)
+        sauce_username, sauce_access_key)
 
-    # Send travis information upstream
+    custom_data = {}
+    git_info = subprocess.Popen(
+        ["git", "describe", "--all", "--long"], stdout=subprocess.PIPE
+        ).communicate()[0]
+    custom_data["git-info"] = git_info
+
+    git_commit = subprocess.Popen(
+        ["git", "rev-parse", "HEAD"], stdout=subprocess.PIPE
+        ).communicate()[0]
+    custom_data["git-commit"] = git_commit
+
+    caps['tags'] = []
     if 'TRAVIS_BUILD_NUMBER' in os.environ:
-        args.remote_caps.append('build=%s' % os.environ['TRAVIS_BUILD_NUMBER'])
+        # Send travis information upstream
+        caps['build'] = "%s %s" % (
+          os.environ['TRAVIS_REPO_SLUG'],
+          os.environ['TRAVIS_BUILD_NUMBER'],
+          )
+        caps['name'] = "Travis run for %s" % os.environ['TRAVIS_REPO_SLUG']
+
+        caps['tags'].append(
+            "repo=%s" % os.environ['TRAVIS_REPO_SLUG'])
+        caps['tags'].append(
+            "branch=%s" % os.environ['TRAVIS_BRANCH'])
+
+        travis_env = [
+            'TRAVIS_BRANCH',
+            'TRAVIS_BUILD_ID',
+            'TRAVIS_BUILD_NUMBER',
+            'TRAVIS_COMMIT',
+            'TRAVIS_COMMIT_RANGE',
+            'TRAVIS_JOB_ID',
+            'TRAVIS_JOB_NUMBER',
+            'TRAVIS_PULL_REQUEST',
+            'TRAVIS_REPO_SLUG',
+            ]
+
+        for env in travis_env:
+            tag = env[len('TRAVIS_'):].lower()
+            value = os.environ.get(env, None)
+            if not value:
+                continue
+            custom_data[tag] = value
+
+        custom_data["github-url"] = (
+            "https://github.com/%s/tree/%s" % (
+                os.environ['TRAVIS_REPO_SLUG'], git_commit))
+        custom_data["travis-url"] = (
+            "https://travis-ci.org/%s/builds/%s" % (
+                os.environ['TRAVIS_REPO_SLUG'],
+                os.environ['TRAVIS_BUILD_ID']))
+    else:
+        # Collect information about who/what is running the test
+        caps['name'] = "Manual run for %s" % getpass.getuser()
+        caps['build'] = git_info
+
+        caps['tags'].append('user=%s' % getpass.getuser())
+        caps['tags'].append('host=%s' % socket.gethostname())
 
 # -----------------------------------------------------------------------------
 
@@ -545,6 +604,12 @@ if args.browser == "Chrome":
         '--enable-logging')
     driver_arguments['chrome_options'].add_argument(
         '--start-maximized')
+    driver_arguments['chrome_options'].add_argument(
+        '--disable-default-apps')
+    driver_arguments['chrome_options'].add_argument(
+        '--disable-extensions')
+    driver_arguments['chrome_options'].add_argument(
+        '--disable-plugins')
 
     #driver_arguments['chrome_options'].binary_location = (
     #    '/usr/bin/google-chrome')
@@ -556,6 +621,8 @@ if args.browser == "Chrome":
     # information.
     if 'TRAVIS' in os.environ:
         driver_arguments['chrome_options'].add_argument('--no-sandbox')
+        driver_arguments['chrome_options'].add_argument('--disable-setuid-sandbox')
+        driver_arguments['chrome_options'].add_argument('--allow-sandbox-debugging')
 
 elif args.browser == "Firefox":
     driver_arguments['firefox_profile'] = webdriver.FirefoxProfile()
@@ -570,7 +637,6 @@ elif args.browser == "PhantomJS":
 
 elif args.browser == "Remote":
     driver_arguments['command_executor'] = args.remote_executor
-    caps = {}
 
     for arg in args.remote_caps:
         if not arg.strip():
@@ -591,15 +657,17 @@ elif args.browser == "Remote":
 
 major_failure = False
 browser = None
+session_id = None
 try:
     try:
         if args.verbose:
             print driver_arguments
         browser = getattr(webdriver, args.browser)(**driver_arguments)
-        atexit.register(browser.close)
+        session_id = browser.session_id
+        atexit.register(browser.quit)
     except:
         if browser:
-            browser.close()
+            browser.quit()
         raise
 
     # Load an empty page so the body element is always visible
@@ -686,6 +754,38 @@ while args.dontexit and browser.window_handles:
 
 sys.stdout.flush()
 sys.stderr.flush()
+
+# Annotate the success / failure to sauce labs
+if args.sauce and session_id:
+    base64string = base64.encodestring(
+        '%s:%s' % (sauce_username, sauce_access_key))[:-1]
+
+    custom_data["failures"] = summary.failures
+    custom_data["errors"] = summary.errors
+    custom_data["tests"] = summary.testsRun
+    custom_data["skipped"] = summary.skipped
+
+    body_content = simplejson.dumps({
+        "passed": summary.wasSuccessful(),
+        "custom-data": custom_data,
+        })
+    connection =  httplib.HTTPConnection("saucelabs.com")
+    connection.request(
+        'PUT', '/rest/v1/%s/jobs/%s' % (sauce_username, session_id),
+        body_content,
+        headers={"Authorization": "Basic %s" % base64string})
+    result = connection.getresponse()
+    print "Sauce labs updated:", result.status == 200
+
+    import hmac
+    from hashlib import md5
+    key = hmac.new(
+        str("%s:%s" % (sauce_username, session_id)),
+        str(sauce_access_key),
+        md5).hexdigest()
+    url = "https://saucelabs.com/jobs/%s?auth=%s" % (
+        browser.session_id, key)
+    print "Sauce lab output at:", url
 
 if summary.wasSuccessful() and summary.testsRun > 0 and not major_failure:
     sys.exit(0)

@@ -2,9 +2,10 @@ language: python
 
 env:
   global:
-    - secure: "VBZ2zI5kTGL3TSJ6QWKiUnLLJiSl97t4sE51YsYTWrk0C5FTfzizP/PuHLlYxb00URqGLXVQxr5HsfOPXtmrIfVDTRjlZlSdzNAjBHDb1Ogm+LUquV6sne/yLe3HhWiiNztyOt7lci53iXwEL15eRJWTweBnvZizElvXq6rE9bE=" # mithro/web-animations-js
-    - secure: "SkkMENmCBobwyCMGU9giQiNJ2QWTNaszrbjp8VJUAfRrqx7QzLxHzcOXDc4iUtz3UUKPJEbOxbIy950Wv2bp3tOOrYHVLOZcIGWN3qxQ6gy2xs3N7foR3Y/kgmEq2c6apcF8t6xiXn7M06yf13SKONXLsQVuSE8r5ToM736mhPs=" # web-animations/web-animations-js
-    - SAUCE_USERNAME=mithro
+    - secure: "bM0peKHrlwFKXxrajgJb/qP+au1JnrUHtqGrwSe1pGV4vdK24P0/JWwa02wBgysqLkWyhOZSdPARP+AQwuyeo2uTBZsNArkNBob+3kBZJMIMa8UY2xuPM7km+XmQLur9X9Z9iR89hC/5hUbv0z2C57O2BzsRCTSK2dNs4K/dc5A=" # alancutter/web-animations-js
+    - secure: "GySwb9k2LVdRXwj6Ben8kt9qJ9q682TNHUVd/b2R7PR723o08jMGNoQldLAHTmTuLD77g8yb6JQGZRW9TTB1Rz/gqNHRWV3Uwj98HZ+RAUhgb4M+sEDcoEi5GXSZBzAX5bK3Eqa2WOLxWSno7yOBIxpFfJEixFo8l3R/EpXcOYQ=" # dstockwell/web-animations-js
+    - secure: "CavzDoVPfR5zYYudQJdRMxrfyMuXzwDv6lGuhti4TFW4MbK4u+cXFnuryhADVGBZacISs/TtIGJ9fzbvYvqEDovDBUNaXvpr6bL7Qxg2T74Q+EE/f+LLgkhz4jtKEFqxLuz+vQDapzfBAIE+nZpQMIr1FX32yewNqleFsSW1oXs=" # mithro/web-animations-js
+    - secure: "OWULN5n4QlXak8aAyH8YjSndZI736zlYJTLNpPpM2m2RDZGPwfNr27as5VBWkmXRcfOgtfD5bUvmbZMP4n0zpphz4Y4rFHZ0Qj/ftzJmA9NrKSOfVmubXWIq9GdaeGlzop+Zpo0uvrl1/U1ro4aNojZZQ+wW1LKysziaGGhukHU=" # web-animations/web-animations-js
 
   matrix:
     - MODE='check'
