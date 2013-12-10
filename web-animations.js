@@ -339,7 +339,7 @@ Player.prototype = {
       return this._pauseTime;
     }
     // This check is equivalent to "unbounded current time < zero".
-    if (this._unpausedCurrentTime < this._timeLag) {
+    if (this._unlaggedCurrentTime < this._timeLag) {
       if (this._pauseTime === null) {
         this._pauseTime = 0;
       }
@@ -348,7 +348,7 @@ Player.prototype = {
     var sourceContentEnd = this.source ? this.source.endTime : 0;
 
     // This check is equivalent to "unbounded current time > source end time".
-    if (this._unpausedCurrentTime - sourceContentEnd > this._timeLag) {
+    if (this._unlaggedCurrentTime - sourceContentEnd > this._timeLag) {
       if (this._pauseTime === null) {
         this._pauseTime = sourceContentEnd;
       }
@@ -361,12 +361,13 @@ Player.prototype = {
     return (this.timeline.currentTime - this.startTime) * this.playbackRate -
         this._timeLag;
   },
-  // The unbounded current time of a player (this) is equal to:
-  // this._unpausedCurrentTime - this._timeLag
-  // _unpausedCurrentTime is used in place of directly calculating the unbounded
+  get _unboundedCurrentTime() {
+    return this._unlaggedCurrentTime - this._timeLag;
+  },
+  // _unlaggedCurrentTime is used in place of calculating the unbounded
   // current time directly to avoid introducing floating point calculation
   // inaccuracies on this._timeLag.
-  get _unpausedCurrentTime() {
+  get _unlaggedCurrentTime() {
     return ((this.timeline.currentTime || 0) - this.startTime) *
         this.playbackRate;
   },
@@ -375,7 +376,7 @@ Player.prototype = {
       return this._pauseTimeLag;
     }
     // This check is equivalent to "unbounded current time < zero".
-    if (this._unpausedCurrentTime < this._timeLag) {
+    if (this._unlaggedCurrentTime < this._timeLag) {
       if (this._pauseTime === null) {
         this._pauseTime = 0;
       }
@@ -384,7 +385,7 @@ Player.prototype = {
     var sourceContentEnd = this.source ? this.source.endTime : 0;
 
     // This check is equivalent to "unbounded current time > source end time".
-    if (this._unpausedCurrentTime - sourceContentEnd > this._timeLag) {
+    if (this._unlaggedCurrentTime - sourceContentEnd > this._timeLag) {
       if (this._pauseTime === null) {
         this._pauseTime = sourceContentEnd;
       }
@@ -474,8 +475,8 @@ Player.prototype = {
     }
     // This check is equivalent to "unbounded current time < zero ||
     // unbounded current time > source content end time".
-    if (this._unpausedCurrentTime < this._timeLag ||
-        this._unpausedCurrentTime -  this.source.endTime >= this._timeLag) {
+    if (this._unlaggedCurrentTime < this._timeLag ||
+        this._unlaggedCurrentTime -  this.source.endTime >= this._timeLag) {
       this.currentTime = this.playbackRate > 0 ? 0 : this.source.endTime;
     }
   },
@@ -537,15 +538,15 @@ Player.prototype = {
     }
 
     if (this._needsHandlerPass) {
-      var timeDelta = this._currentTime - this._lastCurrentTime;
+      var timeDelta = this._unboundedCurrentTime - this._lastCurrentTime;
       if (timeDelta > 0) {
         this.source._generateEvents(
-            this._lastCurrentTime, this._currentTime,
+            this._lastCurrentTime, this._unboundedCurrentTime,
             this.timeline.currentTime, 1);
       }
     }
 
-    this._lastCurrentTime = this._currentTime;
+    this._lastCurrentTime = this._unboundedCurrentTime;
   },
   _registerOnTimeline: function() {
     if (!this._registeredOnTimeline) {
