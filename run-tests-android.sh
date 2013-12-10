@@ -53,7 +53,7 @@ while true; do
   echo "Installing Chrome"
   $ADB install $CHROME_APK
   $ADB shell input keyevent 82   # Send the menu key to unlock the screen
-  $ADB shell am start -a android.intent.action.MAIN -n $CHROME_APP/.Main  # Start chrome
+  $ADB shell am start -a android.intent.action.MAIN -n $CHROME_APP/$CHROME_ACT -W  # Start chrome
 
   if kill -0 $EMULATOR_PID; then
     break

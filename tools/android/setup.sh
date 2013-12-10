@@ -44,6 +44,7 @@ fi
 if [ -e Chrome.apk ]; then
   CHROME_APK=$DIR/Chrome.apk
   CHROME_APP=com.google.android.apps.chrome
+  CHROME_ACT=.Main
 else
   if [ ! -e chrome-android/apks/ChromiumTestShell.apk ]; then
     LATEST=`curl -s http://commondatastorage.googleapis.com/chromium-browser-continuous/Android/LAST_CHANGE`
@@ -53,6 +54,7 @@ else
   fi
   CHROME_APK=$DIR/chrome-android/apks/ChromiumTestShell.apk
   CHROME_APP=org.chromium.chrome.testshell
+  CHROME_ACT=.ChromiumTestShellActivity
 fi
 
 set +e
