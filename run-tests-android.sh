@@ -1,5 +1,7 @@
 #! /bin/bash
 
+set -x
+
 function cleanup {
   if [ x$EMULATOR_PID != x ]; then
     kill $EMULATOR_PID
@@ -18,9 +20,9 @@ git submodule update
 source tools/android/setup.sh
 
 if [ "x$DISPLAY" == x ]; then
-  EMULATOR_ARGS="-no-skin -no-audio -no-window"
+  export DISPLAY=:99.0
+  /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 +extension GLX -ac -screen 0 1280x1024x16
 else
-  EMULATOR_ARGS=""
 fi
 
 while true; do
@@ -32,7 +34,7 @@ while true; do
     exit 1
   fi
 
-  $EMULATOR -verbose -gpu on -partition-size 1024 -no-snapshot-save -wipe-data $EMULATOR_ARGS @Android-Chrome &
+  $EMULATOR -verbose -debug all,-modem,-radio -logcat all -gpu on -partition-size 1024 -no-snapshot-save -wipe-data $EMULATOR_ARGS @Android-Chrome &
   EMULATOR_PID=$!
   while true; do
     $ADB wait-for-device shell true
@@ -66,6 +68,7 @@ while true; do
   $ADB install $CHROME_APK
   $ADB shell input keyevent 82   # Send the menu key to unlock the screen
   $ADB shell am start -a android.intent.action.MAIN -n $CHROME_APP/$CHROME_ACT -W  # Start chrome
+  $ADB shell dumpsys activity
 
   if kill -0 $EMULATOR_PID; then
     break
