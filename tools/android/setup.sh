@@ -11,7 +11,7 @@ cd $DIR
 
 # Download the android emualtor and adb
 if [ ! -d adt ]; then
-  wget -c https://dl.google.com/android/adt/adt-bundle-linux-$(uname -p)-20130729.zip -O adt.zip
+  wget -c https://dl.google.com/android/adt/adt-bundle-linux-$(uname -p)-20131030.zip -O adt.zip
   unzip adt.zip > /dev/null
   ls -l adt*
   mv adt-bundle-linux-* adt
@@ -22,7 +22,7 @@ export AVD=$DIR/adt/sdk/tools/android
 
 # Download the chromedriver binary
 if [ ! -e chromedriver ]; then
-  wget -c https://chromedriver.googlecode.com/files/chromedriver_linux64_2.2.zip  -O chromedriver.zip
+  wget -c http://chromedriver.storage.googleapis.com/2.6/chromedriver_linux64.zip -O chromedriver.zip
   unzip chromedriver.zip
 fi
 export CHROMEDRIVER=$DIR/chromedriver
