@@ -89,4 +89,11 @@ $CHROMEDRIVER &
 CHROMEDRIVER_PID=$!
 sleep 5
 
-./run-tests.sh -b Remote --remote-executor http://localhost:9515 --remote-caps="chromeOptions=androidPackage=$CHROME_APP" "$@"
+cat > load-list.txt <<EOF
+^[a].*
+EOF
+./run-tests.sh -b Remote --remote-executor http://localhost:9515 --remote-caps="chromeOptions=androidPackage=$CHROME_APP" --load-list load-list.txt --verbose || exit 1
+cat > load-list.txt <<EOF
+^[^a].*
+EOF
+./run-tests.sh -b Remote --remote-executor http://localhost:9515 --remote-caps="chromeOptions=androidPackage=$CHROME_APP" --load-list load-list.txt --verbose || exit 1
