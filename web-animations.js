@@ -473,10 +473,8 @@ Player.prototype = {
     if (!this.source || this.playbackRate === 0) {
       return;
     }
-    // This check is equivalent to "unbounded current time < zero ||
-    // unbounded current time > source content end time".
-    if (this._unlaggedCurrentTime < this._timeLag ||
-        this._unlaggedCurrentTime - this.source.endTime >= this._timeLag) {
+    var currentTime = this.currentTime;
+    if (currentTime < 0 || currentTime >= this.source.endTime) {
       this.currentTime = this.playbackRate > 0 ? 0 : this.source.endTime;
     }
   },
