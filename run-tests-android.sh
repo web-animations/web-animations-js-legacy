@@ -40,15 +40,22 @@ while true; do
   # Chrome requires a GPU
   $EMULATOR -verbose -gpu on -no-audio -no-boot-anim -partition-size 1024 -no-snapshot-save -wipe-data $EMULATOR_ARGS @Android-Chrome &
   EMULATOR_PID=$!
-  $ADB wait-for-device shell true
   while true; do
+    $ADB wait-for-device shell true
     BOOTED=$($ADB shell getprop sys.boot_completed | sed -e's/[^0-9]*//g')
     BOOTANIM=$($ADB shell getprop init.svc.bootanim | sed -e's/[^a-zA-Z]*//g')
-    echo "Waiting for emulator to boot... Booted? $BOOTED Animation? $BOOTANIM"
+    if kill -0 $EMULATOR_PID; then
+      echo "Waiting for emulator to boot... Booted? $BOOTED Animation? $BOOTANIM"
+    else
+      echo "Emulator has crashed :("
+      exit 1
+    fi
+
     if [ x$BOOTED == x1 -a x$BOOTANIM == xstopped ]; then
       break
+    else
+      sleep 5
     fi
-    sleep 5
   done
 
   # The emulator crashes if you access it too fast :/
