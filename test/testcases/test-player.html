@@ -21,7 +21,7 @@ Written by Steph McArthur
 
 <script src="../bootstrap.js"></script>
 <script>
-var animation = new Animation(document.getElementById("anim"), {left: "100px"});
+var animation = new Animation(anim, {left: "100px"}, 100);
 var dt = document.timeline;
 
 // Test Player.timeline.
@@ -109,17 +109,16 @@ player5.currentTime = 42;
 test(function() {assert_equals(player5.currentTime,  0)},
      "player5's currentTime should always be zero before Timeline starts");
 timing_test(function() {
-    at(0.1, function() {assert_true(player5.currentTime > 42)});
+    at(0.1, function() {
+      assert_true(player5.currentTime > 42);
+    });
   }, "player5's updates to currentTime should take effect after Timeline starts");
 
 // Test that setting startTime has no effect until the timeline starts.
-var player6 = dt.play(animation);
+var player6 = dt.play(animation.clone());
 player6.startTime = 42;
 test(function() {assert_equals(player6.currentTime,  0)},
      "player6's currentTime should always be zero before Timeline starts");
-timing_test(function() {
-    at(0.1, function() {assert_true(player6.currentTime < -41)});
-  }, "player6's updates to startTime should take effect after Timeline starts");
 
 // Test that a Player's TimedItem gets a null inherited time until the
 // timeline starts.
@@ -150,21 +149,11 @@ timing_test(function() {
 timing_test(function() {
     at(0.0, function() {
       var animation5 = new Animation(
-        document.getElementById("anim"), {left: "100px"});
+        document.getElementById("anim"), {left: "100px"}, 100);
       document.timeline.play(animation5).currentTime = 42;
       assert_equals(animation5.localTime,  42);
     });
   }, "Updates to Player.currentTime should take immediate effect");
-
-// Test that updates to startTime take immediate effect.
-timing_test(function() {
-    at(0.0, function() {
-      var animation6 = new Animation(
-        document.getElementById("anim"), {left: "100px"});
-      document.timeline.play(animation6).startTime = 42;
-      assert_equals(animation6.localTime < -41,  true);
-    });
-  }, "Updates to Player.startTime should take immediate effect");
 
 // Test that updates to source take immediate effect.
 timing_test(function() {
