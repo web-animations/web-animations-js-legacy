@@ -32,6 +32,11 @@ while true; do
   # Start up the emulator
   $ADB kill-server
   $ADB start-server
+  if [ $($ADB devices | wc -l) -gt 2 ]; then
+    echo "Multiple Android devices found, bailing."
+    exit 1
+  fi
+
   # Chrome requires a GPU
   $EMULATOR -verbose -gpu on -no-audio -no-boot-anim -partition-size 1024 -no-snapshot-save -wipe-data $EMULATOR_ARGS @Android-Chrome &
   EMULATOR_PID=$!
