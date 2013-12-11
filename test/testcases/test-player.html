@@ -113,7 +113,7 @@ player5.currentTime = 42;
 test(function() { assert_equals(player5.currentTime, 0); },
     'player5\'s currentTime should always be zero before Timeline starts');
 timing_test(function() {
-    at(0.1, function() { assert_true(player5.currentTime > 42); });
+    at(1, function() { assert_equals(player5.currentTime, 43); });
   }, 'player5\'s updates to currentTime should take effect after Timeline ' +
      'starts');
 
@@ -131,7 +131,7 @@ test(function() { assert_equals(animation3.localTime, null); },
     'TimedItem\'s inherited time, and thus ' +
     'localTime should be null before Timeline starts');
 timing_test(function() {
-    at(0.0, function() { assert_not_equals(animation3.localTime, null); });
+    at(0, function() { assert_not_equals(animation3.localTime, null); });
   }, 'TimedItem\'s inherited time and thus localTime should not be null ' +
      'after Timeline starts');
 
@@ -141,7 +141,7 @@ var animation4 = createAnimation();
 test(function() { assert_equals(animation4.localTime, null); },
     'localTime should be null before playing');
 timing_test(function() {
-    at(0.0, function() {
+    at(0, function() {
       createPlayer(animation4);
       assert_equals(animation4.localTime, 0)
     });
@@ -149,20 +149,86 @@ timing_test(function() {
 
 // Test that updates to currentTime take immediate effect.
 timing_test(function() {
-    at(0.0, function() {
-      var animation5 = createAnimation();
-      createPlayer(animation5).currentTime = 42;
-      assert_equals(animation5.localTime, 42);
+    at(0, function() {
+      var animation = createAnimation();
+      createPlayer(animation).currentTime = 42;
+      assert_equals(animation.localTime, 42);
     });
   }, 'Updates to Player.currentTime should take immediate effect');
 
 // Test that updates to source take immediate effect.
 timing_test(function() {
-    at(0.0, function() {
+    at(0, function() {
       var player = createPlayer();
-      var animation7 = createAnimation();
-      player.source = animation7;
-      assert_equals(animation7.localTime, 0);
+      var animation = createAnimation();
+      player.source = animation;
+      assert_equals(animation.localTime, 0);
     });
   }, 'Updates to Player.source should take immediate effect');
+
+// Test Player.cancel().
+var player7 = createPlayer();
+player7.cancel();
+test(function() { assert_equals(player7.source, null); },
+    'Cancelling a player should remove its source content.');
+timing_test(function() {
+    at(1, function() { assert_equals(player7.currentTime, 0); });
+  }, 'A cancelled player should maintain a currentTime of 0');
+
+// Test Player.finish().
+timing_test(function() {
+    at(0, function() {
+      var player = createPlayer();
+      player.finish();
+      assert_equals(player.currentTime, 100);
+    });
+  }, 'Finishing a player should seek it to the end of its source content.');
+timing_test(function() {
+    var player = createPlayer();
+    at(0, function() {
+      player.currentTime = 42;
+      player.playbackRate = -1;
+    });
+    at(1, function() {
+      assert_equals(player.currentTime, 41);
+    });
+  }, 'Finishing a reversed player should seek it to the start of its source ' +
+     'content.');
+
+// Test Player.reverse().
+timing_test(function() {
+    var player1 = createPlayer();
+    var player2 = createPlayer();
+    at(0, function() {
+      player1.finish();
+      player2.currentTime = 101;
+      player1.reverse();
+      player2.reverse();
+    });
+    at(1, function() {
+      assert_equals(player1.currentTime, 99);
+      assert_equals(player2.currentTime, 99);
+      assert_equals(player1.playbackRate, -1);
+      assert_equals(player2.playbackRate, -1);
+    });
+  }, 'Reversing a player should make it play backwards.');
+timing_test(function() {
+    var player1 = createPlayer();
+    var player2 = createPlayer();
+    at(0, function() {
+      player1.currentTime = 42;
+      player2.currentTime = -1;
+      player1.reverse();
+      player1.reverse();
+      player2.reverse();
+      player2.reverse();
+    });
+    at(1, function() {
+      assert_equals(player1.currentTime, 43);
+      assert_equals(player2.currentTime, 1);
+      assert_equals(player1.playbackRate, 1);
+      assert_equals(player2.playbackRate, 1);
+    });
+  }, 'Reversing a player twice should make it play forwards.');
+
 </script>
