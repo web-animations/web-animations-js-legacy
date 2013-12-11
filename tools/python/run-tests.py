@@ -228,21 +228,21 @@ else:
     custom_data = {}
     git_info = subprocess.Popen(
         ["git", "describe", "--all", "--long"], stdout=subprocess.PIPE
-        ).communicate()[0]
+    ).communicate()[0]
     custom_data["git-info"] = git_info
 
     git_commit = subprocess.Popen(
         ["git", "rev-parse", "HEAD"], stdout=subprocess.PIPE
-        ).communicate()[0]
+    ).communicate()[0]
     custom_data["git-commit"] = git_commit
 
     caps['tags'] = []
     if 'TRAVIS_BUILD_NUMBER' in os.environ:
         # Send travis information upstream
         caps['build'] = "%s %s" % (
-          os.environ['TRAVIS_REPO_SLUG'],
-          os.environ['TRAVIS_BUILD_NUMBER'],
-          )
+            os.environ['TRAVIS_REPO_SLUG'],
+            os.environ['TRAVIS_BUILD_NUMBER'],
+        )
         caps['name'] = "Travis run for %s" % os.environ['TRAVIS_REPO_SLUG']
 
         caps['tags'].append(
@@ -260,7 +260,7 @@ else:
             'TRAVIS_JOB_NUMBER',
             'TRAVIS_PULL_REQUEST',
             'TRAVIS_REPO_SLUG',
-            ]
+        ]
 
         for env in travis_env:
             tag = env[len('TRAVIS_'):].lower()
@@ -411,9 +411,10 @@ class MultiPartForm(object):
 
 
 critical_failure = False
+
+
 class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     STATUS = {0: 'success', 1: 'fail', 2: 'fail', 3: 'skip'}
-
 
     # Make the HTTP requests be quiet
     def log_message(self, format, *a):
@@ -531,8 +532,8 @@ while True:
             ServerHandler)
         break
     except socket.error as e:
-      print e
-      time.sleep(5)
+        print e
+        time.sleep(5)
 
 port = httpd.socket.getsockname()[-1]
 print "Serving at", port
@@ -545,7 +546,7 @@ httpd_thread.start()
 # Start up a virtual display, useful for testing on headless servers.
 # -----------------------------------------------------------------------------
 
-VIRTUAL_SIZE=(1024, 2000)
+VIRTUAL_SIZE = (1024, 2000)
 
 # PhantomJS doesn't need a display
 disp = None
@@ -553,7 +554,8 @@ if args.virtual and args.browser != "PhantomJS":
     from pyvirtualdisplay.smartdisplay import SmartDisplay
 
     try:
-        disp = SmartDisplay(visible=0, bgcolor='black', size=VIRTUAL_SIZE).start()
+        disp = SmartDisplay(
+            visible=0, bgcolor='black', size=VIRTUAL_SIZE).start()
         atexit.register(disp.stop)
     except:
         if disp:
@@ -613,16 +615,20 @@ if args.browser == "Chrome":
     # See https://code.google.com/p/chromium/issues/detail?id=31077 for more
     # information.
     if 'TRAVIS' in os.environ:
-        driver_arguments['chrome_options'].add_argument('--no-sandbox')
-        driver_arguments['chrome_options'].add_argument('--disable-setuid-sandbox')
-        driver_arguments['chrome_options'].add_argument('--allow-sandbox-debugging')
+        driver_arguments['chrome_options'].add_argument(
+            '--no-sandbox')
+        driver_arguments['chrome_options'].add_argument(
+            '--disable-setuid-sandbox')
+        driver_arguments['chrome_options'].add_argument(
+            '--allow-sandbox-debugging')
 
 elif args.browser == "Firefox":
     driver_arguments['firefox_profile'] = webdriver.FirefoxProfile()
     # Firefox will often pop-up a dialog saying "script is taking too long" or
     # similar. So we can notice this problem we use "accept" rather then the
     # default "dismiss".
-    webdriver.DesiredCapabilities.FIREFOX["unexpectedAlertBehaviour"] = "accept"
+    webdriver.DesiredCapabilities.FIREFOX[
+        "unexpectedAlertBehaviour"] = "accept"
 
 elif args.browser == "PhantomJS":
     driver_arguments['executable_path'] = phantomjs
@@ -659,7 +665,7 @@ try:
         raise
 
     # Load an empty page so the body element is always visible
-    browser.get('data:text/html;charset=utf-8,<!DOCTYPE html><html><body>EMPTY</body></html>')
+    browser.get('data:text/html;charset=utf-8,<!DOCTYPE html><html><body>EMPTY</body></html>')  # noqa
     if args.virtual and args.browser == "Firefox":
         # Calling browser.maximize_window() doesn't work as we don't have a
         # window manager, so instead we for the size/position.
@@ -713,7 +719,10 @@ WARNING: Unexpected alert found!
 """ % alert.text)
                 alert.dismiss()
             except selenium_exceptions.NoAlertPresentException, e:
-                sys.stderr.write("WARNING: Unexpected alert which dissappeared on it's own!\n")
+                sys.stderr.write(
+                    "WARNING: Unexpected alert"
+                    " which dissappeared on it's own!\n"
+                )
             sys.stderr.flush()
 
 except Exception, e:
@@ -728,8 +737,8 @@ finally:
         shutil.copy(os.path.join(user_data_dir, "chrome_debug.log"), ".")
 
 if summary.testsRun == 0:
-   print
-   print "FAIL: No tests run!"
+    print
+    print "FAIL: No tests run!"
 
 sys.stdout.flush()
 sys.stderr.flush()
@@ -756,8 +765,8 @@ if args.sauce and session_id:
     body_content = simplejson.dumps({
         "passed": summary.wasSuccessful(),
         "custom-data": custom_data,
-        })
-    connection =  httplib.HTTPConnection("saucelabs.com")
+    })
+    connection = httplib.HTTPConnection("saucelabs.com")
     connection.request(
         'PUT', '/rest/v1/%s/jobs/%s' % (sauce_username, session_id),
         body_content,
