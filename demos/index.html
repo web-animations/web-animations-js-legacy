@@ -93,20 +93,21 @@ limitations under the License.
         z-index: 2;
         position: relative;
       }
-      .hills {
-        top: 32vh;
-        left: -12vw;
+      #hill-container {
+        top: 25vmin;
+        left: -10vw;
+        overflow: hidden;
+        position: absolute;
+        width: 80vw;
+        height: 10vw;
+      }
+      #hill {
         background: #E8E8E8;
         border-radius: 80vw 80vw 0 0;
         width: 80vw;
         height: 40vw;
-        position: absolute;
         z-index: 1;
         background: #8CDD81;
-      }
-      #hill {
-        top: 25vmin;
-        left: -10vw;
       }
       #zeppelin {
         height: 10vmin;
@@ -203,7 +204,9 @@ limitations under the License.
       <h1>Web Animations</h1>
       <img id="zeppelin" src="zeppelin.svg" alt="Demos">
     </div>
-    <div id="hill" class="hills"></div>
+    <div id="hill-container">
+      <div id="hill"></div>
+    </div>
     <div id="grass">
       <ul>
         <a class="demo-link" href="rolio/rolio.html"><li>Rolio</li></a>

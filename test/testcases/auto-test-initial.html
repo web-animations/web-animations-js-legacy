@@ -71,10 +71,6 @@ var expected_failures = {
     firefox: true,
     message: "FIXME: Border is wrong."
   },
-  '/#text at t=(0|1)s/': {
-    firefox: true,
-    message: "FIXME: font-size is returning different values."
-  },
   '#transform at t=0s' : {
     msie: true,
     message: "'none' in IE."
@@ -94,6 +90,10 @@ var expected_failures = {
   '/#(text|outline) at t=(1|2)s/' : {
     msie: true,
     message: "IE returns rbga values."
+  },
+  '/#text at t=(0|1)s/': {
+    chrome: ["31.0", "30.0"],
+    firefox: true,
   }
 };
 </script>

@@ -416,7 +416,7 @@ Player.prototype = {
   },
   _generateEvents: function() {
     if (!isDefinedAndNotNull(this._lastCurrentTime)) {
-      this._lastCurrentTime = this._startTime;
+      this._lastCurrentTime = 0;
     }
 
     if (this._needsHandlerPass) {
@@ -4328,6 +4328,7 @@ var propertyTypes = {
   borderTopRightRadius: percentLengthType,
   borderTopWidth: lengthType,
   bottom: percentLengthAutoType,
+  boxShadow: shadowType,
   clip: typeWithKeywords(['auto'], rectangleType),
   color: colorType,
   cx: lengthType,
