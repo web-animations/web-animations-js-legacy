@@ -1694,8 +1694,11 @@ PathAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     }
   },
   _sample: function(timeFraction, currentIteration, target) {
+    if (timeFraction === null)
+      return;
     // TODO: Handle accumulation.
     var lengthAtTimeFraction = this._lengthAtTimeFraction(timeFraction);
+    ASSERT_ENABLED && assert(isFinite(lengthAtTimeFraction));
     var point = this._path.getPointAtLength(lengthAtTimeFraction);
     var x = point.x - target.offsetWidth / 2;
     var y = point.y - target.offsetHeight / 2;
@@ -1721,6 +1724,9 @@ PathAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     }
     var scaledFraction = timeFraction * segmentCount;
     var index = clamp(Math.floor(scaledFraction), 0, segmentCount);
+    // Special handling for when we reach the end
+    if (index >= segmentCount)
+      return this._cumulativeLengths[segmentCount];
     return this._cumulativeLengths[index] + ((scaledFraction % 1) * (
         this._cumulativeLengths[index + 1] - this._cumulativeLengths[index]));
   },
