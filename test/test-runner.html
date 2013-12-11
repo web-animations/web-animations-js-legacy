@@ -164,6 +164,14 @@ function trueOffsetTop(element) {
   }
 }
 
+/**
+ * Get a value for busting the cache.
+ */
+var cacheBusterValue = '' + window.Date.now();
+function getCacheBuster() {
+  return cacheBusterValue;
+}
+
 
 /**
  * Get the most accurate version of time possible.
@@ -171,7 +179,11 @@ function trueOffsetTop(element) {
  * @return {number} Time as this very moment.
  */
 function now() {
-  return performance.now();
+  try {
+    return window.performance.now();
+  } catch (e) {
+    return Date.now();
+  }
 }
 
 /**
@@ -190,9 +202,6 @@ function now() {
  * @return {Element} tbody containing newly created table rows.
  */
 function createTestRows(testName, testURL) {
-  // Prevent caching of the test file.
-  testURL += '?' + Date.now();
-
   var tableGroup = document.createElement('tbody');
   tableGroup.id = testName.replace('.', '-');
 
@@ -233,7 +242,7 @@ function createTestRows(testName, testURL) {
 
   // iframe containing a preview of object
   var iframe = document.createElement('iframe');
-  iframe.src = testURL + '#message';
+  iframe.src = testURL + '?' + getCacheBuster() + '#message';
 
   var iframeCell = document.createElement('td');
   iframeCell.colSpan = '4';
@@ -569,7 +578,7 @@ function runTests() {
   // Deal with tests which are taking too long...
   for (var i in testStates['RUNNING']) {
     var test = testStates['RUNNING'][i];
-    if (now() - test.start > 30e3) {
+    if (now() - test.start > 300e3) {
       // Only way to stop all the javascript and anything else running in the
       // test is to clear the document.
       var test_iframe = test.querySelector('iframe');

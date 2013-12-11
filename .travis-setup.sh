@@ -11,7 +11,7 @@ ls -l /dev/shm
 uname -a
 cat /etc/lsb-release
 
-sudo apt-get update --fix-missing
+sudo apt-get update --fix-missing > /dev/null 2>&1
 
 # Install python-imaging from the environment rather then build it.
 # If the below fails, pip will build it via the requirements.txt
@@ -30,6 +30,14 @@ echo VERSION=$VERSION
 sudo ln -sf $(which true) $(which xdg-desktop-menu)
 
 case $BROWSER in
+Android)
+	sudo apt-get install -qq --force-yes \
+		libc6:i386 libgcc1:i386 gcc-4.6-base:i386 libstdc++5:i386 \
+		libstdc++6:i386 lib32z1 libreadline6-dev:i386 \
+		libncurses5-dev:i386
+	bash tools/android/setup.sh
+	;;
+
 Chrome)
 	echo "Getting $VERSION of $BROWSER"
 	export CHROME=google-chrome-${VERSION}_current_amd64.deb
