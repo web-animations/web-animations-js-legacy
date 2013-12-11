@@ -110,8 +110,9 @@ test(function() {
 // Test that setting currentTime has no effect until the timeline starts.
 var player5 = createPlayer();
 player5.currentTime = 42;
-test(function() { assert_equals(player5.currentTime, 0); },
-    'player5\'s currentTime should always be zero before Timeline starts');
+test(function() { assert_equals(player5.currentTime, 42); },
+    'player5\'s updates to currentTime should take effect before Timeline ' +
+    'starts');
 timing_test(function() {
     at(1, function() { assert_equals(player5.currentTime, 43); });
   }, 'player5\'s updates to currentTime should take effect after Timeline ' +
@@ -182,7 +183,7 @@ timing_test(function() {
       player.finish();
       assert_equals(player.currentTime, 100);
     });
-  }, 'Finishing a player should seek it to the end of its source content.');
+  }, 'Finishing a player should seek it to the end of its source content');
 timing_test(function() {
     var player = createPlayer();
     at(0, function() {
@@ -193,7 +194,7 @@ timing_test(function() {
       assert_equals(player.currentTime, 41);
     });
   }, 'Finishing a reversed player should seek it to the start of its source ' +
-     'content.');
+     'content');
 
 // Test Player.reverse().
 timing_test(function() {
@@ -211,7 +212,7 @@ timing_test(function() {
       assert_equals(player1.playbackRate, -1);
       assert_equals(player2.playbackRate, -1);
     });
-  }, 'Reversing a player should make it play backwards.');
+  }, 'Reversing a player should make it play backwards');
 timing_test(function() {
     var player1 = createPlayer();
     var player2 = createPlayer();
@@ -229,6 +230,18 @@ timing_test(function() {
       assert_equals(player1.playbackRate, 1);
       assert_equals(player2.playbackRate, 1);
     });
-  }, 'Reversing a player twice should make it play forwards.');
+  }, 'Reversing a player twice should make it play forwards');
 
+// Test configuring a player before the document timeline has started.
+var player8 = createPlayer();
+player8.currentTime = 42;
+player8.playbackRate = 2;
+player8.reverse();
+test(function() { assert_equals(player8.currentTime, 42); },
+    'Making modifications to a player should work when the timeline time is ' +
+    'null');
+timing_test(function() {
+    at(1, function() { assert_equals(player8.currentTime, 40); });
+  }, 'Making modifications to a player should work when the timeline time is ' +
+     'null');
 </script>

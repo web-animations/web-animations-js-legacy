@@ -311,7 +311,7 @@ Player.prototype = {
     }
   },
   get currentTime() {
-    return this._currentTime === null ? 0 : this._currentTime;
+    return this._getCurrentTime(true);
   },
   set _currentTime(seekTime) {
     // This seeks by updating _timeLag. It does not affect the startTime.
@@ -326,8 +326,15 @@ Player.prototype = {
     maybeRestartAnimation();
   },
   get _currentTime() {
-    if (this.timeline.currentTime === null) {
-      return null;
+    return this._getCurrentTime(false);
+  },
+  _getCurrentTime: function(effective) {
+    var timelineCurrentTime = this.timeline.currentTime;
+    if (timelineCurrentTime === null) {
+      if (!effective) {
+        return null;
+      }
+      timelineCurrentTime = 0;
     }
 
     // The following is equivalent to doing:
@@ -358,7 +365,7 @@ Player.prototype = {
       this._timeLag = this._pauseTimeLag;
     }
     this._pauseTime = null;
-    return (this.timeline.currentTime - this.startTime) * this.playbackRate -
+    return (timelineCurrentTime - this.startTime) * this.playbackRate -
         this._timeLag;
   },
   get _unboundedCurrentTime() {
