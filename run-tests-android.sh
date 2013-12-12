@@ -18,10 +18,13 @@ git submodule update
 source tools/android/setup.sh
 
 if [ "x$DISPLAY" == x ]; then
-  EMULATOR_ARGS="-no-skin -no-audio -no-window"
-else
-  EMULATOR_ARGS=""
+  export DISPLAY=:99.0
+  /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 +extension GLX -ac -screen 0 1280x1024x16
+  sleep 15
+  glxinfo
 fi
+
+echo $DISPLAY
 
 while true; do
   # Start up the emulator
