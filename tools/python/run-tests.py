@@ -645,8 +645,13 @@ elif args.browser == "Remote":
             caps.update(getattr(
                 webdriver.DesiredCapabilities, arg.strip().upper()))
         else:
-            key, value = arg.split('=', 1)
-            caps[key] = value
+            bits = arg.split('=')
+            base = caps
+            for arg in bits[:-2]:
+                if arg not in base:
+                    base[arg] = {}
+                base = base[arg]
+            base[bits[-2]] = bits[-1]
     driver_arguments['desired_capabilities'] = caps
 
 major_failure = False
