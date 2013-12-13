@@ -19,9 +19,11 @@ source tools/android/setup.sh
 
 if [ "x$DISPLAY" == x ]; then
   export DISPLAY=:99.0
-  /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 +extension GLX -ac -screen 0 1280x1024x16
+  # xvfb must use 24bits otherwise you get a "failed to create drawable" error
+  # from the emulator. See the following bug for more information
+  # https://bugs.freedesktop.org/show_bug.cgi?id=62742
+  /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 +extension GLX -ac -screen 0 1280x1024x24
   sleep 15
-  glxinfo
 fi
 
 echo $DISPLAY
