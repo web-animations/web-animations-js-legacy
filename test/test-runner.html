@@ -175,7 +175,11 @@ var cacheBuster = '' + window.Date.now();
  * @return {number} Time as this very moment.
  */
 function now() {
-  return performance.now();
+  try {
+    return window.performance.now();
+  } catch (e) {
+    return Date.now();
+  }
 }
 
 /**
