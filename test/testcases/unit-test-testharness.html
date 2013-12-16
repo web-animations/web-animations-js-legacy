@@ -47,7 +47,7 @@ test(function() {
     assert_styles(element, {'left': 'abc123'}, "Description 1");
     assert_unreached();
   } catch (e) {
-    assert_regexp_match(e.message, /^Tried to set the reference element\'s left to "abc123" but neither/);
+    assert_regexp_match(e.message, /^Tried to set the reference element\'s "left"/);
   }
 
   try {

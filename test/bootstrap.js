@@ -313,6 +313,54 @@ function _assert_important_in_array(actual, expected, message) {
 window.assert_styles_assert_important_in_array = _assert_important_in_array;
 
 /**
+ * Optionally sets and then gets a property value from a given element.
+ *
+ * @param {String} name The name of the property to get
+ * @param {Element} element DOM node to get the property from
+ * @param {Object} value DOM node to get the property from
+ *
+ * @private
+ */
+function _set_get_property(name, element, value) {
+  var set = typeof value != "undefined";
+
+  // ctm is special
+  if (name == 'ctm') {
+    if (set) {
+      var values = _extract_important(value);
+      var s = "matrix(" + values[0] + "," + values[1] + "," + values[2] + "," + values[3] + "," + values[4] + "," + values[5] + ")";
+      element.setAttribute("transform", s);
+    }
+
+    var ctm = element.getCTM();
+    return '{' + ctm.a + ', ' +
+      ctm.b + ', ' + ctm.c + ', ' + ctm.d + ', ' +
+      ctm.e + ', ' + ctm.f + '}';
+  }
+
+  if (is_svg_attrib(name, element)) {
+    if (set) {
+      element.setAttribute(name, value);
+    }
+    return element.attributes[name].value;
+  } else {
+    // Map transform to the browser specific value.
+    if (name == 'transform') {
+      name = test_features.transformProperty;
+    }
+
+    if (set) {
+      element.style[name] = "";
+      element.style[name] = value;
+      if (element.style[name] == "") {
+        return undefined;
+      }
+    }
+    return getComputedStyle(element, null).getPropertyValue(name);
+  }
+}
+
+/**
  * asserts that actual has the same styles as the dictionary given by
  * expected.
  *
@@ -350,65 +398,40 @@ function _assert_style_element(object, style, description) {
     for (var prop_name in style) {
       // If the passed in value is an element then grab its current style for
       // that property
+      var prop_values = [];
       if (style[prop_name] instanceof HTMLElement ||
           style[prop_name] instanceof SVGElement) {
 
-        var prop_value = getComputedStyle(style[prop_name], null)[prop_name];
+        prop_values.push(_set_get_property(prop_name, style[prop_name], undefined));
       } else {
-        var prop_value = style[prop_name];
+        if (style[prop_name] instanceof Array) {
+          prop_values.push.apply(prop_values, style[prop_name]);
+        } else {
+          prop_values.push(style[prop_name]);
+        }
       }
 
-      prop_value = '' + prop_value;
-
-      if (prop_name == 'transform') {
-        var output_prop_name = test_features.transformProperty;
-      } else {
-        var output_prop_name = prop_name;
+      // Send all the values via getComputedStyle / SVGElement
+      var expected_prop_values = [];
+      var errors = [];
+      for (var i = 0; i < prop_values.length; i++) {
+        var reference_prop_value = _set_get_property(prop_name, reference_element, prop_values[i]);
+        if (typeof reference_prop_value != "undefined" && expected_prop_values.indexOf(reference_prop_value) < 0) {
+          expected_prop_values.push(reference_prop_value);
+        } else {
+          errors.push('  Unable to set value to "' + prop_values[i] + '"\n');
+        }
       }
 
-      var is_svg = is_svg_attrib(prop_name, object);
-      if (is_svg) {
-        reference_element.setAttribute(prop_name, prop_value);
-
-        var current_style = object.attributes;
-        var target_style = reference_element.attributes;
-      } else {
-        reference_element.style[output_prop_name] = prop_value;
-
-        var current_style = computedObjectStyle;
-        var target_style = getComputedStyle(reference_element, null);
-
-        _assert_important_in_array(
-            prop_value, [reference_element.style[output_prop_name], target_style[output_prop_name]],
-            'Tried to set the reference element\'s '+ output_prop_name +
-            ' to ' + JSON.stringify(prop_value) +
-            ' but neither the style' +
-            ' ' + JSON.stringify(reference_element.style[output_prop_name]) +
-            ' nor computedStyle ' + JSON.stringify(target) +
-            ' ended up matching requested value.');
+      if (expected_prop_values.length == 0) {
+        throw new AssertionError(
+          'Tried to set the reference element\'s "' + prop_name + '"' +
+          ' but all values where invalid:\n' + errors.join('\n'));
       }
 
-      if (prop_name == 'ctm') {
-        var ctm = object.getCTM();
-        var curr = '{' + ctm.a + ', ' + 
-          ctm.b + ', ' + ctm.c + ', ' + ctm.d + ', ' + 
-          ctm.e + ', ' + ctm.f + '}';
+      var actual = _set_get_property(prop_name, object, undefined);
 
-        var target = prop_value;
-
-      } else if (is_svg) {
-        var target = target_style[prop_name].value;
-        var curr = current_style[prop_name].value;
-      } else {
-        var target = target_style[output_prop_name];
-        var curr = current_style[output_prop_name];
-      }
-
-      var description_extra = '\n Property ' + prop_name;
-      if (prop_name != output_prop_name)
-          description_extra += '(actually ' + output_prop_name + ')';
-
-      _assert_important_in_array(curr, [target], description + description_extra);
+      _assert_important_in_array(actual, expected_prop_values, 'Checking '+ prop_name);
     }
   } finally {
     if (reference_element.parentNode) {
