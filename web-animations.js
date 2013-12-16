@@ -653,7 +653,8 @@ TimedItem.prototype = {
         unscaledIterationTime);
     this._timeFraction =
         this.specified._timingFunction(this).scaleTime(this._timeFraction);
-    this._iterationTime = this._timeFraction * this.duration;
+    this._iterationTime = this.duration === Infinity ?
+        this._iterationTime : this._timeFraction * this.duration;
   },
   _updateTimeMarkers: function() {
     if (this.localTime === null) {
