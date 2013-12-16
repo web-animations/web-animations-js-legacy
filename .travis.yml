@@ -21,7 +21,8 @@ env:
     - BROWSER=Remote ARGS='--verbose -b Remote --sauce --remote-caps=ANDROID --remote-caps=version=4.0 --remote-caps=platform=Linux'
 
 matrix:
-  fast_finish: true
+# Disabled until travis-ci/travis-ci#1696 is fixed.
+#  fast_finish: true
   allow_failures:
     - env: BROWSER=Remote ARGS='--verbose -b Remote --sauce --remote-caps=INTERNETEXPLORER --remote-caps=version=10 --remote-caps=platform="Windows 8"'
     - env: BROWSER=Remote ARGS='--verbose -b Remote --sauce --remote-caps=SAFARI --remote-caps=version=6 --remote-caps=platform="OS X 10.8"'
