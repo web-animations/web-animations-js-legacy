@@ -216,7 +216,7 @@ test(function() {
   assert_true(result[2].timingFunction instanceof CubicBezierTimingFunction);
   assert_equals(result[2].range.min, 0.6);
   assert_equals(result[2].range.max, 1.0);
-}, 'Specify \'align\' with KeyframeAnimationEffect, get aligned segments');
+}, 'Specify \'align\' with KeyframeEffect, get aligned segments');
 
 test(function() {
   var result = createNormalizedChain('ease linear', 'align',
@@ -232,7 +232,7 @@ test(function() {
   assert_true(result[2].timingFunction instanceof LinearTimingFunction);
   assert_equals(result[2].range.min, 0.6);
   assert_equals(result[2].range.max, 1.0);
-}, 'Specify \'align\' with KeyframeAnimationEffect and too few timing ' +
+}, 'Specify \'align\' with KeyframeEffect and too few timing ' +
     'functions, get last timing function repeated');
 
 test(function() {
@@ -249,7 +249,7 @@ test(function() {
   assert_true(result[2].timingFunction instanceof CubicBezierTimingFunction);
   assert_equals(result[2].range.min, 0.6);
   assert_equals(result[2].range.max, 1.0);
-}, 'Specify \'align\' with KeyframeAnimationEffect and too many timing ' +
+}, 'Specify \'align\' with KeyframeEffect and too many timing ' +
     'functions, trailing timing functions are dropped');
 
 test(function() {
@@ -265,7 +265,7 @@ test(function() {
   assert_true(result[2].timingFunction instanceof CubicBezierTimingFunction);
   assert_equals(result[2].range.min, 0.6);
   assert_equals(result[2].range.max, 1.0);
-}, 'Specify \'align\' with KeyframeAnimationEffect but inappropriate ' +
+}, 'Specify \'align\' with KeyframeEffect but inappropriate ' +
     'keyframe offsets, offsets get added.');
 
 test(function() {

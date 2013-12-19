@@ -1068,7 +1068,7 @@ var interpretAnimationEffect = function(animationEffect) {
     // The spec requires animationEffect to be an instance of
     // OneOrMoreKeyframes, but this type is just a dictionary or a list of
     // dictionaries, so the best we can do is test for an object.
-    return new KeyframeAnimationEffect(animationEffect);
+    return new KeyframeEffect(animationEffect);
   }
   return null;
 };
@@ -1936,7 +1936,7 @@ var normalizeKeyframeDictionary = function(properties) {
 
 
 /** @constructor */
-var KeyframeAnimationEffect = function(oneOrMoreKeyframeDictionaries,
+var KeyframeEffect = function(oneOrMoreKeyframeDictionaries,
     composite, accumulate) {
   enterModifyCurrentAnimationState();
   try {
@@ -1950,7 +1950,7 @@ var KeyframeAnimationEffect = function(oneOrMoreKeyframeDictionaries,
   }
 };
 
-KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
+KeyframeEffect.prototype = createObject(AnimationEffect.prototype, {
   get composite() {
     return this._composite;
   },
@@ -2127,13 +2127,13 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     return this._cachedPropertySpecificKeyframes;
   },
   clone: function() {
-    var result = new KeyframeAnimationEffect([], this.composite,
+    var result = new KeyframeEffect([], this.composite,
         this.accumulate);
     result._keyframeDictionaries = this._keyframeDictionaries.slice(0);
     return result;
   },
   toString: function() {
-    return '<KeyframeAnimationEffect>';
+    return '<KeyframeEffect>';
   },
   _compositeForKeyframe: function(keyframe) {
     return isDefinedAndNotNull(keyframe.composite) ?
@@ -2414,7 +2414,7 @@ TimingFunction.createNormalizedPositionList = function(easingPoints,
     if (timedItem instanceof Animation &&
         // We have to test for keyframe or path effects because custom effects
         // may inherit from AnimationEffect.
-        (timedItem.effect instanceof KeyframeAnimationEffect ||
+        (timedItem.effect instanceof KeyframeEffect ||
          timedItem.effect instanceof PathAnimationEffect)) {
       return timedItem.effect._positionListForTiming();
     }
@@ -5351,7 +5351,7 @@ window.Element.prototype.getCurrentAnimations = function() {
 
 window.Animation = Animation;
 window.AnimationEffect = AnimationEffect;
-window.KeyframeAnimationEffect = KeyframeAnimationEffect;
+window.KeyframeEffect = KeyframeEffect;
 window.MediaReference = MediaReference;
 window.ParGroup = ParGroup;
 window.PathAnimationEffect = PathAnimationEffect;

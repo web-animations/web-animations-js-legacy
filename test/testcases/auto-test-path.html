@@ -150,7 +150,7 @@ document.timeline.play(new Animation(
     document.querySelector("#anim3"), animFunc3,
     {duration: 10, iterations: 2, easing: "paced"}));
 
-var animFunc4KeyFrames = new KeyframeAnimationEffect(
+var animFunc4KeyFrames = new KeyframeEffect(
     [{transform: "translate(387.5px, 287.5px) rotate(180deg)"}], "replace");
 var animFunc4Path = new PathAnimationEffect(
     document.querySelector('#path4').pathSegList, 'auto-rotate');

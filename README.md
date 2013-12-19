@@ -59,11 +59,11 @@ modified by an animation, and the values that those properties and attributes
 vary between. AnimationEffect objects also control whether the effect replaces
 or adds to the underlying value.
 
-There are three major kinds of effects: `KeyframeAnimationEffect`, `PathAnimationEffect`, and `CustomAnimationEffect`.
+There are three major kinds of effects: `KeyframeEffect`, `PathAnimationEffect`, and `CustomAnimationEffect`.
 
 #### Animating between keyframes
 
-A `KeyframeAnimationEffect` controls one or more properties/attributes by linearly
+A `KeyframeEffect` controls one or more properties/attributes by linearly
 interpolating values between specified keyframes. KeyframeEffects are usually
 defined by specifying the keyframe offset and the property-value pair in a
 dictionary:
@@ -80,7 +80,7 @@ between 0 and 1.
     [{left: "35px"}, {left: "50px"}, {left: "70px"}]
 
 See the [specification](http://www.w3.org/TR/web-animations/#keyframe-animation-effects) for the details
-of the keyframe distribution procedure, and how KeyframeAnimationEffects are
+of the keyframe distribution procedure, and how KeyframeEffects are
 evaluated at offsets outside those specified by the keyframes.
 
 #### Animating along paths
