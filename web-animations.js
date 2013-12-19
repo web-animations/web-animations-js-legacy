@@ -18,6 +18,7 @@
 'use strict';
 
 var ASSERT_ENABLED = false;
+var SVG_NS = 'http://www.w3.org/2000/svg';
 
 function assert(check, message) {
   console.assert(ASSERT_ENABLED,
@@ -28,26 +29,28 @@ function assert(check, message) {
 }
 
 function detectFeatures() {
-  var style = document.createElement('style');
-  style.textContent = '' +
-      'dummyRuleForTesting {' +
-      'width: calc(0px);' +
-      'width: -webkit-calc(0px); }';
-  document.head.appendChild(style);
+  var el = createDummyElement();
+  el.style.cssText = 'width: calc(0px);' +
+                     'width: -webkit-calc(0px);';
+  var calcFunction = el.style.width.split('(')[0];
   var transformCandidates = [
     'transform',
     'webkitTransform',
     'msTransform'
   ];
   var transformProperty = transformCandidates.filter(function(property) {
-    return property in style.sheet.cssRules[0].style;
+    return property in el.style;
   })[0];
-  var calcFunction = style.sheet.cssRules[0].style.width.split('(')[0];
-  document.head.removeChild(style);
   return {
-    transformProperty: transformProperty,
-    calcFunction: calcFunction
+    calcFunction: calcFunction,
+    transformProperty: transformProperty
   };
+}
+
+function createDummyElement() {
+  return document.documentElement.namespaceURI == SVG_NS ?
+         document.createElementNS(SVG_NS, 'g') :
+         document.createElement('div');
 }
 
 var features = detectFeatures();
@@ -91,6 +94,7 @@ var TimingDict = function(timingInput) {
 
 TimingDict.prototype = {
   delay: 0,
+  endDelay: 0,
   fill: 'forwards',
   iterationStart: 0,
   iterations: 1,
@@ -413,7 +417,7 @@ Player.prototype = {
   },
   _generateEvents: function() {
     if (!isDefinedAndNotNull(this._lastCurrentTime)) {
-      this._lastCurrentTime = this._startTime;
+      this._lastCurrentTime = 0;
     }
 
     if (this._needsHandlerPass) {
@@ -491,7 +495,8 @@ TimedItem.prototype = {
     return result;
   },
   get endTime() {
-    return this._startTime + this.activeDuration + this.specified.delay;
+    return this._startTime + this.activeDuration + this.specified.delay +
+        this.specified.endDelay;
   },
   get parent() {
     return this._parent;
@@ -650,7 +655,8 @@ TimedItem.prototype = {
         unscaledIterationTime);
     this._timeFraction =
         this.specified._timingFunction(this).scaleTime(this._timeFraction);
-    this._iterationTime = this._timeFraction * this.duration;
+    this._iterationTime = this.duration === Infinity ?
+        this._iterationTime : this._timeFraction * this.duration;
   },
   _updateTimeMarkers: function() {
     if (this.localTime === null) {
@@ -1282,7 +1288,7 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
           child._updateInheritedTime(this._iterationTime);
         }
         cumulativeStartTime += Math.max(0, child.specified.delay +
-            child.activeDuration);
+            child.activeDuration + child.specified.endDelay);
       }
     }
   },
@@ -1309,7 +1315,7 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
       } else if (this.type === 'seq') {
         var result = 0;
         this._children.forEach(function(a) {
-          result += a.activeDuration + a.specified.delay;
+          result += a.activeDuration + a.specified.delay + a.specified.endDelay;
         });
         this._cachedIntrinsicDuration = result;
       } else {
@@ -1711,12 +1717,10 @@ var PathAnimationEffect = function(path, autoRotate, preTransform, composite,
     // SVGPathSegList doesn't have a constructor.
     this.autoRotate = isDefined(autoRotate) ? autoRotate : 'none';
     this.preTransform = isDefined(preTransform) ? transformType.fromCssValue(preTransform) : [];
-    this._path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    if (path instanceof SVGPathSegList) {
+    this._path = document.createElementNS(SVG_NS, 'path');
       this.segments = path;
     } else {
-      var tempPath = document.createElementNS(
-          'http://www.w3.org/2000/svg', 'path');
+      var tempPath = document.createElementNS(SVG_NS, 'path');
       tempPath.setAttribute('d', String(path));
       this.segments = tempPath.pathSegList;
     }
@@ -1919,13 +1923,13 @@ var shorthandToLonghand = {
 };
 
 // This delegates parsing shorthand value syntax to the browser.
-var shorthandExpanderDiv = document.createElement('div');
+var shorthandExpanderElem = createDummyElement();
 var expandShorthand = function(property, value, result) {
-  shorthandExpanderDiv.style[property] = value;
+  shorthandExpanderElem.style[property] = value;
   var longProperties = shorthandToLonghand[property];
   for (var i in longProperties) {
     var longProperty = longProperties[i];
-    var longhandValue = shorthandExpanderDiv.style[longProperty];
+    var longhandValue = shorthandExpanderElem.style[longProperty];
     result[longProperty] = longhandValue;
   }
 };
@@ -4363,6 +4367,7 @@ var propertyTypes = {
   borderTopRightRadius: percentLengthType,
   borderTopWidth: lengthType,
   bottom: percentLengthAutoType,
+  boxShadow: shadowType,
   clip: typeWithKeywords(['auto'], rectangleType),
   color: colorType,
   cx: lengthType,
@@ -4781,6 +4786,7 @@ CompositedPropertyMap.prototype = {
   }
 };
 
+
 var cssStyleDeclarationAttribute = {
   cssText: true,
   length: true,
@@ -4788,13 +4794,60 @@ var cssStyleDeclarationAttribute = {
   'var': true
 };
 
-var cssStyleDeclarationMethod = {
-  getPropertyValue: true,
-  getPropertyCSSValue: true,
+var cssStyleDeclarationMethodModifiesStyle = {
+  getPropertyValue: false,
+  getPropertyCSSValue: false,
   removeProperty: true,
-  getPropertyPriority: true,
+  getPropertyPriority: false,
   setProperty: true,
-  item: true
+  item: false
+};
+
+var copyInlineStyle = function(sourceStyle, destinationStyle) {
+  for (var i = 0; i < sourceStyle.length; i++) {
+    var property = sourceStyle[i];
+    destinationStyle[property] = sourceStyle[property];
+  }
+};
+
+var retickThenGetComputedStyle = function() {
+  repeatLastTick();
+  // ticker() will restore getComputedStyle() back to normal.
+  return window.getComputedStyle.apply(this, arguments);
+};
+
+// This redundant flag is to support Safari which has trouble determining
+// function object equality during an animation.
+var isGetComputedStylePatched = false;
+var originalGetComputedStyle = window.getComputedStyle;
+
+var ensureRetickBeforeGetComputedStyle = function() {
+  if (!isGetComputedStylePatched) {
+    Object.defineProperty(window, 'getComputedStyle', configureDescriptor({
+      value: retickThenGetComputedStyle
+    }));
+    isGetComputedStylePatched = true;
+  }
+};
+
+var ensureOriginalGetComputedStyle = function() {
+  if (isGetComputedStylePatched) {
+    Object.defineProperty(window, 'getComputedStyle', configureDescriptor({
+      value: originalGetComputedStyle
+    }));
+    isGetComputedStylePatched = false;
+  }
+};
+
+// Changing the inline style of an element under animation may require the
+// animation to be recomputed ontop of the new inline style if
+// getComputedStyle() is called inbetween setting the style and the next
+// animation frame.
+// We modify getComputedStyle() to re-evaluate the animations only if it is
+// called instead of re-evaluating them here potentially unnecessarily.
+var animatedInlineStyleChanged = function() {
+  maybeRestartAnimation();
+  ensureRetickBeforeGetComputedStyle();
 };
 
 
@@ -4808,16 +4861,13 @@ var AnimatedCSSStyleDeclaration = function(element) {
   // Stores the inline style of the element on its behalf while the
   // polyfill uses the element's inline style to simulate web animations.
   // This is needed to fake regular inline style CSSOM access on the element.
-  this._surrogateElement = document.createElement('div');
+  this._surrogateElement = createDummyElement();
   this._style = element.style;
   this._length = 0;
   this._isAnimatedProperty = {};
 
   // Populate the surrogate element's inline style.
-  for (var i = 0; i < this._style.length; i++) {
-    var property = this._style[i];
-    this._surrogateElement.style[property] = this._style[property];
-  }
+  copyInlineStyle(this._style, this._surrogateElement.style);
   this._updateIndices();
 };
 
@@ -4841,7 +4891,7 @@ AnimatedCSSStyleDeclaration.prototype = {
             this._surrogateElement.style.getPropertyValue(property));
       }
     }
-    this._inlineStyleChanged();
+    animatedInlineStyleChanged();
   },
   get length() {
     return this._surrogateElement.style.length;
@@ -4881,31 +4931,30 @@ AnimatedCSSStyleDeclaration.prototype = {
   _setAnimatedProperty: function(property, value) {
     this._style[property] = value;
     this._isAnimatedProperty[property] = true;
-  },
-  _inlineStyleChanged: function() {
-    maybeRestartAnimation();
-    // Changing the inline style of an element under animation may require the
-    // animation to be recomputed ontop of the new inline style if
-    // getComputedStyle() is called inbetween setting the style and the next
-    // animation frame.
-    // We modify getComputedStyle() to re-evaluate the animations only if it is
-    // called instead of re-evaluating them here potentially unnecessarily.
-    ensureRetickBeforeGetComputedStyle();
   }
 };
 
-for (var method in cssStyleDeclarationMethod) {
-  AnimatedCSSStyleDeclaration.prototype[method] = (function(method) {
+for (var method in cssStyleDeclarationMethodModifiesStyle) {
+  AnimatedCSSStyleDeclaration.prototype[method] =
+      (function(method, modifiesStyle) {
     return function() {
-      return this._surrogateElement.style[method].apply(
+      var result = this._surrogateElement.style[method].apply(
           this._surrogateElement.style, arguments);
+      if (modifiesStyle) {
+        if (!this._isAnimatedProperty[arguments[0]]) {
+          this._style[method].apply(this._style, arguments);
+        }
+        this._updateIndices();
+        animatedInlineStyleChanged();
+      }
+      return result;
     }
-  })(method);
+  })(method, cssStyleDeclarationMethodModifiesStyle[method]);
 }
 
 for (var property in document.documentElement.style) {
   if (cssStyleDeclarationAttribute[property] ||
-      cssStyleDeclarationMethod[property]) {
+      property in cssStyleDeclarationMethodModifiesStyle) {
     continue;
   }
   (function(property) {
@@ -4920,34 +4969,53 @@ for (var property in document.documentElement.style) {
             if (!this._isAnimatedProperty[property]) {
               this._style[property] = value;
             }
-            this._inlineStyleChanged();
+            animatedInlineStyleChanged();
           }
         }));
   })(property);
 }
 
-var retickThenGetComputedStyle = function() {
-  repeatLastTick();
-  // ticker() will restore getComputedStyle() back to normal.
-  return window.getComputedStyle.apply(this, arguments);
-};
-
-var originalGetComputedStyle = window.getComputedStyle;
-
-var ensureRetickBeforeGetComputedStyle = function() {
-  if (window.getComputedStyle !== retickThenGetComputedStyle) {
-    Object.defineProperty(window, 'getComputedStyle', configureDescriptor({
-      value: retickThenGetComputedStyle
+// This function is a fallback for when we can't replace an element's style with
+// AnimatatedCSSStyleDeclaration and must patch the existing style to behave
+// in a similar way.
+// Only the methods listed in cssStyleDeclarationMethodModifiesStyle will
+// be patched to behave in the same manner as a native implementation,
+// getter properties like style.left or style[0] will be tainted by the
+// polyfill's animation engine.
+var patchInlineStyleForAnimation = function(style) {
+  var surrogateElement = document.createElement('div');
+  copyInlineStyle(style, surrogateElement.style);
+  var isAnimatedProperty = {};
+  for (var method in cssStyleDeclarationMethodModifiesStyle) {
+    if (!(method in style)) {
+      continue;
+    }
+    Object.defineProperty(style, method, configureDescriptor({
+      value: (function(method, originalMethod, modifiesStyle) {
+        return function() {
+          var result = surrogateElement.style[method].apply(
+              surrogateElement.style, arguments);
+          if (modifiesStyle) {
+            if (!isAnimatedProperty[arguments[0]]) {
+              originalMethod.apply(style, arguments);
+            }
+            animatedInlineStyleChanged();
+          }
+          return result;
+        }
+      })(method, style[method], cssStyleDeclarationMethodModifiesStyle[method])
     }));
   }
-};
 
-var ensureOriginalGetComputedStyle = function() {
-  if (window.getComputedStyle === retickThenGetComputedStyle) {
-    Object.defineProperty(window, 'getComputedStyle', configureDescriptor({
-      value: originalGetComputedStyle
-    }));
-  }
+  style._clearAnimatedProperty = function(property) {
+    this[property] = surrogateElement.style[property];
+    isAnimatedProperty[property] = false;
+  };
+
+  style._setAnimatedProperty = function(property, value) {
+    this[property] = value;
+    isAnimatedProperty[property] = true;
+  };
 };
 
 
@@ -4982,55 +5050,68 @@ Compositor.prototype = {
 
 var ensureTargetInitialised = function(property, target) {
   if (propertyIsSVGAttrib(property, target)) {
-    if (!isDefinedAndNotNull(target._actuals)) {
-      target._actuals = {};
-      target._bases = {};
-      target.actuals = {};
-      target._getAttribute = target.getAttribute;
-      target._setAttribute = target.setAttribute;
-      target.getAttribute = function(name) {
-        if (isDefinedAndNotNull(target._bases[name])) {
-          return target._bases[name];
-        }
-        return target._getAttribute(name);
-      };
-      target.setAttribute = function(name, value) {
-        if (isDefinedAndNotNull(target._actuals[name])) {
-          target._bases[name] = value;
-        } else {
-          target._setAttribute(name, value);
-        }
-      };
-    }
-    if (!isDefinedAndNotNull(target._actuals[property])) {
-      var baseVal = target.getAttribute(property);
-      target._actuals[property] = 0;
-      target._bases[property] = baseVal;
-
-      Object.defineProperty(target.actuals, property, configureDescriptor({
-        set: function(value) {
-          if (value === null) {
-            target._actuals[property] = target._bases[property];
-            target._setAttribute(property, target._bases[property]);
-          } else {
-            target._actuals[property] = value;
-            target._setAttribute(property, value);
-          }
-        },
-        get: function() {
-          return target._actuals[property];
-        }
-      }));
-    }
+    ensureTargetSVGInitialised(property, target);
   } else {
-    if (target.style instanceof AnimatedCSSStyleDeclaration) {
-      return;
-    }
+    ensureTargetCSSInitialised(target);
+  }
+};
+
+var ensureTargetSVGInitialised = function(property, target) {
+  if (!isDefinedAndNotNull(target._actuals)) {
+    target._actuals = {};
+    target._bases = {};
+    target.actuals = {};
+    target._getAttribute = target.getAttribute;
+    target._setAttribute = target.setAttribute;
+    target.getAttribute = function(name) {
+      if (isDefinedAndNotNull(target._bases[name])) {
+        return target._bases[name];
+      }
+      return target._getAttribute(name);
+    };
+    target.setAttribute = function(name, value) {
+      if (isDefinedAndNotNull(target._actuals[name])) {
+        target._bases[name] = value;
+      } else {
+        target._setAttribute(name, value);
+      }
+    };
+  }
+  if (!isDefinedAndNotNull(target._actuals[property])) {
+    var baseVal = target.getAttribute(property);
+    target._actuals[property] = 0;
+    target._bases[property] = baseVal;
+
+    Object.defineProperty(target.actuals, property, configureDescriptor({
+      set: function(value) {
+        if (value === null) {
+          target._actuals[property] = target._bases[property];
+          target._setAttribute(property, target._bases[property]);
+        } else {
+          target._actuals[property] = value;
+          target._setAttribute(property, value);
+        }
+      },
+      get: function() {
+        return target._actuals[property];
+      }
+    }));
+  }
+};
+
+var ensureTargetCSSInitialised = function(target) {
+  if (target.style._webAnimationsStyleInitialised) {
+    return;
+  }
+  try {
     var animatedStyle = new AnimatedCSSStyleDeclaration(target);
     Object.defineProperty(target, 'style', configureDescriptor({
       get: function() { return animatedStyle; }
     }));
+  } catch (error) {
+    patchInlineStyleForAnimation(target.style);
   }
+  target.style._webAnimationsStyleInitialised = true;
 };
 
 var setValue = function(target, property, value) {

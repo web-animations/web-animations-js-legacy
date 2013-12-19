@@ -21,5 +21,9 @@ else
     exit 0
   fi
 
-  echo ./run-tests.sh $ARGS | bash || exit 1
+  if [ x$BROWSER == "xAndroid-Chrome" ]; then
+    echo ./run-tests-android.sh $ARGS | bash || exit 1
+  else
+    echo ./run-tests.sh $ARGS | bash || exit 1
+  fi
 fi

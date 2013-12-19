@@ -89,21 +89,21 @@ if not args.sauce:
     if args.browser == "Chrome":
         # Get ChromeDriver if it's not in the path...
         # https://code.google.com/p/chromedriver/downloads/list
-        chromedriver_bin = None
+        chromedriver_bin = "chromedriver"
+        chromedriver_url_tmpl = "http://chromedriver.storage.googleapis.com/2.6/chromedriver_%s%s.zip"  # noqa
+
         if platform.system() == "Linux":
-            chromedriver_bin = "chromedriver"
             if platform.processor() == "x86_64":
                 # 64 bit binary needed
-                chromedriver_url = "https://chromedriver.googlecode.com/files/chromedriver2_linux64_0.6.zip"  # noqa
+                chromedriver_url = chromedriver_url_tmpl % ("linux", "64")
             else:
                 # 32 bit binary needed
-                chromedriver_url = "https://chromedriver.googlecode.com/files/chromedriver_linux32_26.0.1383.0.zip"  # noqa
+                chromedriver_url = chromedriver_url_tmpl % ("linux", "32")
 
         elif platform.system() == "Darwin":
-            chromedriver_url = "https://chromedriver.googlecode.com/files/chromedriver2_mac32_0.7.zip"  # noqa
-            chromedriver_bin = "chromedriver"
+            chromedriver_url = chromedriver_url_tmpl % ("mac", "32")
         elif platform.system() == "win32":
-            chromedriver_bin = "https://chromedriver.googlecode.com/files/chromedriver2_win32_0.7.zip"  # noqa
+            chromedriver_url = chromedriver_url_tmpl % ("win", "32")
             chromedriver_url = "chromedriver.exe"
 
         try:
@@ -228,21 +228,21 @@ else:
     custom_data = {}
     git_info = subprocess.Popen(
         ["git", "describe", "--all", "--long"], stdout=subprocess.PIPE
-        ).communicate()[0]
+    ).communicate()[0]
     custom_data["git-info"] = git_info
 
     git_commit = subprocess.Popen(
         ["git", "rev-parse", "HEAD"], stdout=subprocess.PIPE
-        ).communicate()[0]
+    ).communicate()[0]
     custom_data["git-commit"] = git_commit
 
     caps['tags'] = []
     if 'TRAVIS_BUILD_NUMBER' in os.environ:
         # Send travis information upstream
         caps['build'] = "%s %s" % (
-          os.environ['TRAVIS_REPO_SLUG'],
-          os.environ['TRAVIS_BUILD_NUMBER'],
-          )
+            os.environ['TRAVIS_REPO_SLUG'],
+            os.environ['TRAVIS_BUILD_NUMBER'],
+        )
         caps['name'] = "Travis run for %s" % os.environ['TRAVIS_REPO_SLUG']
 
         caps['tags'].append(
@@ -260,7 +260,7 @@ else:
             'TRAVIS_JOB_NUMBER',
             'TRAVIS_PULL_REQUEST',
             'TRAVIS_REPO_SLUG',
-            ]
+        ]
 
         for env in travis_env:
             tag = env[len('TRAVIS_'):].lower()
@@ -411,9 +411,10 @@ class MultiPartForm(object):
 
 
 critical_failure = False
+
+
 class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     STATUS = {0: 'success', 1: 'fail', 2: 'fail', 3: 'skip'}
-
 
     # Make the HTTP requests be quiet
     def log_message(self, format, *a):
@@ -488,28 +489,35 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         if overall_status > 0 and (args.virtual or args.browser == "Remote"):
             time.sleep(1)
 
-            screenshot = test_id + '.png'
-            if args.virtual:
-                disp.grab().save(screenshot)
-            elif args.browser == "Remote":
-                global browser
-                browser.save_screenshot(screenshot)
+            try:
+                screenshot = test_id + '.png'
+                if args.virtual:
+                    disp.grab().save(screenshot)
+                elif args.browser == "Remote":
+                    global browser
+                    browser.save_screenshot(screenshot)
 
-            if args.upload and not already_failed:
-                form = MultiPartForm()
-                form.add_field('adult', 'no')
-                form.add_field('optsize', '0')
-                form.add_file(
-                    'upload[]', screenshot, fileHandle=open(screenshot, 'rb'))
+                # On android we want to do a
+                # adb run /system/bin/screencap -p /sdcard/FILENAME.png
+                # adb cp FILENAME.png ....
 
-                request = urllib2.Request("http://postimage.org/")
-                body = str(form)
-                request.add_header('Content-type', form.get_content_type())
-                request.add_header('Content-length', len(body))
-                request.add_data(body)
+                if args.upload and not already_failed:
+                    form = MultiPartForm()
+                    form.add_field('adult', 'no')
+                    form.add_field('optsize', '0')
+                    form.add_file(
+                        'upload[]', screenshot, fileHandle=open(screenshot, 'rb'))
 
-                result = urllib2.urlopen(request).read()
-                print "Screenshot at:", re.findall("""<td><textarea wrap='off' onmouseover='this.focus\(\)' onfocus='this.select\(\)' id="code_1" scrolling="no">([^<]*)</textarea></td>""", result)  # noqa
+                    request = urllib2.Request("http://postimage.org/")
+                    body = str(form)
+                    request.add_header('Content-type', form.get_content_type())
+                    request.add_header('Content-length', len(body))
+                    request.add_data(body)
+
+                    result = urllib2.urlopen(request).read()
+                    print "Screenshot at:", re.findall("""<td><textarea wrap='off' onmouseover='this.focus\(\)' onfocus='this.select\(\)' id="code_1" scrolling="no">([^<]*)</textarea></td>""", result)  # noqa
+            except Exception, e:
+                print e
 
         response = "OK"
         self.send_response(200)
@@ -531,8 +539,8 @@ while True:
             ServerHandler)
         break
     except socket.error as e:
-      print e
-      time.sleep(5)
+        print e
+        time.sleep(5)
 
 port = httpd.socket.getsockname()[-1]
 print "Serving at", port
@@ -545,7 +553,7 @@ httpd_thread.start()
 # Start up a virtual display, useful for testing on headless servers.
 # -----------------------------------------------------------------------------
 
-VIRTUAL_SIZE=(1024, 2000)
+VIRTUAL_SIZE = (1024, 2000)
 
 # PhantomJS doesn't need a display
 disp = None
@@ -553,7 +561,8 @@ if args.virtual and args.browser != "PhantomJS":
     from pyvirtualdisplay.smartdisplay import SmartDisplay
 
     try:
-        disp = SmartDisplay(visible=0, bgcolor='black', size=VIRTUAL_SIZE).start()
+        disp = SmartDisplay(
+            visible=0, bgcolor='black', size=VIRTUAL_SIZE).start()
         atexit.register(disp.stop)
     except:
         if disp:
@@ -597,6 +606,12 @@ if args.browser == "Chrome":
         '--enable-logging')
     driver_arguments['chrome_options'].add_argument(
         '--start-maximized')
+    driver_arguments['chrome_options'].add_argument(
+        '--disable-default-apps')
+    driver_arguments['chrome_options'].add_argument(
+        '--disable-extensions')
+    driver_arguments['chrome_options'].add_argument(
+        '--disable-plugins')
 
     #driver_arguments['chrome_options'].binary_location = (
     #    '/usr/bin/google-chrome')
@@ -607,14 +622,20 @@ if args.browser == "Chrome":
     # See https://code.google.com/p/chromium/issues/detail?id=31077 for more
     # information.
     if 'TRAVIS' in os.environ:
-        driver_arguments['chrome_options'].add_argument('--no-sandbox')
+        driver_arguments['chrome_options'].add_argument(
+            '--no-sandbox')
+        driver_arguments['chrome_options'].add_argument(
+            '--disable-setuid-sandbox')
+        driver_arguments['chrome_options'].add_argument(
+            '--allow-sandbox-debugging')
 
 elif args.browser == "Firefox":
     driver_arguments['firefox_profile'] = webdriver.FirefoxProfile()
     # Firefox will often pop-up a dialog saying "script is taking too long" or
     # similar. So we can notice this problem we use "accept" rather then the
     # default "dismiss".
-    webdriver.DesiredCapabilities.FIREFOX["unexpectedAlertBehaviour"] = "accept"
+    webdriver.DesiredCapabilities.FIREFOX[
+        "unexpectedAlertBehaviour"] = "accept"
 
 elif args.browser == "PhantomJS":
     driver_arguments['executable_path'] = phantomjs
@@ -631,8 +652,13 @@ elif args.browser == "Remote":
             caps.update(getattr(
                 webdriver.DesiredCapabilities, arg.strip().upper()))
         else:
-            key, value = arg.split('=', 1)
-            caps[key] = value
+            bits = arg.split('=')
+            base = caps
+            for arg in bits[:-2]:
+                if arg not in base:
+                    base[arg] = {}
+                base = base[arg]
+            base[bits[-2]] = bits[-1]
     driver_arguments['desired_capabilities'] = caps
 
 major_failure = False
@@ -651,7 +677,7 @@ try:
         raise
 
     # Load an empty page so the body element is always visible
-    browser.get('data:text/html;charset=utf-8,<!DOCTYPE html><html><body>EMPTY</body></html>')
+    browser.get('data:text/html;charset=utf-8,<!DOCTYPE html><html><body>EMPTY</body></html>')  # noqa
     if args.virtual and args.browser == "Firefox":
         # Calling browser.maximize_window() doesn't work as we don't have a
         # window manager, so instead we for the size/position.
@@ -705,7 +731,10 @@ WARNING: Unexpected alert found!
 """ % alert.text)
                 alert.dismiss()
             except selenium_exceptions.NoAlertPresentException, e:
-                sys.stderr.write("WARNING: Unexpected alert which dissappeared on it's own!\n")
+                sys.stderr.write(
+                    "WARNING: Unexpected alert"
+                    " which dissappeared on it's own!\n"
+                )
             sys.stderr.flush()
 
 except Exception, e:
@@ -720,8 +749,8 @@ finally:
         shutil.copy(os.path.join(user_data_dir, "chrome_debug.log"), ".")
 
 if summary.testsRun == 0:
-   print
-   print "FAIL: No tests run!"
+    print
+    print "FAIL: No tests run!"
 
 sys.stdout.flush()
 sys.stderr.flush()
@@ -748,8 +777,8 @@ if args.sauce and session_id:
     body_content = simplejson.dumps({
         "passed": summary.wasSuccessful(),
         "custom-data": custom_data,
-        })
-    connection =  httplib.HTTPConnection("saucelabs.com")
+    })
+    connection = httplib.HTTPConnection("saucelabs.com")
     connection.request(
         'PUT', '/rest/v1/%s/jobs/%s' % (sauce_username, session_id),
         body_content,
