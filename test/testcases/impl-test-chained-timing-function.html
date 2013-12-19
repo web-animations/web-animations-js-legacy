@@ -33,7 +33,7 @@ var LinearTimingFunction = _WebAnimationsTestingUtilities._linearTimingFunction;
 var PacedTimingFunction = _WebAnimationsTestingUtilities._pacedTimingFunction;
 
 var pathEffect =
-    new PathAnimationEffect(document.querySelector('#path').pathSegList);
+    new MotionPathEffect(document.querySelector('#path').pathSegList);
 
 test(function() {
   var result = createNormalizedChain('cubic-bezier(0.5, -1.5, 0.5, 2.5)');
