@@ -34,18 +34,18 @@ var anim = new Animation(document.querySelector('.animation'),
       {transform: 'rotate(0deg) translate(300px, 0px) rotate(0deg)', backgroundColor: 'rgb(0,255,0)'},
       {backgroundColor: 'red', width: '80px'},
       {transform: 'rotate(-180deg) translate(300px, 0px) rotate(-180deg)', backgroundColor: 'blue'}
-    ], 2);
+    ], {iterationStart: 0.5, duration: 2, iterations: 2});
 
 document.timeline.play(anim);
 
-for (var i = 0; i < 1.01; i += 0.05) {
-  var effectValue = anim.effect.valueAtTimeFraction(i);
+for (var i = 0; i < anim.activeDuration; i += 0.15) {
+  var effectValue = anim.effectValueAtLocalTime(i);
   var div = document.createElement('div');
   div.classList.add('animation');
   div.style.webkitTransform = effectValue.transform();
   div.style.backgroundColor = effectValue.backgroundColor();
   div.style.width = effectValue.width('50px');
-  div.style.opacity = i;
+  div.style.opacity = i / anim.activeDuration;
   document.documentElement.appendChild(div);
 }
 
