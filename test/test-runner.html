@@ -175,7 +175,11 @@ var cacheBuster = '' + window.Date.now();
  * @return {number} Time as this very moment.
  */
 function now() {
-  return performance.now();
+  try {
+    return window.performance.now();
+  } catch (e) {
+    return Date.now();
+  }
 }
 
 /**
@@ -570,7 +574,7 @@ function runTests() {
   // Deal with tests which are taking too long...
   for (var i in testStates['RUNNING']) {
     var test = testStates['RUNNING'][i];
-    if (now() - test.start > 30e3) {
+    if (now() - test.start > 300e3) {
       // Only way to stop all the javascript and anything else running in the
       // test is to clear the document.
       var test_iframe = test.querySelector('iframe');

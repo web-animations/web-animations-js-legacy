@@ -489,28 +489,35 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         if overall_status > 0 and (args.virtual or args.browser == "Remote"):
             time.sleep(1)
 
-            screenshot = test_id + '.png'
-            if args.virtual:
-                disp.grab().save(screenshot)
-            elif args.browser == "Remote":
-                global browser
-                browser.save_screenshot(screenshot)
+            try:
+                screenshot = test_id + '.png'
+                if args.virtual:
+                    disp.grab().save(screenshot)
+                elif args.browser == "Remote":
+                    global browser
+                    browser.save_screenshot(screenshot)
 
-            if args.upload and not already_failed:
-                form = MultiPartForm()
-                form.add_field('adult', 'no')
-                form.add_field('optsize', '0')
-                form.add_file(
-                    'upload[]', screenshot, fileHandle=open(screenshot, 'rb'))
+                # On android we want to do a
+                # adb run /system/bin/screencap -p /sdcard/FILENAME.png
+                # adb cp FILENAME.png ....
 
-                request = urllib2.Request("http://postimage.org/")
-                body = str(form)
-                request.add_header('Content-type', form.get_content_type())
-                request.add_header('Content-length', len(body))
-                request.add_data(body)
+                if args.upload and not already_failed:
+                    form = MultiPartForm()
+                    form.add_field('adult', 'no')
+                    form.add_field('optsize', '0')
+                    form.add_file(
+                        'upload[]', screenshot, fileHandle=open(screenshot, 'rb'))
 
-                result = urllib2.urlopen(request).read()
-                print "Screenshot at:", re.findall("""<td><textarea wrap='off' onmouseover='this.focus\(\)' onfocus='this.select\(\)' id="code_1" scrolling="no">([^<]*)</textarea></td>""", result)  # noqa
+                    request = urllib2.Request("http://postimage.org/")
+                    body = str(form)
+                    request.add_header('Content-type', form.get_content_type())
+                    request.add_header('Content-length', len(body))
+                    request.add_data(body)
+
+                    result = urllib2.urlopen(request).read()
+                    print "Screenshot at:", re.findall("""<td><textarea wrap='off' onmouseover='this.focus\(\)' onfocus='this.select\(\)' id="code_1" scrolling="no">([^<]*)</textarea></td>""", result)  # noqa
+            except Exception, e:
+                print e
 
         response = "OK"
         self.send_response(200)
@@ -645,8 +652,13 @@ elif args.browser == "Remote":
             caps.update(getattr(
                 webdriver.DesiredCapabilities, arg.strip().upper()))
         else:
-            key, value = arg.split('=', 1)
-            caps[key] = value
+            bits = arg.split('=')
+            base = caps
+            for arg in bits[:-2]:
+                if arg not in base:
+                    base[arg] = {}
+                base = base[arg]
+            base[bits[-2]] = bits[-1]
     driver_arguments['desired_capabilities'] = caps
 
 major_failure = False

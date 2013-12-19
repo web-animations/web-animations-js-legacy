@@ -9,6 +9,7 @@ env:
 
   matrix:
     - MODE='check'
+    - BROWSER=Android-Chrome ARGS=''
     - BROWSER=Chrome-stable ARGS='-x -b Chrome -u'
     - BROWSER=Chrome-beta ARGS='-x -b Chrome -u'
     - BROWSER=Chrome-unstable ARGS='-x -b Chrome -u'
