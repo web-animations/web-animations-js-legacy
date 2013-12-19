@@ -495,7 +495,8 @@ TimedItem.prototype = {
     return result;
   },
   get endTime() {
-    return this._startTime + this.activeDuration + this.specified.delay + this.specified.endDelay;
+    return this._startTime + this.activeDuration + this.specified.delay +
+        this.specified.endDelay;
   },
   get parent() {
     return this._parent;
@@ -1302,7 +1303,7 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
         var result = 0;
         this._children.forEach(function(a) {
           result += a.activeDuration + a.specified.delay + a.specified.endDelay;
-      });
+        });
         this._cachedIntrinsicDuration = result;
       } else {
         throw 'Unsupported type ' + this.type;
