@@ -70,6 +70,7 @@ var tests = [
   'test-rotation-not-reversed.html',
   'test-update-state.html',
   'unit-test-clone.html',
+  'unit-test-delay.html',
   'unit-test-dom-operations.html',
   'unit-test-duration.html',
   'unit-test-modify-timing-params.html',
