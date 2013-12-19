@@ -997,6 +997,15 @@ TimedItem.prototype = {
                 toGlobal(startTime), firstIteration));
       }
     }
+  },
+  localTimeToTimeFraction: function(localTime) {
+    var oldInheritedTime = this._inheritedTime;
+    this._inheritedTime = localTime + this._startTime;
+    this._updateTimeMarkers();
+    var newTimeFraction = this._timeFraction;
+    this._inheritedTime = oldInheritedTime;
+    this._updateTimeMarkers();
+    return newTimeFraction;
   }
 };
 
@@ -1151,6 +1160,10 @@ Animation.prototype = createObject(TimedItem.prototype, {
     }
     return 'Animation ' + this.startTime + '-' + this.endTime + ' (' +
         this.localTime + ') ' + effectString;
+  },
+  effectValueAtLocalTime: function(localTime) {
+    return this.effect.valueAtTimeFraction(
+        this.localTimeToTimeFraction(localTime));
   }
 });
 
