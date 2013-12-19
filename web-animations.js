@@ -94,6 +94,7 @@ var TimingDict = function(timingInput) {
 
 TimingDict.prototype = {
   delay: 0,
+  endDelay: 0,
   fill: 'forwards',
   iterationStart: 0,
   iterations: 1,
@@ -494,7 +495,8 @@ TimedItem.prototype = {
     return result;
   },
   get endTime() {
-    return this._startTime + this.activeDuration + this.specified.delay;
+    return this._startTime + this.activeDuration + this.specified.delay +
+        this.specified.endDelay;
   },
   get parent() {
     return this._parent;
@@ -1273,7 +1275,7 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
           child._updateInheritedTime(this._iterationTime);
         }
         cumulativeStartTime += Math.max(0, child.specified.delay +
-            child.activeDuration);
+            child.activeDuration + child.specified.endDelay);
       }
     }
   },
@@ -1300,7 +1302,7 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
       } else if (this.type === 'seq') {
         var result = 0;
         this._children.forEach(function(a) {
-          result += a.activeDuration + a.specified.delay;
+          result += a.activeDuration + a.specified.delay + a.specified.endDelay;
         });
         this._cachedIntrinsicDuration = result;
       } else {
