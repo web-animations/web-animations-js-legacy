@@ -99,7 +99,6 @@ TimingDict.prototype = {
   iterationStart: 0,
   iterations: 1,
   duration: 'auto',
-  activeDuration: 'auto',
   playbackRate: 1,
   direction: 'normal',
   easing: 'linear',
@@ -135,10 +134,6 @@ Timing.prototype = {
   },
   _duration: function() {
     var value = this._dict.duration;
-    return typeof value === 'number' ? value : 'auto';
-  },
-  _activeDuration: function() {
-    var value = this._dict.activeDuration;
     return typeof value === 'number' ? value : 'auto';
   },
   getEasingTimes: function() {
@@ -487,12 +482,8 @@ TimedItem.prototype = {
     return result;
   },
   get activeDuration() {
-    var result = this.specified._activeDuration();
-    if (result === 'auto') {
-      var repeatedDuration = this.duration * this.specified._iterations();
-      result = repeatedDuration / Math.abs(this.specified.playbackRate);
-    }
-    return result;
+    var repeatedDuration = this.duration * this.specified._iterations();
+    return repeatedDuration / Math.abs(this.specified.playbackRate);
   },
   get endTime() {
     return this._startTime + this.activeDuration + this.specified.delay +
