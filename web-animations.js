@@ -492,6 +492,26 @@ TimedItem.prototype = {
   get parent() {
     return this._parent;
   },
+  get previousSibling() {
+    if (!this.parent) {
+      return null;
+    }
+    var siblingIndex = this.parent.indexOf(this) - 1;
+    if (siblingIndex < 0) {
+      return null;
+    }
+    return this.parent.children[siblingIndex];
+  },
+  get nextSibling() {
+    if (!this.parent) {
+      return null;
+    }
+    var siblingIndex = this.parent.indexOf(this) + 1;
+    if (siblingIndex >= this.parent.children.length) {
+      return null;
+    }
+    return this.parent.children[siblingIndex];
+  },
   _attach: function(player) {
     // Remove ourselves from our parent, if we have one. This also removes any
     // exsisting player.
