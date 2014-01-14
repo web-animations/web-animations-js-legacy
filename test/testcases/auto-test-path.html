@@ -134,17 +134,17 @@ var expected_failures = {
 <script>
 "use strict";
 
-var animFunc1 = new PathAnimationEffect(
+var animFunc1 = new MotionPathEffect(
     document.querySelector('#path1').pathSegList, 'auto-rotate');
 document.timeline.play(new Animation(document.querySelector("#anim1"),
     animFunc1, {duration: 10, iterations: 2}));
 
-var animFunc2 = new PathAnimationEffect(
+var animFunc2 = new MotionPathEffect(
     document.querySelector('#path2').pathSegList, 'auto-rotate');
 document.timeline.play(new Animation(document.querySelector("#anim2"),
     animFunc2, {duration: 10, iterations: 2}));
 
-var animFunc3 = new PathAnimationEffect(
+var animFunc3 = new MotionPathEffect(
     document.querySelector('#path3').pathSegList, 'auto-rotate');
 document.timeline.play(new Animation(
     document.querySelector("#anim3"), animFunc3,
@@ -152,7 +152,7 @@ document.timeline.play(new Animation(
 
 var animFunc4KeyFrames = new KeyframeEffect(
     [{transform: "translate(387.5px, 287.5px) rotate(180deg)"}], "replace");
-var animFunc4Path = new PathAnimationEffect(
+var animFunc4Path = new MotionPathEffect(
     document.querySelector('#path4').pathSegList, 'auto-rotate');
 var anim4 = new Animation(document.querySelector("#anim4"), animFunc4Path,
     {duration: 10, iterations: 2, easing: "paced"});

@@ -59,7 +59,7 @@ modified by an animation, and the values that those properties and attributes
 vary between. AnimationEffect objects also control whether the effect replaces
 or adds to the underlying value.
 
-There are three major kinds of effects: `KeyframeEffect`, `PathAnimationEffect`, and `CustomAnimationEffect`.
+There are three major kinds of effects: `KeyframeEffect`, `MotionPathEffect`, and `CustomAnimationEffect`.
 
 #### Animating between keyframes
 
@@ -85,7 +85,7 @@ evaluated at offsets outside those specified by the keyframes.
 
 #### Animating along paths
 
-A `PathAnimationEffect` allows elements to be animated along SVG-style paths. For example:
+A `MotionPathEffect` allows elements to be animated along SVG-style paths. For example:
 
     <svg xmlns="http://www.w3.org/2000/svg" version="1.1">
       <defs>
@@ -93,7 +93,7 @@ A `PathAnimationEffect` allows elements to be animated along SVG-style paths. Fo
       </defs>
     </svg>
     <script>
-      var animFunc = new PathAnimationEffect(document.querySelector('#path').pathSegList);
+      var animFunc = new MotionPathEffect(document.querySelector('#path').pathSegList);
       var animation = new Animation(targetElement, animFunc, 2);
     </script>
 
