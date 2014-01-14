@@ -165,6 +165,12 @@ Timing._defineProperty = function(prop) {
     },
     set: function(value) {
       if (isDefinedAndNotNull(value)) {
+        if (prop == 'duration' && value == 'auto') {
+          // duration is not always a number
+        } else if (['delay', 'endDelay', 'iterationStart', 'iterations',
+                    'duration', 'playbackRate'].indexOf(prop) >= 0) {
+          value = Number(value);
+        }
         this._dict[prop] = value;
       } else {
         delete this._dict[prop];
