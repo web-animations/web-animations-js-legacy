@@ -1,4 +1,3 @@
-testtools>=0.9.30
 python-subunit # subunit
 selenium
 
