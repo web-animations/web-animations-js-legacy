@@ -1069,16 +1069,15 @@ TimingEvent.prototype = Object.create(window.Event.prototype, {
   }
 });
 
-var isCustomAnimationEffect = function(animationEffect) {
+var isEffectCallback = function(animationEffect) {
   // TODO: How does WebIDL actually differentiate different callback interfaces?
   return isDefinedAndNotNull(animationEffect) &&
-      typeof animationEffect === 'object' &&
-      typeof animationEffect.sample === 'function';
+      typeof animationEffect === 'function';
 };
 
 var interpretAnimationEffect = function(animationEffect) {
   if (animationEffect instanceof AnimationEffect ||
-      isCustomAnimationEffect(animationEffect)) {
+      isEffectCallback(animationEffect)) {
     return animationEffect;
   } else if (isDefinedAndNotNull(animationEffect) &&
       typeof animationEffect === 'object') {
@@ -1093,12 +1092,8 @@ var interpretAnimationEffect = function(animationEffect) {
 var cloneAnimationEffect = function(animationEffect) {
   if (animationEffect instanceof AnimationEffect) {
     return animationEffect.clone();
-  } else if (isCustomAnimationEffect(animationEffect)) {
-    if (typeof animationEffect.clone === 'function') {
-      return animationEffect.clone();
-    } else {
-      return animationEffect;
-    }
+  } else if (isEffectCallback(animationEffect)) {
+    return animationEffect;
   } else {
     return null;
   }
@@ -1116,22 +1111,20 @@ var Animation = function(target, animationEffect, timingInput) {
   } finally {
     exitModifyCurrentAnimationState(false);
   }
+  this._previousTimeFraction = null;
 };
 
 Animation.prototype = createObject(TimedItem.prototype, {
   _sample: function() {
     if (isDefinedAndNotNull(this.effect) &&
         !(this.target instanceof PseudoElementReference)) {
-      var sampleMethod = isCustomAnimationEffect(this.effect) ?
-          this.effect.sample : this.effect._sample;
-      sampleMethod.apply(
-          this.effect, [
-            this._timeFraction,
-            this.currentIteration,
-            this.target,
-            this.underlyingValue
-          ]
-      );
+      if (isEffectCallback(this.effect)) {
+        this.effect(this._timeFraction, this, this._previousTimeFraction);
+        this._previousTimeFraction = this._timeFraction;
+      } else {
+        this.effect._sample(this._timeFraction, this.currentIteration,
+            this.target, this.underlyingValue);
+      }
     }
   },
   _getLeafItemsInEffectImpl: function(items) {
@@ -1169,8 +1162,8 @@ Animation.prototype = createObject(TimedItem.prototype, {
     var effectString = '<none>';
     if (this.effect instanceof AnimationEffect) {
       effectString = this.effect.toString();
-    } else if (isCustomAnimationEffect(this.effect)) {
-      effectString = 'Custom effect';
+    } else if (isEffectCallback(this.effect)) {
+      effectString = 'Effect callback';
     }
     return 'Animation ' + this.startTime + '-' + this.endTime + ' (' +
         this.localTime + ') ' + effectString;
@@ -2428,11 +2421,7 @@ TimingFunction.createNormalizedPositionList = function(easingPoints,
   if (easingPoints === 'distribute') {
     return TimingFunction.generateDistributedPositionList(numTimingFunctions);
   } else if (easingPoints === 'align') {
-    if (timedItem instanceof Animation &&
-        // We have to test for keyframe or path effects because custom effects
-        // may inherit from AnimationEffect.
-        (timedItem.effect instanceof KeyframeEffect ||
-         timedItem.effect instanceof MotionPathEffect)) {
+    if (timedItem instanceof Animation) {
       return timedItem.effect._positionListForTiming();
     }
     return TimingFunction.generateDistributedPositionList(numTimingFunctions);
