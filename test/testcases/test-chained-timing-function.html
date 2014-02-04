@@ -20,75 +20,75 @@ limitations under the License.
 <script>
 "use strict";
 
-var TestEffect = function() {}
+function createTestEffect() {
+  var effect = function(timeFraction) {
+    effect._timeFraction = timeFraction;
+  };
+  return effect;
+}
 
-TestEffect.prototype = {
-  sample: function(timeFraction) {
-    this._timeFraction = timeFraction;
-  },
-  checkFraction: function(timeFraction) {
-    assert_approx_equals(this._timeFraction, timeFraction, 0.0000000001);
-  },
-};
+function checkFraction(effect, timeFraction) {
+  assert_approx_equals(effect._timeFraction, timeFraction, 0.0000000001);
+}
 
 var easeAtMidPoint = 0.8023931134359329;
 
 timing_test(function() {
-  var testEffect = new TestEffect();
+  var testEffect = createTestEffect();
   document.timeline.play(new Animation(null, testEffect, 1));
   at(0.5, function() {
-    testEffect.checkFraction(0.5);
+    checkFraction(testEffect, 0.5);
   });
 }, 'Default timing function is linear');
 
 timing_test(function() {
-  var testEffect = new TestEffect();
+  var testEffect = createTestEffect();
   document.timeline.play(new Animation(null, testEffect,
       {easing: 'ease', duration: 1}));
   at(0.5, function() {
-    testEffect.checkFraction(easeAtMidPoint);
+    checkFraction(testEffect, easeAtMidPoint);
   });
 }, 'Single timing function spans entire range');
 
 timing_test(function() {
-  var testEffect = new TestEffect();
+  var testEffect = createTestEffect();
   document.timeline.play(new Animation(null, testEffect,
       {easingTimes: 'distribute', duration: 1}));
   at(0.5, function() {
-    testEffect.checkFraction(0.5);
+    checkFraction(testEffect, 0.5);
   });
 }, 'Default primitive timing functions are linear');
 
 timing_test(function() {
-  var testEffect = new TestEffect();
+  var testEffect = createTestEffect();
   document.timeline.play(new Animation(null, testEffect,
       {easing: 'ease ease', duration: 1}));
   at(0.25, function() {
-    testEffect.checkFraction(0.0 + 0.5 * easeAtMidPoint);
+    checkFraction(testEffect, 0.0 + 0.5 * easeAtMidPoint);
   });
   at(0.5, function() {
-    testEffect.checkFraction(0.5);
+    checkFraction(testEffect, 0.5);
   });
   at(0.75, function() {
-    testEffect.checkFraction(0.5 + 0.5 * easeAtMidPoint);
+    checkFraction(testEffect, 0.5 + 0.5 * easeAtMidPoint);
   });
 }, 'Distributed mode');
 
 timing_test(function() {
-  var testEffect = new TestEffect();
+  var testEffect = createTestEffect();
   var animation = new Animation(null, testEffect,
       {easing: 'ease', duration: 1});
   animation.specified.setEasingTimes([0.0, 0.3, 0.6, 1.0]);
   document.timeline.play(animation);
 
   at(0.15, function() {
-    testEffect.checkFraction(0.0 + 0.3 * easeAtMidPoint);
+    checkFraction(testEffect, 0.0 + 0.3 * easeAtMidPoint);
   });
   at(0.45, function() {
-    testEffect.checkFraction(0.3 + 0.3 * easeAtMidPoint);
+    checkFraction(testEffect, 0.3 + 0.3 * easeAtMidPoint);
   });
   at(0.8, function() {
-    testEffect.checkFraction(0.6 + 0.4 * easeAtMidPoint);
+    checkFraction(testEffect, 0.6 + 0.4 * easeAtMidPoint);
   });
 }, 'Explicit points list');
 

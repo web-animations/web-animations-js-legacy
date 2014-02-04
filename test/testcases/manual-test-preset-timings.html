@@ -46,16 +46,15 @@ function testTiming(name) {
   span.appendChild(document.createElement('br'));
   span.appendChild(document.createTextNode(name));
   document.body.appendChild(span);
-  return new Animation(ctx, {
-    sample: function(timeFraction, iteration, target) {
+  return new Animation(ctx,
+    function(timeFraction, animation) {
       var inputTimeFraction = player.currentTime / duration;
-      target.lineTo(inputTimeFraction * size, size - timeFraction * size);
-      target.stroke();
-    },
-  }, {
-    duration: duration,
-    easing: name,
-  });
+      animation.target.lineTo(inputTimeFraction * size, size - timeFraction * size);
+      animation.target.stroke();
+    }, {
+      duration: duration,
+      easing: name,
+    });
 }
 
 // TODO: Making player global like this is is rather ugly. It would be nice if

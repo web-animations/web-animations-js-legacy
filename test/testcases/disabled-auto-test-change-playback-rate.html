@@ -53,12 +53,12 @@ var a1 = new Animation(document.querySelector("#a"),
 var player1 = document.timeline.play(a1);
 
 var a2 = new Animation(undefined,
-    {sample: function(timeFraction, iteration, target) {
+    function(timeFraction) {
       var playbackRate = 0.01 + 10 * timeFraction;
       player1.playbackRate  = playbackRate
       player2.playbackRate = playbackRate;
       document.querySelector("#a").textContent = playbackRate;
-    }},
+    },
     a1.specified.clone());
 var player2 = document.timeline.play(a2);
 
