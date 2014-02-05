@@ -2224,7 +2224,7 @@ KeyframeEffect.prototype = createObject(AnimationEffect.prototype, {
     if (length > 1 && !isDefinedAndNotNull(distributedKeyframes[0].offset)) {
       distributedKeyframes[0].offset = 0;
     }
-    if (!isDefinedAndNotNull(distributedKeyframes[length - 1].offset)) {
+    if (length > 0 && !isDefinedAndNotNull(distributedKeyframes[length - 1].offset)) {
       distributedKeyframes[length - 1].offset = 1;
     }
     var lastOffsetIndex = 0;
