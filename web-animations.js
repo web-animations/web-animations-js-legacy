@@ -768,7 +768,7 @@ TimedItem.prototype = {
   },
   _getLeafItemsInEffectImpl: abstractMethod,
   _isPastEndOfActiveInterval: function() {
-    return this._inheritedTime > this.endTime;
+    return this._inheritedTime >= this.endTime;
   },
   get player() {
     return this.parent === null ?
