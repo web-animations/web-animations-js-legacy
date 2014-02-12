@@ -259,22 +259,26 @@ var Player = function(token, source, timeline) {
   if (token !== constructorToken) {
     throw new TypeError('Illegal constructor');
   }
-  this._registeredOnTimeline = false;
-  this._sequenceNumber = playerSequenceNumber++;
-  this._timeline = timeline;
-  this._startTime =
-      this.timeline.currentTime === null ? 0 : this.timeline.currentTime;
-  this._timeDrift = 0.0;
-  this._pauseTime = undefined;
-  this._playbackRate = 1.0;
-  this._hasTicked = false;
+  enterModifyCurrentAnimationState();
+  try {
+    this._registeredOnTimeline = false;
+    this._sequenceNumber = playerSequenceNumber++;
+    this._timeline = timeline;
+    this._startTime =
+        this.timeline.currentTime === null ? 0 : this.timeline.currentTime;
+    this._timeDrift = 0.0;
+    this._pauseTime = undefined;
+    this._playbackRate = 1.0;
 
-  this.source = source;
-  this._checkForHandlers();
-  this._lastCurrentTime = undefined;
+    this.source = source;
+    this._checkForHandlers();
+    this._lastCurrentTime = undefined;
 
-  playersAreSorted = false;
-  maybeRestartAnimation();
+    playersAreSorted = false;
+    maybeRestartAnimation();
+  } finally {
+    exitModifyCurrentAnimationState(ensureRetickBeforeGetComputedStyle);
+  }
 };
 
 Player.prototype = {
@@ -295,7 +299,7 @@ Player.prototype = {
       }
       this._checkForHandlers();
     } finally {
-      exitModifyCurrentAnimationState(this._hasTicked);
+      exitModifyCurrentAnimationState(repeatLastTick);
     }
   },
   get source() {
@@ -307,8 +311,7 @@ Player.prototype = {
     try {
       this._currentTime = currentTime;
     } finally {
-      exitModifyCurrentAnimationState(
-          this._hasTicked || this.startTime + this._timeDrift <= lastTickTime);
+      exitModifyCurrentAnimationState(repeatLastTick);
     }
   },
   get currentTime() {
@@ -344,8 +347,7 @@ Player.prototype = {
       this._update();
       maybeRestartAnimation();
     } finally {
-      exitModifyCurrentAnimationState(
-          this._hasTicked || this.startTime + this._timeDrift <= lastTickTime);
+      exitModifyCurrentAnimationState(repeatLastTick);
     }
   },
   get startTime() {
@@ -375,7 +377,7 @@ Player.prototype = {
       this._playbackRate = playbackRate;
       this.currentTime = cachedCurrentTime;
     } finally {
-      exitModifyCurrentAnimationState(this._hasTicked);
+      exitModifyCurrentAnimationState(repeatLastTick);
     }
   },
   get playbackRate() {
@@ -554,7 +556,7 @@ TimedItem.prototype = {
       this._updateTimeMarkers();
     } finally {
       exitModifyCurrentAnimationState(
-          Boolean(this.player) && this.player._hasTicked);
+          Boolean(this.player) ? repeatLastTick : null);
     }
   },
   _intrinsicDuration: function() {
@@ -574,7 +576,7 @@ TimedItem.prototype = {
       this._updateInternalState();
     } finally {
       exitModifyCurrentAnimationState(
-          Boolean(this.player) && this.player._hasTicked);
+          Boolean(this.player) ? repeatLastTick : null);
     }
   },
   // We push time down to children. We could instead have children pull from
@@ -1114,7 +1116,7 @@ var Animation = function(target, animationEffect, timingInput) {
     this.effect = interpretAnimationEffect(animationEffect);
     this._target = target;
   } finally {
-    exitModifyCurrentAnimationState(false);
+    exitModifyCurrentAnimationState(null);
   }
 };
 
@@ -1155,7 +1157,7 @@ Animation.prototype = createObject(TimedItem.prototype, {
       this.specified._invalidateTimingFunction();
     } finally {
       exitModifyCurrentAnimationState(
-          Boolean(this.player) && this.player._hasTicked);
+          Boolean(this.player) ? repeatLastTick : null);
     }
   },
   get effect() {
@@ -1388,7 +1390,7 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
       return result;
     } finally {
       exitModifyCurrentAnimationState(
-          Boolean(this.player) && this.player._hasTicked);
+          Boolean(this.player) ? repeatLastTick : null);
     }
   },
   _isInclusiveAncestor: function(item) {
@@ -1646,7 +1648,7 @@ var AnimationEffect = function(token, accumulate) {
   try {
     this.accumulate = accumulate;
   } finally {
-    exitModifyCurrentAnimationState(false);
+    exitModifyCurrentAnimationState(null);
   }
 };
 
@@ -1660,7 +1662,7 @@ AnimationEffect.prototype = {
       // Use the default value if an invalid string is specified.
       this._accumulate = value === 'sum' ? 'sum' : 'none';
     } finally {
-      exitModifyCurrentAnimationState(true);
+      exitModifyCurrentAnimationState(repeatLastTick);
     }
   },
   _sample: abstractMethod,
@@ -1696,7 +1698,7 @@ var MotionPathEffect = function(path, autoRotate, angle, composite,
       this.segments = tempPath.pathSegList;
     }
   } finally {
-    exitModifyCurrentAnimationState(false);
+    exitModifyCurrentAnimationState(null);
   }
 };
 
@@ -1710,7 +1712,7 @@ MotionPathEffect.prototype = createObject(AnimationEffect.prototype, {
       // Use the default value if an invalid string is specified.
       this._composite = value === 'add' ? 'add' : 'replace';
     } finally {
-      exitModifyCurrentAnimationState(true);
+      exitModifyCurrentAnimationState(repeatLastTick);
     }
   },
   _sample: function(timeFraction, currentIteration, target) {
@@ -1761,7 +1763,7 @@ MotionPathEffect.prototype = createObject(AnimationEffect.prototype, {
     try {
       this._autoRotate = String(autoRotate);
     } finally {
-      exitModifyCurrentAnimationState(true);
+      exitModifyCurrentAnimationState(repeatLastTick);
     }
   },
   get autoRotate() {
@@ -1774,7 +1776,7 @@ MotionPathEffect.prototype = createObject(AnimationEffect.prototype, {
       //       says it's a double.
       this._angle = Number(angle);
     } finally {
-      exitModifyCurrentAnimationState(true);
+      exitModifyCurrentAnimationState(repeatLastTick);
     }
   },
   get angle() {
@@ -1799,7 +1801,7 @@ MotionPathEffect.prototype = createObject(AnimationEffect.prototype, {
       }
       this._cumulativeLengths = cumulativeLengths;
     } finally {
-      exitModifyCurrentAnimationState(true);
+      exitModifyCurrentAnimationState(repeatLastTick);
     }
   },
   get segments() {
@@ -1963,7 +1965,7 @@ var KeyframeEffect = function(oneOrMoreKeyframeDictionaries,
 
     this.setFrames(oneOrMoreKeyframeDictionaries);
   } finally {
-    exitModifyCurrentAnimationState(false);
+    exitModifyCurrentAnimationState(null);
   }
 };
 
@@ -1977,7 +1979,7 @@ KeyframeEffect.prototype = createObject(AnimationEffect.prototype, {
       // Use the default value if an invalid string is specified.
       this._composite = value === 'add' ? 'add' : 'replace';
     } finally {
-      exitModifyCurrentAnimationState(true);
+      exitModifyCurrentAnimationState(repeatLastTick);
     }
   },
   getFrames: function() {
@@ -1994,7 +1996,7 @@ KeyframeEffect.prototype = createObject(AnimationEffect.prototype, {
       // Set lazily
       this._cachedPropertySpecificKeyframes = null;
     } finally {
-      exitModifyCurrentAnimationState(true);
+      exitModifyCurrentAnimationState(repeatLastTick);
     }
   },
   _sample: function(timeFraction, currentIteration, target) {
@@ -4787,7 +4789,7 @@ var copyInlineStyle = function(sourceStyle, destinationStyle) {
 
 var retickThenGetComputedStyle = function() {
   repeatLastTick();
-  // ticker() will restore getComputedStyle() back to normal.
+  ensureOriginalGetComputedStyle();
   return window.getComputedStyle.apply(this, arguments);
 };
 
@@ -5232,16 +5234,16 @@ var modifyCurrentAnimationStateDepth = 0;
 var enterModifyCurrentAnimationState = function() {
   modifyCurrentAnimationStateDepth++;
 };
-var exitModifyCurrentAnimationState = function(shouldRepeat) {
+var exitModifyCurrentAnimationState = function(updateCallback) {
   modifyCurrentAnimationStateDepth--;
-  // shouldRepeat is set false when we know we can't possibly affect the current
-  // state (eg. a TimedItem which is not attached to a player). We track the
-  // depth of recursive calls trigger just one repeat per entry. Only the value
-  // of shouldRepeat from the outermost call is considered, this allows certain
+  // updateCallback is set to null when we know we can't possibly affect the
+  // current state (eg. a TimedItem which is not attached to a player). We track
+  // the depth of recursive calls trigger just one repeat per entry. Only the
+  // updateCallback from the outermost call is considered, this allows certain
   // locatations (eg. constructors) to override nested calls that would
-  // otherwise set shouldRepeat unconditionally.
-  if (modifyCurrentAnimationStateDepth === 0 && shouldRepeat) {
-    repeatLastTick();
+  // otherwise set updateCallback unconditionally.
+  if (modifyCurrentAnimationStateDepth === 0 && updateCallback) {
+    updateCallback();
   }
 };
 
@@ -5286,7 +5288,6 @@ var ticker = function(rafTime, isRepeat) {
   var animations = [];
   var finishedPlayers = [];
   PLAYERS.forEach(function(player) {
-    player._hasTicked = true;
     player._update();
     finished = finished && player._isPastEndOfActiveInterval();
     if (!player._hasFutureEffect()) {
