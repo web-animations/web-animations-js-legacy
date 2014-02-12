@@ -34,7 +34,7 @@ var player = document.timeline.play(new Animation(
 // Player's currentTime.
 timing_test(function() {
     at(0.1, function() {
-      player.paused = true;
+      player.pause();
       assert_equals(player.currentTime, 0.1);
     });
   },
@@ -44,7 +44,7 @@ timing_test(function() {
 // Test that repeatedly setting Player.paused to false has no effect.
 timing_test(function() {
     at(0.2, function() {
-      player.paused = false;
+      player.play();
       assert_equals(player.currentTime, 0.1);
     });
   },

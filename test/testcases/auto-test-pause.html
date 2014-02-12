@@ -74,9 +74,9 @@ var pgroup2 = new ParGroup([a3, a4], {name: "p2"});
 var player = document.timeline.play(
     new SeqGroup([pgroup1, pgroup2], {name: "s"}));
 
-at(1.0, function() { player.paused = true; });
-at(2.0, function() { player.paused = false; });
-at(4.0, function() { player.paused = true; });
-at(5.0, function() { player.paused = false; });
+at(1.0, function() { player.pause(); });
+at(2.0, function() { player.play(); });
+at(4.0, function() { player.pause(); });
+at(5.0, function() { player.play(); });
 
 </script>
