@@ -288,7 +288,6 @@ else:
 
 import subunit
 import testtools
-import unittest
 
 if args.list:
     data = file("test/testcases.js").read()
@@ -307,16 +306,17 @@ summary = testtools.StreamSummary()
 
 # Output information to stdout
 if not args.subunit:
+    # Output test failures
+    result_streams = [testtools.TextTestResult(sys.stdout)]
+    if args.verbose:
+        import unittest
+        # Output individual test progress
+        result_streams.insert(0,
+            unittest.TextTestResult(
+                unittest.runner._WritelnDecorator(sys.stdout), False, 2))
     # Human readable test output
     pertest = testtools.StreamToExtendedDecorator(
-        testtools.MultiTestResult(
-            # Individual test progress
-            unittest.TextTestResult(
-                unittest.runner._WritelnDecorator(sys.stdout), False, 2),
-            # End of run, summary of failures.
-            testtools.TextTestResult(sys.stdout),
-        )
-    )
+        testtools.MultiTestResult(*result_streams))
 else:
     from subunit.v2 import StreamResultToBytes
     pertest = StreamResultToBytes(sys.stdout)
