@@ -711,10 +711,13 @@ try:
                 break
 
             try:
-                status = browser.find_element_by_id('status-box').text.strip()
-            except selenium_exceptions.NoSuchElementException, e:
-                status = "Unknown"
-            print "Still waiting tests to finish", repr(v), status
+                progress = browser.execute_script('return window.getTestRunnerProgress()')
+                status = '%s/%s (%s%%)' % (progress['completed'], progress['total'],
+                    100 * progress['completed'] // progress['total'])
+            except selenium_exceptions.WebDriverException, e:
+                status = e
+
+            print 'Running tests...', status
             sys.stdout.flush()
             time.sleep(1)
 
