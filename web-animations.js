@@ -4712,7 +4712,8 @@ CompositedPropertyMap.prototype = {
   },
   captureBaseValues: function() {
     for (var property in this.properties) {
-      if (this.stackDependsOnUnderlyingValue(this.properties[property])) {
+      var stack = this.properties[property];
+      if (stack.length > 0 && this.stackDependsOnUnderlyingValue(stack)) {
         var baseValue = fromCssValue(property, getValue(this.target, property));
         // TODO: Decide what to do with elements not in the DOM.
         ASSERT_ENABLED && assert(
