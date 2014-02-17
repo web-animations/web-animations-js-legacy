@@ -112,7 +112,7 @@ for (var shorthand in testCases) {
 
   var keyframe = {};
   keyframe[shorthand] = value;
-  document.timeline.play(new Animation(testDiv, [keyframe], 2));
+  document.timeline.play(new Animation(testDiv, [keyframe], {duration: 2, fill: 'forwards'}));
 }
 
 </script>

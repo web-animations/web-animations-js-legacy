@@ -38,14 +38,15 @@ limitations under the License.
 "use strict";
 
 var effect = [{left: "100px"}, {left: "200px"}];
+var timing = {duration: 1, fill: 'forwards'};
 
 // Top level animation.
 document.timeline.play(new Animation(document.getElementById("a"),
-    effect, 1.0));
+    effect, timing));
 
 // Animation in group.
 document.timeline.play(new ParGroup([
-  new Animation(document.getElementById("c"), effect, 1.0)
+  new Animation(document.getElementById("c"), effect, timing)
 ], {iterations: 3}));
 
 </script>

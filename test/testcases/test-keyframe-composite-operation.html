@@ -68,7 +68,7 @@ function testComposite(property, initialValue, composite, keyframeValue, offset,
   keyframes[property] = keyframeValue;
   keyframes.composite = composite;
   timing_test(function() {
-    document.timeline.play(new Animation(target, keyframes, 1.0));
+    document.timeline.play(new Animation(target, keyframes, {duration: 1, fill: 'forwards'}));
     at(offset, function() {
       var styles = {};
       styles[property] = expectedValue;
