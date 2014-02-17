@@ -95,7 +95,7 @@ var TimingDict = function(timingInput) {
 TimingDict.prototype = {
   delay: 0,
   endDelay: 0,
-  fill: 'forwards',
+  fill: 'auto',
   iterationStart: 0,
   iterations: 1,
   duration: 'auto',
@@ -566,6 +566,7 @@ var TimedItem = function(token, timingInput) {
   this._updateInternalState();
   this._handlers = {};
   this._onHandlers = {};
+  this._fill = this._resolveFillMode(this.specified.fill);
 };
 
 TimedItem.prototype = {
@@ -662,7 +663,9 @@ TimedItem.prototype = {
   _intrinsicDuration: function() {
     return 0.0;
   },
+  _resolveFillMode: abstractMethod,
   _updateInternalState: function() {
+    this._fill = this._resolveFillMode(this.specified.fill);
     if (this.parent) {
       this.parent._childrenStateModified();
     } else if (this._player) {
@@ -690,8 +693,8 @@ TimedItem.prototype = {
   },
   _updateAnimationTime: function() {
     if (this.localTime < this.specified.delay) {
-      if (this.specified.fill === 'backwards' ||
-          this.specified.fill === 'both') {
+      if (this._fill === 'backwards' ||
+          this._fill === 'both') {
         this._animationTime = 0;
       } else {
         this._animationTime = null;
@@ -700,8 +703,8 @@ TimedItem.prototype = {
         this.specified.delay + this.activeDuration) {
       this._animationTime = this.localTime - this.specified.delay;
     } else {
-      if (this.specified.fill === 'forwards' ||
-          this.specified.fill === 'both') {
+      if (this._fill === 'forwards' ||
+          this._fill === 'both') {
         this._animationTime = this.activeDuration;
       } else {
         this._animationTime = null;
@@ -900,7 +903,7 @@ TimedItem.prototype = {
   // are not in effect unless current.
   // TODO: Complete this restriction.
   _hasFutureEffect: function() {
-    return this._isCurrent() || this.specified.fill !== 'none';
+    return this._isCurrent() || this._fill !== 'none';
   },
   set onstart(func) {
     this._setOnHandler('start', func);
@@ -1222,6 +1225,9 @@ var Animation = function(target, animationEffect, timingInput) {
 };
 
 Animation.prototype = createObject(TimedItem.prototype, {
+  _resolveFillMode: function(fillMode) {
+    return fillMode === 'auto' ? 'none' : fillMode;
+  },
   _sample: function() {
     if (isDefinedAndNotNull(this.effect) &&
         !(this.target instanceof PseudoElementReference)) {
@@ -1338,6 +1344,9 @@ var TimingGroup = function(token, type, children, timing) {
 };
 
 TimingGroup.prototype = createObject(TimedItem.prototype, {
+  _resolveFillMode: function(fillMode) {
+    return fillMode === 'auto' ? 'both' : fillMode;
+  },
   _childrenStateModified: function() {
     // See _updateChildStartTimes().
     this._isInChildrenStateModified = true;
@@ -1604,6 +1613,12 @@ var MediaReference = function(mediaElement, timing, parent, delta) {
 };
 
 MediaReference.prototype = createObject(TimedItem.prototype, {
+  _resolveFillMode: function(fillMode) {
+    // TODO: Fill modes for MediaReferences are still undecided. The spec is not
+    // clear what 'auto' should mean for TimedItems other than Animations and
+    // groups.
+    return fillMode === 'auto' ? 'none' : fillMode;
+  },
   _intrinsicDuration: function() {
     // TODO: This should probably default to zero. But doing so means that as
     // soon as our inheritedTime is zero, the polyfill deems the animation to be
