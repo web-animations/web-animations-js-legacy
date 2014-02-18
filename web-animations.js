@@ -101,8 +101,7 @@ TimingDict.prototype = {
   duration: 'auto',
   playbackRate: 1,
   direction: 'normal',
-  easing: 'linear',
-  _easingTimes: 'distribute'
+  easing: 'linear'
 };
 
 
@@ -119,7 +118,7 @@ var Timing = function(token, timingInput, changeHandler) {
 Timing.prototype = {
   _timingFunction: function(timedItem) {
     var timingFunction = TimingFunction.createFromString(
-        this.easing, this._easingTimes, timedItem);
+        this.easing, timedItem);
     this._timingFunction = function() {
       return timingFunction;
     };
@@ -135,13 +134,6 @@ Timing.prototype = {
   _duration: function() {
     var value = this._dict.duration;
     return typeof value === 'number' ? value : 'auto';
-  },
-  getEasingTimes: function() {
-    return this._easingTimes;
-  },
-  setEasingTimes: function(times) {
-    this._easingTimes = times;
-    this._invalidateTimingFunction();
   },
   _clone: function() {
     return new Timing(
@@ -623,6 +615,7 @@ TimedItem.prototype = {
             this.specified.iterationStart + this.specified._iterations(),
             1.0) :
         this._modulusWithClosedOpenRange(this.specified.iterationStart, 1.0));
+    var timingFunction = this.specified._timingFunction(this);
     this._timeFraction = (
         this._isCurrentDirectionForwards() ?
         unscaledFraction :
@@ -630,8 +623,9 @@ TimedItem.prototype = {
     ASSERT_ENABLED && assert(
         this._timeFraction >= 0.0 && this._timeFraction <= 1.0,
         'Time fraction should be in the range [0, 1]');
-    this._timeFraction =
-        this.specified._timingFunction(this).scaleTime(this._timeFraction);
+    if (timingFunction) {
+      this._timeFraction = timingFunction.scaleTime(this._timeFraction);
+    }
   },
   _getAdjustedAnimationTime: function(animationTime) {
     var startOffset =
@@ -670,10 +664,11 @@ TimedItem.prototype = {
         this._timeFraction + ' ' + this._iterationTime + ' ' +
         this.duration + ' ' + isAtEndOfIterations + ' ' +
         unscaledIterationTime);
-    this._timeFraction =
-        this.specified._timingFunction(this).scaleTime(this._timeFraction);
-    this._iterationTime = this.duration === Infinity ?
-        this._iterationTime : this._timeFraction * this.duration;
+    var timingFunction = this.specified._timingFunction(this);
+    if (timingFunction) {
+      this._timeFraction = timingFunction.scaleTime(this._timeFraction);
+    }
+    this._iterationTime = this._timeFraction * this.duration;
   },
   _updateTimeMarkers: function() {
     if (this.localTime === null) {
@@ -1740,12 +1735,6 @@ MotionPathEffect.prototype = createObject(AnimationEffect.prototype, {
   clone: function() {
     return new MotionPathEffect(this._path.getAttribute('d'));
   },
-  _positionListForTiming: function() {
-    // TODO: Handle aligning chained function segments with MotionPathEffect.
-    console.warn('Alignment of chained timing functions with path animation ' +
-        'effects is not yet implemented');
-    return [0, 1];
-  },
   toString: function() {
     return '<MotionPathEffect>';
   },
@@ -2260,17 +2249,6 @@ KeyframeEffect.prototype = createObject(AnimationEffect.prototype, {
     }
 
     return distributedKeyframes;
-  },
-  _positionListForTiming: function() {
-    var positionList =
-        this._getDistributedKeyframes().map(function(x) { return x.offset; });
-    if (positionList[0] !== 0) {
-      positionList.unshift(0);
-    }
-    if (positionList[positionList.length - 1] !== 1) {
-      positionList.push(1);
-    }
-    return positionList;
   }
 });
 
@@ -2353,194 +2331,35 @@ var TimingFunction = function() {
 };
 
 TimingFunction.prototype.scaleTime = abstractMethod;
-TimingFunction.prototype.clone = abstractMethod;
 
-TimingFunction.createFromString = function(easing, easingPoints, timedItem) {
-  var normalizedChain = TimingFunction.createNormalizedChain(easing,
-      easingPoints, timedItem);
-  ASSERT_ENABLED && assert(normalizedChain.length > 0);
-  if (normalizedChain.length === 1) {
-    ASSERT_ENABLED && assert(normalizedChain[0].range.min === 0);
-    ASSERT_ENABLED && assert(normalizedChain[0].range.max === 1);
-    return normalizedChain[0].timingFunction;
-  }
-  return new ChainedTimingFunction(normalizedChain);
-};
-
-// Returns an array of objects, where each object contains a timing function and
-// the range over which it applies.
-TimingFunction.createNormalizedChain = function(easing, easingPoints,
-    timedItem) {
-  var chain = TimingFunction.createChain(easing, timedItem);
-  ASSERT_ENABLED && assert(chain.length > 0);
-
-  var normalizedPositionList = TimingFunction.createNormalizedPositionList(
-      easingPoints, chain.length, timedItem);
-  ASSERT_ENABLED && assert(TimingFunction.isValidPositionList(
-      normalizedPositionList));
-
-  var normalizedChain = [];
-  var lastTimingFunction = chain[chain.length - 1];
-  for (var i = 1; i < normalizedPositionList.length; i++) {
-    var range = {
-      min: normalizedPositionList[i - 1],
-      max: normalizedPositionList[i]
-    };
-    var timingFunction = i - 1 < chain.length ?
-        chain[i - 1] : lastTimingFunction.clone();
-    if (timingFunction instanceof PacedTimingFunction) {
-      timingFunction.setRange(range);
-    }
-    normalizedChain.push({timingFunction: timingFunction, range: range});
-  }
-  return normalizedChain;
-};
-
-TimingFunction.createChain = function(easing, timedItem) {
-  var chain = [];
-  if (typeof easing === 'string') {
-    easing = easing.trim();
-    while (easing.length > 0) {
-      var result = TimingFunction.createComponentFromString(easing, timedItem);
-      if (result === null) {
-        chain = [];
-        break;
-      }
-      chain.push(result.component);
-      easing = result.remainingString.trim();
-    }
-  }
-  if (chain.length === 0) {
-    return [presetTimingFunctions.linear];
-  }
-  return chain;
-};
-
-TimingFunction.createNormalizedPositionList = function(easingPoints,
-    numTimingFunctions, timedItem) {
-  if (easingPoints === 'distribute') {
-    return TimingFunction.generateDistributedPositionList(numTimingFunctions);
-  } else if (easingPoints === 'align') {
-    if (timedItem instanceof Animation) {
-      return timedItem.effect._positionListForTiming();
-    }
-    return TimingFunction.generateDistributedPositionList(numTimingFunctions);
-  }
-  return TimingFunction.isValidPositionList(easingPoints) ? easingPoints :
-      TimingFunction.generateDistributedPositionList(numTimingFunctions);
-};
-
-TimingFunction.generateDistributedPositionList = function(numTimingFunctions) {
-  var positionList = [0];
-  for (var i = 1; i <= numTimingFunctions; i++) {
-    positionList.push(i / numTimingFunctions);
-  }
-  return positionList;
-};
-
-TimingFunction.isValidPositionList = function(positionList) {
-  if (!Array.isArray(positionList) || positionList[0] !== 0 ||
-      positionList[positionList.length - 1] !== 1) {
-    return false;
-  }
-  for (var i = 1; i < positionList.length; i++) {
-    // Test for a negative condition to correctly handle non-numeric values.
-    if (!(positionList[i] > positionList[i - 1])) {
-      return false;
-    }
-  }
-  return true;
-};
-
-// Creates a timing function from the first valid portion of the supplied
-// string. Returns an object containg the created timing function and the
-// remaining string, or null on failure.
-TimingFunction.createComponentFromString = function(spec, timedItem) {
-  var toFirstSpace = spec.split(' ')[0];
-  var preset = presetTimingFunctions[toFirstSpace];
+TimingFunction.createFromString = function(spec, timedItem) {
+  var preset = presetTimingFunctions[spec];
   if (preset) {
-    return {
-      component: preset,
-      remainingString: spec.substring(toFirstSpace.length)
-    };
+    return preset;
   }
-  if (spec.indexOf('paced') === 0) {
-    var remainingString = spec.substring(5);
+  if (spec === 'paced') {
     if (timedItem instanceof Animation &&
         timedItem.effect instanceof MotionPathEffect) {
-      return {
-        component: new PacedTimingFunction(timedItem.effect),
-        remainingString: remainingString
-      };
+      return new PacedTimingFunction(timedItem.effect);
     }
-    return {
-      component: presetTimingFunctions.linear,
-      remainingString: remainingString
-    };
+    return presetTimingFunctions.linear;
   }
-  var stepMatch = /^steps\(\s*(\d+)\s*,\s*(start|end|middle)\s*\)/.exec(spec);
+  var stepMatch = /steps\(\s*(\d+)\s*,\s*(start|end|middle)\s*\)/.exec(spec);
   if (stepMatch) {
-    return {
-      component: new StepTimingFunction(Number(stepMatch[1]), stepMatch[2]),
-      remainingString: spec.substring(stepMatch[0].length)
-    };
+    return new StepTimingFunction(Number(stepMatch[1]), stepMatch[2]);
   }
   var bezierMatch =
-      /^cubic-bezier\(([^,]*),([^,]*),([^,]*),([^)]*)\)/.exec(spec);
+      /cubic-bezier\(([^,]*),([^,]*),([^,]*),([^)]*)\)/.exec(spec);
   if (bezierMatch) {
-    return {
-      component: new CubicBezierTimingFunction([
-        Number(bezierMatch[1]),
-        Number(bezierMatch[2]),
-        Number(bezierMatch[3]),
-        Number(bezierMatch[4])
-      ]),
-      remainingString: spec.substring(bezierMatch[0].length)
-    };
+    return new CubicBezierTimingFunction([
+      Number(bezierMatch[1]),
+      Number(bezierMatch[2]),
+      Number(bezierMatch[3]),
+      Number(bezierMatch[4])
+    ]);
   }
-  return null;
+  return presetTimingFunctions.linear;
 };
-
-
-
-/** @constructor */
-var ChainedTimingFunction = function(chain) {
-  this._chain = chain;
-};
-
-ChainedTimingFunction.prototype = createObject(TimingFunction.prototype, {
-  scaleTime: function(fraction) {
-    for (var i = 0; i < this._chain.length; i++) {
-      var component = this._chain[i];
-      if (fraction < component.range.max || i === this._chain.length - 1) {
-        return interp(
-            component.range.min,
-            component.range.max,
-            component.timingFunction.scaleTime(
-                this._relativeRange(component.range, fraction)));
-      }
-    }
-    ASSERT_ENABLED && assert(false, 'Logic error in ChainedTimingFunction');
-  },
-  _relativeRange: function(range, x) {
-    return (x - range.min) / (range.max - range.min);
-  }
-});
-
-
-
-/** @constructor */
-var LinearTimingFunction = function() {
-};
-
-LinearTimingFunction.prototype = createObject(TimingFunction.prototype, {
-  scaleTime: function(fraction) {
-    return fraction;
-  },
-  clone: function() {
-    return this;
-  }
-});
 
 
 
@@ -2572,9 +2391,6 @@ CubicBezierTimingFunction.prototype = createObject(TimingFunction.prototype, {
     var xDiff = this.map[fst][0] - this.map[fst - 1][0];
     var p = (fraction - this.map[fst - 1][0]) / xDiff;
     return this.map[fst - 1][1] + p * yDiff;
-  },
-  clone: function() {
-    return this;
   }
 });
 
@@ -2598,14 +2414,11 @@ StepTimingFunction.prototype = createObject(TimingFunction.prototype, {
       fraction += stepSize / 2;
     }
     return fraction - fraction % stepSize;
-  },
-  clone: function() {
-    return this;
   }
 });
 
 var presetTimingFunctions = {
-  'linear': new LinearTimingFunction(),
+  'linear': null,
   'ease': new CubicBezierTimingFunction([0.25, 0.1, 0.25, 1.0]),
   'ease-in': new CubicBezierTimingFunction([0.42, 0, 1.0, 1.0]),
   'ease-out': new CubicBezierTimingFunction([0, 0, 0.58, 1.0]),
@@ -2667,16 +2480,13 @@ PacedTimingFunction.prototype = createObject(TimingFunction.prototype, {
     return leftIndex;
   },
   lengthAtIndex: function(i) {
-    var cumulativeLengths = this._pathEffect._cumulativeLengths;
-    ASSERT_ENABLED && assert(i >= 0 && i <= cumulativeLengths.length - 1);
+    ASSERT_ENABLED &&
+        console.assert(i >= 0 && i <= cumulativeLengths.length - 1);
     var leftIndex = Math.floor(i);
-    var startLength = cumulativeLengths[leftIndex];
-    var endLength = cumulativeLengths[leftIndex + 1];
+    var startLength = this._pathEffect._cumulativeLengths[leftIndex];
+    var endLength = this._pathEffect._cumulativeLengths[leftIndex + 1];
     var indexFraction = i % 1;
     return interp(startLength, endLength, indexFraction);
-  },
-  clone: function() {
-    return new PacedTimingFunction(this._pathEffect);
   }
 });
 
@@ -5378,11 +5188,7 @@ window._WebAnimationsTestingUtilities = {
   _hsl2rgb: hsl2rgb,
   _types: propertyTypes,
   _knownPlayers: PLAYERS,
-  _createNormalizedChain: TimingFunction.createNormalizedChain,
-  _cubicBezierTimingFunction: CubicBezierTimingFunction,
-  _linearTimingFunction: LinearTimingFunction,
-  _pacedTimingFunction: PacedTimingFunction,
-  _enableAsserts: function() { ASSERT_ENABLED = true; }
+  _pacedTimingFunction: PacedTimingFunction
 };
 
 })();
