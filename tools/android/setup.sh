@@ -101,13 +101,18 @@ else
   CHROME_ACT=.ChromiumTestShellActivity
 fi
 
-$ADB install $CHROME_APK
+function start_chrome () {
+  $ADB shell am start -a android.intent.action.MAIN -n $CHROME_APP/$CHROME_ACT -W
+}
+
+if start_chrome | grep -q "does not exist"; then
+  $ADB install $CHROME_APK
+fi
 
 # Check the chrome binary actually starts without segfaulting
-$ADB shell input keyevent 82   # Send the menu key to unlock the screen
-$ADB shell am start -a android.intent.action.MAIN -n $CHROME_APP/$CHROME_ACT -W  # Start chrome
+start_chrome
 sleep 2
-if $ADB shell am start -a android.intent.action.MAIN -n $CHROME_APP/$CHROME_ACT -W | grep -q "Activity not started, its current task"; then
+if start_chrome | grep -q "its current task has been brought to the front"; then
   echo "Chrome seems to have started okay."
 else
   echo "Chrome seems to have crashed!"
