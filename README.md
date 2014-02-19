@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/web-animations/web-animations-js.png?branch=master)](https://travis-ci.org/web-animations/web-animations-js)
+
 ## Learn the tech
 
 ### Why Web Animations?
