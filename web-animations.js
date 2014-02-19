@@ -387,6 +387,10 @@ Player.prototype = {
       this._registerOnTimeline();
     }
   },
+  _hasFutureAnimation: function() {
+    return this.source === null || this.playbackRate === 0 ||
+        this.source._hasFutureAnimation(this.playbackRate > 0);
+  },
   _isPastEndOfActiveInterval: function() {
     return this.source === null ||
         this.source._isPastEndOfActiveInterval();
@@ -767,6 +771,10 @@ TimedItem.prototype = {
     }
   },
   _getLeafItemsInEffectImpl: abstractMethod,
+  _hasFutureAnimation: function(timeDirectionForwards) {
+    return timeDirectionForwards ? this._inheritedTime < this.endTime :
+        this._inheritedTime > this.startTime;
+  },
   _isPastEndOfActiveInterval: function() {
     return this._inheritedTime >= this.endTime;
   },
@@ -5278,7 +5286,7 @@ var ticker = function(rafTime, isRepeat) {
   PLAYERS.forEach(function(player) {
     player._hasTicked = true;
     player._update();
-    finished = finished && player._isPastEndOfActiveInterval();
+    finished = finished && !player._hasFutureAnimation();
     if (!player._hasFutureEffect()) {
       finishedPlayers.push(player);
     }

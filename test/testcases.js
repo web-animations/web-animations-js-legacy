@@ -68,6 +68,7 @@ var tests = [
   'test-pseudo-element-reference.html',
   'test-repeated-pause.html',
   'test-restart.html',
+  'test-reversed-player-active-phase.html',
   'test-rotation-not-reversed.html',
   'test-update-state.html',
   'unit-test-clone.html',
