@@ -1078,9 +1078,7 @@ TimingEvent.prototype = Object.create(window.Event.prototype, {
 });
 
 var isEffectCallback = function(animationEffect) {
-  // TODO: How does WebIDL actually differentiate different callback interfaces?
-  return isDefinedAndNotNull(animationEffect) &&
-      typeof animationEffect === 'function';
+  return typeof animationEffect === 'function';
 };
 
 var interpretAnimationEffect = function(animationEffect) {
