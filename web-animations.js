@@ -2006,7 +2006,8 @@ var expandShorthand = function(property, value, result) {
 var normalizeKeyframeDictionary = function(properties) {
   var result = {
     offset: null,
-    composite: null
+    composite: null,
+    easing: presetTimingFunctions.linear
   };
   var animationProperties = [];
   for (var property in properties) {
@@ -2020,6 +2021,8 @@ var normalizeKeyframeDictionary = function(properties) {
           properties.composite === 'replace') {
         result.composite = properties.composite;
       }
+    } else if (property === 'easing') {
+      result.easing = TimingFunction.createFromString(properties.easing);
     } else {
       // TODO: Check whether this is a supported property.
       animationProperties.push(property);
@@ -2186,6 +2189,9 @@ KeyframeEffect.prototype = createObject(AnimationEffect.prototype, {
     }
     var intervalDistance = (timeFraction - startKeyframe.offset) /
         (endKeyframe.offset - startKeyframe.offset);
+    if (startKeyframe.easing) {
+      intervalDistance = startKeyframe.easing.scaleTime(intervalDistance);
+    }
     return new BlendedCompositableValue(
         new AddReplaceCompositableValue(startKeyframe.rawValue(),
             this._compositeForKeyframe(startKeyframe)),
@@ -2207,8 +2213,8 @@ KeyframeEffect.prototype = createObject(AnimationEffect.prototype, {
         }
         var frame = distributedFrames[i];
         this._cachedPropertySpecificKeyframes[property].push(
-            new PropertySpecificKeyframe(frame.offset,
-                frame.composite, property, frame.cssValues[property]));
+            new PropertySpecificKeyframe(frame.offset, frame.composite,
+                frame.easing, property, frame.cssValues[property]));
       }
     }
 
@@ -2221,12 +2227,12 @@ KeyframeEffect.prototype = createObject(AnimationEffect.prototype, {
       // Add synthetic keyframes at offsets of 0 and 1 if required.
       if (frames[0].offset !== 0.0) {
         var keyframe = new PropertySpecificKeyframe(0.0, 'add',
-            property, cssNeutralValue);
+            presetTimingFunctions.linear, property, cssNeutralValue);
         frames.unshift(keyframe);
       }
       if (frames[frames.length - 1].offset !== 1.0) {
         var keyframe = new PropertySpecificKeyframe(1.0, 'add',
-            property, cssNeutralValue);
+            presetTimingFunctions.linear, property, cssNeutralValue);
         frames.push(keyframe);
       }
       ASSERT_ENABLED && assert(
@@ -2372,7 +2378,7 @@ KeyframeEffect.prototype = createObject(AnimationEffect.prototype, {
  *
  * @constructor
  */
-var KeyframeInternal = function(offset, composite) {
+var KeyframeInternal = function(offset, composite, easing) {
   ASSERT_ENABLED && assert(
       typeof offset === 'number' || offset === null,
       'Invalid offset value');
@@ -2381,6 +2387,7 @@ var KeyframeInternal = function(offset, composite) {
       'Invalid composite value');
   this.offset = offset;
   this.composite = composite;
+  this.easing = easing;
   this.cssValues = {};
 };
 
@@ -2405,9 +2412,12 @@ KeyframeInternal.createFromNormalizedProperties = function(properties) {
   ASSERT_ENABLED && assert(
       isDefinedAndNotNull(properties) && typeof properties === 'object',
       'Properties must be an object');
-  var keyframe = new KeyframeInternal(properties.offset, properties.composite);
+  var keyframe = new KeyframeInternal(properties.offset, properties.composite,
+      properties.easing);
   for (var candidate in properties) {
-    if (candidate !== 'offset' && candidate !== 'composite') {
+    if (candidate !== 'offset' &&
+        candidate !== 'composite' &&
+        candidate !== 'easing') {
       keyframe.addPropertyValuePair(candidate, properties[candidate]);
     }
   }
@@ -2417,9 +2427,11 @@ KeyframeInternal.createFromNormalizedProperties = function(properties) {
 
 
 /** @constructor */
-var PropertySpecificKeyframe = function(offset, composite, property, cssValue) {
+var PropertySpecificKeyframe = function(offset, composite, easing, property,
+    cssValue) {
   this.offset = offset;
   this.composite = composite;
+  this.easing = easing;
   this.property = property;
   this.cssValue = cssValue;
   // Calculated lazily
