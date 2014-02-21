@@ -749,7 +749,11 @@ finally:
     output.stopTestRun()
 
     if args.browser == "Chrome":
-        shutil.copy(os.path.join(user_data_dir, "chrome_debug.log"), ".")
+        log_path = os.path.join(user_data_dir, "chrome_debug.log")
+        if os.path.exists(log_path):
+            shutil.copy(log_path, ".")
+        else:
+            print "Unable to find Chrome log file:", log_path
 
 if summary.testsRun == 0:
     print
