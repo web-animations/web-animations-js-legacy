@@ -28,6 +28,12 @@ parser.add_argument(
     help="Which WebDriver to use.")
 
 parser.add_argument(
+    "-f", "--flag", action='append', default=[],
+    help="Command line flags to pass to the browser, "
+         "currently only available for Chrome. "
+         "Each flag must be a separate --flag invoccation.")
+
+parser.add_argument(
     "-x", "--virtual", action='store_true', default=False,
     help="Use a virtual screen system such as Xvfb, Xephyr or Xvnc.")
 
@@ -600,34 +606,32 @@ if args.browser == "Chrome":
     driver_arguments['chrome_options'] = webdriver.ChromeOptions()
     # Make printable
     webdriver.ChromeOptions.__repr__ = lambda self: str(self.__dict__)
-    driver_arguments['chrome_options'].add_argument(
-        '--user-data-dir=%s' % user_data_dir)
-    driver_arguments['chrome_options'].add_argument(
-        '--enable-logging')
-    driver_arguments['chrome_options'].add_argument(
-        '--start-maximized')
-    driver_arguments['chrome_options'].add_argument(
-        '--disable-default-apps')
-    driver_arguments['chrome_options'].add_argument(
-        '--disable-extensions')
-    driver_arguments['chrome_options'].add_argument(
-        '--disable-plugins')
-
-    #driver_arguments['chrome_options'].binary_location = (
-    #    '/usr/bin/google-chrome')
-    driver_arguments['executable_path'] = chromedriver
-
+    chrome_flags = [
+        '--user-data-dir=%s' % user_data_dir,
+        '--enable-logging',
+        '--start-maximized',
+        '--disable-default-apps',
+        '--disable-extensions',
+        '--disable-plugins',
+    ]
+    chrome_flags += args.flag
     # Travis-CI uses OpenVZ containers which are incompatible with the sandbox
     # technology.
     # See https://code.google.com/p/chromium/issues/detail?id=31077 for more
     # information.
     if 'TRAVIS' in os.environ:
-        driver_arguments['chrome_options'].add_argument(
-            '--no-sandbox')
-        driver_arguments['chrome_options'].add_argument(
-            '--disable-setuid-sandbox')
-        driver_arguments['chrome_options'].add_argument(
-            '--allow-sandbox-debugging')
+        chrome_flags += [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--allow-sandbox-debugging',
+        ]
+    for flag in chrome_flags:
+        driver_arguments['chrome_options'].add_argument(flag)
+
+    #driver_arguments['chrome_options'].binary_location = (
+    #    '/usr/bin/google-chrome')
+    driver_arguments['executable_path'] = chromedriver
+
 
 elif args.browser == "Firefox":
     driver_arguments['firefox_profile'] = webdriver.FirefoxProfile()
