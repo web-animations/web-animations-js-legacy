@@ -5197,7 +5197,6 @@ window.Timing = Timing;
 window.Timeline = Timeline;
 window.TimingEvent = TimingEvent;
 window.TimingGroup = TimingGroup;
-window.DOCUMENT_TIMELINE = DOCUMENT_TIMELINE;
 
 window._WebAnimationsTestingUtilities = {
   _constructorToken: constructorToken,
