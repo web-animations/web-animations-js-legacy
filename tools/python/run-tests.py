@@ -748,8 +748,11 @@ except Exception, e:
 finally:
     output.stopTestRun()
 
-    if args.browser == "Chrome":
-        shutil.copy(os.path.join(user_data_dir, "chrome_debug.log"), ".")
+    # Chrome debug logging is currently broken in Canary:
+    # https://code.google.com/p/chromium/issues/detail?id=345582
+    # FIXME: Reenable this once the issue is fixed.
+    # if args.browser == "Chrome":
+    #     shutil.copy(os.path.join(user_data_dir, "chrome_debug.log"), ".")
 
 if summary.testsRun == 0:
     print
