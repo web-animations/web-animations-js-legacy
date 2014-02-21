@@ -5150,7 +5150,17 @@ var maybeRestartAnimation = function() {
 };
 
 var DOCUMENT_TIMELINE = new Timeline(constructorToken);
-document.timeline = DOCUMENT_TIMELINE;
+// attempt to override native implementation
+try {
+  Object.defineProperty(document, 'timeline', {
+    configurable: true,
+    get: function() { return DOCUMENT_TIMELINE }
+  });
+} catch (e) { }
+// maintain support for Safari
+try {
+  document.timeline = DOCUMENT_TIMELINE;
+} catch (e) { }
 
 window.Element.prototype.animate = function(effect, timing) {
   var anim = new Animation(this, effect, timing);
