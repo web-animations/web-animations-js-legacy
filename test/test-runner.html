@@ -139,6 +139,12 @@ window.onerror = function(msg, url, line) {
 
 (function() {
 window.finished = false;
+window.getTestRunnerProgress = function() {
+  return {
+    completed: testStates['POSTED'].length,
+    total: tests.length,
+  };
+}
 
 var results = [];
 

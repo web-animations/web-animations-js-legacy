@@ -288,7 +288,6 @@ else:
 
 import subunit
 import testtools
-import unittest
 
 if args.list:
     data = file("test/testcases.js").read()
@@ -307,16 +306,17 @@ summary = testtools.StreamSummary()
 
 # Output information to stdout
 if not args.subunit:
+    # Output test failures
+    result_streams = [testtools.TextTestResult(sys.stdout)]
+    if args.verbose:
+        import unittest
+        # Output individual test progress
+        result_streams.insert(0,
+            unittest.TextTestResult(
+                unittest.runner._WritelnDecorator(sys.stdout), False, 2))
     # Human readable test output
     pertest = testtools.StreamToExtendedDecorator(
-        testtools.MultiTestResult(
-            # Individual test progress
-            unittest.TextTestResult(
-                unittest.runner._WritelnDecorator(sys.stdout), False, 2),
-            # End of run, summary of failures.
-            testtools.TextTestResult(sys.stdout),
-        )
-    )
+        testtools.MultiTestResult(*result_streams))
 else:
     from subunit.v2 import StreamResultToBytes
     pertest = StreamResultToBytes(sys.stdout)
@@ -475,7 +475,7 @@ class ServerHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                     mime_type='text/plain; charset=UTF-8',
                     eof=True)
 
-            if 'debug' in data and overall_status > 0:
+            if args.verbose and 'debug' in data and overall_status > 0:
                 output.status(
                     test_id="%s:debug-log" % (test_id),
                     test_status='fail',
@@ -711,10 +711,13 @@ try:
                 break
 
             try:
-                status = browser.find_element_by_id('status-box').text.strip()
-            except selenium_exceptions.NoSuchElementException, e:
-                status = "Unknown"
-            print "Still waiting tests to finish", repr(v), status
+                progress = browser.execute_script('return window.getTestRunnerProgress()')
+                status = '%s/%s (%s%%)' % (progress['completed'], progress['total'],
+                    100 * progress['completed'] // progress['total'])
+            except selenium_exceptions.WebDriverException, e:
+                status = e
+
+            print 'Running tests...', status
             sys.stdout.flush()
             time.sleep(1)
 
@@ -746,7 +749,11 @@ finally:
     output.stopTestRun()
 
     if args.browser == "Chrome":
-        shutil.copy(os.path.join(user_data_dir, "chrome_debug.log"), ".")
+        log_path = os.path.join(user_data_dir, "chrome_debug.log")
+        if os.path.exists(log_path):
+            shutil.copy(log_path, ".")
+        else:
+            print "Unable to find Chrome log file:", log_path
 
 if summary.testsRun == 0:
     print

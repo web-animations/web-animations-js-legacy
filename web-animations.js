@@ -101,8 +101,7 @@ TimingDict.prototype = {
   duration: 'auto',
   playbackRate: 1,
   direction: 'normal',
-  easing: 'linear',
-  _easingTimes: 'distribute'
+  easing: 'linear'
 };
 
 
@@ -119,7 +118,7 @@ var Timing = function(token, timingInput, changeHandler) {
 Timing.prototype = {
   _timingFunction: function(timedItem) {
     var timingFunction = TimingFunction.createFromString(
-        this.easing, this._easingTimes, timedItem);
+        this.easing, timedItem);
     this._timingFunction = function() {
       return timingFunction;
     };
@@ -135,13 +134,6 @@ Timing.prototype = {
   _duration: function() {
     var value = this._dict.duration;
     return typeof value === 'number' ? value : 'auto';
-  },
-  getEasingTimes: function() {
-    return this._easingTimes;
-  },
-  setEasingTimes: function(times) {
-    this._easingTimes = times;
-    this._invalidateTimingFunction();
   },
   _clone: function() {
     return new Timing(
@@ -262,24 +254,29 @@ var Player = function(token, source, timeline) {
   if (token !== constructorToken) {
     throw new TypeError('Illegal constructor');
   }
-  this._registeredOnTimeline = false;
-  this._sequenceNumber = playerSequenceNumber++;
-  this._timeline = timeline;
-  this._startTime =
-      this.timeline.currentTime === null ? 0 : this.timeline.currentTime;
-  this._storedTimeLag = 0.0;
-  this._pausedState = false;
-  this._holdTime = null;
-  this._previousCurrentTime = null;
-  this._playbackRate = 1.0;
-  this._hasTicked = false;
+  enterModifyCurrentAnimationState();
+  try {
+    this._registeredOnTimeline = false;
+    this._sequenceNumber = playerSequenceNumber++;
+    this._timeline = timeline;
+    this._startTime =
+        this.timeline.currentTime === null ? 0 : this.timeline.currentTime;
+    this._storedTimeLag = 0.0;
+    this._pausedState = false;
+    this._holdTime = null;
+    this._previousCurrentTime = null;
+    this._playbackRate = 1.0;
+    this._hasTicked = false;
 
-  this.source = source;
-  this._checkForHandlers();
-  this._lastCurrentTime = undefined;
+    this.source = source;
+    this._checkForHandlers();
+    this._lastCurrentTime = undefined;
 
-  playersAreSorted = false;
-  maybeRestartAnimation();
+    playersAreSorted = false;
+    maybeRestartAnimation();
+  } finally {
+    exitModifyCurrentAnimationState(ensureRetickBeforeGetComputedStyle);
+  }
 };
 
 Player.prototype = {
@@ -300,7 +297,7 @@ Player.prototype = {
       }
       this._checkForHandlers();
     } finally {
-      exitModifyCurrentAnimationState(this._hasTicked);
+      exitModifyCurrentAnimationState(repeatLastTick);
     }
   },
   get source() {
@@ -312,8 +309,7 @@ Player.prototype = {
     try {
       this._currentTime = currentTime;
     } finally {
-      exitModifyCurrentAnimationState(this._hasTicked ||
-          this.startTime + this._storedTimeLag <= lastTickTime);
+      exitModifyCurrentAnimationState(repeatLastTick);
     }
   },
   get currentTime() {
@@ -392,8 +388,7 @@ Player.prototype = {
       this._update();
       maybeRestartAnimation();
     } finally {
-      exitModifyCurrentAnimationState(this._hasTicked ||
-          this.startTime + this._storedTimeLag <= lastTickTime);
+      exitModifyCurrentAnimationState(repeatLastTick);
     }
   },
   get startTime() {
@@ -426,7 +421,7 @@ Player.prototype = {
       this._playbackRate = playbackRate;
       this.currentTime = cachedCurrentTime;
     } finally {
-      exitModifyCurrentAnimationState(this._hasTicked);
+      exitModifyCurrentAnimationState(repeatLastTick);
     }
   },
   get playbackRate() {
@@ -489,6 +484,10 @@ Player.prototype = {
           this.timeline.currentTime === null ? null : this._currentTime);
       this._registerOnTimeline();
     }
+  },
+  _hasFutureAnimation: function() {
+    return this.source === null || this.playbackRate === 0 ||
+        this.source._hasFutureAnimation(this.playbackRate > 0);
   },
   _isPastEndOfActiveInterval: function() {
     return this.source === null ||
@@ -657,7 +656,7 @@ TimedItem.prototype = {
       this._updateTimeMarkers();
     } finally {
       exitModifyCurrentAnimationState(
-          Boolean(this.player) && this.player._hasTicked);
+          Boolean(this.player) ? repeatLastTick : null);
     }
   },
   _intrinsicDuration: function() {
@@ -677,7 +676,7 @@ TimedItem.prototype = {
       this._updateInternalState();
     } finally {
       exitModifyCurrentAnimationState(
-          Boolean(this.player) && this.player._hasTicked);
+          Boolean(this.player) ? repeatLastTick : null);
     }
   },
   // We push time down to children. We could instead have children pull from
@@ -726,6 +725,7 @@ TimedItem.prototype = {
             this.specified.iterationStart + this.specified._iterations(),
             1.0) :
         this._modulusWithClosedOpenRange(this.specified.iterationStart, 1.0));
+    var timingFunction = this.specified._timingFunction(this);
     this._timeFraction = (
         this._isCurrentDirectionForwards() ?
         unscaledFraction :
@@ -733,8 +733,9 @@ TimedItem.prototype = {
     ASSERT_ENABLED && assert(
         this._timeFraction >= 0.0 && this._timeFraction <= 1.0,
         'Time fraction should be in the range [0, 1]');
-    this._timeFraction =
-        this.specified._timingFunction(this).scaleTime(this._timeFraction);
+    if (timingFunction) {
+      this._timeFraction = timingFunction.scaleTime(this._timeFraction);
+    }
   },
   _getAdjustedAnimationTime: function(animationTime) {
     var startOffset =
@@ -773,10 +774,11 @@ TimedItem.prototype = {
         this._timeFraction + ' ' + this._iterationTime + ' ' +
         this.duration + ' ' + isAtEndOfIterations + ' ' +
         unscaledIterationTime);
-    this._timeFraction =
-        this.specified._timingFunction(this).scaleTime(this._timeFraction);
-    this._iterationTime = this.duration === Infinity ?
-        this._iterationTime : this._timeFraction * this.duration;
+    var timingFunction = this.specified._timingFunction(this);
+    if (timingFunction) {
+      this._timeFraction = timingFunction.scaleTime(this._timeFraction);
+    }
+    this._iterationTime = this._timeFraction * this.duration;
   },
   _updateTimeMarkers: function() {
     if (this.localTime === null) {
@@ -870,8 +872,12 @@ TimedItem.prototype = {
     }
   },
   _getLeafItemsInEffectImpl: abstractMethod,
+  _hasFutureAnimation: function(timeDirectionForwards) {
+    return timeDirectionForwards ? this._inheritedTime < this.endTime :
+        this._inheritedTime > this.startTime;
+  },
   _isPastEndOfActiveInterval: function() {
-    return this._inheritedTime > this.endTime;
+    return this._inheritedTime >= this.endTime;
   },
   get player() {
     return this.parent === null ?
@@ -1172,16 +1178,13 @@ TimingEvent.prototype = Object.create(window.Event.prototype, {
   }
 });
 
-var isCustomAnimationEffect = function(animationEffect) {
-  // TODO: How does WebIDL actually differentiate different callback interfaces?
-  return isDefinedAndNotNull(animationEffect) &&
-      typeof animationEffect === 'object' &&
-      typeof animationEffect.sample === 'function';
+var isEffectCallback = function(animationEffect) {
+  return typeof animationEffect === 'function';
 };
 
 var interpretAnimationEffect = function(animationEffect) {
   if (animationEffect instanceof AnimationEffect ||
-      isCustomAnimationEffect(animationEffect)) {
+      isEffectCallback(animationEffect)) {
     return animationEffect;
   } else if (isDefinedAndNotNull(animationEffect) &&
       typeof animationEffect === 'object') {
@@ -1196,12 +1199,8 @@ var interpretAnimationEffect = function(animationEffect) {
 var cloneAnimationEffect = function(animationEffect) {
   if (animationEffect instanceof AnimationEffect) {
     return animationEffect.clone();
-  } else if (isCustomAnimationEffect(animationEffect)) {
-    if (typeof animationEffect.clone === 'function') {
-      return animationEffect.clone();
-    } else {
-      return animationEffect;
-    }
+  } else if (isEffectCallback(animationEffect)) {
+    return animationEffect;
   } else {
     return null;
   }
@@ -1217,24 +1216,22 @@ var Animation = function(target, animationEffect, timingInput) {
     this.effect = interpretAnimationEffect(animationEffect);
     this._target = target;
   } finally {
-    exitModifyCurrentAnimationState(false);
+    exitModifyCurrentAnimationState(null);
   }
+  this._previousTimeFraction = null;
 };
 
 Animation.prototype = createObject(TimedItem.prototype, {
   _sample: function() {
     if (isDefinedAndNotNull(this.effect) &&
         !(this.target instanceof PseudoElementReference)) {
-      var sampleMethod = isCustomAnimationEffect(this.effect) ?
-          this.effect.sample : this.effect._sample;
-      sampleMethod.apply(
-          this.effect, [
-            this._timeFraction,
-            this.currentIteration,
-            this.target,
-            this.underlyingValue
-          ]
-      );
+      if (isEffectCallback(this.effect)) {
+        this.effect(this._timeFraction, this, this._previousTimeFraction);
+        this._previousTimeFraction = this._timeFraction;
+      } else {
+        this.effect._sample(this._timeFraction, this.currentIteration,
+            this.target, this.underlyingValue);
+      }
     }
   },
   _getLeafItemsInEffectImpl: function(items) {
@@ -1258,7 +1255,7 @@ Animation.prototype = createObject(TimedItem.prototype, {
       this.specified._invalidateTimingFunction();
     } finally {
       exitModifyCurrentAnimationState(
-          Boolean(this.player) && this.player._hasTicked);
+          Boolean(this.player) ? repeatLastTick : null);
     }
   },
   get effect() {
@@ -1272,8 +1269,8 @@ Animation.prototype = createObject(TimedItem.prototype, {
     var effectString = '<none>';
     if (this.effect instanceof AnimationEffect) {
       effectString = this.effect.toString();
-    } else if (isCustomAnimationEffect(this.effect)) {
-      effectString = 'Custom effect';
+    } else if (isEffectCallback(this.effect)) {
+      effectString = 'Effect callback';
     }
     return 'Animation ' + this.startTime + '-' + this.endTime + ' (' +
         this.localTime + ') ' + effectString;
@@ -1491,7 +1488,7 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
       return result;
     } finally {
       exitModifyCurrentAnimationState(
-          Boolean(this.player) && this.player._hasTicked);
+          Boolean(this.player) ? repeatLastTick : null);
     }
   },
   _isInclusiveAncestor: function(item) {
@@ -1749,7 +1746,7 @@ var AnimationEffect = function(token, accumulate) {
   try {
     this.accumulate = accumulate;
   } finally {
-    exitModifyCurrentAnimationState(false);
+    exitModifyCurrentAnimationState(null);
   }
 };
 
@@ -1763,7 +1760,7 @@ AnimationEffect.prototype = {
       // Use the default value if an invalid string is specified.
       this._accumulate = value === 'sum' ? 'sum' : 'none';
     } finally {
-      exitModifyCurrentAnimationState(true);
+      exitModifyCurrentAnimationState(repeatLastTick);
     }
   },
   _sample: abstractMethod,
@@ -1799,7 +1796,7 @@ var MotionPathEffect = function(path, autoRotate, angle, composite,
       this.segments = tempPath.pathSegList;
     }
   } finally {
-    exitModifyCurrentAnimationState(false);
+    exitModifyCurrentAnimationState(null);
   }
 };
 
@@ -1813,7 +1810,7 @@ MotionPathEffect.prototype = createObject(AnimationEffect.prototype, {
       // Use the default value if an invalid string is specified.
       this._composite = value === 'add' ? 'add' : 'replace';
     } finally {
-      exitModifyCurrentAnimationState(true);
+      exitModifyCurrentAnimationState(repeatLastTick);
     }
   },
   _sample: function(timeFraction, currentIteration, target) {
@@ -1850,12 +1847,6 @@ MotionPathEffect.prototype = createObject(AnimationEffect.prototype, {
   clone: function() {
     return new MotionPathEffect(this._path.getAttribute('d'));
   },
-  _positionListForTiming: function() {
-    // TODO: Handle aligning chained function segments with MotionPathEffect.
-    console.warn('Alignment of chained timing functions with path animation ' +
-        'effects is not yet implemented');
-    return [0, 1];
-  },
   toString: function() {
     return '<MotionPathEffect>';
   },
@@ -1864,7 +1855,7 @@ MotionPathEffect.prototype = createObject(AnimationEffect.prototype, {
     try {
       this._autoRotate = String(autoRotate);
     } finally {
-      exitModifyCurrentAnimationState(true);
+      exitModifyCurrentAnimationState(repeatLastTick);
     }
   },
   get autoRotate() {
@@ -1877,7 +1868,7 @@ MotionPathEffect.prototype = createObject(AnimationEffect.prototype, {
       //       says it's a double.
       this._angle = Number(angle);
     } finally {
-      exitModifyCurrentAnimationState(true);
+      exitModifyCurrentAnimationState(repeatLastTick);
     }
   },
   get angle() {
@@ -1902,7 +1893,7 @@ MotionPathEffect.prototype = createObject(AnimationEffect.prototype, {
       }
       this._cumulativeLengths = cumulativeLengths;
     } finally {
-      exitModifyCurrentAnimationState(true);
+      exitModifyCurrentAnimationState(repeatLastTick);
     }
   },
   get segments() {
@@ -2066,7 +2057,7 @@ var KeyframeEffect = function(oneOrMoreKeyframeDictionaries,
 
     this.setFrames(oneOrMoreKeyframeDictionaries);
   } finally {
-    exitModifyCurrentAnimationState(false);
+    exitModifyCurrentAnimationState(null);
   }
 };
 
@@ -2080,7 +2071,7 @@ KeyframeEffect.prototype = createObject(AnimationEffect.prototype, {
       // Use the default value if an invalid string is specified.
       this._composite = value === 'add' ? 'add' : 'replace';
     } finally {
-      exitModifyCurrentAnimationState(true);
+      exitModifyCurrentAnimationState(repeatLastTick);
     }
   },
   getFrames: function() {
@@ -2097,7 +2088,7 @@ KeyframeEffect.prototype = createObject(AnimationEffect.prototype, {
       // Set lazily
       this._cachedPropertySpecificKeyframes = null;
     } finally {
-      exitModifyCurrentAnimationState(true);
+      exitModifyCurrentAnimationState(repeatLastTick);
     }
   },
   _sample: function(timeFraction, currentIteration, target) {
@@ -2370,17 +2361,6 @@ KeyframeEffect.prototype = createObject(AnimationEffect.prototype, {
     }
 
     return distributedKeyframes;
-  },
-  _positionListForTiming: function() {
-    var positionList =
-        this._getDistributedKeyframes().map(function(x) { return x.offset; });
-    if (positionList[0] !== 0) {
-      positionList.unshift(0);
-    }
-    if (positionList[positionList.length - 1] !== 1) {
-      positionList.push(1);
-    }
-    return positionList;
   }
 });
 
@@ -2463,198 +2443,35 @@ var TimingFunction = function() {
 };
 
 TimingFunction.prototype.scaleTime = abstractMethod;
-TimingFunction.prototype.clone = abstractMethod;
 
-TimingFunction.createFromString = function(easing, easingPoints, timedItem) {
-  var normalizedChain = TimingFunction.createNormalizedChain(easing,
-      easingPoints, timedItem);
-  ASSERT_ENABLED && assert(normalizedChain.length > 0);
-  if (normalizedChain.length === 1) {
-    ASSERT_ENABLED && assert(normalizedChain[0].range.min === 0);
-    ASSERT_ENABLED && assert(normalizedChain[0].range.max === 1);
-    return normalizedChain[0].timingFunction;
-  }
-  return new ChainedTimingFunction(normalizedChain);
-};
-
-// Returns an array of objects, where each object contains a timing function and
-// the range over which it applies.
-TimingFunction.createNormalizedChain = function(easing, easingPoints,
-    timedItem) {
-  var chain = TimingFunction.createChain(easing, timedItem);
-  ASSERT_ENABLED && assert(chain.length > 0);
-
-  var normalizedPositionList = TimingFunction.createNormalizedPositionList(
-      easingPoints, chain.length, timedItem);
-  ASSERT_ENABLED && assert(TimingFunction.isValidPositionList(
-      normalizedPositionList));
-
-  var normalizedChain = [];
-  var lastTimingFunction = chain[chain.length - 1];
-  for (var i = 1; i < normalizedPositionList.length; i++) {
-    var range = {
-      min: normalizedPositionList[i - 1],
-      max: normalizedPositionList[i]
-    };
-    var timingFunction = i - 1 < chain.length ?
-        chain[i - 1] : lastTimingFunction.clone();
-    if (timingFunction instanceof PacedTimingFunction) {
-      timingFunction.setRange(range);
-    }
-    normalizedChain.push({timingFunction: timingFunction, range: range});
-  }
-  return normalizedChain;
-};
-
-TimingFunction.createChain = function(easing, timedItem) {
-  var chain = [];
-  if (typeof easing === 'string') {
-    easing = easing.trim();
-    while (easing.length > 0) {
-      var result = TimingFunction.createComponentFromString(easing, timedItem);
-      if (result === null) {
-        chain = [];
-        break;
-      }
-      chain.push(result.component);
-      easing = result.remainingString.trim();
-    }
-  }
-  if (chain.length === 0) {
-    return [presetTimingFunctions.linear];
-  }
-  return chain;
-};
-
-TimingFunction.createNormalizedPositionList = function(easingPoints,
-    numTimingFunctions, timedItem) {
-  if (easingPoints === 'distribute') {
-    return TimingFunction.generateDistributedPositionList(numTimingFunctions);
-  } else if (easingPoints === 'align') {
-    if (timedItem instanceof Animation &&
-        // We have to test for keyframe or path effects because custom effects
-        // may inherit from AnimationEffect.
-        (timedItem.effect instanceof KeyframeEffect ||
-         timedItem.effect instanceof MotionPathEffect)) {
-      return timedItem.effect._positionListForTiming();
-    }
-    return TimingFunction.generateDistributedPositionList(numTimingFunctions);
-  }
-  return TimingFunction.isValidPositionList(easingPoints) ? easingPoints :
-      TimingFunction.generateDistributedPositionList(numTimingFunctions);
-};
-
-TimingFunction.generateDistributedPositionList = function(numTimingFunctions) {
-  var positionList = [0];
-  for (var i = 1; i <= numTimingFunctions; i++) {
-    positionList.push(i / numTimingFunctions);
-  }
-  return positionList;
-};
-
-TimingFunction.isValidPositionList = function(positionList) {
-  if (!Array.isArray(positionList) || positionList[0] !== 0 ||
-      positionList[positionList.length - 1] !== 1) {
-    return false;
-  }
-  for (var i = 1; i < positionList.length; i++) {
-    // Test for a negative condition to correctly handle non-numeric values.
-    if (!(positionList[i] > positionList[i - 1])) {
-      return false;
-    }
-  }
-  return true;
-};
-
-// Creates a timing function from the first valid portion of the supplied
-// string. Returns an object containg the created timing function and the
-// remaining string, or null on failure.
-TimingFunction.createComponentFromString = function(spec, timedItem) {
-  var toFirstSpace = spec.split(' ')[0];
-  var preset = presetTimingFunctions[toFirstSpace];
+TimingFunction.createFromString = function(spec, timedItem) {
+  var preset = presetTimingFunctions[spec];
   if (preset) {
-    return {
-      component: preset,
-      remainingString: spec.substring(toFirstSpace.length)
-    };
+    return preset;
   }
-  if (spec.indexOf('paced') === 0) {
-    var remainingString = spec.substring(5);
+  if (spec === 'paced') {
     if (timedItem instanceof Animation &&
         timedItem.effect instanceof MotionPathEffect) {
-      return {
-        component: new PacedTimingFunction(timedItem.effect),
-        remainingString: remainingString
-      };
+      return new PacedTimingFunction(timedItem.effect);
     }
-    return {
-      component: presetTimingFunctions.linear,
-      remainingString: remainingString
-    };
+    return presetTimingFunctions.linear;
   }
-  var stepMatch = /^steps\(\s*(\d+)\s*,\s*(start|end|middle)\s*\)/.exec(spec);
+  var stepMatch = /steps\(\s*(\d+)\s*,\s*(start|end|middle)\s*\)/.exec(spec);
   if (stepMatch) {
-    return {
-      component: new StepTimingFunction(Number(stepMatch[1]), stepMatch[2]),
-      remainingString: spec.substring(stepMatch[0].length)
-    };
+    return new StepTimingFunction(Number(stepMatch[1]), stepMatch[2]);
   }
   var bezierMatch =
-      /^cubic-bezier\(([^,]*),([^,]*),([^,]*),([^)]*)\)/.exec(spec);
+      /cubic-bezier\(([^,]*),([^,]*),([^,]*),([^)]*)\)/.exec(spec);
   if (bezierMatch) {
-    return {
-      component: new CubicBezierTimingFunction([
-        Number(bezierMatch[1]),
-        Number(bezierMatch[2]),
-        Number(bezierMatch[3]),
-        Number(bezierMatch[4])
-      ]),
-      remainingString: spec.substring(bezierMatch[0].length)
-    };
+    return new CubicBezierTimingFunction([
+      Number(bezierMatch[1]),
+      Number(bezierMatch[2]),
+      Number(bezierMatch[3]),
+      Number(bezierMatch[4])
+    ]);
   }
-  return null;
+  return presetTimingFunctions.linear;
 };
-
-
-
-/** @constructor */
-var ChainedTimingFunction = function(chain) {
-  this._chain = chain;
-};
-
-ChainedTimingFunction.prototype = createObject(TimingFunction.prototype, {
-  scaleTime: function(fraction) {
-    for (var i = 0; i < this._chain.length; i++) {
-      var component = this._chain[i];
-      if (fraction < component.range.max || i === this._chain.length - 1) {
-        return interp(
-            component.range.min,
-            component.range.max,
-            component.timingFunction.scaleTime(
-                this._relativeRange(component.range, fraction)));
-      }
-    }
-    ASSERT_ENABLED && assert(false, 'Logic error in ChainedTimingFunction');
-  },
-  _relativeRange: function(range, x) {
-    return (x - range.min) / (range.max - range.min);
-  }
-});
-
-
-
-/** @constructor */
-var LinearTimingFunction = function() {
-};
-
-LinearTimingFunction.prototype = createObject(TimingFunction.prototype, {
-  scaleTime: function(fraction) {
-    return fraction;
-  },
-  clone: function() {
-    return this;
-  }
-});
 
 
 
@@ -2686,9 +2503,6 @@ CubicBezierTimingFunction.prototype = createObject(TimingFunction.prototype, {
     var xDiff = this.map[fst][0] - this.map[fst - 1][0];
     var p = (fraction - this.map[fst - 1][0]) / xDiff;
     return this.map[fst - 1][1] + p * yDiff;
-  },
-  clone: function() {
-    return this;
   }
 });
 
@@ -2712,14 +2526,11 @@ StepTimingFunction.prototype = createObject(TimingFunction.prototype, {
       fraction += stepSize / 2;
     }
     return fraction - fraction % stepSize;
-  },
-  clone: function() {
-    return this;
   }
 });
 
 var presetTimingFunctions = {
-  'linear': new LinearTimingFunction(),
+  'linear': null,
   'ease': new CubicBezierTimingFunction([0.25, 0.1, 0.25, 1.0]),
   'ease-in': new CubicBezierTimingFunction([0.42, 0, 1.0, 1.0]),
   'ease-out': new CubicBezierTimingFunction([0, 0, 0.58, 1.0]),
@@ -2781,16 +2592,13 @@ PacedTimingFunction.prototype = createObject(TimingFunction.prototype, {
     return leftIndex;
   },
   lengthAtIndex: function(i) {
-    var cumulativeLengths = this._pathEffect._cumulativeLengths;
-    ASSERT_ENABLED && assert(i >= 0 && i <= cumulativeLengths.length - 1);
+    ASSERT_ENABLED &&
+        console.assert(i >= 0 && i <= cumulativeLengths.length - 1);
     var leftIndex = Math.floor(i);
-    var startLength = cumulativeLengths[leftIndex];
-    var endLength = cumulativeLengths[leftIndex + 1];
+    var startLength = this._pathEffect._cumulativeLengths[leftIndex];
+    var endLength = this._pathEffect._cumulativeLengths[leftIndex + 1];
     var indexFraction = i % 1;
     return interp(startLength, endLength, indexFraction);
-  },
-  clone: function() {
-    return new PacedTimingFunction(this._pathEffect);
   }
 });
 
@@ -4826,7 +4634,8 @@ CompositedPropertyMap.prototype = {
   },
   captureBaseValues: function() {
     for (var property in this.properties) {
-      if (this.stackDependsOnUnderlyingValue(this.properties[property])) {
+      var stack = this.properties[property];
+      if (stack.length > 0 && this.stackDependsOnUnderlyingValue(stack)) {
         var baseValue = fromCssValue(property, getValue(this.target, property));
         // TODO: Decide what to do with elements not in the DOM.
         ASSERT_ENABLED && assert(
@@ -4890,7 +4699,7 @@ var copyInlineStyle = function(sourceStyle, destinationStyle) {
 
 var retickThenGetComputedStyle = function() {
   repeatLastTick();
-  // ticker() will restore getComputedStyle() back to normal.
+  ensureOriginalGetComputedStyle();
   return window.getComputedStyle.apply(this, arguments);
 };
 
@@ -5335,16 +5144,16 @@ var modifyCurrentAnimationStateDepth = 0;
 var enterModifyCurrentAnimationState = function() {
   modifyCurrentAnimationStateDepth++;
 };
-var exitModifyCurrentAnimationState = function(shouldRepeat) {
+var exitModifyCurrentAnimationState = function(updateCallback) {
   modifyCurrentAnimationStateDepth--;
-  // shouldRepeat is set false when we know we can't possibly affect the current
-  // state (eg. a TimedItem which is not attached to a player). We track the
-  // depth of recursive calls trigger just one repeat per entry. Only the value
-  // of shouldRepeat from the outermost call is considered, this allows certain
+  // updateCallback is set to null when we know we can't possibly affect the
+  // current state (eg. a TimedItem which is not attached to a player). We track
+  // the depth of recursive calls trigger just one repeat per entry. Only the
+  // updateCallback from the outermost call is considered, this allows certain
   // locatations (eg. constructors) to override nested calls that would
-  // otherwise set shouldRepeat unconditionally.
-  if (modifyCurrentAnimationStateDepth === 0 && shouldRepeat) {
-    repeatLastTick();
+  // otherwise set updateCallback unconditionally.
+  if (modifyCurrentAnimationStateDepth === 0 && updateCallback) {
+    updateCallback();
   }
 };
 
@@ -5389,9 +5198,8 @@ var ticker = function(rafTime, isRepeat) {
   var animations = [];
   var finishedPlayers = [];
   PLAYERS.forEach(function(player) {
-    player._hasTicked = true;
     player._update();
-    finished = finished && player._isPastEndOfActiveInterval();
+    finished = finished && !player._hasFutureAnimation();
     if (!player._hasFutureEffect()) {
       finishedPlayers.push(player);
     }
@@ -5447,7 +5255,17 @@ var maybeRestartAnimation = function() {
 };
 
 var DOCUMENT_TIMELINE = new Timeline(constructorToken);
-document.timeline = DOCUMENT_TIMELINE;
+// attempt to override native implementation
+try {
+  Object.defineProperty(document, 'timeline', {
+    configurable: true,
+    get: function() { return DOCUMENT_TIMELINE }
+  });
+} catch (e) { }
+// maintain support for Safari
+try {
+  document.timeline = DOCUMENT_TIMELINE;
+} catch (e) { }
 
 window.Element.prototype.animate = function(effect, timing) {
   var anim = new Animation(this, effect, timing);
@@ -5491,11 +5309,7 @@ window._WebAnimationsTestingUtilities = {
   _hsl2rgb: hsl2rgb,
   _types: propertyTypes,
   _knownPlayers: PLAYERS,
-  _createNormalizedChain: TimingFunction.createNormalizedChain,
-  _cubicBezierTimingFunction: CubicBezierTimingFunction,
-  _linearTimingFunction: LinearTimingFunction,
-  _pacedTimingFunction: PacedTimingFunction,
-  _enableAsserts: function() { ASSERT_ENABLED = true; }
+  _pacedTimingFunction: PacedTimingFunction
 };
 
 })();
