@@ -216,6 +216,9 @@ Timeline.prototype = {
     }
     return relativeTime(cachedClockTime(), this._startTime);
   },
+  get effectiveCurrentTime() {
+    return this.currentTime || 0;
+  },
   play: function(source) {
     return new Player(constructorToken, source, this);
   },
@@ -233,7 +236,7 @@ Timeline.prototype = {
   },
   _pauseAnimationsForTesting: function(pauseAt) {
     PLAYERS.forEach(function(player) {
-      player.paused = true;
+      player.pause();
       player.currentTime = pauseAt;
     });
   }
@@ -258,9 +261,12 @@ var Player = function(token, source, timeline) {
     this._timeline = timeline;
     this._startTime =
         this.timeline.currentTime === null ? 0 : this.timeline.currentTime;
-    this._timeDrift = 0.0;
-    this._pauseTime = undefined;
+    this._storedTimeLag = 0.0;
+    this._pausedState = false;
+    this._holdTime = null;
+    this._previousCurrentTime = null;
     this._playbackRate = 1.0;
+    this._hasTicked = false;
 
     this.source = source;
     this._checkForHandlers();
@@ -307,34 +313,77 @@ Player.prototype = {
     }
   },
   get currentTime() {
-    return this._currentTime === null ? 0 : this._currentTime;
+    return this._currentTime;
   },
-  // This is the current time.
-  set _currentTime(currentTime) {
-    // This seeks by updating _drift. It does not affect the startTime.
-    if (isDefined(this._pauseTime)) {
-      this._pauseTime = currentTime;
+  set _currentTime(seekTime) {
+    // If we are paused or seeking to a time where limiting applies (i.e. beyond
+    // the end in the current direction), update the hold time.
+    var sourceContentEnd = this.source ? this.source.endTime : 0;
+    if (this.paused ||
+        (this.playbackRate > 0 && seekTime >= sourceContentEnd) ||
+        (this.playbackRate < 0 && seekTime <= 0)) {
+      this._holdTime = seekTime;
+    // Otherwise, clear the hold time (it may been set by previously seeking to
+    // a limited time) and update the time lag.
     } else {
-      this._timeDrift = (this.timeline.currentTime - this.startTime) *
-          this.playbackRate - currentTime;
+      this._holdTime = null;
+      this._storedTimeLag = (this.timeline.effectiveCurrentTime -
+          this.startTime) * this.playbackRate - seekTime;
     }
     this._update();
     maybeRestartAnimation();
   },
   get _currentTime() {
-    if (this.timeline.currentTime === null) {
-      return null;
+    this._previousCurrentTime = (this.timeline.effectiveCurrentTime -
+        this.startTime) * this.playbackRate - this.timeLag;
+    return this._previousCurrentTime;
+  },
+  get _unlimitedCurrentTime() {
+    return (this.timeline.effectiveCurrentTime - this.startTime) *
+        this.playbackRate - this._storedTimeLag;
+  },
+  get timeLag() {
+    if (this.paused) {
+      return this._pauseTimeLag;
     }
-    return isDefined(this._pauseTime) ? this._pauseTime :
-        (this.timeline.currentTime - this.startTime) * this.playbackRate -
-        this._timeDrift;
+
+    // Apply limiting at start of interval when playing in reverse
+    if (this.playbackRate < 0 && this._unlimitedCurrentTime <= 0) {
+      if (this._holdTime === null) {
+        this._holdTime = Math.min(this._previousCurrentTime, 0);
+      }
+      return this._pauseTimeLag;
+    }
+
+    // Apply limiting at end of interval when playing forwards
+    var sourceContentEnd = this.source ? this.source.endTime : 0;
+    if (this.playbackRate > 0 &&
+        this._unlimitedCurrentTime >= sourceContentEnd) {
+      if (this._holdTime === null) {
+        this._holdTime = Math.max(this._previousCurrentTime, sourceContentEnd);
+      }
+      return this._pauseTimeLag;
+    }
+
+    // Finished limiting so store pause time lag
+    if (this._holdTime !== null) {
+      this._storedTimeLag = this._pauseTimeLag;
+      this._holdTime = null;
+    }
+
+    return this._storedTimeLag;
+  },
+  get _pauseTimeLag() {
+    return ((this.timeline.currentTime || 0) - this.startTime) *
+        this.playbackRate - this._holdTime;
   },
   set startTime(startTime) {
     enterModifyCurrentAnimationState();
     try {
       // This seeks by updating _startTime and hence the currentTime. It does
-      // not affect _drift.
+      // not affect _storedTimeLag.
       this._startTime = startTime;
+      this._holdTime = null;
       playersAreSorted = false;
       this._update();
       maybeRestartAnimation();
@@ -345,18 +394,21 @@ Player.prototype = {
   get startTime() {
     return this._startTime;
   },
-  set paused(isPaused) {
-    if (isPaused) {
-      this._pauseTime = this.currentTime;
-    } else if (isDefined(this._pauseTime)) {
-      this._timeDrift = (this.timeline.currentTime - this.startTime) *
-          this.playbackRate - this._pauseTime;
-      this._pauseTime = undefined;
-      maybeRestartAnimation();
+  set _paused(isPaused) {
+    if (isPaused === this._pausedState) {
+      return;
     }
+    if (this._pausedState) {
+      this._storedTimeLag = this.timeLag;
+      this._holdTime = null;
+      maybeRestartAnimation();
+    } else {
+      this._holdTime = this.currentTime;
+    }
+    this._pausedState = isPaused;
   },
   get paused() {
-    return isDefined(this._pauseTime);
+    return this._pausedState;
   },
   get timeline() {
     return this._timeline;
@@ -375,9 +427,61 @@ Player.prototype = {
   get playbackRate() {
     return this._playbackRate;
   },
+  get finished() {
+    return this.source &&
+        ((this.playbackRate > 0 && this.currentTime >= this.source.endTime) ||
+        (this.playbackRate < 0 && this.currentTime <= 0));
+  },
+  cancel: function() {
+    this.source = null;
+  },
+  finish: function() {
+    if (this.playbackRate < 0) {
+      this.currentTime = 0;
+    } else if (this.playbackRate > 0) {
+      var sourceEndTime = this.source ? this.source.endTime : 0;
+      if (sourceEndTime === Infinity) {
+        throw new Error('InvalidStateError');
+      }
+      this.currentTime = sourceEndTime;
+    }
+  },
+  play: function() {
+    this._paused = false;
+    if (!this.source) {
+      return;
+    }
+    if (this.playbackRate > 0 &&
+        (this.currentTime < 0 ||
+         this.currentTime >= this.source.endTime)) {
+      this.currentTime = 0;
+    } else if (this.playbackRate < 0 &&
+        (this.currentTime <= 0 ||
+        this.currentTime > this.source.endTime)) {
+      this.currentTime = this.source.endTime;
+    }
+  },
+  pause: function() {
+    this._paused = true;
+  },
+  reverse: function() {
+    if (this.playbackRate === 0) {
+      return;
+    }
+    if (this.source) {
+      if (this.playbackRate > 0 && this.currentTime >= this.source.endTime) {
+        this.currentTime = this.source.endTime;
+      } else if (this.playbackRate < 0 && this.currentTime < 0) {
+        this.currentTime = 0;
+      }
+    }
+    this.playbackRate = -this.playbackRate;
+    this._paused = false;
+  },
   _update: function() {
     if (this.source !== null) {
-      this.source._updateInheritedTime(this._currentTime);
+      this.source._updateInheritedTime(
+          this.timeline.currentTime === null ? null : this._currentTime);
       this._registerOnTimeline();
     }
   },
@@ -420,15 +524,15 @@ Player.prototype = {
     }
 
     if (this._needsHandlerPass) {
-      var timeDelta = this._currentTime - this._lastCurrentTime;
+      var timeDelta = this._unlimitedCurrentTime - this._lastCurrentTime;
       if (timeDelta > 0) {
         this.source._generateEvents(
-            this._lastCurrentTime, this._currentTime,
+            this._lastCurrentTime, this._unlimitedCurrentTime,
             this.timeline.currentTime, 1);
       }
     }
 
-    this._lastCurrentTime = this._currentTime;
+    this._lastCurrentTime = this._unlimitedCurrentTime;
   },
   _registerOnTimeline: function() {
     if (!this._registeredOnTimeline) {

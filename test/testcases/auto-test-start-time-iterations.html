@@ -33,24 +33,20 @@ limitations under the License.
   border-right: 1px solid black;
 }
 
-#ca {
+#normal {
   top: 50px;
-  width: 400px;
 }
 
-#cb {
+#reverse {
   top: 150px;
-  width: 200px;
 }
 
-#cc {
+#alternate {
   top: 250px;
-  width: 200px;
 }
 
-#cd {
+#alternate-reverse {
   top: 350px;
-  width: 200px;
 }
 
 </style>
@@ -58,68 +54,54 @@ limitations under the License.
 <div>Right edge of each box should align with black line at end of test. Note
 that the position of the last element in each group is approximate.</div>
 
-<div class="animContainer" id="ca">
-  <div style="width: 600px;" class="expected"><div class="anim a"></div></div>
-  <div style="width: 600px;" class="expected"><div class="anim b"></div></div>
+<div class="animContainer" id="normal">
+  <div style="width: 600px;" class="expected"><div id="normal_a" class="anim"></div></div>
+  <div style="width: 600px;" class="expected"><div id="normal_b" class="anim"></div></div>
 </div>
 
-<div class="animContainer" id="cb">
-  <div style="width: 200px;" class="expected"><div class="anim a"></div></div>
-  <div style="width: 200px;" class="expected"><div class="anim b"></div></div>
+<div class="animContainer" id="reverse">
+  <div style="width: 200px;" class="expected"><div id="reverse_a" class="anim"></div></div>
+  <div style="width: 200px;" class="expected"><div id="reverse_b" class="anim"></div></div>
 </div>
 
-<div class="animContainer" id="cc">
-  <div style="width: 200px;" class="expected"><div class="anim a"></div></div>
-  <div style="width: 200px;" class="expected"><div class="anim b"></div></div>
+<div class="animContainer" id="alternate">
+  <div style="width: 200px;" class="expected"><div id="alternate_a" class="anim"></div></div>
+  <div style="width: 200px;" class="expected"><div id="alternate_b" class="anim"></div></div>
 </div>
 
-<div class="animContainer" id="cd">
-  <div style="width: 600px;" class="expected"><div class="anim a"></div></div>
-  <div style="width: 600px;" class="expected"><div class="anim b"></div></div>
+<div class="animContainer" id="alternate-reverse">
+  <div style="width: 600px;" class="expected"><div id="alternate-reverse_a" class="anim"></div></div>
+  <div style="width: 600px;" class="expected"><div id="alternate-reverse_b" class="anim"></div></div>
 </div>
 
 <script src="../bootstrap.js"></script>
 <script>
 "use strict";
 
-var containers = ["ca", "cb", "cc", "cd"];
-
 var directions = ["normal", "reverse", "alternate", "alternate-reverse"];
 
 var animation = [{left: "100px"}, {left: "500px"}];
 
-// We use a new group for each animation to avoid coupling due to the intrinsic
-// duration of a par group.
-var group = function(direction) {
-  return new ParGroup([], {iterations: 2.0, direction: direction});
-};
-var groupWithFixedDuration = function(direction) {
-  return new ParGroup([],
-      {iterations: 2.0, direction: direction, duration: 4.0});
-};
-
 for (var i = 0; i < directions.length; i++) {
-  var container = document.getElementById(containers[i]);
   var direction = directions[i];
+  var container = document.getElementById(direction);
 
   // Interaction of default start time with parent iterations. At the time of
   // addition, the child picks up a start time of zero. The parent then updates
   // its duration and its iteration time jumps, causing the child to start
   // playing part way through the animation.
-  var group1 = group(direction);
-  document.timeline.play(group1);
-  var group2 = groupWithFixedDuration(direction);
-  document.timeline.play(group2);
+  var intrinsicGroup = new ParGroup([], {iterations: 2.0, direction: direction});
+  document.timeline.play(intrinsicGroup);
+  var fixedGroup = new ParGroup([], {iterations: 2.0, direction: direction, duration: 4.0});
+  document.timeline.play(fixedGroup);
 
   timing_test(function() {
-      at(0.75, function(container, group1, group2) {
+      at(0.75, (function(container, direction, intrinsicGroup, fixedGroup) {
         return function() {
-          group1.append(new Animation(container.getElementsByClassName("a")[0],
-              animation, {duration: 1.0}));
-          group2.append(new Animation(container.getElementsByClassName("b")[0],
-              animation, {duration: 1.0}));
+          intrinsicGroup.append(new Animation(document.getElementById(direction + '_a'), animation, {duration: 1.0}));
+          fixedGroup.append(new Animation(document.getElementById(direction + '_b'), animation, {duration: 1.0}));
         };
-      }(container, group1, group2))
+      })(container, direction, intrinsicGroup, fixedGroup));
     });
 }
 </script>
