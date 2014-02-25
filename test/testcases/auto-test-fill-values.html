@@ -47,45 +47,29 @@ limitations under the License.
 
 <div class="animContainer" id="normal">
   <div class="expect no-effect"><div class="anim fill-none"></div></div>
-  <div class="expect no-effect"><div class="anim fill-none"></div></div>
-  <div class="expect no-effect"><div class="anim fill-backwards"></div></div>
   <div class="expect no-effect"><div class="anim fill-backwards"></div></div>
   <div class="expect last-frame"><div class="anim fill-forwards"></div></div>
-  <div class="expect last-frame"><div class="anim fill-forwards"></div></div>
-  <div class="expect last-frame"><div class="anim fill-both"></div></div>
   <div class="expect last-frame"><div class="anim fill-both"></div></div>
 </div>
 
 <div class="animContainer" id="reverse">
   <div class="expect no-effect"><div class="anim fill-none"></div></div>
-  <div class="expect no-effect"><div class="anim fill-none"></div></div>
-  <div class="expect no-effect"><div class="anim fill-backwards"></div></div>
   <div class="expect no-effect"><div class="anim fill-backwards"></div></div>
   <div class="expect first-frame"><div class="anim fill-forwards"></div></div>
-  <div class="expect first-frame"><div class="anim fill-forwards"></div></div>
-  <div class="expect first-frame"><div class="anim fill-both"></div></div>
   <div class="expect first-frame"><div class="anim fill-both"></div></div>
 </div>
 
 <div class="animContainer" id="alternate">
   <div class="expect no-effect"><div class="anim fill-none"></div></div>
-  <div class="expect no-effect"><div class="anim fill-none"></div></div>
-  <div class="expect no-effect"><div class="anim fill-backwards"></div></div>
   <div class="expect no-effect"><div class="anim fill-backwards"></div></div>
   <div class="expect first-frame"><div class="anim fill-forwards"></div></div>
-  <div class="expect first-frame"><div class="anim fill-forwards"></div></div>
-  <div class="expect first-frame"><div class="anim fill-both"></div></div>
   <div class="expect first-frame"><div class="anim fill-both"></div></div>
 </div>
 
 <div class="animContainer" id="alternate-reverse">
   <div class="expect no-effect"><div class="anim fill-none"></div></div>
-  <div class="expect no-effect"><div class="anim fill-none"></div></div>
-  <div class="expect no-effect"><div class="anim fill-backwards"></div></div>
   <div class="expect no-effect"><div class="anim fill-backwards"></div></div>
   <div class="expect last-frame"><div class="anim fill-forwards"></div></div>
-  <div class="expect last-frame"><div class="anim fill-forwards"></div></div>
-  <div class="expect last-frame"><div class="anim fill-both"></div></div>
   <div class="expect last-frame"><div class="anim fill-both"></div></div>
 </div>
 
@@ -114,9 +98,11 @@ function testCase(element, direction, fill, duration) {
 
 directions.forEach(function (direction) {
   fills.forEach(function (fill) {
-    var divs = document.querySelectorAll('#' + direction + ' .fill-' + fill);
-    testCase(divs[0], direction, fill, 1);
-    testCase(divs[1], direction, fill, 0);
+    var dur0 = document.querySelector('#' + direction + ' .fill-' + fill);
+    var dur1 = dur0.cloneNode(true);
+    dur0.parentElement.insertBefore(dur1, dur0);
+    testCase(dur1, direction, fill, 1);
+    testCase(dur0, direction, fill, 0);
   });
 });
 </script>
