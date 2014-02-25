@@ -28,6 +28,8 @@ limitations under the License.
   height: 25px;
   background-color: #FAA;
   position: relative;
+  font-size: 13px;
+  border-top: 1px solid black;
 }
 
 .expect { border-right: 1px solid black; }
@@ -107,8 +109,7 @@ directions.forEach(function (direction) {
           duration: 1,
           fill: fills[j]
         }));
-    divs[2 * j].innerHTML = "dir: " + direction + " fill: " + fills[j] +
-        " dur: 1";
+    divs[2 * j].innerHTML = "dir: " + direction + " fill: " + fills[j] + " dur: 1";
     document.timeline.play(
         new Animation(divs[2 * j + 1], effect, {
           iterations: 4,
@@ -116,8 +117,7 @@ directions.forEach(function (direction) {
           duration: 0,
           fill: fills[j]
         }));
-    divs[2 * j + 1].innerHTML = "dir: " + direction + " fill: " + fills[j] +
-        " dur: 0";
+    divs[2 * j + 1].innerHTML = "dir: " + direction + " fill: " + fills[j] + " dur: 0";
   }
 });
 
