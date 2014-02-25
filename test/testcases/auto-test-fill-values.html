@@ -37,36 +37,36 @@ limitations under the License.
 .expect.first-frame { width: 500px; }
 .expect.last-frame { width: 600px; }
 
-#normal { top: 50px; }
-#reverse { top: 300px; }
-#alternate { top: 550px; }
-#alternate-reverse { top: 800px; }
+.dir-normal { top: 50px; }
+.dir-reverse { top: 300px; }
+.dir-alternate { top: 550px; }
+.dir-alternate-reverse { top: 800px; }
 </style>
 
 <div>Right edge of each box should align with black line at end of test.</div>
 
-<div class="animContainer" id="normal">
+<div class="animContainer dir-normal">
   <div class="expect no-effect"><div class="anim fill-none"></div></div>
   <div class="expect no-effect"><div class="anim fill-backwards"></div></div>
   <div class="expect last-frame"><div class="anim fill-forwards"></div></div>
   <div class="expect last-frame"><div class="anim fill-both"></div></div>
 </div>
 
-<div class="animContainer" id="reverse">
+<div class="animContainer dir-reverse">
   <div class="expect no-effect"><div class="anim fill-none"></div></div>
   <div class="expect no-effect"><div class="anim fill-backwards"></div></div>
   <div class="expect first-frame"><div class="anim fill-forwards"></div></div>
   <div class="expect first-frame"><div class="anim fill-both"></div></div>
 </div>
 
-<div class="animContainer" id="alternate">
+<div class="animContainer dir-alternate">
   <div class="expect no-effect"><div class="anim fill-none"></div></div>
   <div class="expect no-effect"><div class="anim fill-backwards"></div></div>
   <div class="expect first-frame"><div class="anim fill-forwards"></div></div>
   <div class="expect first-frame"><div class="anim fill-both"></div></div>
 </div>
 
-<div class="animContainer" id="alternate-reverse">
+<div class="animContainer dir-alternate-reverse">
   <div class="expect no-effect"><div class="anim fill-none"></div></div>
   <div class="expect no-effect"><div class="anim fill-backwards"></div></div>
   <div class="expect last-frame"><div class="anim fill-forwards"></div></div>
@@ -98,7 +98,7 @@ function testCase(element, direction, fill, duration) {
 
 directions.forEach(function (direction) {
   fills.forEach(function (fill) {
-    var dur0 = document.querySelector('#' + direction + ' .fill-' + fill);
+    var dur0 = document.querySelector('.dir-' + direction + ' .fill-' + fill);
     var dur1 = dur0.cloneNode(true);
     dur0.parentElement.insertBefore(dur1, dur0);
     testCase(dur1, direction, fill, 1);
