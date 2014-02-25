@@ -19,7 +19,7 @@ limitations under the License.
 .animContainer {
   position: absolute;
   left: 0px;
-  height: 100px;
+  height: 10px;
 }
 
 .anim {
@@ -38,9 +38,11 @@ limitations under the License.
 .expect.last-frame { width: 600px; }
 
 .dir-normal { top: 50px; }
-.dir-reverse { top: 300px; }
-.dir-alternate { top: 550px; }
-.dir-alternate-reverse { top: 800px; }
+.dir-reverse { top: 350px; }
+.dir-alternate { top: 650px; }
+.dir-alternate-reverse { top: 950px; }
+
+.spacing { height: 1200px; }
 </style>
 
 <div>Right edge of each box should align with black line at end of test.</div>
@@ -50,6 +52,7 @@ limitations under the License.
   <div class="expect no-effect"><div class="anim fill-backwards"></div></div>
   <div class="expect last-frame"><div class="anim fill-forwards"></div></div>
   <div class="expect last-frame"><div class="anim fill-both"></div></div>
+  <div class="expect no-effect"><div class="anim fill-auto"></div></div>
 </div>
 
 <div class="animContainer dir-reverse">
@@ -57,6 +60,7 @@ limitations under the License.
   <div class="expect no-effect"><div class="anim fill-backwards"></div></div>
   <div class="expect first-frame"><div class="anim fill-forwards"></div></div>
   <div class="expect first-frame"><div class="anim fill-both"></div></div>
+  <div class="expect no-effect"><div class="anim fill-auto"></div></div>
 </div>
 
 <div class="animContainer dir-alternate">
@@ -64,6 +68,7 @@ limitations under the License.
   <div class="expect no-effect"><div class="anim fill-backwards"></div></div>
   <div class="expect first-frame"><div class="anim fill-forwards"></div></div>
   <div class="expect first-frame"><div class="anim fill-both"></div></div>
+  <div class="expect no-effect"><div class="anim fill-auto"></div></div>
 </div>
 
 <div class="animContainer dir-alternate-reverse">
@@ -71,16 +76,17 @@ limitations under the License.
   <div class="expect no-effect"><div class="anim fill-backwards"></div></div>
   <div class="expect last-frame"><div class="anim fill-forwards"></div></div>
   <div class="expect last-frame"><div class="anim fill-both"></div></div>
+  <div class="expect no-effect"><div class="anim fill-auto"></div></div>
 </div>
 
-<div style="height: 1000px;"></div>
+<div class="spacing"></div>
 
 <script src="../bootstrap.js"></script>
 <script>
 'use strict';
 
 var directions = ['normal', 'reverse', 'alternate', 'alternate-reverse'];
-var fills = ['none', 'backwards', 'forwards', 'both'];
+var fills = ['none', 'backwards', 'forwards', 'both', 'auto'];
 var effect = [{left: '100px'}, {left: '200px'}];
 var nextId = 0;
 
