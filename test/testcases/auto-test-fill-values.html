@@ -24,7 +24,7 @@ limitations under the License.
 
 .anim {
   left: 0px;
-  width: 300px;
+  width: 400px;
   height: 25px;
   background-color: #FAA;
   position: relative;
@@ -33,9 +33,9 @@ limitations under the License.
 }
 
 .expect { border-right: 1px solid black; }
-.expect.no-effect { width: 300px; }
-.expect.first-frame { width: 400px; }
-.expect.last-frame { width: 500px; }
+.expect.no-effect { width: 400px; }
+.expect.first-frame { width: 500px; }
+.expect.last-frame { width: 600px; }
 
 #normal { top: 50px; }
 #reverse { top: 300px; }
@@ -46,79 +46,77 @@ limitations under the License.
 <div>Right edge of each box should align with black line at end of test.</div>
 
 <div class="animContainer" id="normal">
-  <div class="expect no-effect"><div id="a" class="anim"></div></div>
-  <div class="expect no-effect"><div id="b" class="anim"></div></div>
-  <div class="expect no-effect"><div id="c" class="anim"></div></div>
-  <div class="expect no-effect"><div id="d" class="anim"></div></div>
-  <div class="expect last-frame"><div id="e" class="anim"></div></div>
-  <div class="expect last-frame"><div id="f" class="anim"></div></div>
-  <div class="expect last-frame"><div id="g" class="anim"></div></div>
-  <div class="expect last-frame"><div id="h" class="anim"></div></div>
+  <div class="expect no-effect"><div class="anim"></div></div>
+  <div class="expect no-effect"><div class="anim"></div></div>
+  <div class="expect no-effect"><div class="anim"></div></div>
+  <div class="expect no-effect"><div class="anim"></div></div>
+  <div class="expect last-frame"><div class="anim"></div></div>
+  <div class="expect last-frame"><div class="anim"></div></div>
+  <div class="expect last-frame"><div class="anim"></div></div>
+  <div class="expect last-frame"><div class="anim"></div></div>
 </div>
 
 <div class="animContainer" id="reverse">
-  <div class="expect no-effect"><div id="i" class="anim"></div></div>
-  <div class="expect no-effect"><div id="j" class="anim"></div></div>
-  <div class="expect no-effect"><div id="k" class="anim"></div></div>
-  <div class="expect no-effect"><div id="l" class="anim"></div></div>
-  <div class="expect first-frame"><div id="m" class="anim"></div></div>
-  <div class="expect first-frame"><div id="n" class="anim"></div></div>
-  <div class="expect first-frame"><div id="o" class="anim"></div></div>
-  <div class="expect first-frame"><div id="p" class="anim"></div></div>
+  <div class="expect no-effect"><div class="anim"></div></div>
+  <div class="expect no-effect"><div class="anim"></div></div>
+  <div class="expect no-effect"><div class="anim"></div></div>
+  <div class="expect no-effect"><div class="anim"></div></div>
+  <div class="expect first-frame"><div class="anim"></div></div>
+  <div class="expect first-frame"><div class="anim"></div></div>
+  <div class="expect first-frame"><div class="anim"></div></div>
+  <div class="expect first-frame"><div class="anim"></div></div>
 </div>
 
 <div class="animContainer" id="alternate">
-  <div class="expect no-effect"><div id="q" class="anim"></div></div>
-  <div class="expect no-effect"><div id="r" class="anim"></div></div>
-  <div class="expect no-effect"><div id="s" class="anim"></div></div>
-  <div class="expect no-effect"><div id="t" class="anim"></div></div>
-  <div class="expect first-frame"><div id="u" class="anim"></div></div>
-  <div class="expect first-frame"><div id="v" class="anim"></div></div>
-  <div class="expect first-frame"><div id="w" class="anim"></div></div>
-  <div class="expect first-frame"><div id="x" class="anim"></div></div>
+  <div class="expect no-effect"><div class="anim"></div></div>
+  <div class="expect no-effect"><div class="anim"></div></div>
+  <div class="expect no-effect"><div class="anim"></div></div>
+  <div class="expect no-effect"><div class="anim"></div></div>
+  <div class="expect first-frame"><div class="anim"></div></div>
+  <div class="expect first-frame"><div class="anim"></div></div>
+  <div class="expect first-frame"><div class="anim"></div></div>
+  <div class="expect first-frame"><div class="anim"></div></div>
 </div>
 
 <div class="animContainer" id="alternate-reverse">
-  <div class="expect no-effect"><div id="y" class="anim"></div></div>
-  <div class="expect no-effect"><div id="z" class="anim"></div></div>
-  <div class="expect no-effect"><div id="aa" class="anim"></div></div>
-  <div class="expect no-effect"><div id="ab" class="anim"></div></div>
-  <div class="expect last-frame"><div id="ac" class="anim"></div></div>
-  <div class="expect last-frame"><div id="ad" class="anim"></div></div>
-  <div class="expect last-frame"><div id="ae" class="anim"></div></div>
-  <div class="expect last-frame"><div id="af" class="anim"></div></div>
+  <div class="expect no-effect"><div class="anim"></div></div>
+  <div class="expect no-effect"><div class="anim"></div></div>
+  <div class="expect no-effect"><div class="anim"></div></div>
+  <div class="expect no-effect"><div class="anim"></div></div>
+  <div class="expect last-frame"><div class="anim"></div></div>
+  <div class="expect last-frame"><div class="anim"></div></div>
+  <div class="expect last-frame"><div class="anim"></div></div>
+  <div class="expect last-frame"><div class="anim"></div></div>
 </div>
 
 <div style="height: 1000px;"></div>
 
 <script src="../bootstrap.js"></script>
 <script>
-"use strict";
+'use strict';
 
-var directions = ["normal", "reverse", "alternate", "alternate-reverse"];
-var fills = ["none", "backwards", "forwards", "both"];
-var effect = [{left: "100px"}, {left: "200px"}];
+var directions = ['normal', 'reverse', 'alternate', 'alternate-reverse'];
+var fills = ['none', 'backwards', 'forwards', 'both'];
+var effect = [{left: '100px'}, {left: '200px'}];
+var nextId = 0;
+
+function testCase(element, direction, fill, duration) {
+  document.timeline.play(
+      new Animation(element, effect, {
+        iterations: 4,
+        direction: direction,
+        fill: fill,
+        duration: duration,
+      }));
+  element.id = 'anim' + (nextId++);
+  element.textContent = 'ID: ' + element.id + ' | dir: ' + direction + ' | fill: ' + fill + ' | dur: ' + duration;
+}
 
 directions.forEach(function (direction) {
   var divs = document.getElementById(direction).getElementsByClassName('anim');
-  for (var j = 0; j < fills.length; j++) {
-    document.timeline.play(
-        new Animation(divs[2 * j], effect, {
-          iterations: 4,
-          direction: direction,
-          duration: 1,
-          fill: fills[j]
-        }));
-    divs[2 * j].innerHTML = "dir: " + direction + " fill: " + fills[j] + " dur: 1";
-    document.timeline.play(
-        new Animation(divs[2 * j + 1], effect, {
-          iterations: 4,
-          direction: direction,
-          duration: 0,
-          fill: fills[j]
-        }));
-    divs[2 * j + 1].innerHTML = "dir: " + direction + " fill: " + fills[j] + " dur: 0";
+  for (var i = 0; i < fills.length; i++) {
+    testCase(divs[2 * i], direction, fills[i], 1);
+    testCase(divs[2 * i + 1], direction, fills[i], 0);
   }
 });
-
 </script>
