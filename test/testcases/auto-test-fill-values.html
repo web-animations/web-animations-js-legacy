@@ -46,47 +46,47 @@ limitations under the License.
 <div>Right edge of each box should align with black line at end of test.</div>
 
 <div class="animContainer" id="normal">
-  <div class="expect no-effect"><div class="anim"></div></div>
-  <div class="expect no-effect"><div class="anim"></div></div>
-  <div class="expect no-effect"><div class="anim"></div></div>
-  <div class="expect no-effect"><div class="anim"></div></div>
-  <div class="expect last-frame"><div class="anim"></div></div>
-  <div class="expect last-frame"><div class="anim"></div></div>
-  <div class="expect last-frame"><div class="anim"></div></div>
-  <div class="expect last-frame"><div class="anim"></div></div>
+  <div class="expect no-effect"><div class="anim fill-none"></div></div>
+  <div class="expect no-effect"><div class="anim fill-none"></div></div>
+  <div class="expect no-effect"><div class="anim fill-backwards"></div></div>
+  <div class="expect no-effect"><div class="anim fill-backwards"></div></div>
+  <div class="expect last-frame"><div class="anim fill-forwards"></div></div>
+  <div class="expect last-frame"><div class="anim fill-forwards"></div></div>
+  <div class="expect last-frame"><div class="anim fill-both"></div></div>
+  <div class="expect last-frame"><div class="anim fill-both"></div></div>
 </div>
 
 <div class="animContainer" id="reverse">
-  <div class="expect no-effect"><div class="anim"></div></div>
-  <div class="expect no-effect"><div class="anim"></div></div>
-  <div class="expect no-effect"><div class="anim"></div></div>
-  <div class="expect no-effect"><div class="anim"></div></div>
-  <div class="expect first-frame"><div class="anim"></div></div>
-  <div class="expect first-frame"><div class="anim"></div></div>
-  <div class="expect first-frame"><div class="anim"></div></div>
-  <div class="expect first-frame"><div class="anim"></div></div>
+  <div class="expect no-effect"><div class="anim fill-none"></div></div>
+  <div class="expect no-effect"><div class="anim fill-none"></div></div>
+  <div class="expect no-effect"><div class="anim fill-backwards"></div></div>
+  <div class="expect no-effect"><div class="anim fill-backwards"></div></div>
+  <div class="expect first-frame"><div class="anim fill-forwards"></div></div>
+  <div class="expect first-frame"><div class="anim fill-forwards"></div></div>
+  <div class="expect first-frame"><div class="anim fill-both"></div></div>
+  <div class="expect first-frame"><div class="anim fill-both"></div></div>
 </div>
 
 <div class="animContainer" id="alternate">
-  <div class="expect no-effect"><div class="anim"></div></div>
-  <div class="expect no-effect"><div class="anim"></div></div>
-  <div class="expect no-effect"><div class="anim"></div></div>
-  <div class="expect no-effect"><div class="anim"></div></div>
-  <div class="expect first-frame"><div class="anim"></div></div>
-  <div class="expect first-frame"><div class="anim"></div></div>
-  <div class="expect first-frame"><div class="anim"></div></div>
-  <div class="expect first-frame"><div class="anim"></div></div>
+  <div class="expect no-effect"><div class="anim fill-none"></div></div>
+  <div class="expect no-effect"><div class="anim fill-none"></div></div>
+  <div class="expect no-effect"><div class="anim fill-backwards"></div></div>
+  <div class="expect no-effect"><div class="anim fill-backwards"></div></div>
+  <div class="expect first-frame"><div class="anim fill-forwards"></div></div>
+  <div class="expect first-frame"><div class="anim fill-forwards"></div></div>
+  <div class="expect first-frame"><div class="anim fill-both"></div></div>
+  <div class="expect first-frame"><div class="anim fill-both"></div></div>
 </div>
 
 <div class="animContainer" id="alternate-reverse">
-  <div class="expect no-effect"><div class="anim"></div></div>
-  <div class="expect no-effect"><div class="anim"></div></div>
-  <div class="expect no-effect"><div class="anim"></div></div>
-  <div class="expect no-effect"><div class="anim"></div></div>
-  <div class="expect last-frame"><div class="anim"></div></div>
-  <div class="expect last-frame"><div class="anim"></div></div>
-  <div class="expect last-frame"><div class="anim"></div></div>
-  <div class="expect last-frame"><div class="anim"></div></div>
+  <div class="expect no-effect"><div class="anim fill-none"></div></div>
+  <div class="expect no-effect"><div class="anim fill-none"></div></div>
+  <div class="expect no-effect"><div class="anim fill-backwards"></div></div>
+  <div class="expect no-effect"><div class="anim fill-backwards"></div></div>
+  <div class="expect last-frame"><div class="anim fill-forwards"></div></div>
+  <div class="expect last-frame"><div class="anim fill-forwards"></div></div>
+  <div class="expect last-frame"><div class="anim fill-both"></div></div>
+  <div class="expect last-frame"><div class="anim fill-both"></div></div>
 </div>
 
 <div style="height: 1000px;"></div>
@@ -113,10 +113,10 @@ function testCase(element, direction, fill, duration) {
 }
 
 directions.forEach(function (direction) {
-  var divs = document.getElementById(direction).getElementsByClassName('anim');
-  for (var i = 0; i < fills.length; i++) {
-    testCase(divs[2 * i], direction, fills[i], 1);
-    testCase(divs[2 * i + 1], direction, fills[i], 0);
-  }
+  fills.forEach(function (fill) {
+    var divs = document.querySelectorAll('#' + direction + ' .fill-' + fill);
+    testCase(divs[0], direction, fill, 1);
+    testCase(divs[1], direction, fill, 0);
+  });
 });
 </script>
