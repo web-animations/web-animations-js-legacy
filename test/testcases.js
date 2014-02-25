@@ -55,6 +55,7 @@ var tests = [
   'test-document-timeline.html',
   'test-dynamic-load.html',
   'test-events.html',
+  'test-fill-auto.html',
   'test-getcurrent.html',
   'test-keyframe-animation-effect.html',
   'test-keyframe-composite-operation.html',
