@@ -37,21 +37,13 @@
 var easings = [
   '',
   'linear',
-  'ease',
-  'ease-in',
-  'ease-out',
   'ease-in-out',
-  'cubic-bezier(0.5, -1.5, 0.5, 2.5)',
-  'steps(3, start)',
-  'steps(3, middle)',
-  'steps(3, end)',
-  'step-start',
   'step-middle',
-  'step-end',
+  'steps(4, end)',
 ];
 
 var keyframeHeight = 50;
-var timing = {duration: easings.length * 2, fill: 'forwards'};
+var timing = {duration: easings.length, fill: 'forwards'};
 
 control.animate({height: easings.length * keyframeHeight + 'px'}, timing);
 
