@@ -22,6 +22,7 @@ var tests = [
   'auto-test-iterations-basic.html',
   'auto-test-iterations-fill.html',
   'auto-test-keyframe-creation.html',
+  'auto-test-keyframe-easing.html',
   'auto-test-length-units.html',
   'auto-test-matrix-transforms.html',
   'auto-test-non-numeric.html',
