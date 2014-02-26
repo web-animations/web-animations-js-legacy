@@ -1,5 +1,7 @@
 [![Build Status](https://travis-ci.org/web-animations/web-animations-js.png?branch=master)](https://travis-ci.org/web-animations/web-animations-js)
 
+Latest specification at http://dev.w3.org/fxtf/web-animations/.
+
 ## Learn the tech
 
 ### Why Web Animations?
