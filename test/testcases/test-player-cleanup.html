@@ -28,7 +28,8 @@ var expected_failures = {
 "use strict";
 
 
-document.timeline.play(new Animation(null, {}, 1));
+document.timeline.play(new Animation(null, {},
+	{duration: 1, fill: 'forwards'}));
 document.timeline.play(new Animation(null, {},
 	{duration: 1, fill: 'none'}));
 var player = document.timeline.play(new Animation(anim,

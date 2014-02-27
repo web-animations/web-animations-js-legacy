@@ -32,13 +32,13 @@ div.anim {
 "use strict";
 
 var animFunc = {left: "100px"};
-var anim1 = new Animation(document.getElementById("anim1"), animFunc, 1.0);
+var anim1 = new Animation(document.getElementById("anim1"), animFunc, {duration: 1.0, fill: 'forwards'});
 var player1 = document.timeline.play(anim1);
 
-var anim2 = new Animation(document.getElementById("anim2"), animFunc, 1.0);
+var anim2 = new Animation(document.getElementById("anim2"), animFunc, {duration: 1.0, fill: 'forwards'});
 var player2 = document.timeline.play(anim2);
 
-var anim3 = new Animation(document.getElementById("anim3"), animFunc, 1.0);
+var anim3 = new Animation(document.getElementById("anim3"), animFunc, {duration: 1.0, fill: 'forwards'});
 var player3 = document.timeline.play(anim3);
 
 // Check that once an animation is completed, creating a new Player restarts it.

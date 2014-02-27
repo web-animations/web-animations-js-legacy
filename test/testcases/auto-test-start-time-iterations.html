@@ -98,8 +98,8 @@ for (var i = 0; i < directions.length; i++) {
   timing_test(function() {
       at(0.75, (function(container, direction, intrinsicGroup, fixedGroup) {
         return function() {
-          intrinsicGroup.append(new Animation(document.getElementById(direction + '_a'), animation, {duration: 1.0}));
-          fixedGroup.append(new Animation(document.getElementById(direction + '_b'), animation, {duration: 1.0}));
+          intrinsicGroup.append(new Animation(document.getElementById(direction + '_a'), animation, {duration: 1.0, fill: 'forwards'}));
+          fixedGroup.append(new Animation(document.getElementById(direction + '_b'), animation, {duration: 1.0, fill: 'forwards'}));
         };
       })(container, direction, intrinsicGroup, fixedGroup));
     });

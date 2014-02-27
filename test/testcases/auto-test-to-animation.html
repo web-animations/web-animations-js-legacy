@@ -76,7 +76,7 @@ var divs = document.querySelectorAll(".anim");
 var group = new ParGroup([], 2);
 
 for (var i = 0; i < divs.length; i++) {
-  group.append(new Animation(divs[i], {left: (100 * (i+1)) + "px"}, 2));
+  group.append(new Animation(divs[i], {left: (100 * (i+1)) + "px"}, {duration: 2, fill: 'forwards'}));
 }
 document.timeline.play(group);
 
