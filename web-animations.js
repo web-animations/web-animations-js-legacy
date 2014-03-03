@@ -5180,7 +5180,7 @@ var repeatLastTick = function() {
 
 var playerSortFunction = function(a, b) {
   var result = a.startTime - b.startTime;
-  return result !== 0 ? result : a._sequenceNumber - b.sequenceNumber;
+  return result !== 0 ? result : a._sequenceNumber - b._sequenceNumber;
 };
 
 var lastTickTime;

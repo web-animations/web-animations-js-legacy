@@ -63,6 +63,7 @@ var tests = [
   'test-pause-for-testing.html',
   'test-player.html',
   'test-player-cleanup.html',
+  'test-player-sort.html',
   'test-pseudo-element-reference.html',
   'test-repeated-pause.html',
   'test-restart.html',
