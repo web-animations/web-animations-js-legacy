@@ -63,8 +63,8 @@ timing_test(function() {
 
     player.source.specified.delay = -1;
     assert_styles(element, {top: '200px'});
-   });
- }, 'Updated style should be visible after change to specified timing');
+  });
+}, 'Updated style should be visible after change to specified timing');
 
 var group = new SeqGroup([
   new Animation(element, {}, 1),
