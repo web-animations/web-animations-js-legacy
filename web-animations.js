@@ -5297,7 +5297,7 @@ try {
 window.Element.prototype.animate = function(effect, timing) {
   var anim = new Animation(this, effect, timing);
   DOCUMENT_TIMELINE.play(anim);
-  return anim;
+  return anim.player;
 };
 window.Element.prototype.getCurrentPlayers = function() {
   return PLAYERS.filter((function(player) {
