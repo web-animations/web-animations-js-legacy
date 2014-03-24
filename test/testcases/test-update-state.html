@@ -56,6 +56,16 @@ timing_test(function() {
   });
 }, 'Updated style should be visible after player seek');
 
+timing_test(function() {
+  var player = element.animate([{top: '0px'}, {top: '1000px'}], 10);
+  at(1, function() {
+    assert_styles(element, {top: '100px'});
+
+    player.source.specified.delay = -1;
+    assert_styles(element, {top: '200px'});
+   });
+ }, 'Updated style should be visible after change to specified timing');
+
 var group = new SeqGroup([
   new Animation(element, {}, 1),
   new Animation(element, [{right: '0px'}, {right: '1000px'}], 10),
@@ -95,7 +105,7 @@ timing_test(function() {
       group.append(group);
     } catch (e) {
     }
-    player2.startTime -= 1;
+    player2.source.specified.delay = -1;
     assert_styles(element, {bottom: '600px'});
   });
 }, 'Updated style should be visible despite unrelated errors');
