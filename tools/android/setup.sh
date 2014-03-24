@@ -90,15 +90,15 @@ if [ -e Chrome.apk ]; then
   CHROME_APP=com.google.android.apps.chrome
   CHROME_ACT=.Main
 else
-  if [ ! -e chrome-android/apks/ChromiumTestShell.apk ]; then
+  if [ ! -e chrome-android/apks/ChromeShell.apk ]; then
     LATEST=`curl -s http://commondatastorage.googleapis.com/chromium-browser-continuous/Android/LAST_CHANGE`
     REMOTE_APK=http://commondatastorage.googleapis.com/chromium-browser-continuous/Android/$LATEST/chrome-android.zip
     wget -c $REMOTE_APK
     unzip chrome-android.zip
   fi
-  CHROME_APK=$ANDROID_DIR/chrome-android/apks/ChromiumTestShell.apk
-  CHROME_APP=org.chromium.chrome.testshell
-  CHROME_ACT=.ChromiumTestShellActivity
+  CHROME_APK=$ANDROID_DIR/chrome-android/apks/ChromeShell.apk
+  CHROME_APP=org.chromium.chrome.shell
+  CHROME_ACT=.ChromeShellActivity
 fi
 
 function start_chrome () {
