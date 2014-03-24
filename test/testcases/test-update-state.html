@@ -47,24 +47,14 @@ timing_test(function() {
 }, 'New animation should apply within script after timeline has started.')
 
 timing_test(function() {
-  var anim = element.animate([{left: '0px'}, {left: '1000px'}], 10);
+  var player = element.animate([{left: '0px'}, {left: '1000px'}], 10);
   at(1, function() {
     assert_styles(element, {left: '100px'});
 
-    anim.player.currentTime += 1;
+    player.currentTime += 1;
     assert_styles(element, {left: '200px'});
   });
 }, 'Updated style should be visible after player seek');
-
-timing_test(function() {
-  var anim = element.animate([{top: '0px'}, {top: '1000px'}], 10);
-  at(1, function() {
-    assert_styles(element, {top: '100px'});
-
-    anim.specified.delay = -1;
-    assert_styles(element, {top: '200px'});
-  });
-}, 'Updated style should be visible after change to specified timing');
 
 var group = new SeqGroup([
   new Animation(element, {}, 1),
@@ -85,16 +75,16 @@ timing_test(function() {
 
 timing_test(function() {
   at(3, function() {
-    var anim = element.animate([{color: 'red'}, {color: 'green'}, {color: 'red'}], 1);
-    assert_equals(anim.player.startTime, 3);
+    var player = element.animate([{color: 'red'}, {color: 'green'}, {color: 'red'}], 1);
+    assert_equals(player.startTime, 3);
     assert_styles(element, {color: 'red'});
 
-    anim.player.startTime -= 0.5;
+    player.startTime -= 0.5;
     assert_styles(element, {color: 'green'});
   });
 }, 'Changing the start time of a new player to before the current time should cause it to take effect');
 
-var anim3 = element.animate([{bottom: '0px'}, {bottom: '1000px'}], 10);
+var player2 = element.animate([{bottom: '0px'}, {bottom: '1000px'}], 10);
 // Run this last, since if it fails it's likely to corrupt the other tests.
 timing_test(function() {
   at(5, function() {
@@ -105,7 +95,7 @@ timing_test(function() {
       group.append(group);
     } catch (e) {
     }
-    anim3.specified.delay = -1;
+    player2.startTime -= 1;
     assert_styles(element, {bottom: '600px'});
   });
 }, 'Updated style should be visible despite unrelated errors');
