@@ -2,7 +2,7 @@ testtools>=0.9.30
 python-subunit # subunit
 selenium
 
--e svn+http://closure-linter.googlecode.com/svn/trunk/#egg=closer-linter
+-e svn+http://closure-linter.googlecode.com/svn/trunk/#egg=closure-linter
 
 # Requirements for using -x
 pyvirtualdisplay

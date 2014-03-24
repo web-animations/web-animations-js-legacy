@@ -91,25 +91,26 @@ var expected_failures = {
 "use strict";
 
 var dt = document.timeline;
+var timing = {duration: 2, fill: 'forwards'};
 
 dt.play(new Animation(document.querySelector("#a"),
-    [{backgroundColor: "red"}, {backgroundColor: "green"}], 2));
+    [{backgroundColor: "red"}, {backgroundColor: "green"}], timing));
 dt.play(new Animation(document.querySelector("#b"),
-    {backgroundColor: "rgb(0, 128, 0)"}, 2));
+    {backgroundColor: "rgb(0, 128, 0)"}, timing));
 dt.play(new Animation(document.querySelector("#c"),
-    new KeyframeAnimationEffect([
+    new KeyframeEffect([
       {offset: 0.25, backgroundColor: "rgb(255, 0, 0)"},
       {offset: 0.75, backgroundColor: "rgb(0, 0, 255)"},
-    ], 'add'), 2));
+    ], 'add'), timing));
 dt.play(new Animation(document.querySelector("#d"),
-    {offset: 0.5, backgroundColor: "white"}, 2));
+    {offset: 0.5, backgroundColor: "white"}, timing));
 dt.play(new Animation(document.querySelector("#e"),
-    {offset: 0.5, backgroundColor: "white"}, 2));
+    {offset: 0.5, backgroundColor: "white"}, timing));
 
 dt.play(new Animation(document.querySelector("#f"),
-    [{backgroundColor: "#000000"}, {backgroundColor: "#ffffff"}], 2));
+    [{backgroundColor: "#000000"}, {backgroundColor: "#ffffff"}], timing));
 
 dt.play(new Animation(document.querySelector("#g"),
-    [{backgroundColor: "#000"}, {backgroundColor: "#fff"}], 2));
+    [{backgroundColor: "#000"}, {backgroundColor: "#fff"}], timing));
 
 </script>

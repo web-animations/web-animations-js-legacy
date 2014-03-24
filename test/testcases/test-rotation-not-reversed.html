@@ -32,7 +32,7 @@ div.anim {
 <script>
 "use strict";
 
-document.timeline.play(new Animation(anim, [{transform: 'scale(2)'}, {transform: 'rotate(45deg)'}], 1));
+document.timeline.play(new Animation(anim, [{transform: 'scale(2)'}, {transform: 'rotate(45deg)'}], {duration: 1, fill: 'forwards'}));
 
 
 timing_test(function() {

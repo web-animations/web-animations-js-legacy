@@ -1,3 +1,7 @@
+[![Build Status](https://travis-ci.org/web-animations/web-animations-js.png?branch=master)](https://travis-ci.org/web-animations/web-animations-js)
+
+Latest specification at http://dev.w3.org/fxtf/web-animations/.
+
 ## Learn the tech
 
 ### Why Web Animations?
@@ -59,11 +63,11 @@ modified by an animation, and the values that those properties and attributes
 vary between. AnimationEffect objects also control whether the effect replaces
 or adds to the underlying value.
 
-There are three major kinds of effects: `KeyframeAnimationEffect`, `PathAnimationEffect`, and `CustomAnimationEffect`.
+There are three major kinds of effects: `KeyframeEffect`, `MotionPathEffect`, and `EffectCallback`.
 
 #### Animating between keyframes
 
-A `KeyframeAnimationEffect` controls one or more properties/attributes by linearly
+A `KeyframeEffect` controls one or more properties/attributes by linearly
 interpolating values between specified keyframes. KeyframeEffects are usually
 defined by specifying the keyframe offset and the property-value pair in a
 dictionary:
@@ -80,12 +84,12 @@ between 0 and 1.
     [{left: "35px"}, {left: "50px"}, {left: "70px"}]
 
 See the [specification](http://www.w3.org/TR/web-animations/#keyframe-animation-effects) for the details
-of the keyframe distribution procedure, and how KeyframeAnimationEffects are
+of the keyframe distribution procedure, and how KeyframeEffects are
 evaluated at offsets outside those specified by the keyframes.
 
 #### Animating along paths
 
-A `PathAnimationEffect` allows elements to be animated along SVG-style paths. For example:
+A `MotionPathEffect` allows elements to be animated along SVG-style paths. For example:
 
     <svg xmlns="http://www.w3.org/2000/svg" version="1.1">
       <defs>
@@ -93,13 +97,13 @@ A `PathAnimationEffect` allows elements to be animated along SVG-style paths. Fo
       </defs>
     </svg>
     <script>
-      var animFunc = new PathAnimationEffect(document.querySelector('#path').pathSegList);
+      var animFunc = new MotionPathEffect(document.querySelector('#path').pathSegList);
       var animation = new Animation(targetElement, animFunc, 2);
     </script>
 
 #### Custom animation effects
 
-A `CustomAnimationEffect` allows animations to generate call-outs to JavaScript
+An `EffectCallback` allows animations to generate call-outs to JavaScript
 rather than manipulating properties directly. Please see the
 [specification](http://www.w3.org/TR/web-animations/#custom-effects) for more details on this
 feature.
@@ -224,4 +228,4 @@ then the polyfill will provide a console warning in browsers where these feature
 ## Tools & testing
 
 For running tests or building minified files, consult the
-[tooling information](http://www.polymer-project.org/tooling-strategy.html).
+[tooling information](http://www.polymer-project.org/resources/tooling-strategy.html).

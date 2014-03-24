@@ -95,6 +95,6 @@ document.querySelector("table").innerHTML = table;
 "use strict";
 for (var id in anims) {
   document.timeline.play(
-      new Animation(document.querySelector(id), anims[id], 2));
+      new Animation(document.querySelector(id), anims[id], {duration: 2, fill: 'forwards'}));
 }
 </script>

@@ -45,23 +45,23 @@ var keyframes = [{left: "200px"}, {left: "300px"}];
 
 test(function() {
   assert_true(new Animation(document.getElementById("elem"), keyframes).effect
-      instanceof KeyframeAnimationEffect);
-}, "Animation.effect should be an instance of KeyframeAnimationEffect when " +
+      instanceof KeyframeEffect);
+}, "Animation.effect should be an instance of KeyframeEffect when " +
     "created with a keyframe dictionary");
 
 test(function() {
-  assert_equals(new KeyframeAnimationEffect(keyframes).accumulate, "none");
-}, "KeyframeAnimationEffect.accumulate should default to 'none'");
+  assert_equals(new KeyframeEffect(keyframes).accumulate, "none");
+}, "KeyframeEffect.accumulate should default to 'none'");
 
 test(function() {
-  var effect = new KeyframeAnimationEffect(keyframes);
+  var effect = new KeyframeEffect(keyframes);
   effect.accumulate = "foo";
   assert_equals(effect.accumulate, "none");
   effect.accumulate = 42;
   assert_equals(effect.accumulate, "none");
   effect.accumulate = "sum";
   assert_equals(effect.accumulate, "sum");
-}, "KeyframeAnimationEffect.accumulate should only accept valid values");
+}, "KeyframeEffect.accumulate should only accept valid values");
 
 timing_test(function() {
   var animation = new Animation(document.getElementById("anim0"), keyframes,
@@ -72,21 +72,21 @@ timing_test(function() {
     animation.effect.accumulate = "sum";
     assert_styles("#anim0", {left: "550px"});
   });
-}, "Setting KeyframeAnimationEffect.accumulate should cause immediate update");
+}, "Setting KeyframeEffect.accumulate should cause immediate update");
 
 test(function() {
-  assert_equals(new KeyframeAnimationEffect(keyframes).composite, "replace");
-}, "KeyframeAnimationEffect.composite should default to 'replace'");
+  assert_equals(new KeyframeEffect(keyframes).composite, "replace");
+}, "KeyframeEffect.composite should default to 'replace'");
 
 test(function() {
-  var effect = new KeyframeAnimationEffect(keyframes);
+  var effect = new KeyframeEffect(keyframes);
   effect.composite = "foo";
   assert_equals(effect.composite, "replace");
   effect.composite = 42;
   assert_equals(effect.composite, "replace");
   effect.composite = "add";
   assert_equals(effect.composite, "add");
-}, "KeyframeAnimationEffect.composite should only accept valid values");
+}, "KeyframeEffect.composite should only accept valid values");
 
 timing_test(function() {
   var animation = new Animation(document.getElementById("anim1"), keyframes, 1);
@@ -96,101 +96,101 @@ timing_test(function() {
     animation.effect.composite = "add";
     assert_styles("#anim1", {left: "350px"});
   });
-}, "Setting KeyframeAnimationEffect.composite should cause immediate update");
+}, "Setting KeyframeEffect.composite should cause immediate update");
 
 test(function() {
-  var frames = new KeyframeAnimationEffect(
+  var frames = new KeyframeEffect(
       [{left: "100px"}, {top: "200px"}]).getFrames();
   assert_equals(frames.length, 2);
   assert_equals(frames[0].left, "100px");
   assert_equals(frames[1].top, "200px");
-}, "KeyframeAnimationEffect.getFrames() should return the specified keyframes");
+}, "KeyframeEffect.getFrames() should return the specified keyframes");
 
 test(function() {
-  var frames = new KeyframeAnimationEffect({left: "100px"}).getFrames();
+  var frames = new KeyframeEffect({left: "100px"}).getFrames();
   assert_equals(frames.length, 1);
   assert_equals(frames[0].left, "100px");
-}, "KeyframeAnimationEffect should handle a single keyframe");
+}, "KeyframeEffect should handle a single keyframe");
 
 test(function() {
-  var frames = new KeyframeAnimationEffect({}).getFrames();
+  var frames = new KeyframeEffect({}).getFrames();
   assert_equals(frames.length, 1);
   assert_equals(typeof frames[0], "object");
-}, "KeyframeAnimationEffect should handle an empty keyframe");
+}, "KeyframeEffect should handle an empty keyframe");
 
 test(function() {
-  var frames = new KeyframeAnimationEffect().getFrames();
+  var frames = new KeyframeEffect().getFrames();
   assert_equals(frames.length, 1);
   assert_equals(typeof frames[0], "object");
-}, "KeyframeAnimationEffect should handle no input for keyframe dictionary");
+}, "KeyframeEffect should handle no input for keyframe dictionary");
 
 test(function() {
-  var frames = new KeyframeAnimationEffect(42).getFrames();
+  var frames = new KeyframeEffect(42).getFrames();
   assert_equals(frames.length, 1);
   assert_equals(typeof frames[0], "object");
-}, "KeyframeAnimationEffect should handle non-objects for keyframe dictionary");
+}, "KeyframeEffect should handle non-objects for keyframe dictionary");
 
 test(function() {
   assert_false(
-      new KeyframeAnimationEffect(keyframes).getFrames() === keyframes);
-}, "KeyframeAnimationEffect.getFrames() should not return the original " +
+      new KeyframeEffect(keyframes).getFrames() === keyframes);
+}, "KeyframeEffect.getFrames() should not return the original " +
     "keyframe dictionary");
 
 test(function() {
-  var effect = new KeyframeAnimationEffect({left: "100px"});
+  var effect = new KeyframeEffect({left: "100px"});
   effect.getFrames().push({top: "200px"});
   var frames = effect.getFrames();
   assert_equals(frames.length, 1);
   assert_equals(frames[0].left, "100px");
   assert_equals(frames[0].top, undefined);
-}, "KeyframeAnimationEffect.getFrames() should not allow internal state to " +
+}, "KeyframeEffect.getFrames() should not allow internal state to " +
     "be modified");
 
 test(function() {
-  assert_equals(new KeyframeAnimationEffect(keyframes).getFrames()[0].offset,
+  assert_equals(new KeyframeEffect(keyframes).getFrames()[0].offset,
       null);
 }, "Default keyframe offset should be null");
 
 test(function() {
   assert_equals(
-      new KeyframeAnimationEffect({offset: "foo"}).getFrames()[0].offset, null);
-  assert_equals(new KeyframeAnimationEffect({offset: 42}).getFrames()[0].offset,
+      new KeyframeEffect({offset: "foo"}).getFrames()[0].offset, null);
+  assert_equals(new KeyframeEffect({offset: 42}).getFrames()[0].offset,
       42);
 }, "Keyframes should only accept valid values for offset");
 
 test(function() {
-  assert_equals(new KeyframeAnimationEffect(keyframes).getFrames()[0].composite,
+  assert_equals(new KeyframeEffect(keyframes).getFrames()[0].composite,
       null);
 }, "Default keyframe composite should be null");
 
 test(function() {
   assert_equals(
-      new KeyframeAnimationEffect({composite: "foo"}).getFrames()[0].composite,
+      new KeyframeEffect({composite: "foo"}).getFrames()[0].composite,
       null);
   assert_equals(
-      new KeyframeAnimationEffect({composite: 42}).getFrames()[0].composite,
+      new KeyframeEffect({composite: 42}).getFrames()[0].composite,
       null);
   assert_equals(
-      new KeyframeAnimationEffect({composite: "add"}).getFrames()[0].composite,
+      new KeyframeEffect({composite: "add"}).getFrames()[0].composite,
       "add");
-  assert_equals(new KeyframeAnimationEffect(
+  assert_equals(new KeyframeEffect(
       {composite: "replace"}).getFrames()[0].composite,
       "replace");
 }, "Keyframes should only accept valid values for composite");
 
 test(function() {
-  assert_equals(new KeyframeAnimationEffect({left: null}).getFrames()[0].left,
+  assert_equals(new KeyframeEffect({left: null}).getFrames()[0].left,
       "");
 }, "Keyframe should handle null property values");
 
 test(function() {
   assert_equals(
-      typeof new KeyframeAnimationEffect({left: 42}).getFrames()[0].left,
+      typeof new KeyframeEffect({left: 42}).getFrames()[0].left,
       "string");
-  assert_equals(new KeyframeAnimationEffect({left: 42}).getFrames()[0].left,
+  assert_equals(new KeyframeEffect({left: 42}).getFrames()[0].left,
       "42");
   var obj = { toString: function() { return "toString() called"; } };
-  assert_equals(new KeyframeAnimationEffect({left: obj}).getFrames()[0].left,
+  assert_equals(new KeyframeEffect({left: obj}).getFrames()[0].left,
       obj.toString());
 }, "Keyframe property values should be stringified");
 
@@ -204,12 +204,12 @@ timing_test(function() {
 }, "Invalid keyframe property values should be ignored");
 
 test(function() {
-  var effect = new KeyframeAnimationEffect(keyframes);
+  var effect = new KeyframeEffect(keyframes);
   effect.setFrames({top: "200px"});
   var frames = effect.getFrames();
   assert_equals(frames[0].left, undefined);
   assert_equals(frames[0].top, "200px");
-}, "KeyframeAnimationEffect.setFrames() should replace exisiting keyframes");
+}, "KeyframeEffect.setFrames() should replace exisiting keyframes");
 
 timing_test(function() {
   var animation = new Animation(document.getElementById("anim3"), keyframes, 1);
@@ -219,11 +219,11 @@ timing_test(function() {
     animation.effect.setFrames([{left: "300px"}, {left: "400px"}]);
     assert_styles("#anim3", {left: "350px"});
   });
-}, "KeyframeAnimationEffect.setFrames() should immediately update its target");
+}, "KeyframeEffect.setFrames() should immediately update its target");
 
 timing_test(function() {
   document.timeline.play(new Animation(document.getElementById("anim4"),
-      new KeyframeAnimationEffect(keyframes, 'replace', 'sum'),
+      new KeyframeEffect(keyframes, 'replace', 'sum'),
       {duration: 1.0, iterations: 3.0}));
   at(0.5, function() {
     assert_styles("#anim4", {left: "250px"});
@@ -238,7 +238,7 @@ timing_test(function() {
 
 timing_test(function() {
   document.timeline.play(new Animation(document.getElementById("anim5"),
-      new KeyframeAnimationEffect(keyframes, 'add', 'sum'),
+      new KeyframeEffect(keyframes, 'add', 'sum'),
       {duration: 1.0, iterations: 3.0}));
   at(0.5, function() {
     assert_styles("#anim5", {left: "350px"});
@@ -253,7 +253,7 @@ timing_test(function() {
 
 timing_test(function() {
   document.timeline.play(new Animation(document.getElementById("anim6"),
-      new KeyframeAnimationEffect(keyframes, 'add', 'sum'),
+      new KeyframeEffect(keyframes, 'add', 'sum'),
       {duration: 1.0, iterationStart: 1.0, iterations: 3.0}));
   at(0.5, function() {
     assert_styles("#anim6", {left: "650px"});
@@ -268,7 +268,7 @@ timing_test(function() {
 
 timing_test(function() {
   document.timeline.play(new Animation(document.getElementById("anim7"),
-      new KeyframeAnimationEffect(keyframes, 'add', 'sum'),
+      new KeyframeEffect(keyframes, 'add', 'sum'),
       {duration: 1.0, iterationStart: 1.1, iterations: 3.0}));
   at(0.4, function() {
     assert_styles("#anim7", {left: "650px"});
@@ -283,7 +283,7 @@ timing_test(function() {
 
 timing_test(function() {
   document.timeline.play(new Animation(document.getElementById("anim8"),
-      new KeyframeAnimationEffect([
+      new KeyframeEffect([
         {left: "200px", composite: "add"},
         {left: "300px", composite: "replace"}
       ], 'replace', 'sum'),
@@ -298,7 +298,7 @@ timing_test(function() {
 
 timing_test(function() {
   document.timeline.play(new Animation(document.getElementById("anim9"),
-      new KeyframeAnimationEffect(keyframes, 'add', 'sum'),
+      new KeyframeEffect(keyframes, 'add', 'sum'),
       {duration: 1.0, iterationStart: -2.0, iterations: 4.0}));
   at(0.5, function() {
     assert_styles("#anim9", {left: "350px"});

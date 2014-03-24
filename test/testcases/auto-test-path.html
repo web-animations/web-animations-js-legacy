@@ -83,27 +83,42 @@ height: 600px;
 
 <script>
 var expected_failures = {
+  // Firefox
   '/#anim1/': {
     firefox: true,
     msie: true,
     message: "Doesn't quite follow path correctly."
   },
-  '/#anim2 at t=(0|1|2|7|8|10|11)s/': {
+  '/#anim2 at t=(0|1|2|10|11)s/': {
     firefox: true,
+    message: "Doesn't quite follow path correctly."
+  },
+  '/#anim2 at t=(7|8)s/': {
+    firefox: ['26.0', '27.0'],
     message: "Doesn't quite follow path correctly."
   },
   '/#anim3 at t=(0|7|8|10)s/': {
     firefox: true,
     message: "Doesn't quite follow path correctly."
   },
-  '/#anim3 at t=(0|6|7|8|10)s/': {
-    firefox: true,
+  '/#anim3 at t=6s/': {
+    firefox: ['26.0', '27.0'],
+    message: "Doesn't quite follow path correctly."
+  },
+  '/#anim3 at t=5s/': {
+    firefox: ['28.0', '29.0'],
     message: "Doesn't quite follow path correctly."
   },
   '/#anim4 at t=(0|10)s/': {
     firefox: true,
     message: "Doesn't quite follow path correctly."
   },
+  '/#anim4 at t=(3|8|9)s/': {
+    firefox: ['28.0', '29.0'],
+    message: "Doesn't quite follow path correctly."
+  },
+
+  // Internet Explorer
   '/#anim2 at t=(0|1|2|3|4|9|10|11)s/': {
     msie: true,
     message: "Doesn't quite follow path correctly."
@@ -116,31 +131,48 @@ var expected_failures = {
     msie: true,
     message: "Doesn't quite follow path correctly."
   },
+
+  // Android Chrome
+  '/#anim3 at t=(7|8)s/' : {
+    android: true,
+    message: "Android uses integer SVG implementation."
+  },
+  '/#anim4 at t=8s/' : {
+    android: true,
+    message: "Android uses integer SVG implementation."
+  },
+
+  // Firefox & Android Chrome
+  '/#anim2 at t=9s/' : {
+    firefox: ['28.0', '29.0'],
+    android: true,
+    message: "Firefox is non-visibly different and Android uses an integer SVG implementation."
+  },
 };
 </script>
 <script src="../bootstrap.js"></script>
 <script>
 "use strict";
 
-var animFunc1 = new PathAnimationEffect(
+var animFunc1 = new MotionPathEffect(
     document.querySelector('#path1').pathSegList, 'auto-rotate');
 document.timeline.play(new Animation(document.querySelector("#anim1"),
     animFunc1, {duration: 10, iterations: 2}));
 
-var animFunc2 = new PathAnimationEffect(
+var animFunc2 = new MotionPathEffect(
     document.querySelector('#path2').pathSegList, 'auto-rotate');
 document.timeline.play(new Animation(document.querySelector("#anim2"),
     animFunc2, {duration: 10, iterations: 2}));
 
-var animFunc3 = new PathAnimationEffect(
+var animFunc3 = new MotionPathEffect(
     document.querySelector('#path3').pathSegList, 'auto-rotate');
 document.timeline.play(new Animation(
     document.querySelector("#anim3"), animFunc3,
     {duration: 10, iterations: 2, easing: "paced"}));
 
-var animFunc4KeyFrames = new KeyframeAnimationEffect(
+var animFunc4KeyFrames = new KeyframeEffect(
     [{transform: "translate(387.5px, 287.5px) rotate(180deg)"}], "replace");
-var animFunc4Path = new PathAnimationEffect(
+var animFunc4Path = new MotionPathEffect(
     document.querySelector('#path4').pathSegList, 'auto-rotate');
 var anim4 = new Animation(document.querySelector("#anim4"), animFunc4Path,
     {duration: 10, iterations: 2, easing: "paced"});

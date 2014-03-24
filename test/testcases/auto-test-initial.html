@@ -71,10 +71,6 @@ var expected_failures = {
     firefox: true,
     message: "FIXME: Border is wrong."
   },
-  '/#text at t=(0|1)s/': {
-    firefox: true,
-    message: "FIXME: font-size is returning different values."
-  },
   '#transform at t=0s' : {
     msie: true,
     message: "'none' in IE."
@@ -94,6 +90,10 @@ var expected_failures = {
   '/#(text|outline) at t=(1|2)s/' : {
     msie: true,
     message: "IE returns rbga values."
+  },
+  '/#text at t=(0|1)s/': {
+    chrome: ["31.0", "30.0"],
+    firefox: true,
   }
 };
 </script>
@@ -101,6 +101,7 @@ var expected_failures = {
 <script>
 "use strict";
 
+var timing = {duration: 2, fill: 'forwards'};
 
 document.timeline.play(new Animation(document.querySelector('#allToInitial'), [{
   backgroundColor: 'initial',
@@ -152,9 +153,9 @@ document.timeline.play(new Animation(document.querySelector('#allToInitial'), [{
   width: 'initial',
   wordSpacing: 'initial',
   zIndex: 'initial',
-}], 2));
+}], timing));
 
-document.timeline.play(new Animation(document.querySelector('#background'), [{ backgroundColor: 'initial' }, { backgroundColor: 'green' }], 2));
+document.timeline.play(new Animation(document.querySelector('#background'), [{ backgroundColor: 'initial' }, { backgroundColor: 'green' }], timing));
 
 document.timeline.play(new Animation(document.querySelector('#border'), [{
   borderBottomColor: 'initial',
@@ -182,7 +183,7 @@ document.timeline.play(new Animation(document.querySelector('#border'), [{
   borderTopLeftRadius: '50px',
   borderTopRightRadius: '50px',
   borderTopWidth: '10px',
-}], 2));
+}], timing));
 
 document.timeline.play(new Animation(document.querySelector('#table'), [{
   borderSpacing: 'initial',
@@ -190,9 +191,9 @@ document.timeline.play(new Animation(document.querySelector('#table'), [{
 }, {
   borderSpacing: '10px',
   verticalAlign: '10px',
-}], 2));
+}], timing));
 
-document.timeline.play(new Animation(document.querySelector('#opacity'), [{ opacity: 'initial' }, { opacity: '0.25' }], 2));
+document.timeline.play(new Animation(document.querySelector('#opacity'), [{ opacity: 'initial' }, { opacity: '0.25' }], timing));
 
 document.timeline.play(new Animation(document.querySelector('#outline'), [{
   outlineColor: 'initial',
@@ -202,7 +203,7 @@ document.timeline.play(new Animation(document.querySelector('#outline'), [{
   outlineColor: 'green',
   outlineWidth: '10px',
   outlineOffset: '10px',
-}], 2));
+}], timing));
 
 document.timeline.play(new Animation(document.querySelector('#padding'), [{
   paddingBottom: 'initial',
@@ -214,9 +215,9 @@ paddingBottom: '50px',
   paddingLeft: '50px',
   paddingRight: '50px',
   paddingTop: '50px',
-}], 2));
+}], timing));
 
-document.timeline.play(new Animation(document.querySelector('#transform'), [{ transform: 'initial' }, { transform: 'rotate(360deg)' }], 2));
+document.timeline.play(new Animation(document.querySelector('#transform'), [{ transform: 'initial' }, { transform: 'rotate(360deg)' }], timing));
 
 document.timeline.play(new Animation(document.querySelector('#text'), [{
   color: 'initial',
@@ -236,6 +237,6 @@ document.timeline.play(new Animation(document.querySelector('#text'), [{
   textIndent: '50px',
   textShadow: '10px 10px 50px lime',
   wordSpacing: '100px',
-}], 2));
+}], timing));
 
 </script>

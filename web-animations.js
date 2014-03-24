@@ -18,6 +18,7 @@
 'use strict';
 
 var ASSERT_ENABLED = false;
+var SVG_NS = 'http://www.w3.org/2000/svg';
 
 function assert(check, message) {
   console.assert(ASSERT_ENABLED,
@@ -52,26 +53,28 @@ function webAnimationsInspector_notifyPlayers(players) {
 }
 
 function detectFeatures() {
-  var style = document.createElement('style');
-  style.textContent = '' +
-      'dummyRuleForTesting {' +
-      'width: calc(0px);' +
-      'width: -webkit-calc(0px); }';
-  document.head.appendChild(style);
+  var el = createDummyElement();
+  el.style.cssText = 'width: calc(0px);' +
+                     'width: -webkit-calc(0px);';
+  var calcFunction = el.style.width.split('(')[0];
   var transformCandidates = [
     'transform',
     'webkitTransform',
     'msTransform'
   ];
   var transformProperty = transformCandidates.filter(function(property) {
-    return property in style.sheet.cssRules[0].style;
+    return property in el.style;
   })[0];
-  var calcFunction = style.sheet.cssRules[0].style.width.split('(')[0];
-  document.head.removeChild(style);
   return {
-    transformProperty: transformProperty,
-    calcFunction: calcFunction
+    calcFunction: calcFunction,
+    transformProperty: transformProperty
   };
+}
+
+function createDummyElement() {
+  return document.documentElement.namespaceURI == SVG_NS ?
+         document.createElementNS(SVG_NS, 'g') :
+         document.createElement('div');
 }
 
 var features = detectFeatures();
@@ -115,15 +118,14 @@ var TimingDict = function(timingInput) {
 
 TimingDict.prototype = {
   delay: 0,
-  fill: 'forwards',
+  endDelay: 0,
+  fill: 'auto',
   iterationStart: 0,
   iterations: 1,
   duration: 'auto',
-  activeDuration: 'auto',
   playbackRate: 1,
   direction: 'normal',
-  easing: 'linear',
-  _easingTimes: 'distribute'
+  easing: 'linear'
 };
 
 
@@ -140,7 +142,7 @@ var Timing = function(token, timingInput, changeHandler) {
 Timing.prototype = {
   _timingFunction: function(timedItem) {
     var timingFunction = TimingFunction.createFromString(
-        this.easing, this._easingTimes, timedItem);
+        this.easing, timedItem);
     this._timingFunction = function() {
       return timingFunction;
     };
@@ -156,17 +158,6 @@ Timing.prototype = {
   _duration: function() {
     var value = this._dict.duration;
     return typeof value === 'number' ? value : 'auto';
-  },
-  _activeDuration: function() {
-    var value = this._dict.activeDuration;
-    return typeof value === 'number' ? value : 'auto';
-  },
-  getEasingTimes: function() {
-    return this._easingTimes;
-  },
-  setEasingTimes: function(times) {
-    this._easingTimes = times;
-    this._invalidateTimingFunction();
   },
   _clone: function() {
     return new Timing(
@@ -190,6 +181,12 @@ Timing._defineProperty = function(prop) {
     },
     set: function(value) {
       if (isDefinedAndNotNull(value)) {
+        if (prop == 'duration' && value == 'auto') {
+          // duration is not always a number
+        } else if (['delay', 'endDelay', 'iterationStart', 'iterations',
+                    'duration', 'playbackRate'].indexOf(prop) >= 0) {
+          value = Number(value);
+        }
         this._dict[prop] = value;
       } else {
         delete this._dict[prop];
@@ -243,6 +240,9 @@ Timeline.prototype = {
     }
     return relativeTime(cachedClockTime(), this._startTime);
   },
+  get effectiveCurrentTime() {
+    return this.currentTime || 0;
+  },
   play: function(source) {
     return new Player(constructorToken, source, this);
   },
@@ -260,7 +260,7 @@ Timeline.prototype = {
   },
   _pauseAnimationsForTesting: function(pauseAt) {
     PLAYERS.forEach(function(player) {
-      player.paused = true;
+      player.pause();
       player.currentTime = pauseAt;
     });
   }
@@ -278,22 +278,29 @@ var Player = function(token, source, timeline) {
   if (token !== constructorToken) {
     throw new TypeError('Illegal constructor');
   }
-  this._registeredOnTimeline = false;
-  this._sequenceNumber = playerSequenceNumber++;
-  this._timeline = timeline;
-  this._startTime =
-      this.timeline.currentTime === null ? 0 : this.timeline.currentTime;
-  this._timeDrift = 0.0;
-  this._pauseTime = undefined;
-  this._playbackRate = 1.0;
-  this._hasTicked = false;
+  enterModifyCurrentAnimationState();
+  try {
+    this._registeredOnTimeline = false;
+    this._sequenceNumber = playerSequenceNumber++;
+    this._timeline = timeline;
+    this._startTime =
+        this.timeline.currentTime === null ? 0 : this.timeline.currentTime;
+    this._storedTimeLag = 0.0;
+    this._pausedState = false;
+    this._holdTime = null;
+    this._previousCurrentTime = null;
+    this._playbackRate = 1.0;
+    this._hasTicked = false;
 
-  this.source = source;
-  this._checkForHandlers();
-  this._lastCurrentTime = undefined;
+    this.source = source;
+    this._checkForHandlers();
+    this._lastCurrentTime = undefined;
 
-  playersAreSorted = false;
-  maybeRestartAnimation();
+    playersAreSorted = false;
+    maybeRestartAnimation();
+  } finally {
+    exitModifyCurrentAnimationState(ensureRetickBeforeGetComputedStyle);
+  }
 };
 
 Player.prototype = {
@@ -314,7 +321,7 @@ Player.prototype = {
       }
       this._checkForHandlers();
     } finally {
-      exitModifyCurrentAnimationState(this._hasTicked);
+      exitModifyCurrentAnimationState(repeatLastTick);
     }
   },
   get source() {
@@ -326,62 +333,106 @@ Player.prototype = {
     try {
       this._currentTime = currentTime;
     } finally {
-      exitModifyCurrentAnimationState(
-          this._hasTicked || this.startTime + this._timeDrift <= lastTickTime);
+      exitModifyCurrentAnimationState(repeatLastTick);
     }
   },
   get currentTime() {
-    return this._currentTime === null ? 0 : this._currentTime;
+    return this._currentTime;
   },
-  // This is the current time.
-  set _currentTime(currentTime) {
-    // This seeks by updating _drift. It does not affect the startTime.
-    if (isDefined(this._pauseTime)) {
-      this._pauseTime = currentTime;
+  set _currentTime(seekTime) {
+    // If we are paused or seeking to a time where limiting applies (i.e. beyond
+    // the end in the current direction), update the hold time.
+    var sourceContentEnd = this.source ? this.source.endTime : 0;
+    if (this.paused ||
+        (this.playbackRate > 0 && seekTime >= sourceContentEnd) ||
+        (this.playbackRate < 0 && seekTime <= 0)) {
+      this._holdTime = seekTime;
+    // Otherwise, clear the hold time (it may been set by previously seeking to
+    // a limited time) and update the time lag.
     } else {
-      this._timeDrift = (this.timeline.currentTime - this.startTime) *
-          this.playbackRate - currentTime;
+      this._holdTime = null;
+      this._storedTimeLag = (this.timeline.effectiveCurrentTime -
+          this.startTime) * this.playbackRate - seekTime;
     }
     this._update();
     maybeRestartAnimation();
   },
   get _currentTime() {
-    if (this.timeline.currentTime === null) {
-      return null;
+    this._previousCurrentTime = (this.timeline.effectiveCurrentTime -
+        this.startTime) * this.playbackRate - this.timeLag;
+    return this._previousCurrentTime;
+  },
+  get _unlimitedCurrentTime() {
+    return (this.timeline.effectiveCurrentTime - this.startTime) *
+        this.playbackRate - this._storedTimeLag;
+  },
+  get timeLag() {
+    if (this.paused) {
+      return this._pauseTimeLag;
     }
-    return isDefined(this._pauseTime) ? this._pauseTime :
-        (this.timeline.currentTime - this.startTime) * this.playbackRate -
-        this._timeDrift;
+
+    // Apply limiting at start of interval when playing in reverse
+    if (this.playbackRate < 0 && this._unlimitedCurrentTime <= 0) {
+      if (this._holdTime === null) {
+        this._holdTime = Math.min(this._previousCurrentTime, 0);
+      }
+      return this._pauseTimeLag;
+    }
+
+    // Apply limiting at end of interval when playing forwards
+    var sourceContentEnd = this.source ? this.source.endTime : 0;
+    if (this.playbackRate > 0 &&
+        this._unlimitedCurrentTime >= sourceContentEnd) {
+      if (this._holdTime === null) {
+        this._holdTime = Math.max(this._previousCurrentTime, sourceContentEnd);
+      }
+      return this._pauseTimeLag;
+    }
+
+    // Finished limiting so store pause time lag
+    if (this._holdTime !== null) {
+      this._storedTimeLag = this._pauseTimeLag;
+      this._holdTime = null;
+    }
+
+    return this._storedTimeLag;
+  },
+  get _pauseTimeLag() {
+    return ((this.timeline.currentTime || 0) - this.startTime) *
+        this.playbackRate - this._holdTime;
   },
   set startTime(startTime) {
     enterModifyCurrentAnimationState();
     try {
       // This seeks by updating _startTime and hence the currentTime. It does
-      // not affect _drift.
+      // not affect _storedTimeLag.
       this._startTime = startTime;
+      this._holdTime = null;
       playersAreSorted = false;
       this._update();
       maybeRestartAnimation();
     } finally {
-      exitModifyCurrentAnimationState(
-          this._hasTicked || this.startTime + this._timeDrift <= lastTickTime);
+      exitModifyCurrentAnimationState(repeatLastTick);
     }
   },
   get startTime() {
     return this._startTime;
   },
-  set paused(isPaused) {
-    if (isPaused) {
-      this._pauseTime = this.currentTime;
-    } else if (isDefined(this._pauseTime)) {
-      this._timeDrift = (this.timeline.currentTime - this.startTime) *
-          this.playbackRate - this._pauseTime;
-      this._pauseTime = undefined;
-      maybeRestartAnimation();
+  set _paused(isPaused) {
+    if (isPaused === this._pausedState) {
+      return;
     }
+    if (this._pausedState) {
+      this._storedTimeLag = this.timeLag;
+      this._holdTime = null;
+      maybeRestartAnimation();
+    } else {
+      this._holdTime = this.currentTime;
+    }
+    this._pausedState = isPaused;
   },
   get paused() {
-    return isDefined(this._pauseTime);
+    return this._pausedState;
   },
   get timeline() {
     return this._timeline;
@@ -394,17 +445,73 @@ Player.prototype = {
       this._playbackRate = playbackRate;
       this.currentTime = cachedCurrentTime;
     } finally {
-      exitModifyCurrentAnimationState(this._hasTicked);
+      exitModifyCurrentAnimationState(repeatLastTick);
     }
   },
   get playbackRate() {
     return this._playbackRate;
   },
+  get finished() {
+    return this.source &&
+        ((this.playbackRate > 0 && this.currentTime >= this.source.endTime) ||
+        (this.playbackRate < 0 && this.currentTime <= 0));
+  },
+  cancel: function() {
+    this.source = null;
+  },
+  finish: function() {
+    if (this.playbackRate < 0) {
+      this.currentTime = 0;
+    } else if (this.playbackRate > 0) {
+      var sourceEndTime = this.source ? this.source.endTime : 0;
+      if (sourceEndTime === Infinity) {
+        throw new Error('InvalidStateError');
+      }
+      this.currentTime = sourceEndTime;
+    }
+  },
+  play: function() {
+    this._paused = false;
+    if (!this.source) {
+      return;
+    }
+    if (this.playbackRate > 0 &&
+        (this.currentTime < 0 ||
+         this.currentTime >= this.source.endTime)) {
+      this.currentTime = 0;
+    } else if (this.playbackRate < 0 &&
+        (this.currentTime <= 0 ||
+        this.currentTime > this.source.endTime)) {
+      this.currentTime = this.source.endTime;
+    }
+  },
+  pause: function() {
+    this._paused = true;
+  },
+  reverse: function() {
+    if (this.playbackRate === 0) {
+      return;
+    }
+    if (this.source) {
+      if (this.playbackRate > 0 && this.currentTime >= this.source.endTime) {
+        this.currentTime = this.source.endTime;
+      } else if (this.playbackRate < 0 && this.currentTime < 0) {
+        this.currentTime = 0;
+      }
+    }
+    this.playbackRate = -this.playbackRate;
+    this._paused = false;
+  },
   _update: function() {
     if (this.source !== null) {
-      this.source._updateInheritedTime(this._currentTime);
+      this.source._updateInheritedTime(
+          this.timeline.currentTime === null ? null : this._currentTime);
       this._registerOnTimeline();
     }
+  },
+  _hasFutureAnimation: function() {
+    return this.source === null || this.playbackRate === 0 ||
+        this.source._hasFutureAnimation(this.playbackRate > 0);
   },
   _isPastEndOfActiveInterval: function() {
     return this.source === null ||
@@ -437,19 +544,19 @@ Player.prototype = {
   },
   _generateEvents: function() {
     if (!isDefinedAndNotNull(this._lastCurrentTime)) {
-      this._lastCurrentTime = this._startTime;
+      this._lastCurrentTime = 0;
     }
 
     if (this._needsHandlerPass) {
-      var timeDelta = this._currentTime - this._lastCurrentTime;
+      var timeDelta = this._unlimitedCurrentTime - this._lastCurrentTime;
       if (timeDelta > 0) {
         this.source._generateEvents(
-            this._lastCurrentTime, this._currentTime,
+            this._lastCurrentTime, this._unlimitedCurrentTime,
             this.timeline.currentTime, 1);
       }
     }
 
-    this._lastCurrentTime = this._currentTime;
+    this._lastCurrentTime = this._unlimitedCurrentTime;
   },
   _registerOnTimeline: function() {
     if (!this._registeredOnTimeline) {
@@ -485,6 +592,7 @@ var TimedItem = function(token, timingInput) {
   this._updateInternalState();
   this._handlers = {};
   this._onHandlers = {};
+  this._fill = this._resolveFillMode(this.specified.fill);
 };
 
 TimedItem.prototype = {
@@ -509,18 +617,35 @@ TimedItem.prototype = {
     return result;
   },
   get activeDuration() {
-    var result = this.specified._activeDuration();
-    if (result === 'auto') {
-      var repeatedDuration = this.duration * this.specified._iterations();
-      result = repeatedDuration / Math.abs(this.specified.playbackRate);
-    }
-    return result;
+    var repeatedDuration = this.duration * this.specified._iterations();
+    return repeatedDuration / Math.abs(this.specified.playbackRate);
   },
   get endTime() {
-    return this._startTime + this.activeDuration + this.specified.delay;
+    return this._startTime + this.activeDuration + this.specified.delay +
+        this.specified.endDelay;
   },
   get parent() {
     return this._parent;
+  },
+  get previousSibling() {
+    if (!this.parent) {
+      return null;
+    }
+    var siblingIndex = this.parent.indexOf(this) - 1;
+    if (siblingIndex < 0) {
+      return null;
+    }
+    return this.parent.children[siblingIndex];
+  },
+  get nextSibling() {
+    if (!this.parent) {
+      return null;
+    }
+    var siblingIndex = this.parent.indexOf(this) + 1;
+    if (siblingIndex >= this.parent.children.length) {
+      return null;
+    }
+    return this.parent.children[siblingIndex];
   },
   _attach: function(player) {
     // Remove ourselves from our parent, if we have one. This also removes any
@@ -558,13 +683,15 @@ TimedItem.prototype = {
       this._updateTimeMarkers();
     } finally {
       exitModifyCurrentAnimationState(
-          Boolean(this.player) && this.player._hasTicked);
+          Boolean(this.player) ? repeatLastTick : null);
     }
   },
   _intrinsicDuration: function() {
     return 0.0;
   },
+  _resolveFillMode: abstractMethod,
   _updateInternalState: function() {
+    this._fill = this._resolveFillMode(this.specified.fill);
     if (this.parent) {
       this.parent._childrenStateModified();
     } else if (this._player) {
@@ -578,7 +705,7 @@ TimedItem.prototype = {
       this._updateInternalState();
     } finally {
       exitModifyCurrentAnimationState(
-          Boolean(this.player) && this.player._hasTicked);
+          Boolean(this.player) ? repeatLastTick : null);
     }
   },
   // We push time down to children. We could instead have children pull from
@@ -592,8 +719,8 @@ TimedItem.prototype = {
   },
   _updateAnimationTime: function() {
     if (this.localTime < this.specified.delay) {
-      if (this.specified.fill === 'backwards' ||
-          this.specified.fill === 'both') {
+      if (this._fill === 'backwards' ||
+          this._fill === 'both') {
         this._animationTime = 0;
       } else {
         this._animationTime = null;
@@ -602,8 +729,8 @@ TimedItem.prototype = {
         this.specified.delay + this.activeDuration) {
       this._animationTime = this.localTime - this.specified.delay;
     } else {
-      if (this.specified.fill === 'forwards' ||
-          this.specified.fill === 'both') {
+      if (this._fill === 'forwards' ||
+          this._fill === 'both') {
         this._animationTime = this.activeDuration;
       } else {
         this._animationTime = null;
@@ -627,6 +754,7 @@ TimedItem.prototype = {
             this.specified.iterationStart + this.specified._iterations(),
             1.0) :
         this._modulusWithClosedOpenRange(this.specified.iterationStart, 1.0));
+    var timingFunction = this.specified._timingFunction(this);
     this._timeFraction = (
         this._isCurrentDirectionForwards() ?
         unscaledFraction :
@@ -634,8 +762,9 @@ TimedItem.prototype = {
     ASSERT_ENABLED && assert(
         this._timeFraction >= 0.0 && this._timeFraction <= 1.0,
         'Time fraction should be in the range [0, 1]');
-    this._timeFraction =
-        this.specified._timingFunction(this).scaleTime(this._timeFraction);
+    if (timingFunction) {
+      this._timeFraction = timingFunction.scaleTime(this._timeFraction);
+    }
   },
   _getAdjustedAnimationTime: function(animationTime) {
     var startOffset =
@@ -674,8 +803,10 @@ TimedItem.prototype = {
         this._timeFraction + ' ' + this._iterationTime + ' ' +
         this.duration + ' ' + isAtEndOfIterations + ' ' +
         unscaledIterationTime);
-    this._timeFraction =
-        this.specified._timingFunction(this).scaleTime(this._timeFraction);
+    var timingFunction = this.specified._timingFunction(this);
+    if (timingFunction) {
+      this._timeFraction = timingFunction.scaleTime(this._timeFraction);
+    }
     this._iterationTime = this._timeFraction * this.duration;
   },
   _updateTimeMarkers: function() {
@@ -770,8 +901,12 @@ TimedItem.prototype = {
     }
   },
   _getLeafItemsInEffectImpl: abstractMethod,
+  _hasFutureAnimation: function(timeDirectionForwards) {
+    return timeDirectionForwards ? this._inheritedTime < this.endTime :
+        this._inheritedTime > this.startTime;
+  },
   _isPastEndOfActiveInterval: function() {
-    return this._inheritedTime > this.endTime;
+    return this._inheritedTime >= this.endTime;
   },
   get player() {
     return this.parent === null ?
@@ -794,7 +929,7 @@ TimedItem.prototype = {
   // are not in effect unless current.
   // TODO: Complete this restriction.
   _hasFutureEffect: function() {
-    return this._isCurrent() || this.specified.fill !== 'none';
+    return this._isCurrent() || this._fill !== 'none';
   },
   set onstart(func) {
     this._setOnHandler('start', func);
@@ -1072,23 +1207,20 @@ TimingEvent.prototype = Object.create(window.Event.prototype, {
   }
 });
 
-var isCustomAnimationEffect = function(animationEffect) {
-  // TODO: How does WebIDL actually differentiate different callback interfaces?
-  return isDefinedAndNotNull(animationEffect) &&
-      typeof animationEffect === 'object' &&
-      typeof animationEffect.sample === 'function';
+var isEffectCallback = function(animationEffect) {
+  return typeof animationEffect === 'function';
 };
 
 var interpretAnimationEffect = function(animationEffect) {
   if (animationEffect instanceof AnimationEffect ||
-      isCustomAnimationEffect(animationEffect)) {
+      isEffectCallback(animationEffect)) {
     return animationEffect;
   } else if (isDefinedAndNotNull(animationEffect) &&
       typeof animationEffect === 'object') {
     // The spec requires animationEffect to be an instance of
     // OneOrMoreKeyframes, but this type is just a dictionary or a list of
     // dictionaries, so the best we can do is test for an object.
-    return new KeyframeAnimationEffect(animationEffect);
+    return new KeyframeEffect(animationEffect);
   }
   return null;
 };
@@ -1096,12 +1228,8 @@ var interpretAnimationEffect = function(animationEffect) {
 var cloneAnimationEffect = function(animationEffect) {
   if (animationEffect instanceof AnimationEffect) {
     return animationEffect.clone();
-  } else if (isCustomAnimationEffect(animationEffect)) {
-    if (typeof animationEffect.clone === 'function') {
-      return animationEffect.clone();
-    } else {
-      return animationEffect;
-    }
+  } else if (isEffectCallback(animationEffect)) {
+    return animationEffect;
   } else {
     return null;
   }
@@ -1117,24 +1245,25 @@ var Animation = function(target, animationEffect, timingInput) {
     this.effect = interpretAnimationEffect(animationEffect);
     this._target = target;
   } finally {
-    exitModifyCurrentAnimationState(false);
+    exitModifyCurrentAnimationState(null);
   }
+  this._previousTimeFraction = null;
 };
 
 Animation.prototype = createObject(TimedItem.prototype, {
+  _resolveFillMode: function(fillMode) {
+    return fillMode === 'auto' ? 'none' : fillMode;
+  },
   _sample: function() {
     if (isDefinedAndNotNull(this.effect) &&
         !(this.target instanceof PseudoElementReference)) {
-      var sampleMethod = isCustomAnimationEffect(this.effect) ?
-          this.effect.sample : this.effect._sample;
-      sampleMethod.apply(
-          this.effect, [
-            this._timeFraction,
-            this.currentIteration,
-            this.target,
-            this.underlyingValue
-          ]
-      );
+      if (isEffectCallback(this.effect)) {
+        this.effect(this._timeFraction, this, this._previousTimeFraction);
+        this._previousTimeFraction = this._timeFraction;
+      } else {
+        this.effect._sample(this._timeFraction, this.currentIteration,
+            this.target, this.underlyingValue);
+      }
     }
   },
   _getLeafItemsInEffectImpl: function(items) {
@@ -1158,7 +1287,7 @@ Animation.prototype = createObject(TimedItem.prototype, {
       this.specified._invalidateTimingFunction();
     } finally {
       exitModifyCurrentAnimationState(
-          Boolean(this.player) && this.player._hasTicked);
+          Boolean(this.player) ? repeatLastTick : null);
     }
   },
   get effect() {
@@ -1172,8 +1301,8 @@ Animation.prototype = createObject(TimedItem.prototype, {
     var effectString = '<none>';
     if (this.effect instanceof AnimationEffect) {
       effectString = this.effect.toString();
-    } else if (isCustomAnimationEffect(this.effect)) {
-      effectString = 'Custom effect';
+    } else if (isEffectCallback(this.effect)) {
+      effectString = 'Effect callback';
     }
     return 'Animation ' + this.startTime + '-' + this.endTime + ' (' +
         this.localTime + ') ' + effectString;
@@ -1241,6 +1370,9 @@ var TimingGroup = function(token, type, children, timing) {
 };
 
 TimingGroup.prototype = createObject(TimedItem.prototype, {
+  _resolveFillMode: function(fillMode) {
+    return fillMode === 'auto' ? 'both' : fillMode;
+  },
   _childrenStateModified: function() {
     // See _updateChildStartTimes().
     this._isInChildrenStateModified = true;
@@ -1295,7 +1427,7 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
           child._updateInheritedTime(this._iterationTime);
         }
         cumulativeStartTime += Math.max(0, child.specified.delay +
-            child.activeDuration);
+            child.activeDuration + child.specified.endDelay);
       }
     }
   },
@@ -1322,7 +1454,7 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
       } else if (this.type === 'seq') {
         var result = 0;
         this._children.forEach(function(a) {
-          result += a.activeDuration + a.specified.delay;
+          result += a.activeDuration + a.specified.delay + a.specified.endDelay;
         });
         this._cachedIntrinsicDuration = result;
       } else {
@@ -1391,7 +1523,7 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
       return result;
     } finally {
       exitModifyCurrentAnimationState(
-          Boolean(this.player) && this.player._hasTicked);
+          Boolean(this.player) ? repeatLastTick : null);
     }
   },
   _isInclusiveAncestor: function(item) {
@@ -1507,6 +1639,12 @@ var MediaReference = function(mediaElement, timing, parent, delta) {
 };
 
 MediaReference.prototype = createObject(TimedItem.prototype, {
+  _resolveFillMode: function(fillMode) {
+    // TODO: Fill modes for MediaReferences are still undecided. The spec is not
+    // clear what 'auto' should mean for TimedItems other than Animations and
+    // groups.
+    return fillMode === 'auto' ? 'none' : fillMode;
+  },
   _intrinsicDuration: function() {
     // TODO: This should probably default to zero. But doing so means that as
     // soon as our inheritedTime is zero, the polyfill deems the animation to be
@@ -1649,7 +1787,7 @@ var AnimationEffect = function(token, accumulate) {
   try {
     this.accumulate = accumulate;
   } finally {
-    exitModifyCurrentAnimationState(false);
+    exitModifyCurrentAnimationState(null);
   }
 };
 
@@ -1663,7 +1801,7 @@ AnimationEffect.prototype = {
       // Use the default value if an invalid string is specified.
       this._accumulate = value === 'sum' ? 'sum' : 'none';
     } finally {
-      exitModifyCurrentAnimationState(true);
+      exitModifyCurrentAnimationState(repeatLastTick);
     }
   },
   _sample: abstractMethod,
@@ -1678,34 +1816,32 @@ var clamp = function(x, min, max) {
 
 
 /** @constructor */
-var PathAnimationEffect = function(path, autoRotate, angle, composite,
+var MotionPathEffect = function(path, autoRotate, angle, composite,
     accumulate) {
   enterModifyCurrentAnimationState();
   try {
     AnimationEffect.call(this, constructorToken, accumulate);
 
-    // Use the default value if an invalid string is specified.
     this.composite = composite;
 
     // TODO: path argument is not in the spec -- seems useful since
     // SVGPathSegList doesn't have a constructor.
     this.autoRotate = isDefined(autoRotate) ? autoRotate : 'none';
     this.angle = isDefined(angle) ? angle : 0;
-    this._path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    this._path = document.createElementNS(SVG_NS, 'path');
     if (path instanceof SVGPathSegList) {
       this.segments = path;
     } else {
-      var tempPath = document.createElementNS(
-          'http://www.w3.org/2000/svg', 'path');
+      var tempPath = document.createElementNS(SVG_NS, 'path');
       tempPath.setAttribute('d', String(path));
       this.segments = tempPath.pathSegList;
     }
   } finally {
-    exitModifyCurrentAnimationState(false);
+    exitModifyCurrentAnimationState(null);
   }
 };
 
-PathAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
+MotionPathEffect.prototype = createObject(AnimationEffect.prototype, {
   get composite() {
     return this._composite;
   },
@@ -1715,7 +1851,7 @@ PathAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
       // Use the default value if an invalid string is specified.
       this._composite = value === 'add' ? 'add' : 'replace';
     } finally {
-      exitModifyCurrentAnimationState(true);
+      exitModifyCurrentAnimationState(repeatLastTick);
     }
   },
   _sample: function(timeFraction, currentIteration, target) {
@@ -1750,23 +1886,17 @@ PathAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
         this._cumulativeLengths[index + 1] - this._cumulativeLengths[index]));
   },
   clone: function() {
-    return new PathAnimationEffect(this._path.getAttribute('d'));
-  },
-  _positionListForTiming: function() {
-    // TODO: Handle aligning chained function segments with PathAnimationEffect.
-    console.warn('Alignment of chained timing functions with path animation ' +
-        'effects is not yet implemented');
-    return [0, 1];
+    return new MotionPathEffect(this._path.getAttribute('d'));
   },
   toString: function() {
-    return '<PathAnimationEffect>';
+    return '<MotionPathEffect>';
   },
   set autoRotate(autoRotate) {
     enterModifyCurrentAnimationState();
     try {
       this._autoRotate = String(autoRotate);
     } finally {
-      exitModifyCurrentAnimationState(true);
+      exitModifyCurrentAnimationState(repeatLastTick);
     }
   },
   get autoRotate() {
@@ -1779,7 +1909,7 @@ PathAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
       //       says it's a double.
       this._angle = Number(angle);
     } finally {
-      exitModifyCurrentAnimationState(true);
+      exitModifyCurrentAnimationState(repeatLastTick);
     }
   },
   get angle() {
@@ -1804,7 +1934,7 @@ PathAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
       }
       this._cumulativeLengths = cumulativeLengths;
     } finally {
-      exitModifyCurrentAnimationState(true);
+      exitModifyCurrentAnimationState(repeatLastTick);
     }
   },
   get segments() {
@@ -1903,13 +2033,13 @@ var shorthandToLonghand = {
 };
 
 // This delegates parsing shorthand value syntax to the browser.
-var shorthandExpanderDiv = document.createElement('div');
+var shorthandExpanderElem = createDummyElement();
 var expandShorthand = function(property, value, result) {
-  shorthandExpanderDiv.style[property] = value;
+  shorthandExpanderElem.style[property] = value;
   var longProperties = shorthandToLonghand[property];
   for (var i in longProperties) {
     var longProperty = longProperties[i];
-    var longhandValue = shorthandExpanderDiv.style[longProperty];
+    var longhandValue = shorthandExpanderElem.style[longProperty];
     result[longProperty] = longhandValue;
   }
 };
@@ -1917,7 +2047,8 @@ var expandShorthand = function(property, value, result) {
 var normalizeKeyframeDictionary = function(properties) {
   var result = {
     offset: null,
-    composite: null
+    composite: null,
+    easing: presetTimingFunctions.linear
   };
   var animationProperties = [];
   for (var property in properties) {
@@ -1931,6 +2062,8 @@ var normalizeKeyframeDictionary = function(properties) {
           properties.composite === 'replace') {
         result.composite = properties.composite;
       }
+    } else if (property === 'easing') {
+      result.easing = TimingFunction.createFromString(properties.easing);
     } else {
       // TODO: Check whether this is a supported property.
       animationProperties.push(property);
@@ -1958,7 +2091,7 @@ var normalizeKeyframeDictionary = function(properties) {
 
 
 /** @constructor */
-var KeyframeAnimationEffect = function(oneOrMoreKeyframeDictionaries,
+var KeyframeEffect = function(oneOrMoreKeyframeDictionaries,
     composite, accumulate) {
   enterModifyCurrentAnimationState();
   try {
@@ -1968,11 +2101,11 @@ var KeyframeAnimationEffect = function(oneOrMoreKeyframeDictionaries,
 
     this.setFrames(oneOrMoreKeyframeDictionaries);
   } finally {
-    exitModifyCurrentAnimationState(false);
+    exitModifyCurrentAnimationState(null);
   }
 };
 
-KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
+KeyframeEffect.prototype = createObject(AnimationEffect.prototype, {
   get composite() {
     return this._composite;
   },
@@ -1982,7 +2115,7 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
       // Use the default value if an invalid string is specified.
       this._composite = value === 'add' ? 'add' : 'replace';
     } finally {
-      exitModifyCurrentAnimationState(true);
+      exitModifyCurrentAnimationState(repeatLastTick);
     }
   },
   getFrames: function() {
@@ -1999,7 +2132,7 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
       // Set lazily
       this._cachedPropertySpecificKeyframes = null;
     } finally {
-      exitModifyCurrentAnimationState(true);
+      exitModifyCurrentAnimationState(repeatLastTick);
     }
   },
   _sample: function(timeFraction, currentIteration, target) {
@@ -2097,6 +2230,9 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     }
     var intervalDistance = (timeFraction - startKeyframe.offset) /
         (endKeyframe.offset - startKeyframe.offset);
+    if (startKeyframe.easing) {
+      intervalDistance = startKeyframe.easing.scaleTime(intervalDistance);
+    }
     return new BlendedCompositableValue(
         new AddReplaceCompositableValue(startKeyframe.rawValue(),
             this._compositeForKeyframe(startKeyframe)),
@@ -2118,8 +2254,8 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
         }
         var frame = distributedFrames[i];
         this._cachedPropertySpecificKeyframes[property].push(
-            new PropertySpecificKeyframe(frame.offset,
-                frame.composite, property, frame.cssValues[property]));
+            new PropertySpecificKeyframe(frame.offset, frame.composite,
+                frame.easing, property, frame.cssValues[property]));
       }
     }
 
@@ -2132,12 +2268,12 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
       // Add synthetic keyframes at offsets of 0 and 1 if required.
       if (frames[0].offset !== 0.0) {
         var keyframe = new PropertySpecificKeyframe(0.0, 'add',
-            property, cssNeutralValue);
+            presetTimingFunctions.linear, property, cssNeutralValue);
         frames.unshift(keyframe);
       }
       if (frames[frames.length - 1].offset !== 1.0) {
         var keyframe = new PropertySpecificKeyframe(1.0, 'add',
-            property, cssNeutralValue);
+            presetTimingFunctions.linear, property, cssNeutralValue);
         frames.push(keyframe);
       }
       ASSERT_ENABLED && assert(
@@ -2149,13 +2285,13 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     return this._cachedPropertySpecificKeyframes;
   },
   clone: function() {
-    var result = new KeyframeAnimationEffect([], this.composite,
+    var result = new KeyframeEffect([], this.composite,
         this.accumulate);
     result._keyframeDictionaries = this._keyframeDictionaries.slice(0);
     return result;
   },
   toString: function() {
-    return '<KeyframeAnimationEffect>';
+    return '<KeyframeEffect>';
   },
   _compositeForKeyframe: function(keyframe) {
     return isDefinedAndNotNull(keyframe.composite) ?
@@ -2272,17 +2408,6 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
     }
 
     return distributedKeyframes;
-  },
-  _positionListForTiming: function() {
-    var positionList =
-        this._getDistributedKeyframes().map(function(x) { return x.offset; });
-    if (positionList[0] !== 0) {
-      positionList.unshift(0);
-    }
-    if (positionList[positionList.length - 1] !== 1) {
-      positionList.push(1);
-    }
-    return positionList;
   }
 });
 
@@ -2294,7 +2419,7 @@ KeyframeAnimationEffect.prototype = createObject(AnimationEffect.prototype, {
  *
  * @constructor
  */
-var KeyframeInternal = function(offset, composite) {
+var KeyframeInternal = function(offset, composite, easing) {
   ASSERT_ENABLED && assert(
       typeof offset === 'number' || offset === null,
       'Invalid offset value');
@@ -2303,6 +2428,7 @@ var KeyframeInternal = function(offset, composite) {
       'Invalid composite value');
   this.offset = offset;
   this.composite = composite;
+  this.easing = easing;
   this.cssValues = {};
 };
 
@@ -2327,9 +2453,12 @@ KeyframeInternal.createFromNormalizedProperties = function(properties) {
   ASSERT_ENABLED && assert(
       isDefinedAndNotNull(properties) && typeof properties === 'object',
       'Properties must be an object');
-  var keyframe = new KeyframeInternal(properties.offset, properties.composite);
+  var keyframe = new KeyframeInternal(properties.offset, properties.composite,
+      properties.easing);
   for (var candidate in properties) {
-    if (candidate !== 'offset' && candidate !== 'composite') {
+    if (candidate !== 'offset' &&
+        candidate !== 'composite' &&
+        candidate !== 'easing') {
       keyframe.addPropertyValuePair(candidate, properties[candidate]);
     }
   }
@@ -2339,9 +2468,11 @@ KeyframeInternal.createFromNormalizedProperties = function(properties) {
 
 
 /** @constructor */
-var PropertySpecificKeyframe = function(offset, composite, property, cssValue) {
+var PropertySpecificKeyframe = function(offset, composite, easing, property,
+    cssValue) {
   this.offset = offset;
   this.composite = composite;
+  this.easing = easing;
   this.property = property;
   this.cssValue = cssValue;
   // Calculated lazily
@@ -2365,198 +2496,35 @@ var TimingFunction = function() {
 };
 
 TimingFunction.prototype.scaleTime = abstractMethod;
-TimingFunction.prototype.clone = abstractMethod;
 
-TimingFunction.createFromString = function(easing, easingPoints, timedItem) {
-  var normalizedChain = TimingFunction.createNormalizedChain(easing,
-      easingPoints, timedItem);
-  ASSERT_ENABLED && assert(normalizedChain.length > 0);
-  if (normalizedChain.length === 1) {
-    ASSERT_ENABLED && assert(normalizedChain[0].range.min === 0);
-    ASSERT_ENABLED && assert(normalizedChain[0].range.max === 1);
-    return normalizedChain[0].timingFunction;
-  }
-  return new ChainedTimingFunction(normalizedChain);
-};
-
-// Returns an array of objects, where each object contains a timing function and
-// the range over which it applies.
-TimingFunction.createNormalizedChain = function(easing, easingPoints,
-    timedItem) {
-  var chain = TimingFunction.createChain(easing, timedItem);
-  ASSERT_ENABLED && assert(chain.length > 0);
-
-  var normalizedPositionList = TimingFunction.createNormalizedPositionList(
-      easingPoints, chain.length, timedItem);
-  ASSERT_ENABLED && assert(TimingFunction.isValidPositionList(
-      normalizedPositionList));
-
-  var normalizedChain = [];
-  var lastTimingFunction = chain[chain.length - 1];
-  for (var i = 1; i < normalizedPositionList.length; i++) {
-    var range = {
-      min: normalizedPositionList[i - 1],
-      max: normalizedPositionList[i]
-    };
-    var timingFunction = i - 1 < chain.length ?
-        chain[i - 1] : lastTimingFunction.clone();
-    if (timingFunction instanceof PacedTimingFunction) {
-      timingFunction.setRange(range);
-    }
-    normalizedChain.push({timingFunction: timingFunction, range: range});
-  }
-  return normalizedChain;
-};
-
-TimingFunction.createChain = function(easing, timedItem) {
-  var chain = [];
-  if (typeof easing === 'string') {
-    easing = easing.trim();
-    while (easing.length > 0) {
-      var result = TimingFunction.createComponentFromString(easing, timedItem);
-      if (result === null) {
-        chain = [];
-        break;
-      }
-      chain.push(result.component);
-      easing = result.remainingString.trim();
-    }
-  }
-  if (chain.length === 0) {
-    return [presetTimingFunctions.linear];
-  }
-  return chain;
-};
-
-TimingFunction.createNormalizedPositionList = function(easingPoints,
-    numTimingFunctions, timedItem) {
-  if (easingPoints === 'distribute') {
-    return TimingFunction.generateDistributedPositionList(numTimingFunctions);
-  } else if (easingPoints === 'align') {
-    if (timedItem instanceof Animation &&
-        // We have to test for keyframe or path effects because custom effects
-        // may inherit from AnimationEffect.
-        (timedItem.effect instanceof KeyframeAnimationEffect ||
-         timedItem.effect instanceof PathAnimationEffect)) {
-      return timedItem.effect._positionListForTiming();
-    }
-    return TimingFunction.generateDistributedPositionList(numTimingFunctions);
-  }
-  return TimingFunction.isValidPositionList(easingPoints) ? easingPoints :
-      TimingFunction.generateDistributedPositionList(numTimingFunctions);
-};
-
-TimingFunction.generateDistributedPositionList = function(numTimingFunctions) {
-  var positionList = [0];
-  for (var i = 1; i <= numTimingFunctions; i++) {
-    positionList.push(i / numTimingFunctions);
-  }
-  return positionList;
-};
-
-TimingFunction.isValidPositionList = function(positionList) {
-  if (!Array.isArray(positionList) || positionList[0] !== 0 ||
-      positionList[positionList.length - 1] !== 1) {
-    return false;
-  }
-  for (var i = 1; i < positionList.length; i++) {
-    // Test for a negative condition to correctly handle non-numeric values.
-    if (!(positionList[i] > positionList[i - 1])) {
-      return false;
-    }
-  }
-  return true;
-};
-
-// Creates a timing function from the first valid portion of the supplied
-// string. Returns an object containg the created timing function and the
-// remaining string, or null on failure.
-TimingFunction.createComponentFromString = function(spec, timedItem) {
-  var toFirstSpace = spec.split(' ')[0];
-  var preset = presetTimingFunctions[toFirstSpace];
+TimingFunction.createFromString = function(spec, timedItem) {
+  var preset = presetTimingFunctions[spec];
   if (preset) {
-    return {
-      component: preset,
-      remainingString: spec.substring(toFirstSpace.length)
-    };
+    return preset;
   }
-  if (spec.indexOf('paced') === 0) {
-    var remainingString = spec.substring(5);
+  if (spec === 'paced') {
     if (timedItem instanceof Animation &&
-        timedItem.effect instanceof PathAnimationEffect) {
-      return {
-        component: new PacedTimingFunction(timedItem.effect),
-        remainingString: remainingString
-      };
+        timedItem.effect instanceof MotionPathEffect) {
+      return new PacedTimingFunction(timedItem.effect);
     }
-    return {
-      component: presetTimingFunctions.linear,
-      remainingString: remainingString
-    };
+    return presetTimingFunctions.linear;
   }
-  var stepMatch = /^steps\(\s*(\d+)\s*,\s*(start|end|middle)\s*\)/.exec(spec);
+  var stepMatch = /steps\(\s*(\d+)\s*,\s*(start|end|middle)\s*\)/.exec(spec);
   if (stepMatch) {
-    return {
-      component: new StepTimingFunction(Number(stepMatch[1]), stepMatch[2]),
-      remainingString: spec.substring(stepMatch[0].length)
-    };
+    return new StepTimingFunction(Number(stepMatch[1]), stepMatch[2]);
   }
   var bezierMatch =
-      /^cubic-bezier\(([^,]*),([^,]*),([^,]*),([^)]*)\)/.exec(spec);
+      /cubic-bezier\(([^,]*),([^,]*),([^,]*),([^)]*)\)/.exec(spec);
   if (bezierMatch) {
-    return {
-      component: new CubicBezierTimingFunction([
-        Number(bezierMatch[1]),
-        Number(bezierMatch[2]),
-        Number(bezierMatch[3]),
-        Number(bezierMatch[4])
-      ]),
-      remainingString: spec.substring(bezierMatch[0].length)
-    };
+    return new CubicBezierTimingFunction([
+      Number(bezierMatch[1]),
+      Number(bezierMatch[2]),
+      Number(bezierMatch[3]),
+      Number(bezierMatch[4])
+    ]);
   }
-  return null;
+  return presetTimingFunctions.linear;
 };
-
-
-
-/** @constructor */
-var ChainedTimingFunction = function(chain) {
-  this._chain = chain;
-};
-
-ChainedTimingFunction.prototype = createObject(TimingFunction.prototype, {
-  scaleTime: function(fraction) {
-    for (var i = 0; i < this._chain.length; i++) {
-      var component = this._chain[i];
-      if (fraction < component.range.max || i === this._chain.length - 1) {
-        return interp(
-            component.range.min,
-            component.range.max,
-            component.timingFunction.scaleTime(
-                this._relativeRange(component.range, fraction)));
-      }
-    }
-    ASSERT_ENABLED && assert(false, 'Logic error in ChainedTimingFunction');
-  },
-  _relativeRange: function(range, x) {
-    return (x - range.min) / (range.max - range.min);
-  }
-});
-
-
-
-/** @constructor */
-var LinearTimingFunction = function() {
-};
-
-LinearTimingFunction.prototype = createObject(TimingFunction.prototype, {
-  scaleTime: function(fraction) {
-    return fraction;
-  },
-  clone: function() {
-    return this;
-  }
-});
 
 
 
@@ -2588,9 +2556,6 @@ CubicBezierTimingFunction.prototype = createObject(TimingFunction.prototype, {
     var xDiff = this.map[fst][0] - this.map[fst - 1][0];
     var p = (fraction - this.map[fst - 1][0]) / xDiff;
     return this.map[fst - 1][1] + p * yDiff;
-  },
-  clone: function() {
-    return this;
   }
 });
 
@@ -2614,14 +2579,11 @@ StepTimingFunction.prototype = createObject(TimingFunction.prototype, {
       fraction += stepSize / 2;
     }
     return fraction - fraction % stepSize;
-  },
-  clone: function() {
-    return this;
   }
 });
 
 var presetTimingFunctions = {
-  'linear': new LinearTimingFunction(),
+  'linear': null,
   'ease': new CubicBezierTimingFunction([0.25, 0.1, 0.25, 1.0]),
   'ease-in': new CubicBezierTimingFunction([0.42, 0, 1.0, 1.0]),
   'ease-out': new CubicBezierTimingFunction([0, 0, 0.58, 1.0]),
@@ -2635,7 +2597,7 @@ var presetTimingFunctions = {
 
 /** @constructor */
 var PacedTimingFunction = function(pathEffect) {
-  ASSERT_ENABLED && assert(pathEffect instanceof PathAnimationEffect);
+  ASSERT_ENABLED && assert(pathEffect instanceof MotionPathEffect);
   this._pathEffect = pathEffect;
   // Range is the portion of the effect over which we pace, normalized to
   // [0, 1].
@@ -2683,16 +2645,13 @@ PacedTimingFunction.prototype = createObject(TimingFunction.prototype, {
     return leftIndex;
   },
   lengthAtIndex: function(i) {
-    var cumulativeLengths = this._pathEffect._cumulativeLengths;
-    ASSERT_ENABLED && assert(i >= 0 && i <= cumulativeLengths.length - 1);
+    ASSERT_ENABLED &&
+        console.assert(i >= 0 && i <= cumulativeLengths.length - 1);
     var leftIndex = Math.floor(i);
-    var startLength = cumulativeLengths[leftIndex];
-    var endLength = cumulativeLengths[leftIndex + 1];
+    var startLength = this._pathEffect._cumulativeLengths[leftIndex];
+    var endLength = this._pathEffect._cumulativeLengths[leftIndex + 1];
     var indexFraction = i % 1;
     return interp(startLength, endLength, indexFraction);
-  },
-  clone: function() {
-    return new PacedTimingFunction(this._pathEffect);
   }
 });
 
@@ -4347,6 +4306,7 @@ var propertyTypes = {
   borderTopRightRadius: percentLengthType,
   borderTopWidth: lengthType,
   bottom: percentLengthAutoType,
+  boxShadow: shadowType,
   clip: typeWithKeywords(['auto'], rectangleType),
   color: colorType,
   cx: lengthType,
@@ -4727,7 +4687,8 @@ CompositedPropertyMap.prototype = {
   },
   captureBaseValues: function() {
     for (var property in this.properties) {
-      if (this.stackDependsOnUnderlyingValue(this.properties[property])) {
+      var stack = this.properties[property];
+      if (stack.length > 0 && this.stackDependsOnUnderlyingValue(stack)) {
         var baseValue = fromCssValue(property, getValue(this.target, property));
         // TODO: Decide what to do with elements not in the DOM.
         ASSERT_ENABLED && assert(
@@ -4765,6 +4726,7 @@ CompositedPropertyMap.prototype = {
   }
 };
 
+
 var cssStyleDeclarationAttribute = {
   cssText: true,
   length: true,
@@ -4772,13 +4734,60 @@ var cssStyleDeclarationAttribute = {
   'var': true
 };
 
-var cssStyleDeclarationMethod = {
-  getPropertyValue: true,
-  getPropertyCSSValue: true,
+var cssStyleDeclarationMethodModifiesStyle = {
+  getPropertyValue: false,
+  getPropertyCSSValue: false,
   removeProperty: true,
-  getPropertyPriority: true,
+  getPropertyPriority: false,
   setProperty: true,
-  item: true
+  item: false
+};
+
+var copyInlineStyle = function(sourceStyle, destinationStyle) {
+  for (var i = 0; i < sourceStyle.length; i++) {
+    var property = sourceStyle[i];
+    destinationStyle[property] = sourceStyle[property];
+  }
+};
+
+var retickThenGetComputedStyle = function() {
+  repeatLastTick();
+  ensureOriginalGetComputedStyle();
+  return window.getComputedStyle.apply(this, arguments);
+};
+
+// This redundant flag is to support Safari which has trouble determining
+// function object equality during an animation.
+var isGetComputedStylePatched = false;
+var originalGetComputedStyle = window.getComputedStyle;
+
+var ensureRetickBeforeGetComputedStyle = function() {
+  if (!isGetComputedStylePatched) {
+    Object.defineProperty(window, 'getComputedStyle', configureDescriptor({
+      value: retickThenGetComputedStyle
+    }));
+    isGetComputedStylePatched = true;
+  }
+};
+
+var ensureOriginalGetComputedStyle = function() {
+  if (isGetComputedStylePatched) {
+    Object.defineProperty(window, 'getComputedStyle', configureDescriptor({
+      value: originalGetComputedStyle
+    }));
+    isGetComputedStylePatched = false;
+  }
+};
+
+// Changing the inline style of an element under animation may require the
+// animation to be recomputed ontop of the new inline style if
+// getComputedStyle() is called inbetween setting the style and the next
+// animation frame.
+// We modify getComputedStyle() to re-evaluate the animations only if it is
+// called instead of re-evaluating them here potentially unnecessarily.
+var animatedInlineStyleChanged = function() {
+  maybeRestartAnimation();
+  ensureRetickBeforeGetComputedStyle();
 };
 
 
@@ -4792,16 +4801,13 @@ var AnimatedCSSStyleDeclaration = function(element) {
   // Stores the inline style of the element on its behalf while the
   // polyfill uses the element's inline style to simulate web animations.
   // This is needed to fake regular inline style CSSOM access on the element.
-  this._surrogateElement = document.createElement('div');
+  this._surrogateElement = createDummyElement();
   this._style = element.style;
   this._length = 0;
   this._isAnimatedProperty = {};
 
   // Populate the surrogate element's inline style.
-  for (var i = 0; i < this._style.length; i++) {
-    var property = this._style[i];
-    this._surrogateElement.style[property] = this._style[property];
-  }
+  copyInlineStyle(this._style, this._surrogateElement.style);
   this._updateIndices();
 };
 
@@ -4825,7 +4831,7 @@ AnimatedCSSStyleDeclaration.prototype = {
             this._surrogateElement.style.getPropertyValue(property));
       }
     }
-    this._inlineStyleChanged();
+    animatedInlineStyleChanged();
   },
   get length() {
     return this._surrogateElement.style.length;
@@ -4865,31 +4871,30 @@ AnimatedCSSStyleDeclaration.prototype = {
   _setAnimatedProperty: function(property, value) {
     this._style[property] = value;
     this._isAnimatedProperty[property] = true;
-  },
-  _inlineStyleChanged: function() {
-    maybeRestartAnimation();
-    // Changing the inline style of an element under animation may require the
-    // animation to be recomputed ontop of the new inline style if
-    // getComputedStyle() is called inbetween setting the style and the next
-    // animation frame.
-    // We modify getComputedStyle() to re-evaluate the animations only if it is
-    // called instead of re-evaluating them here potentially unnecessarily.
-    ensureRetickBeforeGetComputedStyle();
   }
 };
 
-for (var method in cssStyleDeclarationMethod) {
-  AnimatedCSSStyleDeclaration.prototype[method] = (function(method) {
+for (var method in cssStyleDeclarationMethodModifiesStyle) {
+  AnimatedCSSStyleDeclaration.prototype[method] =
+      (function(method, modifiesStyle) {
     return function() {
-      return this._surrogateElement.style[method].apply(
+      var result = this._surrogateElement.style[method].apply(
           this._surrogateElement.style, arguments);
+      if (modifiesStyle) {
+        if (!this._isAnimatedProperty[arguments[0]]) {
+          this._style[method].apply(this._style, arguments);
+        }
+        this._updateIndices();
+        animatedInlineStyleChanged();
+      }
+      return result;
     }
-  })(method);
+  })(method, cssStyleDeclarationMethodModifiesStyle[method]);
 }
 
 for (var property in document.documentElement.style) {
   if (cssStyleDeclarationAttribute[property] ||
-      cssStyleDeclarationMethod[property]) {
+      property in cssStyleDeclarationMethodModifiesStyle) {
     continue;
   }
   (function(property) {
@@ -4904,34 +4909,53 @@ for (var property in document.documentElement.style) {
             if (!this._isAnimatedProperty[property]) {
               this._style[property] = value;
             }
-            this._inlineStyleChanged();
+            animatedInlineStyleChanged();
           }
         }));
   })(property);
 }
 
-var retickThenGetComputedStyle = function() {
-  repeatLastTick();
-  // ticker() will restore getComputedStyle() back to normal.
-  return window.getComputedStyle.apply(this, arguments);
-};
-
-var originalGetComputedStyle = window.getComputedStyle;
-
-var ensureRetickBeforeGetComputedStyle = function() {
-  if (window.getComputedStyle !== retickThenGetComputedStyle) {
-    Object.defineProperty(window, 'getComputedStyle', configureDescriptor({
-      value: retickThenGetComputedStyle
+// This function is a fallback for when we can't replace an element's style with
+// AnimatatedCSSStyleDeclaration and must patch the existing style to behave
+// in a similar way.
+// Only the methods listed in cssStyleDeclarationMethodModifiesStyle will
+// be patched to behave in the same manner as a native implementation,
+// getter properties like style.left or style[0] will be tainted by the
+// polyfill's animation engine.
+var patchInlineStyleForAnimation = function(style) {
+  var surrogateElement = document.createElement('div');
+  copyInlineStyle(style, surrogateElement.style);
+  var isAnimatedProperty = {};
+  for (var method in cssStyleDeclarationMethodModifiesStyle) {
+    if (!(method in style)) {
+      continue;
+    }
+    Object.defineProperty(style, method, configureDescriptor({
+      value: (function(method, originalMethod, modifiesStyle) {
+        return function() {
+          var result = surrogateElement.style[method].apply(
+              surrogateElement.style, arguments);
+          if (modifiesStyle) {
+            if (!isAnimatedProperty[arguments[0]]) {
+              originalMethod.apply(style, arguments);
+            }
+            animatedInlineStyleChanged();
+          }
+          return result;
+        }
+      })(method, style[method], cssStyleDeclarationMethodModifiesStyle[method])
     }));
   }
-};
 
-var ensureOriginalGetComputedStyle = function() {
-  if (window.getComputedStyle === retickThenGetComputedStyle) {
-    Object.defineProperty(window, 'getComputedStyle', configureDescriptor({
-      value: originalGetComputedStyle
-    }));
-  }
+  style._clearAnimatedProperty = function(property) {
+    this[property] = surrogateElement.style[property];
+    isAnimatedProperty[property] = false;
+  };
+
+  style._setAnimatedProperty = function(property, value) {
+    this[property] = value;
+    isAnimatedProperty[property] = true;
+  };
 };
 
 
@@ -4966,55 +4990,68 @@ Compositor.prototype = {
 
 var ensureTargetInitialised = function(property, target) {
   if (propertyIsSVGAttrib(property, target)) {
-    if (!isDefinedAndNotNull(target._actuals)) {
-      target._actuals = {};
-      target._bases = {};
-      target.actuals = {};
-      target._getAttribute = target.getAttribute;
-      target._setAttribute = target.setAttribute;
-      target.getAttribute = function(name) {
-        if (isDefinedAndNotNull(target._bases[name])) {
-          return target._bases[name];
-        }
-        return target._getAttribute(name);
-      };
-      target.setAttribute = function(name, value) {
-        if (isDefinedAndNotNull(target._actuals[name])) {
-          target._bases[name] = value;
-        } else {
-          target._setAttribute(name, value);
-        }
-      };
-    }
-    if (!isDefinedAndNotNull(target._actuals[property])) {
-      var baseVal = target.getAttribute(property);
-      target._actuals[property] = 0;
-      target._bases[property] = baseVal;
-
-      Object.defineProperty(target.actuals, property, configureDescriptor({
-        set: function(value) {
-          if (value === null) {
-            target._actuals[property] = target._bases[property];
-            target._setAttribute(property, target._bases[property]);
-          } else {
-            target._actuals[property] = value;
-            target._setAttribute(property, value);
-          }
-        },
-        get: function() {
-          return target._actuals[property];
-        }
-      }));
-    }
+    ensureTargetSVGInitialised(property, target);
   } else {
-    if (target.style instanceof AnimatedCSSStyleDeclaration) {
-      return;
-    }
+    ensureTargetCSSInitialised(target);
+  }
+};
+
+var ensureTargetSVGInitialised = function(property, target) {
+  if (!isDefinedAndNotNull(target._actuals)) {
+    target._actuals = {};
+    target._bases = {};
+    target.actuals = {};
+    target._getAttribute = target.getAttribute;
+    target._setAttribute = target.setAttribute;
+    target.getAttribute = function(name) {
+      if (isDefinedAndNotNull(target._bases[name])) {
+        return target._bases[name];
+      }
+      return target._getAttribute(name);
+    };
+    target.setAttribute = function(name, value) {
+      if (isDefinedAndNotNull(target._actuals[name])) {
+        target._bases[name] = value;
+      } else {
+        target._setAttribute(name, value);
+      }
+    };
+  }
+  if (!isDefinedAndNotNull(target._actuals[property])) {
+    var baseVal = target.getAttribute(property);
+    target._actuals[property] = 0;
+    target._bases[property] = baseVal;
+
+    Object.defineProperty(target.actuals, property, configureDescriptor({
+      set: function(value) {
+        if (value === null) {
+          target._actuals[property] = target._bases[property];
+          target._setAttribute(property, target._bases[property]);
+        } else {
+          target._actuals[property] = value;
+          target._setAttribute(property, value);
+        }
+      },
+      get: function() {
+        return target._actuals[property];
+      }
+    }));
+  }
+};
+
+var ensureTargetCSSInitialised = function(target) {
+  if (target.style._webAnimationsStyleInitialised) {
+    return;
+  }
+  try {
     var animatedStyle = new AnimatedCSSStyleDeclaration(target);
     Object.defineProperty(target, 'style', configureDescriptor({
       get: function() { return animatedStyle; }
     }));
+  } catch (error) {
+    patchInlineStyleForAnimation(target.style);
   }
+  target.style._webAnimationsStyleInitialised = true;
 };
 
 var setValue = function(target, property, value) {
@@ -5064,30 +5101,21 @@ var usePerformanceTiming =
 
 // Don't use a local named requestAnimationFrame, to avoid potential problems
 // with hoisting.
-var raf = window.requestAnimationFrame;
-if (!raf) {
-  var nativeRaf = window.webkitRequestAnimationFrame ||
-      window.mozRequestAnimationFrame;
-  if (!nativeRaf) {
-    // requestAnimationFrame is not available, simulate it.
-    raf = function(callback) {
-      setTimeout(function() {
-        callback(clockMillis());
-      }, 1000 / 60);
-    };
-  } else if (usePerformanceTiming) {
-    // platform requestAnimationFrame provides only millisecond accuracy, wrap
-    // it and use performance.now()
-    raf = function(callback) {
-      nativeRaf(function() {
-        callback(window.performance.now());
-      });
-    };
-  } else {
-    // platform requestAnimationFrame provides only millisecond accuracy, and
-    // we can't do any better
-    raf = nativeRaf;
-  }
+var nativeRaf = window.requestAnimationFrame ||
+    window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame;
+var raf;
+if (nativeRaf) {
+  raf = function(callback) {
+    nativeRaf(function() {
+      callback(clockMillis());
+    });
+  };
+} else {
+  raf = function(callback) {
+    setTimeout(function() {
+      callback(clockMillis());
+    }, 1000 / 60);
+  };
 }
 
 var clockMillis = function() {
@@ -5169,16 +5197,16 @@ var modifyCurrentAnimationStateDepth = 0;
 var enterModifyCurrentAnimationState = function() {
   modifyCurrentAnimationStateDepth++;
 };
-var exitModifyCurrentAnimationState = function(shouldRepeat) {
+var exitModifyCurrentAnimationState = function(updateCallback) {
   modifyCurrentAnimationStateDepth--;
-  // shouldRepeat is set false when we know we can't possibly affect the current
-  // state (eg. a TimedItem which is not attached to a player). We track the
-  // depth of recursive calls trigger just one repeat per entry. Only the value
-  // of shouldRepeat from the outermost call is considered, this allows certain
+  // updateCallback is set to null when we know we can't possibly affect the
+  // current state (eg. a TimedItem which is not attached to a player). We track
+  // the depth of recursive calls trigger just one repeat per entry. Only the
+  // updateCallback from the outermost call is considered, this allows certain
   // locatations (eg. constructors) to override nested calls that would
-  // otherwise set shouldRepeat unconditionally.
-  if (modifyCurrentAnimationStateDepth === 0 && shouldRepeat) {
-    repeatLastTick();
+  // otherwise set updateCallback unconditionally.
+  if (modifyCurrentAnimationStateDepth === 0 && updateCallback) {
+    updateCallback();
   }
 };
 
@@ -5190,7 +5218,7 @@ var repeatLastTick = function() {
 
 var playerSortFunction = function(a, b) {
   var result = a.startTime - b.startTime;
-  return result !== 0 ? result : a._sequenceNumber - b.sequenceNumber;
+  return result !== 0 ? result : a._sequenceNumber - b._sequenceNumber;
 };
 
 var lastTickTime;
@@ -5223,9 +5251,8 @@ var ticker = function(rafTime, isRepeat) {
   var animations = [];
   var finishedPlayers = [];
   PLAYERS.forEach(function(player) {
-    player._hasTicked = true;
     player._update();
-    finished = finished && player._isPastEndOfActiveInterval();
+    finished = finished && !player._hasFutureAnimation();
     if (!player._hasFutureEffect()) {
       finishedPlayers.push(player);
     }
@@ -5281,7 +5308,17 @@ var maybeRestartAnimation = function() {
 };
 
 var DOCUMENT_TIMELINE = new Timeline(constructorToken);
-document.timeline = DOCUMENT_TIMELINE;
+// attempt to override native implementation
+try {
+  Object.defineProperty(document, 'timeline', {
+    configurable: true,
+    get: function() { return DOCUMENT_TIMELINE }
+  });
+} catch (e) { }
+// maintain support for Safari
+try {
+  document.timeline = DOCUMENT_TIMELINE;
+} catch (e) { }
 
 window.Element.prototype.animate = function(effect, timing) {
   var anim = new Animation(this, effect, timing);
@@ -5305,10 +5342,10 @@ window.Element.prototype.getCurrentAnimations = function() {
 
 window.Animation = Animation;
 window.AnimationEffect = AnimationEffect;
-window.KeyframeAnimationEffect = KeyframeAnimationEffect;
+window.KeyframeEffect = KeyframeEffect;
 window.MediaReference = MediaReference;
 window.ParGroup = ParGroup;
-window.PathAnimationEffect = PathAnimationEffect;
+window.MotionPathEffect = MotionPathEffect;
 window.Player = Player;
 window.PseudoElementReference = PseudoElementReference;
 window.SeqGroup = SeqGroup;
@@ -5325,11 +5362,7 @@ window._WebAnimationsTestingUtilities = {
   _hsl2rgb: hsl2rgb,
   _types: propertyTypes,
   _knownPlayers: PLAYERS,
-  _createNormalizedChain: TimingFunction.createNormalizedChain,
-  _cubicBezierTimingFunction: CubicBezierTimingFunction,
-  _linearTimingFunction: LinearTimingFunction,
-  _pacedTimingFunction: PacedTimingFunction,
-  _enableAsserts: function() { ASSERT_ENABLED = true; }
+  _pacedTimingFunction: PacedTimingFunction
 };
 
 })();

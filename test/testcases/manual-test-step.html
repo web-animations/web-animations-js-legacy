@@ -46,8 +46,9 @@ function testStep(numSteps, position) {
   span.appendChild(document.createElement('br'));
   span.appendChild(document.createTextNode('position: ' + position));
   document.body.appendChild(span);
-  return new Animation(ctx, {
-    sample: function(timeFraction, iteration, target) {
+  return new Animation(ctx,
+    function(timeFraction, animation) {
+      var target = animation.target;
       var inputTimeFraction = player.currentTime / duration;
       if (target.lastTimeFraction !== timeFraction) {
         target.beginPath();
@@ -63,8 +64,7 @@ function testStep(numSteps, position) {
       }
       target.lastTimeFraction = timeFraction;
       target.stroke();
-    },
-  }, {
+    }, {
     duration: duration,
     easing: 'steps(' + numSteps + ', ' + position + ')',
   });

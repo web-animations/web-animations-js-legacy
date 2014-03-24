@@ -39,10 +39,11 @@ var expected_failures = {
 <script src="../bootstrap.js"></script>
 <script>
   "use strict";
-  var across = new Animation(document.querySelector("#a"), {left: "450px"}, 0.2);
-  var pause1 = new Animation(null, {left: "500px"}, 0.2);
-  var pause2 = new Animation(null, null, 0.2);
-  var down = new Animation(document.querySelector("#a"), {top: "450px"}, 0.2);
+  var timing = {duration: 0.2, fill: 'forwards'};
+  var across = new Animation(document.querySelector("#a"), {left: "450px"}, timing);
+  var pause1 = new Animation(null, {left: "500px"}, timing);
+  var pause2 = new Animation(null, null, timing);
+  var down = new Animation(document.querySelector("#a"), {top: "450px"}, timing);
   var combo = new SeqGroup([across, pause1, pause2, down]);
   document.timeline.play(combo);
 

@@ -132,10 +132,10 @@ var raf = window.requestAnimationFrame ||
 
 var shake = 0;
 var shakeParticles = function() {
-  shake = 1 - shake;
+  shake = 20 - shake;
   for (var i = 0; i < particles.length; i++) {
-    particles[i].element.style.left = shake + 'px';
-    particles[i].element.style.top = shake + 'px';
+    particles[i].element.style.setProperty('left', shake + 'px');
+    particles[i].element.style.setProperty('top', shake + 'px');
   }
   if (testing) {
     raf(shakeParticles);

@@ -28,10 +28,11 @@ var expected_failures = {
 "use strict";
 
 
-document.timeline.play(new Animation(null, {}, 1));
+document.timeline.play(new Animation(null, {},
+	{duration: 1, fill: 'forwards'}));
 document.timeline.play(new Animation(null, {},
 	{duration: 1, fill: 'none'}));
-var player = document.timeline.play(new Animation(anim, 
+var player = document.timeline.play(new Animation(anim,
 	[{backgroundColor: 'red'}, {backgroundColor: 'white'}],
 	{duration: 1, fill: 'none'}));
 
@@ -54,8 +55,8 @@ timing_test(function() {
 			"Only restarted animation current");
 		assert_equals(_WebAnimationsTestingUtilities._knownPlayers.length, 2,
 			"Restarted and forward filling animations known");
-		assert_styles('#anim', [{"backgroundColor": 'rgb(255, 0, 0)'}], 
-			"takes effect immediately");		
+		assert_styles('#anim', [{"backgroundColor": 'rgb(255, 0, 0)'}],
+			"takes effect immediately");
 	});
 	at(3.5, function() {
 		assert_equals(document.timeline.getCurrentPlayers().length, 1,
@@ -70,8 +71,8 @@ timing_test(function() {
 			"Only restarted animation current");
 		assert_equals(_WebAnimationsTestingUtilities._knownPlayers.length, 2,
 			"Restarted and forward filling animations known");
-		assert_styles('#anim', [{"backgroundColor": 'rgb(255, 128, 128)'}], 
-			"takes effect immediately");		
+		assert_styles('#anim', [{"backgroundColor": 'rgb(255, 64, 64)'}],
+			"takes effect immediately");
 	});
 });
 </script>
