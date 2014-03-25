@@ -24,36 +24,36 @@ Written by Steph McArthur
 var animation = new Animation(anim, {left: "100px"}, 100);
 var dt = document.timeline;
 
-// Test Player.timeline.
+// Test AnimationPlayer.timeline.
 var player1 = dt.play(animation);
 test(function() {assert_equals(player1.timeline,  document.timeline)},
-     "Player.timeline is document timeline");
+     "AnimationPlayer.timeline is document timeline");
 
-// Test that TimedItem.player and Player.source are consistent.
+// Test that TimedItem.player and AnimationPlayer.source are consistent.
 test(function() {assert_equals(player1.source,  animation)},
-     "Player.source should be the Animation");
+     "AnimationPlayer.source should be the Animation");
 test(function() {assert_equals(animation.player,  player1)},
-     "TimedItem.player should be the Player");
+     "TimedItem.player should be the AnimationPlayer");
 
-// Test that play() always returns a new Player.
+// Test that play() always returns a new AnimationPlayer.
 var player2 = dt.play(animation);
 test(function() {assert_not_equals(player2,  player1)},
-     "Repeated calls to play() should create a new Player");
+     "Repeated calls to play() should create a new AnimationPlayer");
 test(function() {assert_equals(animation.player,  player2)},
-     "Repeated play(): TimedItem.player should be the Player");
+     "Repeated play(): TimedItem.player should be the AnimationPlayer");
 test(function() {assert_equals(player2.source,  animation)},
-     "Repeated play(): Player.source should be the Animation");
+     "Repeated play(): AnimationPlayer.source should be the Animation");
 test(function() {assert_equals(player2.startTime,  player1.startTime)},
      "Repeated play(): Players should have same start time");
 
-// Test explicit setting of Player.source.
+// Test explicit setting of AnimationPlayer.source.
 player1.source = animation;
 test(function() {assert_equals(player2.source,  null)},
-     "Set Player.source: Old Player.source should be null");
+     "Set AnimationPlayer.source: Old source should be null");
 test(function() {assert_equals(player1.source,  animation)},
-     "Set Player.source: New Player.source should be the Animation");
+     "Set AnimationPlayer.source: New source should be the Animation");
 test(function() {assert_equals(animation.player,  player1)},
-     "Set Player.source: TimedItem.player should be the Player");
+     "Set AnimationPlayer.source: TimedItem.player should be the AnimationPlayer");
 
 // Test that TimedItem.player gives null on a detached tree.
 var animation2 =
@@ -69,7 +69,7 @@ var player3 = dt.play(parGroup);
 test(function() {assert_equals(animation2.player,  player3)},
      "TimedItem.player should remote");
 
-// Test that calling play() on a TimedItem with a parent results in.
+// Test that calling play() on a TimedItem with a parent results in
 // reparenting.
 var player4 = dt.play(animation2);
 test(function() {assert_equals(animation2.parent,  null)},
@@ -77,17 +77,17 @@ test(function() {assert_equals(animation2.parent,  null)},
 test(function() {assert_equals(parGroup.children.length, 0)},
      "Animation parent should be updated, leaving parGroup.children.length = 0");
 test(function() {assert_equals(player4.source,  animation2)},
-     "Player should use reparented animation");
+     "AnimationPlayer should use reparented animation");
 
-// Test that setting a parent on a TimedItem with a Player causes the player to.
-// be disconnected.
+// Test that setting a parent on a TimedItem with an AnimationPlayer causes the
+// player to be disconnected.
 parGroup.append(animation2);
 test(function() {assert_equals(parGroup.player,  player3)},
      "TimedItem.player should be updated for root");
 test(function() {assert_equals(animation2.player,  player3)},
      "TimedItem.player should be updated for leaf");
 test(function() {assert_equals(player4.source,  null)},
-     "Player.source should be updated");
+     "AnimationPlayer.source should be updated");
 test(function() {assert_equals(animation2.parent,  parGroup)},
      "Animation.parent should be updated");
 test(function() {assert_equals(parGroup.children.length,  1)},
@@ -120,7 +120,7 @@ player6.startTime = 42;
 test(function() {assert_equals(player6.currentTime, -42)},
      "player6's currentTime should always be zero before Timeline starts");
 
-// Test that a Player's TimedItem gets a null inherited time until the.
+// Test that an AnimationPlayer's TimedItem gets a null inherited time until the
 // timeline starts.
 var animation1 = new Animation(document.getElementById("anim"), {left: "100px"});
 dt.play(animation1);
@@ -132,7 +132,7 @@ timing_test(function() {
   }, "TimedItem's inherited time " +
      "and thus localTime should not be null after Timeline starts");
 
-// Test that TimedItem is updated immediately on calling Timeline.play() after.
+// Test that TimedItem is updated immediately on calling Timeline.play() after
 // the timeline starts.
 var animation4 = new Animation(
    document.getElementById("anim"), {left: "100px"});
@@ -153,7 +153,7 @@ timing_test(function() {
       document.timeline.play(animation5).currentTime = 42;
       assert_equals(animation5.localTime,  42);
     });
-  }, "Updates to Player.currentTime should take immediate effect");
+  }, "Updates to AnimationPlayer.currentTime should take immediate effect");
 
 // Test that updates to source take immediate effect.
 timing_test(function() {
@@ -165,21 +165,21 @@ timing_test(function() {
       player.source = animation7;
       assert_equals(animation7.localTime,  0);
     });
-  }, "Updates to Player.source should take immediate effect");
+  }, "Updates to AnimationPlayer.source should take immediate effect");
 
 function createPlayer(duration) {
   return document.timeline.play(new Animation(null, null, duration));
 }
 
-// Tests the initial values of the Player API.
+// Tests the initial values of the AnimationPlayer API.
 timing_test(function() {
     at(0, function() {
       var anim = new Animation(null, null, 3);
-      assert_equals(anim.player, null, "Player should be null initially");
+      assert_equals(anim.player, null, "player should be null initially");
 
       // Check state after playing
       document.timeline.play(anim);
-      assert_not_equals(anim.player, null, "Player should be not be null when playing");
+      assert_not_equals(anim.player, null, "player should be not be null when playing");
       assert_equals(anim.player.source, anim, "Initial source content");
       assert_equals(anim.player.timeline, document.timeline, "Initial document timeline");
       assert_equals(anim.player.startTime, document.timeline.currentTime, "Initial start time");
@@ -452,7 +452,7 @@ test(function() {
     assert_false(player.finished, "Finished state while after updating start time");
   }, "Adjust start time (4)");
 
-// Test seeking past end of player
+// Test seeking past end of player.
 timing_test(function() {
     var player = createPlayer(3);
     player.currentTime = 4;
@@ -462,7 +462,7 @@ timing_test(function() {
     });
   }, "Seeking past player content end and waiting");
 
-// Test seeking before start of reversed player
+// Test seeking before start of reversed player.
 timing_test(function() {
     var player = createPlayer(3);
     player.playbackRate = -1;
@@ -778,7 +778,7 @@ timing_test(function() {
 test(function() {
     var player = createPlayer(3);
     // Setting a high playbackRate has caused the reported currentTime to differ
-    // from what was set in previous implementations of Player.
+    // from what was set in previous implementations of AnimationPlayer.
     player.playbackRate = 123456;
     player.currentTime = 1.618;
     assert_equals(player.currentTime, 1.618, "currentTime after seeking to fractional time");

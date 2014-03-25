@@ -76,7 +76,7 @@ timing_test(function() {
     at(3.0, function() {assert_equals(getComputedStyle(target2).getPropertyValue("left"), "100px")});
   }, "Second animation should have later compositing order");
 
-// Test compositing order follows Player start time order.
+// Test compositing order follows AnimationPlayer start time order.
 var target3 = document.getElementById("target3");
 var player1 = document.timeline.play(
   new Animation(target3, leftToRight, 1.0));

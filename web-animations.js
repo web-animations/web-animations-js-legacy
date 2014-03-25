@@ -220,7 +220,7 @@ Timeline.prototype = {
     return this.currentTime || 0;
   },
   play: function(source) {
-    return new Player(constructorToken, source, this);
+    return new AnimationPlayer(constructorToken, source, this);
   },
   getCurrentPlayers: function() {
     return PLAYERS.filter(function(player) {
@@ -242,7 +242,7 @@ Timeline.prototype = {
   }
 };
 
-// TODO: Remove dead Players from here?
+// TODO: Remove dead players from here?
 var PLAYERS = [];
 var playersAreSorted = false;
 var playerSequenceNumber = 0;
@@ -250,7 +250,7 @@ var playerSequenceNumber = 0;
 
 
 /** @constructor */
-var Player = function(token, source, timeline) {
+var AnimationPlayer = function(token, source, timeline) {
   if (token !== constructorToken) {
     throw new TypeError('Illegal constructor');
   }
@@ -279,7 +279,7 @@ var Player = function(token, source, timeline) {
   }
 };
 
-Player.prototype = {
+AnimationPlayer.prototype = {
   set source(source) {
     enterModifyCurrentAnimationState();
     try {
@@ -684,8 +684,8 @@ TimedItem.prototype = {
   },
   // We push time down to children. We could instead have children pull from
   // above, but this is tricky because a TimedItem may use either a parent
-  // TimedItem or an Player. This requires either logic in
-  // TimedItem, or for TimedItem and Player to implement Timeline
+  // TimedItem or an AnimationPlayer. This requires either logic in
+  // TimedItem, or for TimedItem and AnimationPlayer to implement Timeline
   // (or an equivalent), both of which are ugly.
   _updateInheritedTime: function(inheritedTime) {
     this._inheritedTime = inheritedTime;
@@ -1604,7 +1604,8 @@ var MediaReference = function(mediaElement, timing, parent, delta) {
   this._media.loop = false;
 
   // If the media element has a media controller, we detach it. This mirrors the
-  // behaviour when re-parenting a TimedItem, or attaching one to a Player.
+  // behaviour when re-parenting a TimedItem, or attaching one to an
+  // AnimationPlayer.
   // TODO: It would be neater to assign to MediaElement.controller, but this was
   // broken in Chrome until recently. See crbug.com/226270.
   this._media.mediaGroup = '';
@@ -1668,8 +1669,8 @@ MediaReference.prototype = createObject(TimedItem.prototype, {
       this._media.currentTime = time * this._media.defaultPlaybackRate;
     }
   },
-  // This is called by the polyfill on each tick when our Player's tree is
-  // active.
+  // This is called by the polyfill on each tick when our AnimationPlayer's tree
+  // is active.
   _updateInheritedTime: function(inheritedTime) {
     this._inheritedTime = inheritedTime;
     this._updateTimeMarkers();
@@ -1728,10 +1729,10 @@ MediaReference.prototype = createObject(TimedItem.prototype, {
       this._ensurePlaying();
     }
 
-    // Seek if required. This could be due to our Player being seeked, or video
-    // slippage. We need to handle the fact that the video may not play at
-    // exactly the right speed. There's also a variable delay when the video is
-    // first played.
+    // Seek if required. This could be due to our AnimationPlayer being seeked,
+    // or video slippage. We need to handle the fact that the video may not play
+    // at exactly the right speed. There's also a variable delay when the video
+    // is first played.
     // TODO: What's the right value for this delta?
     var delta = isDefinedAndNotNull(this._delta) ? this._delta :
         0.2 * Math.abs(this._media.playbackRate);
@@ -5214,8 +5215,8 @@ var ticker = function(rafTime, isRepeat) {
   // Clear any modifications to getComputedStyle.
   ensureOriginalGetComputedStyle();
 
-  // Get animations for this sample. We order by Player then by DFS order within
-  // each Player's tree.
+  // Get animations for this sample. We order by AnimationPlayer then by DFS
+  // order within each AnimationPlayer's tree.
   if (!playersAreSorted) {
     PLAYERS.sort(playerSortFunction);
     playersAreSorted = true;
@@ -5316,11 +5317,11 @@ window.Element.prototype.getCurrentAnimations = function() {
 
 window.Animation = Animation;
 window.AnimationEffect = AnimationEffect;
+window.AnimationPlayer = AnimationPlayer;
 window.KeyframeEffect = KeyframeEffect;
 window.MediaReference = MediaReference;
 window.ParGroup = ParGroup;
 window.MotionPathEffect = MotionPathEffect;
-window.Player = Player;
 window.PseudoElementReference = PseudoElementReference;
 window.SeqGroup = SeqGroup;
 window.TimedItem = TimedItem;

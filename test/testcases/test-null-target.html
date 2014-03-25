@@ -52,7 +52,7 @@ var expected_failures = {
       assert_equals(getComputedStyle(a).getPropertyValue("left"), "450px")
       assert_equals(getComputedStyle(a).getPropertyValue("top"), "0px")
     });
-  }, "Player should do nothing for the duration of animations with null targets.")
+  }, "AnimationPlayer should do nothing for the duration of animations with null targets.")
 
   timing_test(function() {
     at(0.8, function() {
@@ -60,6 +60,6 @@ var expected_failures = {
       assert_equals(getComputedStyle(a).getPropertyValue("top"), "450px")
     });
   },
-  "Player should do nothing for duration of animations with null targets, " +
+  "AnimationPlayer should do nothing for duration of animations with null targets, " +
   "then continue with animations with real targets.") 
 </script>
