@@ -47,7 +47,7 @@ The Web Animations model is a description of an engine for animation content on 
 
 Web Animations also exposes a JS API to the model. This API defines a number of
 new interfaces that are exposed to JavaScript. We'll go through some of the more
-important ones here: Animations, AnimationEffects, TimingDictionaries, TimingGroups, and Players.
+important ones here: Animations, AnimationEffects, TimingDictionaries, TimingGroups, and AnimationPlayers.
 
 An `Animation` object defines a single animation effect that applies to a single element target. For example:
 
@@ -181,13 +181,13 @@ calculated duration of the max (`duration + delay`) of its children - in this ca
 
 ### Playing Animations
 
-In order to play an `Animation` or `TimingGroup`, a `Player` must be constructed:
+In order to play an `Animation` or `TimingGroup`, an `AnimationPlayer` must be constructed:
 
     var player = document.timeline.play(myAnimation);
 
-Players provide complete control the start time and current playback head of their attached animation. However, players can't modify any internal details of an animation.
+AnimationPlayers provide complete control the start time and current playback head of their attached animation. However, players can't modify any internal details of an animation.
 
-Players can be used to pause, seek, reverse, or modify the playback rate of an animation.
+AnimationPlayers can be used to pause, seek, reverse, or modify the playback rate of an animation.
 
 `document.timeline.currentTime` is a timeline's global time. It gives the number
 of seconds since the document fired its load event.

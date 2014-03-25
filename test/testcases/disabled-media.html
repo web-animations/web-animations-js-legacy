@@ -420,7 +420,7 @@ timing_test(function() {
 // TODO: Need to find a video with limited seek ranges.
 
 // Test that video is paused when its MediaReference is detached from its
-// Player.
+// AnimationPlayer.
 timing_test(function() {
   var video = getNextVideo();
   var player;
@@ -434,6 +434,6 @@ timing_test(function() {
   at(2.0, function() {
     assert_true(video.paused);
   });
-}, "Video should be paused when MediaReference is detached from its Player");
+}, "Video should be paused when MediaReference is detached from its AnimationPlayer");
 
 </script>

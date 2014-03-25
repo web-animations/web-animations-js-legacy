@@ -17,7 +17,7 @@ timing_test(function() {
         player.currentTime = 3;
         player.playbackRate = -1;
         assert_styles(target, {left: '100px'});
-    }, 'Player reversing');
+    }, 'AnimationPlayer reversing');
 
     at(2, function() {}, 'Tick');
 

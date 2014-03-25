@@ -41,7 +41,7 @@ var player2 = document.timeline.play(anim2);
 var anim3 = new Animation(document.getElementById("anim3"), animFunc, {duration: 1.0, fill: 'forwards'});
 var player3 = document.timeline.play(anim3);
 
-// Check that once an animation is completed, creating a new Player restarts it.
+// Check that once an animation is completed, creating a new AnimationPlayer restarts it.
 timing_test(function() {
     at(1.0, function() {
       assert_styles('#anim1', {'left': '100px'});
@@ -57,7 +57,7 @@ timing_test(function() {
     at(2.0, function() {assert_styles('#anim1', {'left': '100px'})});
   }, "Animation 1 should be in end state a second time");
 
-// Setting Player.currentTime = 0 restarts it.
+// Setting AnimationPlayer.currentTime = 0 restarts it.
 timing_test(function() {
     at(0.5, function() {
       assert_styles("#anim2", {'left': '50px'});
@@ -83,8 +83,8 @@ timing_test(function() {
     });
   }, "Animation 2 should be in end state a second time");
 
-// Even when animation is completed, setting Player.currentTime = 0 restarts
-// it.
+// Even when animation is completed, setting AnimationPlayer.currentTime = 0
+// restarts it.
 timing_test(function() {
     at(1.0, function() {
       assert_styles("#anim3", {'left': '100px'});
