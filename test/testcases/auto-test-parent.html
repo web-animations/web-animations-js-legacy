@@ -45,7 +45,7 @@ document.timeline.play(new Animation(document.getElementById("a"),
     effect, timing));
 
 // Animation in group.
-document.timeline.play(new ParGroup([
+document.timeline.play(new AnimationGroup([
   new Animation(document.getElementById("c"), effect, timing)
 ], {iterations: 3}));
 

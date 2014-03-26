@@ -644,8 +644,8 @@ TimedItem.prototype = {
         this.remove();
       }
       this._parent = parent;
-      // In the case of a SeqGroup parent, _startTime will be updated by
-      // TimingGroup.splice().
+      // In the case of a AnimationSequence parent, _startTime will be updated
+      // by TimingGroup.splice().
       if (this.parent === null || this.parent.type !== 'seq') {
         this._startTime =
             this._stashedStartTime === undefined ? 0.0 : this._stashedStartTime;
@@ -1448,8 +1448,8 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
       children.push(child.clone());
     });
     return this.type === 'par' ?
-        new ParGroup(children, this.specified._dict) :
-        new SeqGroup(children, this.specified._dict);
+        new AnimationGroup(children, this.specified._dict) :
+        new AnimationSequence(children, this.specified._dict);
   },
   clear: function() {
     this._splice(0, this._children.length);
@@ -1563,20 +1563,20 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
 
 
 /** @constructor */
-var ParGroup = function(children, timing, parent) {
+var AnimationGroup = function(children, timing, parent) {
   TimingGroup.call(this, constructorToken, 'par', children, timing, parent);
 };
 
-ParGroup.prototype = Object.create(TimingGroup.prototype);
+AnimationGroup.prototype = Object.create(TimingGroup.prototype);
 
 
 
 /** @constructor */
-var SeqGroup = function(children, timing, parent) {
+var AnimationSequence = function(children, timing, parent) {
   TimingGroup.call(this, constructorToken, 'seq', children, timing, parent);
 };
 
-SeqGroup.prototype = Object.create(TimingGroup.prototype);
+AnimationSequence.prototype = Object.create(TimingGroup.prototype);
 
 
 
@@ -5317,13 +5317,13 @@ window.Element.prototype.getCurrentAnimations = function() {
 
 window.Animation = Animation;
 window.AnimationEffect = AnimationEffect;
+window.AnimationGroup = AnimationGroup;
 window.AnimationPlayer = AnimationPlayer;
+window.AnimationSequence = AnimationSequence;
 window.KeyframeEffect = KeyframeEffect;
 window.MediaReference = MediaReference;
-window.ParGroup = ParGroup;
 window.MotionPathEffect = MotionPathEffect;
 window.PseudoElementReference = PseudoElementReference;
-window.SeqGroup = SeqGroup;
 window.TimedItem = TimedItem;
 window.TimedItemList = TimedItemList;
 window.Timing = Timing;

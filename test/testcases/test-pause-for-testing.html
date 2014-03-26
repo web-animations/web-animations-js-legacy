@@ -30,9 +30,9 @@ limitations under the License.
 <script src='../bootstrap.js'></script>
 <script>
 'use strict';
-var downRed = new ParGroup(
+var downRed = new AnimationGroup(
     [new Animation(document.querySelector('#a'), {top: '600px'}, 4)]);
-var downBlue = new ParGroup(
+var downBlue = new AnimationGroup(
     [new Animation(document.querySelector('#b'), {top: '600px'}, 4)],
     {delay: 1});
 document.timeline.play(downRed);

@@ -66,7 +66,7 @@ timing_test(function() {
   });
 }, 'Updated style should be visible after change to specified timing');
 
-var group = new SeqGroup([
+var group = new AnimationSequence([
   new Animation(element, {}, 1),
   new Animation(element, [{right: '0px'}, {right: '1000px'}], 10),
 ]);
@@ -101,7 +101,7 @@ timing_test(function() {
     assert_styles(element, {bottom: '500px'});
 
     try {
-      var group = new ParGroup();
+      var group = new AnimationGroup();
       group.append(group);
     } catch (e) {
     }

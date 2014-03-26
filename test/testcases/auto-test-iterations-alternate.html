@@ -41,10 +41,10 @@ var anim1 = new Animation(
 var anim2 = new Animation(
     document.getElementById("b"), effect,
     {duration: 1.0, fill: 'forwards'});
-var parGroup = new ParGroup(
+var animationGroup = new AnimationGroup(
     [anim2],
     {duration: 1.0, iterations: 3.0, direction: "alternate", fill: 'forwards'});
 
 document.timeline.play(anim1);
-document.timeline.play(parGroup);
+document.timeline.play(animationGroup);
 </script>
