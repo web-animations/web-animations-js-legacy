@@ -47,13 +47,13 @@ document.timeline.play(anim);
 
 // After 3.0s, move it to a parallel group and run that.
 testharness_timeline.schedule(function() {
-    document.timeline.play(new ParGroup([anim],
+    document.timeline.play(new AnimationGroup([anim],
         {duration: 1.0, iterations: 3.0}));
   }, 3000);
 
 // After 3.0s, move it to a parallel group and run that.
 testharness_timeline.schedule(function() {
-    document.timeline.play(new ParGroup([anim],
+    document.timeline.play(new AnimationGroup([anim],
         {duration: 1.5, iterations: 3.0}));
   }, 8000);
 

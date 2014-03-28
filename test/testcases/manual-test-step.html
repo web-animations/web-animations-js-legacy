@@ -73,7 +73,7 @@ function testStep(numSteps, position) {
 // TODO: Making player global like this is is rather ugly. It would be nice if
 // the animation or player were passed to the custom animation effect's sample
 // function.
-var player = document.timeline.play(new ParGroup([
+var player = document.timeline.play(new AnimationGroup([
   testStep(1, 'start'),
   testStep(1, 'middle'),
   testStep(1, 'end'),

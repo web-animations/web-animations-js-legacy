@@ -110,20 +110,20 @@ feature.
 
 ### Sequencing and synchronizing animations
 
-Two different types of TimingGroups (`ParGroup` and `SeqGroup`) allow animations to be synchronized and sequenced.
+Two different types of TimingGroups (`AnimationGroup` and `AnimationSequence`) allow animations to be synchronized and sequenced.
 
 To play a list of animations in parallel:
 
-    var parGroup = new ParGroup([new Animation(...), new Animation(...)]);
+    var animationGroup = new AnimationGroup([new Animation(...), new Animation(...)]);
 
 To play a list in sequence:
 
-    var seqGroup = new SeqGroup([new Animation(...), new Animation(...)]);
+    var animationSequence = new AnimationSequence([new Animation(...), new Animation(...)]);
 
-Because `Animation`, `ParGroup`, `SeqGroup` are all TimedItems, groups can be nested:
+Because `Animation`, `AnimationGroup`, `AnimationSequence` are all TimedItems, groups can be nested:
 
-    var parGroup = new ParGroup([
-      new SeqGroup([
+    var animationGroup = new AnimationGroup([
+      new AnimationSequence([
         new Animation(...),
         new Animation(...),
       ]),
@@ -132,7 +132,7 @@ Because `Animation`, `ParGroup`, `SeqGroup` are all TimedItems, groups can be ne
 
 Groups also take an optional TimingDictionary parameter (see below), which among other things allows iteration and timing functions to apply at the group level:
 
-    var parGroup = new ParGroup([new Animation(...), new Animation(...)], {iterations: 4});
+    var animationGroup = new AnimationGroup([new Animation(...), new Animation(...)], {iterations: 4});
 
 ### Controlling the animation timing
 
@@ -160,8 +160,8 @@ backwards fills, and animation forwards fills. There are a few simple rules whic
 
 The following example illustrates these rules:
 
-    var parGroup = new ParGroup([
-      new SeqGroup([
+    var animationGroup = new AnimationGroup([
+      new AnimationSequence([
         new Animation(..., {duration: 3}),
         new Animation(..., {duration: 5, fill: 'both'})
       ], {duration: 6, delay: 3, fill: 'none'}),
@@ -170,14 +170,14 @@ The following example illustrates these rules:
 
 In this example:
 
-- The `SeqGroup` has an explicit `duration` of 6 seconds, and so the
+- The `AnimationSequence` has an explicit `duration` of 6 seconds, and so the
 second child animation will only play for the first 3 of its 5 second duration
-- The `ParGroup` has no explicit duration, and will be provided with a
+- The `AnimationGroup` has no explicit duration, and will be provided with a
 calculated duration of the max (`duration + delay`) of its children - in this case 9 seconds.
-- Although `fill: "both"` is specified for the second `Animation` within the `SeqGroup`, the `SeqGroup` itself has a `fill` of "none". Hence, as the animation ends right at the end of the `SeqGroup`, the animation will only fill backwards, and only up until the boundary of the `SeqGroup` (i.e. 3 seconds after the start of the `ParGroup`).
-- The `Animation` inside the `ParGroup` and the `ParGroup` are both `fill: "forward"`. Therefore the animation will fill forward in two places: 
-    - from 8 seconds after the `ParGroup` starts until the second iteration of the `ParGroup` starts (i.e. for 1 second)
-    - from 17 seconds after the `ParGroup` starts, extending forward indefinitely.
+- Although `fill: "both"` is specified for the second `Animation` within the `AnimationSequence`, the `AnimationSequence` itself has a `fill` of "none". Hence, as the animation ends right at the end of the `AnimationSequence`, the animation will only fill backwards, and only up until the boundary of the `AnimationSequence` (i.e. 3 seconds after the start of the `AnimationGroup`).
+- The `Animation` inside the `AnimationGroup` and the `AnimationGroup` are both `fill: "forward"`. Therefore the animation will fill forward in two places: 
+    - from 8 seconds after the `AnimationGroup` starts until the second iteration of the `AnimationGroup` starts (i.e. for 1 second)
+    - from 17 seconds after the `AnimationGroup` starts, extending forward indefinitely.
 
 ### Playing Animations
 

@@ -125,7 +125,7 @@ var effect100To180 = [{left: "100px"}, {left: "180px"}];
 for (var i = 0; i < directions.length; i++) {
   var dir = directions[i];
   groups.push(
-      new ParGroup([], {iterations: 2, direction: dir, duration: 4, fill: 'forwards'}));
+      new AnimationGroup([], {iterations: 2, direction: dir, duration: 4, fill: 'forwards'}));
 }
 
 for (var i = 0; i < containers.length; i++) {

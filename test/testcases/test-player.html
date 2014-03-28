@@ -58,14 +58,14 @@ test(function() {assert_equals(animation.player,  player1)},
 // Test that TimedItem.player gives null on a detached tree.
 var animation2 =
     new Animation(document.getElementById("anim"), {left: "100px"});
-var parGroup = new ParGroup([animation2]);
-test(function() {assert_equals(parGroup.player,  null)},
+var animationGroup = new AnimationGroup([animation2]);
+test(function() {assert_equals(animationGroup.player,  null)},
      "TimedItem.player should be null for root");
 test(function() {assert_equals(animation2.player,  null)},
      "TimedItem.player should be null for leaf");
 
 // Test that TimedItem.player remotes to the root of the tree.
-var player3 = dt.play(parGroup);
+var player3 = dt.play(animationGroup);
 test(function() {assert_equals(animation2.player,  player3)},
      "TimedItem.player should remote");
 
@@ -74,25 +74,25 @@ test(function() {assert_equals(animation2.player,  player3)},
 var player4 = dt.play(animation2);
 test(function() {assert_equals(animation2.parent,  null)},
      "Animation should be reparented");
-test(function() {assert_equals(parGroup.children.length, 0)},
-     "Animation parent should be updated, leaving parGroup.children.length = 0");
+test(function() {assert_equals(animationGroup.children.length, 0)},
+     "Animation parent should be updated, leaving animationGroup.children.length = 0");
 test(function() {assert_equals(player4.source,  animation2)},
      "AnimationPlayer should use reparented animation");
 
 // Test that setting a parent on a TimedItem with an AnimationPlayer causes the
 // player to be disconnected.
-parGroup.append(animation2);
-test(function() {assert_equals(parGroup.player,  player3)},
+animationGroup.append(animation2);
+test(function() {assert_equals(animationGroup.player,  player3)},
      "TimedItem.player should be updated for root");
 test(function() {assert_equals(animation2.player,  player3)},
      "TimedItem.player should be updated for leaf");
 test(function() {assert_equals(player4.source,  null)},
      "AnimationPlayer.source should be updated");
-test(function() {assert_equals(animation2.parent,  parGroup)},
+test(function() {assert_equals(animation2.parent,  animationGroup)},
      "Animation.parent should be updated");
-test(function() {assert_equals(parGroup.children.length,  1)},
-      "Animation parent should be updated, leaving parGroup.children.length = 1");
-test(function() {assert_equals(parGroup.children[0],  animation2)},
+test(function() {assert_equals(animationGroup.children.length,  1)},
+      "Animation parent should be updated, leaving animationGroup.children.length = 1");
+test(function() {assert_equals(animationGroup.children[0],  animation2)},
      "Animation parent should be updated");
 
 // Test that currentTime is zero before timeline starts.

@@ -69,10 +69,10 @@ var a1 = new Animation(document.querySelector("#a"), effect, {duration: 2.6, fil
 var a2 = new Animation(document.querySelector("#b"), effect, {duration: 2.5, fill: "forwards"});
 var a3 = new Animation(document.querySelector("#c"), effect, {duration: 2.5, fill: "forwards"});
 var a4 = new Animation(document.querySelector("#d"), effect, {duration: 2.3, fill: "forwards"});
-var pgroup1 = new ParGroup([a1, a2], {name: "p1", fill: "forwards"});
-var pgroup2 = new ParGroup([a3, a4], {name: "p2", fill: "forwards"});
+var pgroup1 = new AnimationGroup([a1, a2], {name: "p1", fill: "forwards"});
+var pgroup2 = new AnimationGroup([a3, a4], {name: "p2", fill: "forwards"});
 var player = document.timeline.play(
-    new SeqGroup([pgroup1, pgroup2], {name: "s", fill: "forwards"}));
+    new AnimationSequence([pgroup1, pgroup2], {name: "s", fill: "forwards"}));
 
 at(1.0, function() { player.pause(); });
 at(2.0, function() { player.play(); });

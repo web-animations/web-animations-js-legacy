@@ -32,7 +32,7 @@ function createAnim(element, fill) {
     });
 }
 function createGroup(element, fill) {
-  return new SeqGroup([
+  return new AnimationSequence([
       new Animation(element, effect, {
         duration: 0.1,
         fill: 'both'})

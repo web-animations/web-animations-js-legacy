@@ -58,8 +58,8 @@ test(function() {
 
 test(function() {
 
-  var aTree = new ParGroup([
-    new SeqGroup([
+  var aTree = new AnimationGroup([
+    new AnimationSequence([
       new Animation(body, {left: '100px'}, 1),
       new Animation(body, {left: '100px'}, 1)
     ]),
@@ -87,7 +87,7 @@ test(function() {
 test(function() {
   var anAnimation = new Animation(body, {left: '100px'}, 1);
   anAnimation.onstart = function() { };
-  var aGroup = new ParGroup([anAnimation]);
+  var aGroup = new AnimationGroup([anAnimation]);
   var player = document.timeline.play(aGroup);
   assert_true(player._needsHandlerPass);
 }, 'needsHandlerPass correctly passed from child to parent on construction');
@@ -95,7 +95,7 @@ test(function() {
 test(function() {
   var anAnimation = new Animation(body, {left: '100px'}, 1);
   anAnimation.onstart = function() { };
-  var aGroup = new ParGroup([]);
+  var aGroup = new AnimationGroup([]);
   aGroup.append(anAnimation);
   var player = document.timeline.play(aGroup);
   assert_true(player._needsHandlerPass);
@@ -104,7 +104,7 @@ test(function() {
 test(function() {
   var anAnimation = new Animation(body, {left: '100px'}, 1);
   anAnimation.onstart = function() { };
-  var aGroup = new ParGroup([]);
+  var aGroup = new AnimationGroup([]);
   var player = document.timeline.play(aGroup);
   aGroup.append(anAnimation);
   assert_true(player._needsHandlerPass);

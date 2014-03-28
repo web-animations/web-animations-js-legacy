@@ -98,7 +98,7 @@ for (var i = 0; i < directions.length; i++) {
   var container = document.getElementById(containers[i]);
 
   document.timeline.play(
-      new ParGroup([
+      new AnimationGroup([
           // Test basic use.
           new Animation(container.getElementsByClassName("a")[0],
               [{left: "100px"}, {left: "300px"}],

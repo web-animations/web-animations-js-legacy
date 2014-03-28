@@ -137,23 +137,23 @@ testTiming(simple({duration: 5, delay: 5}),
   [event('start', 5, 5, 0), event('end', 10, 10, 0)],
   "delayed start");
 
-testTiming(new ParGroup([simple(10)]),
+testTiming(new AnimationGroup([simple(10)]),
   [event('start', 0, 0, 0), event('start', 0, 0, 0, child(0)),
    event('end', 10, 10, 0, child(0)), event('end', 10, 10, 0)],
    "simple par group");
 
-testTiming(new ParGroup([simple(10), simple(10)]),
+testTiming(new AnimationGroup([simple(10), simple(10)]),
   [event('start', 0, 0, 0), event('start', 0, 0, 0, child(0)),
    event('start', 0, 0, 0, child(1)), event('end', 10, 10, 0, child(0)),
    event('end', 10, 10, 0, child(1)), event('end', 10, 10, 0)],
    "par group with multiple children");
-testTiming(new SeqGroup([simple(5), simple(5)]),
+testTiming(new AnimationSequence([simple(5), simple(5)]),
   [event('start', 0, 0, 0), event('start', 0, 0, 0, child(0)),
    event('end', 5, 5, 0, child(0)), event('start', 0, 5, 0, child(1)),
    event('end', 5, 10, 0, child(1)), event('end', 10, 10, 0)],
    "seq group with multiple children");
 
-testTiming(new ParGroup([simple(5)], {duration: 5, 
+testTiming(new AnimationGroup([simple(5)], {duration: 5, 
                                        iterations: 2}),
   [event('start', 0, 0, 0), event('start', 0, 0, 0, child(0)),
    event('end', 5, 5, 0, child(0)), event('iteration', 5, 5, 1),
@@ -164,7 +164,7 @@ testTiming(new ParGroup([simple(5)], {duration: 5,
 // child at (0.5, 2.5, 4.5)
 // parent at ((-3), 2, 7)
 // result: child iterations at 1.5 | 2.5 4.5 6.5 | 7.5 9.5
-testTiming(new ParGroup([simple({duration: 2, iterationStart: 0.75,
+testTiming(new AnimationGroup([simple({duration: 2, iterationStart: 0.75,
                                  iterations: 2.5})],
                         {iterationStart: 0.6, iterations: 2}),
   [event('start', 0, 0, 0), event('iteration', 4.5, 1.5, 3, child(0)), 
@@ -181,13 +181,13 @@ testTiming(simple({duration: 10, playbackRate: 2}),
   [event('start', 0, 0, 0), event('end', 5, 5, 0)],
   "simple animation with non-unit playbackRate");
 
-testTiming(new ParGroup([simple({duration: 10, playbackRate: 4})], 
+testTiming(new AnimationGroup([simple({duration: 10, playbackRate: 4})], 
            {playbackRate: 0.5}),
   [event('start', 0, 0, 0), event('start', 0, 0, 0, child(0)),
    event('end', 2.5, 5, 0, child(0)), event('end', 5, 5, 0)],
    "nested non-unit playbackRates");
 
-testTiming(new ParGroup([simple({iterations: 2, duration: 2.5, 
+testTiming(new AnimationGroup([simple({iterations: 2, duration: 2.5, 
                                  playbackRate: 4})],
            {playbackRate: 0.5, iterations: 2}),
   [event('start', 0, 0, 0), event('start', 0, 0, 0, child(0)),
