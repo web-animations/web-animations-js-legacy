@@ -2634,7 +2634,7 @@ var interp = function(from, to, f, type) {
   if (Array.isArray(from) || Array.isArray(to)) {
     return interpArray(from, to, f, type);
   }
-  var zero = type === 'scale' ? 1.0 : 0.0;
+  var zero = (type && type.indexOf('scale') === 0) ? 1 : 0;
   to = isDefinedAndNotNull(to) ? to : zero;
   from = isDefinedAndNotNull(from) ? from : zero;
 
@@ -3716,7 +3716,11 @@ function build3DRotationMatcher() {
     for (var i = 0; i < 3; i++) {
       out.push(r[i].px);
     }
-    out.push(r[3]);
+    var angle = 0;
+    for (var unit in r[3]) {
+      angle += convertToDeg(r[3][unit], unit);
+    }
+    out.push(angle);
     return out;
   };
   return [m[0], f, m[2]];
@@ -4012,8 +4016,8 @@ function convertItemToMatrix(item) {
       var x = item.d[0];
       var y = item.d[1];
       var z = item.d[2];
-      var s = Math.sin(item.d[3] / 2);
-      var sc = s * Math.cos(item.d[3] / 2);
+      var s = Math.sin(item.d[3] * Math.PI / 360);
+      var sc = s * Math.cos(item.d[3] * Math.PI / 360);
       var sq = s * s;
       return [
         1 - 2 * (y * y + z * z) * sq,
@@ -4044,17 +4048,17 @@ function convertItemToMatrix(item) {
               0, 0, item.d[2], 0,
               0, 0, 0, 1];
     case 'skew':
-      return [1, Math.tan(item.d[1]), 0, 0,
-              Math.tan(item.d[0]), 1, 0, 0,
+      return [1, Math.tan(item.d[1] * Math.PI / 180), 0, 0,
+              Math.tan(item.d[0] * Math.PI / 180), 1, 0, 0,
               0, 0, 1, 0,
               0, 0, 0, 1];
     case 'skewX':
       return [1, 0, 0, 0,
-              Math.tan(item.d), 1, 0, 0,
+              Math.tan(item.d * Math.PI / 180), 1, 0, 0,
               0, 0, 1, 0,
               0, 0, 0, 1];
     case 'skewY':
-      return [1, Math.tan(item.d), 0, 0,
+      return [1, Math.tan(item.d * Math.PI / 180), 0, 0,
               0, 1, 0, 0,
               0, 0, 1, 0,
               0, 0, 0, 1];
@@ -4090,6 +4094,12 @@ function convertItemToMatrix(item) {
 }
 
 function convertToMatrix(transformList) {
+  if (transformList.length === 0) {
+    return [1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1];
+  }
   return transformList.map(convertItemToMatrix).reduce(multiplyMatrices);
 }
 
@@ -4192,11 +4202,16 @@ function interpolateTransformsWithMatrices(from, to, f) {
 function interpTransformValue(from, to, f) {
   var type = from.t ? from.t : to.t;
   switch (type) {
+    case 'matrix':
+    case 'matrix3d':
+      ASSERT_ENABLED && assert(
+        false, 'Must use matrix decomposition when interpolating raw matrices');
     // Transforms with unitless parameters.
     case 'rotate':
     case 'rotateX':
     case 'rotateY':
     case 'rotateZ':
+    case 'rotate3d':
     case 'scale':
     case 'scaleX':
     case 'scaleY':
@@ -4205,8 +4220,6 @@ function interpTransformValue(from, to, f) {
     case 'skew':
     case 'skewX':
     case 'skewY':
-    case 'matrix':
-    case 'matrix3d':
       return {t: type, d: interp(from.d, to.d, f, type)};
     default:
       // Transforms with lengthType parameters.
@@ -4228,6 +4241,10 @@ function interpTransformValue(from, to, f) {
   }
 }
 
+function isMatrix(item) {
+  return item.t[0] === 'm';
+}
+
 // The CSSWG decided to disallow scientific notation in CSS property strings
 // (see http://lists.w3.org/Archives/Public/www-style/2010Feb/0050.html).
 // We need this function to hakonitize all numbers before adding them to
@@ -4242,13 +4259,14 @@ var transformType = {
   interpolate: function(from, to, f) {
     var out = [];
     for (var i = 0; i < Math.min(from.length, to.length); i++) {
-      if (from[i].t !== to[i].t || from[i].t.substr(0, 6) == 'matrix') {
+      if (from[i].t !== to[i].t || isMatrix(from[i])) {
         break;
       }
       out.push(interpTransformValue(from[i], to[i], f));
     }
 
-    if (i < Math.min(from.length, to.length)) {
+    if (i < Math.min(from.length, to.length) ||
+        from.some(isMatrix) || to.some(isMatrix)) {
       out.push(interpolateTransformsWithMatrices(from.slice(i), to.slice(i),
           f));
       return out;
