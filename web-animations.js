@@ -4016,6 +4016,17 @@ function convertItemToMatrix(item) {
       var x = item.d[0];
       var y = item.d[1];
       var z = item.d[2];
+      var sqrLength = x * x + y * y + z * z;
+      if (sqrLength === 0) {
+        x = 1;
+        y = 0;
+        z = 0;
+      } else if (sqrLength !== 1) {
+        var length = Math.sqrt(sqrLength);
+        x /= length;
+        y /= length;
+        z /= length;
+      }
       var s = Math.sin(item.d[3] * Math.PI / 360);
       var sc = s * Math.cos(item.d[3] * Math.PI / 360);
       var sq = s * s;
@@ -4025,7 +4036,7 @@ function convertItemToMatrix(item) {
         2 * (x * z * sq - y * sc),
         0,
 
-        2 * (x * z * sq - z * sc),
+        2 * (x * y * sq - z * sc),
         1 - 2 * (x * x + z * z) * sq,
         2 * (y * z * sq + x * sc),
         0,
