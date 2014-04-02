@@ -4264,6 +4264,13 @@ var transformType = {
 
     if (i < Math.min(from.length, to.length) ||
         from.some(isMatrix) || to.some(isMatrix)) {
+      // TODO: TESTING ONLY, REMOVE BEFORE SUBMITTING.
+      out.push({
+        t: 'matrix3d',
+        d: convertToMatrix(f < 0.5 ? from.slice(i) : to.slice(i))
+      });
+      return out;
+
       if (from.decompositionPair !== to) {
         from.decompositionPair = to;
         from.decomposition = decomposeMatrix(convertToMatrix(from.slice(i)));
