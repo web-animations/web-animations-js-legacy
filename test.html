@@ -28,21 +28,34 @@
 'use strict';
 var testGroups = [
   [
+    'matrix3d(1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1)',
+    'matrix(0.7, 0.7, -0.7, 0.7, 10, 20)',
+    'matrix3d(0,0,-1,0, 0,1,0,0, 1,0,0,0, 0,0,0,1)',
+  ], [
+    'skew(20deg, 30deg)',
+    'skewX(40deg)',
+    'skewY(30deg)',
+  ], [
+    'scale(1.1, 1.2)',
+    'scaleX(1.2)',
+    'scaleY(1.1)',
+    'scaleZ(2) translateZ(4px)',
+  ], [
     'rotate(60deg)',
     'rotateX(70deg)',
     'rotateY(80deg)',
     'rotateZ(70deg)',
     'rotate3d(1, 1, 1, 60deg)',
   ], [
-    'skew(20deg, 30deg)',
-    'skewX(40deg)',
-    'skewY(30deg)',
+    'translate(10px, 20px)',
+    'translateX(10px)',
+    'translateY(20px)',
+    'translateZ(30px)',
+    'translate3d(10px, 20px, 40px)',
   ], [
-    'scale(1.2)',
-    'scale(1.1, 1.2)',
-    'scaleX(1.2)',
-    'scaleY(1.1)',
-    'scaleZ(2) translateZ(1)',
+    'translate(100px)',
+    'translate(100px) rotate(20deg)',
+    'translate(100px) rotate(20deg) scale(0.5)',
   ]
 ];
 
