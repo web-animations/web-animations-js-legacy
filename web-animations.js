@@ -4168,6 +4168,12 @@ var composeMatrix = (function() {
       matrix = multiply(matrix, temp);
     }
 
+    if (skew[0]) {
+      temp[2][0] = 0;
+      temp[1][0] = skew[0];
+      matrix = multiply(matrix, temp);
+    }
+
     for (var i = 0; i < 3; i++) {
       for (var j = 0; j < 3; j++) {
         matrix[i][j] *= scale[i];
@@ -4275,13 +4281,6 @@ var transformType = {
 
     if (i < Math.min(from.length, to.length) ||
         from.some(isMatrix) || to.some(isMatrix)) {
-      // TODO: TESTING ONLY, REMOVE BEFORE SUBMITTING.
-      out.push({
-        t: 'matrix3d',
-        d: convertToMatrix(f < 0.5 ? from.slice(i) : to.slice(i))
-      });
-      return out;
-
       if (from.decompositionPair !== to) {
         from.decompositionPair = to;
         from.decomposition = decomposeMatrix(convertToMatrix(from.slice(i)));
