@@ -4171,10 +4171,7 @@ var composeMatrix = (function() {
   return composeMatrix;
 })();
 
-function interpolateTransformsWithMatrices(from, to, f) {
-  var fromM = decomposeMatrix(convertToMatrix(from));
-  var toM = decomposeMatrix(convertToMatrix(to));
-
+function interpolateDecomposedTransformsWithMatrices(fromM, toM, f) {
   var product = dot(fromM.quaternion, toM.quaternion);
   product = clamp(product, -1.0, 1.0);
 
@@ -4267,8 +4264,16 @@ var transformType = {
 
     if (i < Math.min(from.length, to.length) ||
         from.some(isMatrix) || to.some(isMatrix)) {
-      out.push(interpolateTransformsWithMatrices(from.slice(i), to.slice(i),
-          f));
+      if (from.decompositionPair !== to) {
+        from.decompositionPair = to;
+        from.decomposition = decomposeMatrix(convertToMatrix(from.slice(i)));
+      }
+      if (to.decompositionPair !== from) {
+        to.decompositionPair = from;
+        to.decomposition = decomposeMatrix(convertToMatrix(to.slice(i)));
+      }
+      out.push(interpolateDecomposedTransformsWithMatrices(
+          from.decomposition, to.decomposition, f));
       return out;
     }
 
