@@ -4258,10 +4258,8 @@ var transformType = {
               value[i].d[1] + ', ' + value[i].d[2] + ') ';
           break;
         case 'matrix':
-          out += value[i].t + '(' +
-              n(value[i].d[0]) + ', ' + n(value[i].d[1]) + ', ' +
-              n(value[i].d[2]) + ', ' + n(value[i].d[3]) + ', ' +
-              n(value[i].d[4]) + ', ' + n(value[i].d[5]) + ') ';
+        case 'matrix3d':
+          out += value[i].t + '(' + value[i].d.map(n).join(', ') + ') ';
           break;
       }
     }
