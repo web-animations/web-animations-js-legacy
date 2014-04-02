@@ -3758,9 +3758,6 @@ var decomposeMatrix = (function() {
            m[2][2] * m[0][1] * m[1][0];
   }
 
-  // this is only ever used on the perspective matrix, which has 0, 0, 0, 1 as
-  // last column
-  //
   // from Wikipedia:
   //
   // [A B]^-1 = [A^-1 + A^-1B(D - CA^-1B)^-1CA^-1     -A^-1B(D - CA^-1B)^-1]
@@ -3836,10 +3833,12 @@ var decomposeMatrix = (function() {
   }
 
   function decomposeMatrix(matrix) {
-    var m3d = [[matrix[0], matrix[1], 0, 0],
-               [matrix[2], matrix[3], 0, 0],
-               [0, 0, 1, 0],
-               [matrix[4], matrix[5], 0, 1]];
+    var m3d = [
+      matrix.slice(0, 4),
+      matrix.slice(4, 8),
+      matrix.slice(8, 12),
+      matrix.slice(12, 16)
+    ];
 
     // skip normalization step as m3d[3][3] should always be 1
     if (m3d[3][3] !== 1) {
@@ -3965,9 +3964,27 @@ function dot(v1, v2) {
 }
 
 function multiplyMatrices(a, b) {
-  return [a[0] * b[0] + a[2] * b[1], a[1] * b[0] + a[3] * b[1],
-          a[0] * b[2] + a[2] * b[3], a[1] * b[2] + a[3] * b[3],
-          a[0] * b[4] + a[2] * b[5] + a[4], a[1] * b[4] + a[3] * b[5] + a[5]];
+  return [
+    a[0] * b[0] + a[4] * b[1] + a[8] * b[2] + a[12] * b[3],
+    a[1] * b[0] + a[5] * b[1] + a[9] * b[2] + a[13] * b[3],
+    a[2] * b[0] + a[6] * b[1] + a[10] * b[2] + a[14] * b[3],
+    a[3] * b[0] + a[7] * b[1] + a[11] * b[2] + a[15] * b[3],
+
+    a[0] * b[4] + a[4] * b[5] + a[8] * b[6] + a[12] * b[7],
+    a[1] * b[4] + a[5] * b[5] + a[9] * b[6] + a[13] * b[7],
+    a[2] * b[4] + a[6] * b[5] + a[10] * b[6] + a[14] * b[7],
+    a[3] * b[4] + a[7] * b[5] + a[11] * b[6] + a[15] * b[7],
+
+    a[0] * b[8] + a[4] * b[9] + a[8] * b[10] + a[12] * b[11],
+    a[1] * b[8] + a[5] * b[9] + a[9] * b[10] + a[13] * b[11],
+    a[2] * b[8] + a[6] * b[9] + a[10] * b[10] + a[14] * b[11],
+    a[3] * b[8] + a[7] * b[9] + a[11] * b[10] + a[15] * b[11],
+
+    a[0] * b[12] + a[4] * b[13] + a[8] * b[14] + a[12] * b[15],
+    a[1] * b[12] + a[5] * b[13] + a[9] * b[14] + a[13] * b[15],
+    a[2] * b[12] + a[6] * b[13] + a[10] * b[14] + a[14] * b[15],
+    a[3] * b[12] + a[7] * b[13] + a[11] * b[14] + a[15] * b[15]
+  ];
 }
 
 function convertItemToMatrix(item) {
@@ -3991,9 +4008,54 @@ function convertItemToMatrix(item) {
               -Math.sin(angle), Math.cos(angle), 0, 0,
               0, 0, 1, 0,
               0, 0, 0, 1];
+    case 'rotate3d':
+      var x = item.d[0];
+      var y = item.d[1];
+      var z = item.d[2];
+      var s = Math.sin(item.d[3] / 2);
+      var sc = s * Math.cos(item.d[3] / 2);
+      var sq = s * s;
+      return [
+        1 - 2 * (y * y + z * z) * sq,
+        2 * (x * y * sq + z * sc),
+        2 * (x * z * sq - y * sc),
+        0,
+
+        2 * (x * z * sq - z * sc),
+        1 - 2 * (x * x + z * z) * sq,
+        2 * (y * z * sq + x * sc),
+        0,
+
+        2 * (x * z * sq + y * sc),
+        2 * (y * z * sq - x * sc),
+        1 - 2 * (x * x + y * y) * sq,
+        0,
+
+        0, 0, 0, 1
+      ];
     case 'scale':
       return [item.d[0], 0, 0, 0,
               0, item.d[1], 0, 0,
+              0, 0, 1, 0,
+              0, 0, 0, 1];
+    case 'scale3d':
+      return [item.d[0], 0, 0, 0,
+              0, item.d[1], 0, 0,
+              0, 0, item.d[2], 0,
+              0, 0, 0, 1];
+    case 'skew':
+      return [1, Math.tan(item.d[1]), 0, 0,
+              Math.tan(item.d[0]), 1, 0, 0,
+              0, 0, 1, 0,
+              0, 0, 0, 1];
+    case 'skewX':
+      return [1, 0, 0, 0,
+              Math.tan(item.d), 1, 0, 0,
+              0, 0, 1, 0,
+              0, 0, 0, 1];
+    case 'skewY':
+      return [1, Math.tan(item.d), 0, 0,
+              0, 1, 0, 0,
               0, 0, 1, 0,
               0, 0, 0, 1];
     // TODO: Work out what to do with non-px values.
@@ -4002,6 +4064,18 @@ function convertItemToMatrix(item) {
               0, 1, 0, 0,
               0, 0, 1, 0,
               item.d[0].px, item.d[1].px, 0, 1];
+    case 'translate3d':
+      return [1, 0, 0, 0,
+              0, 1, 0, 0,
+              0, 0, 1, 0,
+              item.d[0].px, item.d[1].px, item.d[2].px, 1];
+    case 'perspective':
+      return [
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, -1 / item.d.px,
+        0, 0, 0, 1,
+      ];
     case 'matrix':
       return [item.d[0], item.d[1], 0, 0,
               item.d[2], item.d[3], 0, 0,
@@ -4009,6 +4083,9 @@ function convertItemToMatrix(item) {
               item.d[4], item.d[5], 0, 1];
     case 'matrix3d':
       return item.d;
+    default:
+      ASSERT_ENABLED && assert(false, 'Transform item type ' + item.t +
+        ' conversion to matrix not yet implemented.');
   }
 }
 
@@ -4076,9 +4153,10 @@ var composeMatrix = (function() {
       }
     }
 
-    return {t: 'matrix', d: [matrix[0][0], matrix[0][1],
-                             matrix[1][0], matrix[1][1],
-                             matrix[3][0], matrix[3][1]]};
+    return {
+      t: 'matrix3d',
+      d: matrix[0].concat(matrix[1], matrix[2], matrix[3])
+    };
   }
   return composeMatrix;
 })();
@@ -4208,6 +4286,11 @@ var transformType = {
           } else {
             out += ', ' + value[i].d[1] + unit + ') ';
           }
+          break;
+        case 'rotate3d':
+          var unit = svgMode ? '' : 'deg';
+          out += value[i].t + '(' + value[i].d[0] + ', ' + value[i].d[1] +
+              ', ' + value[i].d[2] + ', ' + value[i].d[3] + unit + ') ';
           break;
         case 'translateX':
         case 'translateY':
