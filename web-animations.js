@@ -3742,7 +3742,8 @@ var transformREs = [
   buildMatcher('scaleZ', 1, false, false, 1),
   buildMatcher('scale3d', 3, false, false),
   buildMatcher('perspective', 1, false, true),
-  buildMatcher('matrix', 6, false, false)
+  buildMatcher('matrix', 6, false, false),
+  buildMatcher('matrix3d', 16, false, false)
 ];
 
 var decomposeMatrix = (function() {
@@ -3973,14 +3974,27 @@ function convertItemToMatrix(item) {
   switch (item.t) {
     case 'rotate':
       var amount = item.d * Math.PI / 180;
-      return [Math.cos(amount), Math.sin(amount),
-              -Math.sin(amount), Math.cos(amount), 0, 0];
+      return [Math.cos(amount), Math.sin(amount), 0, 0,
+              -Math.sin(amount), Math.cos(amount), 0, 0,
+              0, 0, 1, 0,
+              0, 0, 0, 1];
     case 'scale':
-      return [item.d[0], 0, 0, item.d[1], 0, 0];
+      return [item.d[0], 0, 0, 0,
+              0, item.d[1], 0, 0,
+              0, 0, 1, 0,
+              0, 0, 0, 1];
     // TODO: Work out what to do with non-px values.
     case 'translate':
-      return [1, 0, 0, 1, item.d[0].px, item.d[1].px];
+      return [1, 0, 0, 0,
+              0, 1, 0, 0,
+              0, 0, 1, 0,
+              item.d[0].px, item.d[1].px, 0, 1];
     case 'matrix':
+      return [item.d[0], item.d[1], 0, 0,
+              item.d[2], item.d[3], 0, 0,
+              0, 0, 1, 0,
+              item.d[4], item.d[5], 0, 1];
+    case 'matrix3d':
       return item.d;
   }
 }
@@ -4101,6 +4115,7 @@ function interpTransformValue(from, to, f) {
     case 'skewX':
     case 'skewY':
     case 'matrix':
+    case 'matrix3d':
       return {t: type, d: interp(from.d, to.d, f, type)};
     default:
       // Transforms with lengthType parameters.
@@ -4136,7 +4151,7 @@ var transformType = {
   interpolate: function(from, to, f) {
     var out = [];
     for (var i = 0; i < Math.min(from.length, to.length); i++) {
-      if (from[i].t !== to[i].t) {
+      if (from[i].t !== to[i].t || from[i].t.substr(0, 6) == 'matrix') {
         break;
       }
       out.push(interpTransformValue(from[i], to[i], f));
