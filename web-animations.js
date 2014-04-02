@@ -3972,10 +3972,23 @@ function multiplyMatrices(a, b) {
 
 function convertItemToMatrix(item) {
   switch (item.t) {
+    case 'rotateX':
+      var angle = item.d * Math.PI / 180;
+      return [1, 0, 0, 0,
+              0, Math.cos(angle), Math.sin(angle), 0,
+              0, -Math.sin(angle), Math.cos(angle), 0,
+              0, 0, 0, 1];
+    case 'rotateY':
+      var angle = item.d * Math.PI / 180;
+      return [Math.cos(angle), 0, -Math.sin(angle), 0,
+              0, 1, 0, 0,
+              Math.sin(angle), 0, Math.cos(angle), 0,
+              0, 0, 0, 1];
     case 'rotate':
-      var amount = item.d * Math.PI / 180;
-      return [Math.cos(amount), Math.sin(amount), 0, 0,
-              -Math.sin(amount), Math.cos(amount), 0, 0,
+    case 'rotateZ':
+      var angle = item.d * Math.PI / 180;
+      return [Math.cos(angle), Math.sin(angle), 0, 0,
+              -Math.sin(angle), Math.cos(angle), 0, 0,
               0, 0, 1, 0,
               0, 0, 0, 1];
     case 'scale':
