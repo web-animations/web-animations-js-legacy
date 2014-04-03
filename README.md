@@ -232,4 +232,4 @@ For running tests or building minified files, consult the
 
 ## Breaking changes
 
-When we make a potentially breaking change to polyfill's API surface (like a rename) we keep the old version around on another branch, deprecated, for 3 months, and ensure that there are console warnings that a change is pending. We also announce anything that isn't a bug fix on web-animations-changes@googlegroups.com (https://groups.google.com/forum/#!forum/web-animations-changes).
+When we make a potentially breaking change to the polyfill's API surface (like a rename) we keep the old version around, deprecated, for 3 months, and ensure that there are console warnings that a change is pending. We also announce anything that isn't a bug fix on web-animations-changes@googlegroups.com (https://groups.google.com/forum/#!forum/web-animations-changes).
