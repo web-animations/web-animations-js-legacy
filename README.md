@@ -229,3 +229,7 @@ then the polyfill will provide a console warning in browsers where these feature
 
 For running tests or building minified files, consult the
 [tooling information](http://www.polymer-project.org/resources/tooling-strategy.html).
+
+## Breaking changes
+
+When we make a potentially breaking change to polyfill's API surface (like a rename) we keep the old version around on another branch, deprecated, for 3 months, and ensure that there are console warnings that a change is pending. We also announce anything that isn't a bug fix on web-animations-changes@googlegroups.com (https://groups.google.com/forum/#!forum/web-animations-changes).
