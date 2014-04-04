@@ -3836,6 +3836,8 @@ var decomposeMatrix = (function() {
             v1[0] * v2[1] - v1[1] * v2[0]];
   }
 
+  // TODO: Implement 2D matrix decomposition.
+  // http://dev.w3.org/csswg/css-transforms/#decomposing-a-2d-matrix
   function decomposeMatrix(matrix) {
     var m3d = [
       matrix.slice(0, 4),
