@@ -4129,6 +4129,20 @@ var composeMatrix = (function() {
     return result;
   }
 
+  function is2D(m) {
+    return (
+      m[0][2] == 0 &&
+      m[0][3] == 0 &&
+      m[1][2] == 0 &&
+      m[1][3] == 0 &&
+      m[2][0] == 0 &&
+      m[2][1] == 0 &&
+      m[2][2] == 1 &&
+      m[2][3] == 0 &&
+      m[3][2] == 0 &&
+      m[3][3] == 1);
+  }
+
   function composeMatrix(translate, scale, skew, quat, perspective) {
     var matrix = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]];
 
@@ -4182,6 +4196,13 @@ var composeMatrix = (function() {
       }
     }
 
+    if (is2D(matrix)) {
+      return {
+        t: 'matrix',
+        d: [matrix[0][0], matrix[0][1], matrix[1][0], matrix[1][1],
+            matrix[3][0], matrix[3][1]]
+      };
+    }
     return {
       t: 'matrix3d',
       d: matrix[0].concat(matrix[1], matrix[2], matrix[3])
