@@ -46,6 +46,7 @@ var tests = [
   'auto-test-transform-units.html',
   'auto-test-visibility.html',
   'auto-test-wrapping-bug.html',
+  'impl-test-deprecation.html',
   'impl-test-from-css-value.html',
   'impl-test-paced-timing-function.html',
   'impl-test-player-sees-handlers.html',
