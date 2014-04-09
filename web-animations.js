@@ -2923,7 +2923,7 @@ var positionType = {
     return value.map(percentLengthType.toCssValue).join(' ');
   },
   fromCssValue: function(value) {
-    var tokens = positionType.consumeTokensFromString(value);
+    var tokens = positionType.consumeAllTokensFromString(value);
     if (!tokens || tokens.length > 4) {
       return undefined;
     }
@@ -2984,7 +2984,7 @@ var positionType = {
     }
     return out.every(isDefinedAndNotNull) ? out : undefined;
   },
-  consumeTokensFromString: function(remaining) {
+  consumeAllTokensFromString: function(remaining) {
     var tokens = [];
     while (remaining.trim()) {
       var result = positionType.consumeTokenFromString(remaining);
@@ -3136,6 +3136,7 @@ var originType = {
   toCssValue: function(value) {
     var result = percentLengthType.toCssValue(value[0]) + ' ' +
         percentLengthType.toCssValue(value[1]);
+    // Return the third value if it is non-zero.
     for (var unit in value[2]) {
       if (value[2][unit] !== 0) {
         return result + ' ' + percentLengthType.toCssValue(value[2]);
@@ -3144,15 +3145,15 @@ var originType = {
     return result;
   },
   fromCssValue: function(value) {
-    var tokens = positionType.consumeTokensFromString(value);
+    var tokens = positionType.consumeAllTokensFromString(value);
     if (!tokens) {
       return undefined;
     }
+    var out = ['center', 'center', {px: 0}];
     switch (tokens.length) {
       case 0:
         return originType.zero();
       case 1:
-        var out = ['center', 'center', {px: 0}];
         if (positionType.isHorizontalToken(tokens[0])) {
           out[0] = tokens[0];
         } else if (positionType.isVerticalToken(tokens[0])) {
@@ -3161,9 +3162,12 @@ var originType = {
           return undefined;
         }
         return out.map(positionType.resolveToken);
-      case 2:
       case 3:
-        var out = [undefined, undefined, {px: 0}];
+        if (positionType.isKeyword(tokens[2])) {
+          return undefined;
+        }
+        out[2] = tokens[2];
+      case 2:
         if (positionType.isHorizontalToken(tokens[0]) &&
             positionType.isVerticalToken(tokens[1])) {
           out[0] = tokens[0];
@@ -3174,12 +3178,6 @@ var originType = {
           out[1] = tokens[0];
         } else {
           return undefined;
-        }
-        if (tokens.length === 3) {
-          if (positionType.isKeyword(tokens[2])) {
-            return undefined;
-          }
-          out[2] = tokens[2];
         }
         return out.map(positionType.resolveToken);
       default:
