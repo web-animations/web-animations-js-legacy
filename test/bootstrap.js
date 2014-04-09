@@ -177,8 +177,18 @@ window.test_features = (function() {
   })[0];
   var calcFunction = style.sheet.cssRules[0].style.width.split('(')[0];
   document.head.removeChild(style);
+  function prefixProperty(property) {
+    switch (property) {
+    case 'transform':
+      return transformProperty;
+    case 'transformOrigin':
+      return transformProperty + 'Origin';
+    default:
+      return property;
+    }
+  }
   return {
-    transformProperty: transformProperty,
+    prefixProperty: prefixProperty,
     calcFunction: calcFunction
   };
 })();
@@ -277,13 +287,13 @@ function _assert_important_in_array(actual, expected, message) {
           if (Math.abs(actual) < 1e-10) {
             actual = 0;
           }
-          actual = '' + actual.toPrecision(4);
+          actual = '' + actual.toPrecision(3);
         }
         if (typeof expected === 'number') {
           if (Math.abs(expected) < 1e-10) {
             expected = 0;
           }
-          expected = '' + expected.toPrecision(4);
+          expected = '' + expected.toPrecision(3);
         }
 
         assert_equals(actual, expected);
@@ -360,11 +370,7 @@ function _assert_style_element(object, style, description) {
 
       prop_value = '' + prop_value;
 
-      if (prop_name == 'transform') {
-        var output_prop_name = test_features.transformProperty;
-      } else {
-        var output_prop_name = prop_name;
-      }
+      var output_prop_name = test_features.prefixProperty(prop_name);
 
       var is_svg = is_svg_attrib(prop_name, object);
       if (is_svg) {
