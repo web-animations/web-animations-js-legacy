@@ -5413,7 +5413,8 @@ window._WebAnimationsTestingUtilities = {
   _hsl2rgb: hsl2rgb,
   _types: propertyTypes,
   _knownPlayers: PLAYERS,
-  _pacedTimingFunction: PacedTimingFunction
+  _pacedTimingFunction: PacedTimingFunction,
+  _prefixProperty: prefixProperty
 };
 
 })();

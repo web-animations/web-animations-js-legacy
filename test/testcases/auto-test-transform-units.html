@@ -72,7 +72,7 @@ for (var i = 0; i < transformValues.length; i++) {
       div.className = "expected";
       div.style.top = y + 'px';
       div.style.left = x + 'px';
-      div.style[test_features.transformProperty] = transformValues[i][k];
+      div.style[_WebAnimationsTestingUtilities._prefixProperty('transform')] = transformValues[i][k];
       toplevel.appendChild(document.createElement("div"));
       var div = toplevel.lastChild;
       div.className = "anim";

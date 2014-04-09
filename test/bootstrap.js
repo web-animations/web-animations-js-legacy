@@ -160,39 +160,6 @@ var is_svg_attrib = function(property, target) {
 
 var svg_namespace_uri = 'http://www.w3.org/2000/svg';
 
-window.test_features = (function() {
-  var style = document.createElement('style');
-  style.textContent = '' +
-     'dummyRuleForTesting {' +
-     'width: calc(0px);' +
-     'width: -webkit-calc(0px); }';
-  document.head.appendChild(style);
-  var transformCandidates = [
-    'transform',
-    'webkitTransform',
-    'msTransform'
-  ];
-  var transformProperty = transformCandidates.filter(function(property) {
-    return property in style.sheet.cssRules[0].style;
-  })[0];
-  var calcFunction = style.sheet.cssRules[0].style.width.split('(')[0];
-  document.head.removeChild(style);
-  function prefixProperty(property) {
-    switch (property) {
-    case 'transform':
-      return transformProperty;
-    case 'transformOrigin':
-      return transformProperty + 'Origin';
-    default:
-      return property;
-    }
-  }
-  return {
-    prefixProperty: prefixProperty,
-    calcFunction: calcFunction
-  };
-})();
-
 /**
  * Figure out a useful name for an element.
  *
@@ -287,13 +254,13 @@ function _assert_important_in_array(actual, expected, message) {
           if (Math.abs(actual) < 1e-10) {
             actual = 0;
           }
-          actual = '' + actual.toPrecision(3);
+          actual = '' + actual.toPrecision(4);
         }
         if (typeof expected === 'number') {
           if (Math.abs(expected) < 1e-10) {
             expected = 0;
           }
-          expected = '' + expected.toPrecision(3);
+          expected = '' + expected.toPrecision(4);
         }
 
         assert_equals(actual, expected);
@@ -370,7 +337,7 @@ function _assert_style_element(object, style, description) {
 
       prop_value = '' + prop_value;
 
-      var output_prop_name = test_features.prefixProperty(prop_name);
+      var output_prop_name = _WebAnimationsTestingUtilities._prefixProperty(prop_name);
 
       var is_svg = is_svg_attrib(prop_name, object);
       if (is_svg) {
