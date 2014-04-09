@@ -4091,8 +4091,7 @@ function convertItemToMatrix(item) {
         1, 0, 0, 0,
         0, 1, 0, 0,
         0, 0, 1, -1 / item.d.px,
-        0, 0, 0, 1,
-      ];
+        0, 0, 0, 1];
     case 'matrix':
       return [item.d[0], item.d[1], 0, 0,
               item.d[2], item.d[3], 0, 0,
@@ -4102,7 +4101,7 @@ function convertItemToMatrix(item) {
       return item.d;
     default:
       ASSERT_ENABLED && assert(false, 'Transform item type ' + item.t +
-        ' conversion to matrix not yet implemented.');
+          ' conversion to matrix not yet implemented.');
   }
 }
 
@@ -4131,16 +4130,16 @@ var composeMatrix = (function() {
 
   function is2D(m) {
     return (
-      m[0][2] == 0 &&
-      m[0][3] == 0 &&
-      m[1][2] == 0 &&
-      m[1][3] == 0 &&
-      m[2][0] == 0 &&
-      m[2][1] == 0 &&
-      m[2][2] == 1 &&
-      m[2][3] == 0 &&
-      m[3][2] == 0 &&
-      m[3][3] == 1);
+        m[0][2] == 0 &&
+        m[0][3] == 0 &&
+        m[1][2] == 0 &&
+        m[1][3] == 0 &&
+        m[2][0] == 0 &&
+        m[2][1] == 0 &&
+        m[2][2] == 1 &&
+        m[2][3] == 0 &&
+        m[3][2] == 0 &&
+        m[3][3] == 1);
   }
 
   function composeMatrix(translate, scale, skew, quat, perspective) {
@@ -4241,8 +4240,8 @@ function interpTransformValue(from, to, f) {
   switch (type) {
     case 'matrix':
     case 'matrix3d':
-      ASSERT_ENABLED && assert(
-        false, 'Must use matrix decomposition when interpolating raw matrices');
+      ASSERT_ENABLED && assert(false,
+          'Must use matrix decomposition when interpolating raw matrices');
     // Transforms with unitless parameters.
     case 'rotate':
     case 'rotateX':
