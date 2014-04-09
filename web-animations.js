@@ -55,6 +55,7 @@ function createDummyElement() {
 
 var features = detectFeatures();
 var constructorToken = {};
+var deprecationsSilenced = {};
 
 var createObject = function(proto, obj) {
   var newObject = Object.create(proto);
@@ -67,6 +68,24 @@ var createObject = function(proto, obj) {
 
 var abstractMethod = function() {
   throw 'Abstract method not implemented.';
+};
+
+var deprecated = function(name, deprecationDate, advice) {
+  if (deprecationsSilenced[name]) {
+    return;
+  }
+  var today = new Date();
+  var cutoffDate = new Date(deprecationDate);
+  cutoffDate.setMonth(cutoffDate.getMonth() + 3); // 3 months grace period
+
+  if (today < cutoffDate) {
+    console.warn('Web Animations: ' + name +
+        ' is deprecated and will stop working on ' +
+        cutoffDate.toDateString() + '. ' + advice);
+    deprecationsSilenced[name] = true;
+  } else {
+    throw new Error(name + ' is no longer supported. ' + advice);
+  }
 };
 
 var IndexSizeError = function(message) {
@@ -193,7 +212,7 @@ var isDefinedAndNotNull = function(val) {
 
 
 /** @constructor */
-var Timeline = function(token) {
+var AnimationTimeline = function(token) {
   if (token !== constructorToken) {
     throw new TypeError('Illegal constructor');
   }
@@ -204,7 +223,7 @@ var Timeline = function(token) {
   }
 };
 
-Timeline.prototype = {
+AnimationTimeline.prototype = {
   get currentTime() {
     if (this._startTime === undefined) {
       this._startTime = documentTimeZeroAsClockTime;
@@ -5282,7 +5301,7 @@ var maybeRestartAnimation = function() {
   rafScheduled = true;
 };
 
-var DOCUMENT_TIMELINE = new Timeline(constructorToken);
+var DOCUMENT_TIMELINE = new AnimationTimeline(constructorToken);
 // attempt to override native implementation
 try {
   Object.defineProperty(document, 'timeline', {
@@ -5320,6 +5339,7 @@ window.AnimationEffect = AnimationEffect;
 window.AnimationGroup = AnimationGroup;
 window.AnimationPlayer = AnimationPlayer;
 window.AnimationSequence = AnimationSequence;
+window.AnimationTimeline = AnimationTimeline;
 window.KeyframeEffect = KeyframeEffect;
 window.MediaReference = MediaReference;
 window.MotionPathEffect = MotionPathEffect;
@@ -5327,17 +5347,27 @@ window.PseudoElementReference = PseudoElementReference;
 window.TimedItem = TimedItem;
 window.TimedItemList = TimedItemList;
 window.Timing = Timing;
-window.Timeline = Timeline;
 window.TimingEvent = TimingEvent;
 window.TimingGroup = TimingGroup;
 
 window._WebAnimationsTestingUtilities = {
   _constructorToken: constructorToken,
+  _deprecated: deprecated,
   _positionListType: positionListType,
   _hsl2rgb: hsl2rgb,
   _types: propertyTypes,
   _knownPlayers: PLAYERS,
   _pacedTimingFunction: PacedTimingFunction
 };
+
+// Timeline is deprecated
+Object.defineProperty(window, 'Timeline', {
+  get: function() {
+    deprecated('Timeline', '2014-04-08',
+        'Please use AnimationTimeline instead.');
+    return AnimationTimeline;
+  },
+  configurable: true
+});
 
 })();
