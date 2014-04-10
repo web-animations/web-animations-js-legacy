@@ -43,8 +43,21 @@ function detectFeatures() {
   })[0];
   return {
     calcFunction: calcFunction,
-    transformProperty: transformProperty
+    transformProperty: transformProperty,
+    transformOriginProperty: transformProperty + 'Origin'
   };
+}
+var features = detectFeatures();
+
+function prefixProperty(property) {
+  switch (property) {
+    case 'transform':
+      return features.transformProperty;
+    case 'transformOrigin':
+      return features.transformOriginProperty;
+    default:
+      return property;
+  }
 }
 
 function createDummyElement() {
@@ -53,8 +66,8 @@ function createDummyElement() {
          document.createElement('div');
 }
 
-var features = detectFeatures();
 var constructorToken = {};
+var deprecationsSilenced = {};
 
 var createObject = function(proto, obj) {
   var newObject = Object.create(proto);
@@ -67,6 +80,24 @@ var createObject = function(proto, obj) {
 
 var abstractMethod = function() {
   throw 'Abstract method not implemented.';
+};
+
+var deprecated = function(name, deprecationDate, advice) {
+  if (deprecationsSilenced[name]) {
+    return;
+  }
+  var today = new Date();
+  var cutoffDate = new Date(deprecationDate);
+  cutoffDate.setMonth(cutoffDate.getMonth() + 3); // 3 months grace period
+
+  if (today < cutoffDate) {
+    console.warn('Web Animations: ' + name +
+        ' is deprecated and will stop working on ' +
+        cutoffDate.toDateString() + '. ' + advice);
+    deprecationsSilenced[name] = true;
+  } else {
+    throw new Error(name + ' is no longer supported. ' + advice);
+  }
 };
 
 var IndexSizeError = function(message) {
@@ -193,7 +224,7 @@ var isDefinedAndNotNull = function(val) {
 
 
 /** @constructor */
-var Timeline = function(token) {
+var AnimationTimeline = function(token) {
   if (token !== constructorToken) {
     throw new TypeError('Illegal constructor');
   }
@@ -204,7 +235,7 @@ var Timeline = function(token) {
   }
 };
 
-Timeline.prototype = {
+AnimationTimeline.prototype = {
   get currentTime() {
     if (this._startTime === undefined) {
       this._startTime = documentTimeZeroAsClockTime;
@@ -2911,21 +2942,9 @@ var positionType = {
     return value.map(percentLengthType.toCssValue).join(' ');
   },
   fromCssValue: function(value) {
-    var tokens = [];
-    var remaining = value;
-    while (true) {
-      var result = positionType.consumeTokenFromString(remaining);
-      if (!result) {
-        return undefined;
-      }
-      tokens.push(result.value);
-      remaining = result.remaining;
-      if (!result.remaining.trim()) {
-        break;
-      }
-      if (tokens.length >= 4) {
-        return undefined;
-      }
+    var tokens = positionType.consumeAllTokensFromString(value);
+    if (!tokens || tokens.length > 4) {
+      return undefined;
     }
 
     if (tokens.length === 1) {
@@ -2983,6 +3002,18 @@ var positionType = {
       }
     }
     return out.every(isDefinedAndNotNull) ? out : undefined;
+  },
+  consumeAllTokensFromString: function(remaining) {
+    var tokens = [];
+    while (remaining.trim()) {
+      var result = positionType.consumeTokenFromString(remaining);
+      if (!result) {
+        return undefined;
+      }
+      tokens.push(result.value);
+      remaining = result.remaining;
+    }
+    return tokens;
   },
   consumeTokenFromString: function(value) {
     var keywordMatch = positionKeywordRE.exec(value);
@@ -3102,6 +3133,75 @@ var rectangleType = {
       return out;
     }
     return undefined;
+  }
+};
+
+var originType = {
+  zero: function() { return [{'%': 0}, {'%': 0}, {px: 0}]; },
+  add: function(base, delta) {
+    return [
+      percentLengthType.add(base[0], delta[0]),
+      percentLengthType.add(base[1], delta[1]),
+      percentLengthType.add(base[2], delta[2])
+    ];
+  },
+  interpolate: function(from, to, f) {
+    return [
+      percentLengthType.interpolate(from[0], to[0], f),
+      percentLengthType.interpolate(from[1], to[1], f),
+      percentLengthType.interpolate(from[2], to[2], f)
+    ];
+  },
+  toCssValue: function(value) {
+    var result = percentLengthType.toCssValue(value[0]) + ' ' +
+        percentLengthType.toCssValue(value[1]);
+    // Return the third value if it is non-zero.
+    for (var unit in value[2]) {
+      if (value[2][unit] !== 0) {
+        return result + ' ' + percentLengthType.toCssValue(value[2]);
+      }
+    }
+    return result;
+  },
+  fromCssValue: function(value) {
+    var tokens = positionType.consumeAllTokensFromString(value);
+    if (!tokens) {
+      return undefined;
+    }
+    var out = ['center', 'center', {px: 0}];
+    switch (tokens.length) {
+      case 0:
+        return originType.zero();
+      case 1:
+        if (positionType.isHorizontalToken(tokens[0])) {
+          out[0] = tokens[0];
+        } else if (positionType.isVerticalToken(tokens[0])) {
+          out[1] = tokens[0];
+        } else {
+          return undefined;
+        }
+        return out.map(positionType.resolveToken);
+      case 3:
+        if (positionType.isKeyword(tokens[2])) {
+          return undefined;
+        }
+        out[2] = tokens[2];
+      case 2:
+        if (positionType.isHorizontalToken(tokens[0]) &&
+            positionType.isVerticalToken(tokens[1])) {
+          out[0] = tokens[0];
+          out[1] = tokens[1];
+        } else if (positionType.isVerticalToken(tokens[0]) &&
+            positionType.isHorizontalToken(tokens[1])) {
+          out[0] = tokens[1];
+          out[1] = tokens[0];
+        } else {
+          return undefined;
+        }
+        return out.map(positionType.resolveToken);
+      default:
+        return undefined;
+    }
   }
 };
 
@@ -4494,6 +4594,7 @@ var propertyTypes = {
   textShadow: shadowType,
   top: percentLengthAutoType,
   transform: transformType,
+  transformOrigin: originType,
   verticalAlign: typeWithKeywords([
     'baseline',
     'sub',
@@ -5202,9 +5303,7 @@ var ensureTargetCSSInitialised = function(target) {
 
 var setValue = function(target, property, value) {
   ensureTargetInitialised(property, target);
-  if (property === 'transform') {
-    property = features.transformProperty;
-  }
+  property = prefixProperty(property);
   if (propertyIsSVGAttrib(property, target)) {
     target.actuals[property] = value;
   } else {
@@ -5214,9 +5313,7 @@ var setValue = function(target, property, value) {
 
 var clearValue = function(target, property) {
   ensureTargetInitialised(property, target);
-  if (property === 'transform') {
-    property = features.transformProperty;
-  }
+  property = prefixProperty(property);
   if (propertyIsSVGAttrib(property, target)) {
     target.actuals[property] = null;
   } else {
@@ -5226,9 +5323,7 @@ var clearValue = function(target, property) {
 
 var getValue = function(target, property) {
   ensureTargetInitialised(property, target);
-  if (property === 'transform') {
-    property = features.transformProperty;
-  }
+  property = prefixProperty(property);
   if (propertyIsSVGAttrib(property, target)) {
     return target.actuals[property];
   } else {
@@ -5453,7 +5548,7 @@ var maybeRestartAnimation = function() {
   rafScheduled = true;
 };
 
-var DOCUMENT_TIMELINE = new Timeline(constructorToken);
+var DOCUMENT_TIMELINE = new AnimationTimeline(constructorToken);
 // attempt to override native implementation
 try {
   Object.defineProperty(document, 'timeline', {
@@ -5491,6 +5586,7 @@ window.AnimationEffect = AnimationEffect;
 window.AnimationGroup = AnimationGroup;
 window.AnimationPlayer = AnimationPlayer;
 window.AnimationSequence = AnimationSequence;
+window.AnimationTimeline = AnimationTimeline;
 window.KeyframeEffect = KeyframeEffect;
 window.MediaReference = MediaReference;
 window.MotionPathEffect = MotionPathEffect;
@@ -5498,17 +5594,28 @@ window.PseudoElementReference = PseudoElementReference;
 window.TimedItem = TimedItem;
 window.TimedItemList = TimedItemList;
 window.Timing = Timing;
-window.Timeline = Timeline;
 window.TimingEvent = TimingEvent;
 window.TimingGroup = TimingGroup;
 
 window._WebAnimationsTestingUtilities = {
   _constructorToken: constructorToken,
+  _deprecated: deprecated,
   _positionListType: positionListType,
   _hsl2rgb: hsl2rgb,
   _types: propertyTypes,
   _knownPlayers: PLAYERS,
-  _pacedTimingFunction: PacedTimingFunction
+  _pacedTimingFunction: PacedTimingFunction,
+  _prefixProperty: prefixProperty
 };
+
+// Timeline is deprecated
+Object.defineProperty(window, 'Timeline', {
+  get: function() {
+    deprecated('Timeline', '2014-04-08',
+        'Please use AnimationTimeline instead.');
+    return AnimationTimeline;
+  },
+  configurable: true
+});
 
 })();

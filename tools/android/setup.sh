@@ -90,15 +90,15 @@ if [ -e Chrome.apk ]; then
   CHROME_APP=com.google.android.apps.chrome
   CHROME_ACT=.Main
 else
-  if [ ! -e chrome-android/apks/ChromiumTestShell.apk ]; then
-    LATEST=`curl -s http://commondatastorage.googleapis.com/chromium-browser-continuous/Android/LAST_CHANGE`
-    REMOTE_APK=http://commondatastorage.googleapis.com/chromium-browser-continuous/Android/$LATEST/chrome-android.zip
+  if [ ! -e chrome-android/apks/ChromeShell.apk ]; then
+    LATEST_APK=`curl -s http://commondatastorage.googleapis.com/chromium-browser-continuous/Android/LAST_CHANGE`
+    REMOTE_APK=http://commondatastorage.googleapis.com/chromium-browser-continuous/Android/$LATEST_APK/chrome-android.zip
     wget -c $REMOTE_APK
     unzip chrome-android.zip
   fi
-  CHROME_APK=$ANDROID_DIR/chrome-android/apks/ChromiumTestShell.apk
-  CHROME_APP=org.chromium.chrome.testshell
-  CHROME_ACT=.ChromiumTestShellActivity
+  CHROME_APK=$ANDROID_DIR/chrome-android/apks/ChromeShell.apk
+  CHROME_APP=org.chromium.chrome.shell
+  CHROME_ACT=.ChromeShellActivity
 fi
 
 function start_chrome () {
@@ -123,8 +123,14 @@ fi
 
 # Download and start the chromedriver binary
 if [ ! -e chromedriver ]; then
-  wget -c http://chromedriver.storage.googleapis.com/2.6/chromedriver_linux64.zip -O chromedriver.zip
-  unzip chromedriver.zip
+  # TODO: Use the latest release of chromedriver instead of this custom build once version 3.0 comes out.
+  # LATEST_CHROMEDRIVER=`curl -s http://chromedriver.storage.googleapis.com/LATEST_RELEASE`
+  # wget -c http://chromedriver.storage.googleapis.com/$LATEST_CHROMEDRIVER/chromedriver_linux64.zip -O chromedriver.zip
+  # unzip chromedriver.zip
+
+  # This version of chromedriver was build from the Chromium repository at r262639 on 2014-04-09.
+  wget https://googledrive.com/host/0B6C-LL9qmW-IYVFrdURCMHZlM1U -O chromedriver
+  chmod 0755 chromedriver
 fi
 
 CHROMEDRIVER_NOTRUNNING=true
