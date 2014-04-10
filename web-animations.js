@@ -39,13 +39,13 @@ function detectFeatures() {
     })[0];
   }
   var transformProperty = detectProperty(
-    'transform',
-    'webkitTransform',
-    'msTransform');
+      'transform',
+      'webkitTransform',
+      'msTransform');
   var perspectiveProperty = detectProperty(
-    'perspective',
-    'webkitPerspective',
-    'msPerspective');
+      'perspective',
+      'webkitPerspective',
+      'msPerspective');
   return {
     calcFunction: calcFunction,
     transformProperty: transformProperty,
