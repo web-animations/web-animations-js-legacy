@@ -42,6 +42,7 @@ var tests = [
   'auto-test-timing-functions.html',
   'auto-test-to-animation.html',
   'auto-test-transform-3d.html',
+  'auto-test-transform-origin.html',
   'auto-test-transform-primitives.html',
   'auto-test-transform-units.html',
   'auto-test-visibility.html',

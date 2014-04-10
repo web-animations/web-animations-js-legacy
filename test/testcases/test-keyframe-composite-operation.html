@@ -62,7 +62,7 @@ function testComposite(property, initialValue, composite, keyframeValue, offset,
   var target = document.createElement('div');
   document.getElementById('targets').appendChild(target);
   if (initialValue !== undefined && initialValue !== null) {
-    target.style[property === 'transform' ? test_features.transformProperty : property] = initialValue;
+    target.style[_WebAnimationsTestingUtilities._prefixProperty(property)] = initialValue;
   }
   var keyframes = {};
   keyframes[property] = keyframeValue;

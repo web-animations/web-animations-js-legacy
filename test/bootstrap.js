@@ -160,29 +160,6 @@ var is_svg_attrib = function(property, target) {
 
 var svg_namespace_uri = 'http://www.w3.org/2000/svg';
 
-window.test_features = (function() {
-  var style = document.createElement('style');
-  style.textContent = '' +
-     'dummyRuleForTesting {' +
-     'width: calc(0px);' +
-     'width: -webkit-calc(0px); }';
-  document.head.appendChild(style);
-  var transformCandidates = [
-    'transform',
-    'webkitTransform',
-    'msTransform'
-  ];
-  var transformProperty = transformCandidates.filter(function(property) {
-    return property in style.sheet.cssRules[0].style;
-  })[0];
-  var calcFunction = style.sheet.cssRules[0].style.width.split('(')[0];
-  document.head.removeChild(style);
-  return {
-    transformProperty: transformProperty,
-    calcFunction: calcFunction
-  };
-})();
-
 /**
  * Figure out a useful name for an element.
  *
@@ -360,11 +337,7 @@ function _assert_style_element(object, style, description) {
 
       prop_value = '' + prop_value;
 
-      if (prop_name == 'transform') {
-        var output_prop_name = test_features.transformProperty;
-      } else {
-        var output_prop_name = prop_name;
-      }
+      var output_prop_name = _WebAnimationsTestingUtilities._prefixProperty(prop_name);
 
       var is_svg = is_svg_attrib(prop_name, object);
       if (is_svg) {
