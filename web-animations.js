@@ -2665,7 +2665,7 @@ var interp = function(from, to, f, type) {
   if (Array.isArray(from) || Array.isArray(to)) {
     return interpArray(from, to, f, type);
   }
-  var zero = type === 'scale' ? 1.0 : 0.0;
+  var zero = (type && type.indexOf('scale') === 0) ? 1 : 0;
   to = isDefinedAndNotNull(to) ? to : zero;
   from = isDefinedAndNotNull(from) ? from : zero;
 
@@ -3816,7 +3816,11 @@ function build3DRotationMatcher() {
     for (var i = 0; i < 3; i++) {
       out.push(r[i].px);
     }
-    out.push(r[3]);
+    var angle = 0;
+    for (var unit in r[3]) {
+      angle += convertToDeg(r[3][unit], unit);
+    }
+    out.push(angle);
     return out;
   };
   return [m[0], f, m[2]];
@@ -3842,7 +3846,8 @@ var transformREs = [
   buildMatcher('scaleZ', 1, false, false, 1),
   buildMatcher('scale3d', 3, false, false),
   buildMatcher('perspective', 1, false, true),
-  buildMatcher('matrix', 6, false, false)
+  buildMatcher('matrix', 6, false, false),
+  buildMatcher('matrix3d', 16, false, false)
 ];
 
 var decomposeMatrix = (function() {
@@ -3857,9 +3862,6 @@ var decomposeMatrix = (function() {
            m[2][2] * m[0][1] * m[1][0];
   }
 
-  // this is only ever used on the perspective matrix, which has 0, 0, 0, 1 as
-  // last column
-  //
   // from Wikipedia:
   //
   // [A B]^-1 = [A^-1 + A^-1B(D - CA^-1B)^-1CA^-1     -A^-1B(D - CA^-1B)^-1]
@@ -3934,11 +3936,15 @@ var decomposeMatrix = (function() {
             v1[0] * v2[1] - v1[1] * v2[0]];
   }
 
+  // TODO: Implement 2D matrix decomposition.
+  // http://dev.w3.org/csswg/css-transforms/#decomposing-a-2d-matrix
   function decomposeMatrix(matrix) {
-    var m3d = [[matrix[0], matrix[1], 0, 0],
-               [matrix[2], matrix[3], 0, 0],
-               [0, 0, 1, 0],
-               [matrix[4], matrix[5], 0, 1]];
+    var m3d = [
+      matrix.slice(0, 4),
+      matrix.slice(4, 8),
+      matrix.slice(8, 12),
+      matrix.slice(12, 16)
+    ];
 
     // skip normalization step as m3d[3][3] should always be 1
     if (m3d[3][3] !== 1) {
@@ -4064,28 +4070,148 @@ function dot(v1, v2) {
 }
 
 function multiplyMatrices(a, b) {
-  return [a[0] * b[0] + a[2] * b[1], a[1] * b[0] + a[3] * b[1],
-          a[0] * b[2] + a[2] * b[3], a[1] * b[2] + a[3] * b[3],
-          a[0] * b[4] + a[2] * b[5] + a[4], a[1] * b[4] + a[3] * b[5] + a[5]];
+  return [
+    a[0] * b[0] + a[4] * b[1] + a[8] * b[2] + a[12] * b[3],
+    a[1] * b[0] + a[5] * b[1] + a[9] * b[2] + a[13] * b[3],
+    a[2] * b[0] + a[6] * b[1] + a[10] * b[2] + a[14] * b[3],
+    a[3] * b[0] + a[7] * b[1] + a[11] * b[2] + a[15] * b[3],
+
+    a[0] * b[4] + a[4] * b[5] + a[8] * b[6] + a[12] * b[7],
+    a[1] * b[4] + a[5] * b[5] + a[9] * b[6] + a[13] * b[7],
+    a[2] * b[4] + a[6] * b[5] + a[10] * b[6] + a[14] * b[7],
+    a[3] * b[4] + a[7] * b[5] + a[11] * b[6] + a[15] * b[7],
+
+    a[0] * b[8] + a[4] * b[9] + a[8] * b[10] + a[12] * b[11],
+    a[1] * b[8] + a[5] * b[9] + a[9] * b[10] + a[13] * b[11],
+    a[2] * b[8] + a[6] * b[9] + a[10] * b[10] + a[14] * b[11],
+    a[3] * b[8] + a[7] * b[9] + a[11] * b[10] + a[15] * b[11],
+
+    a[0] * b[12] + a[4] * b[13] + a[8] * b[14] + a[12] * b[15],
+    a[1] * b[12] + a[5] * b[13] + a[9] * b[14] + a[13] * b[15],
+    a[2] * b[12] + a[6] * b[13] + a[10] * b[14] + a[14] * b[15],
+    a[3] * b[12] + a[7] * b[13] + a[11] * b[14] + a[15] * b[15]
+  ];
 }
 
 function convertItemToMatrix(item) {
   switch (item.t) {
+    case 'rotateX':
+      var angle = item.d * Math.PI / 180;
+      return [1, 0, 0, 0,
+              0, Math.cos(angle), Math.sin(angle), 0,
+              0, -Math.sin(angle), Math.cos(angle), 0,
+              0, 0, 0, 1];
+    case 'rotateY':
+      var angle = item.d * Math.PI / 180;
+      return [Math.cos(angle), 0, -Math.sin(angle), 0,
+              0, 1, 0, 0,
+              Math.sin(angle), 0, Math.cos(angle), 0,
+              0, 0, 0, 1];
     case 'rotate':
-      var amount = item.d * Math.PI / 180;
-      return [Math.cos(amount), Math.sin(amount),
-              -Math.sin(amount), Math.cos(amount), 0, 0];
+    case 'rotateZ':
+      var angle = item.d * Math.PI / 180;
+      return [Math.cos(angle), Math.sin(angle), 0, 0,
+              -Math.sin(angle), Math.cos(angle), 0, 0,
+              0, 0, 1, 0,
+              0, 0, 0, 1];
+    case 'rotate3d':
+      var x = item.d[0];
+      var y = item.d[1];
+      var z = item.d[2];
+      var sqrLength = x * x + y * y + z * z;
+      if (sqrLength === 0) {
+        x = 1;
+        y = 0;
+        z = 0;
+      } else if (sqrLength !== 1) {
+        var length = Math.sqrt(sqrLength);
+        x /= length;
+        y /= length;
+        z /= length;
+      }
+      var s = Math.sin(item.d[3] * Math.PI / 360);
+      var sc = s * Math.cos(item.d[3] * Math.PI / 360);
+      var sq = s * s;
+      return [
+        1 - 2 * (y * y + z * z) * sq,
+        2 * (x * y * sq + z * sc),
+        2 * (x * z * sq - y * sc),
+        0,
+
+        2 * (x * y * sq - z * sc),
+        1 - 2 * (x * x + z * z) * sq,
+        2 * (y * z * sq + x * sc),
+        0,
+
+        2 * (x * z * sq + y * sc),
+        2 * (y * z * sq - x * sc),
+        1 - 2 * (x * x + y * y) * sq,
+        0,
+
+        0, 0, 0, 1
+      ];
     case 'scale':
-      return [item.d[0], 0, 0, item.d[1], 0, 0];
+      return [item.d[0], 0, 0, 0,
+              0, item.d[1], 0, 0,
+              0, 0, 1, 0,
+              0, 0, 0, 1];
+    case 'scale3d':
+      return [item.d[0], 0, 0, 0,
+              0, item.d[1], 0, 0,
+              0, 0, item.d[2], 0,
+              0, 0, 0, 1];
+    case 'skew':
+      return [1, Math.tan(item.d[1] * Math.PI / 180), 0, 0,
+              Math.tan(item.d[0] * Math.PI / 180), 1, 0, 0,
+              0, 0, 1, 0,
+              0, 0, 0, 1];
+    case 'skewX':
+      return [1, 0, 0, 0,
+              Math.tan(item.d * Math.PI / 180), 1, 0, 0,
+              0, 0, 1, 0,
+              0, 0, 0, 1];
+    case 'skewY':
+      return [1, Math.tan(item.d * Math.PI / 180), 0, 0,
+              0, 1, 0, 0,
+              0, 0, 1, 0,
+              0, 0, 0, 1];
     // TODO: Work out what to do with non-px values.
     case 'translate':
-      return [1, 0, 0, 1, item.d[0].px, item.d[1].px];
+      return [1, 0, 0, 0,
+              0, 1, 0, 0,
+              0, 0, 1, 0,
+              item.d[0].px, item.d[1].px, 0, 1];
+    case 'translate3d':
+      return [1, 0, 0, 0,
+              0, 1, 0, 0,
+              0, 0, 1, 0,
+              item.d[0].px, item.d[1].px, item.d[2].px, 1];
+    case 'perspective':
+      return [
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, -1 / item.d.px,
+        0, 0, 0, 1];
     case 'matrix':
+      return [item.d[0], item.d[1], 0, 0,
+              item.d[2], item.d[3], 0, 0,
+              0, 0, 1, 0,
+              item.d[4], item.d[5], 0, 1];
+    case 'matrix3d':
       return item.d;
+    default:
+      ASSERT_ENABLED && assert(false, 'Transform item type ' + item.t +
+          ' conversion to matrix not yet implemented.');
   }
 }
 
 function convertToMatrix(transformList) {
+  if (transformList.length === 0) {
+    return [1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1];
+  }
   return transformList.map(convertItemToMatrix).reduce(multiplyMatrices);
 }
 
@@ -4100,6 +4226,20 @@ var composeMatrix = (function() {
       }
     }
     return result;
+  }
+
+  function is2D(m) {
+    return (
+        m[0][2] == 0 &&
+        m[0][3] == 0 &&
+        m[1][2] == 0 &&
+        m[1][3] == 0 &&
+        m[2][0] == 0 &&
+        m[2][1] == 0 &&
+        m[2][2] == 1 &&
+        m[2][3] == 0 &&
+        m[3][2] == 0 &&
+        m[3][3] == 1);
   }
 
   function composeMatrix(translate, scale, skew, quat, perspective) {
@@ -4143,23 +4283,34 @@ var composeMatrix = (function() {
       matrix = multiply(matrix, temp);
     }
 
+    if (skew[0]) {
+      temp[2][0] = 0;
+      temp[1][0] = skew[0];
+      matrix = multiply(matrix, temp);
+    }
+
     for (var i = 0; i < 3; i++) {
       for (var j = 0; j < 3; j++) {
         matrix[i][j] *= scale[i];
       }
     }
 
-    return {t: 'matrix', d: [matrix[0][0], matrix[0][1],
-                             matrix[1][0], matrix[1][1],
-                             matrix[3][0], matrix[3][1]]};
+    if (is2D(matrix)) {
+      return {
+        t: 'matrix',
+        d: [matrix[0][0], matrix[0][1], matrix[1][0], matrix[1][1],
+            matrix[3][0], matrix[3][1]]
+      };
+    }
+    return {
+      t: 'matrix3d',
+      d: matrix[0].concat(matrix[1], matrix[2], matrix[3])
+    };
   }
   return composeMatrix;
 })();
 
-function interpolateTransformsWithMatrices(from, to, f) {
-  var fromM = decomposeMatrix(convertToMatrix(from));
-  var toM = decomposeMatrix(convertToMatrix(to));
-
+function interpolateDecomposedTransformsWithMatrices(fromM, toM, f) {
   var product = dot(fromM.quaternion, toM.quaternion);
   product = clamp(product, -1.0, 1.0);
 
@@ -4187,11 +4338,16 @@ function interpolateTransformsWithMatrices(from, to, f) {
 function interpTransformValue(from, to, f) {
   var type = from.t ? from.t : to.t;
   switch (type) {
+    case 'matrix':
+    case 'matrix3d':
+      ASSERT_ENABLED && assert(false,
+          'Must use matrix decomposition when interpolating raw matrices');
     // Transforms with unitless parameters.
     case 'rotate':
     case 'rotateX':
     case 'rotateY':
     case 'rotateZ':
+    case 'rotate3d':
     case 'scale':
     case 'scaleX':
     case 'scaleY':
@@ -4200,7 +4356,6 @@ function interpTransformValue(from, to, f) {
     case 'skew':
     case 'skewX':
     case 'skewY':
-    case 'matrix':
       return {t: type, d: interp(from.d, to.d, f, type)};
     default:
       // Transforms with lengthType parameters.
@@ -4222,6 +4377,10 @@ function interpTransformValue(from, to, f) {
   }
 }
 
+function isMatrix(item) {
+  return item.t[0] === 'm';
+}
+
 // The CSSWG decided to disallow scientific notation in CSS property strings
 // (see http://lists.w3.org/Archives/Public/www-style/2010Feb/0050.html).
 // We need this function to hakonitize all numbers before adding them to
@@ -4236,15 +4395,24 @@ var transformType = {
   interpolate: function(from, to, f) {
     var out = [];
     for (var i = 0; i < Math.min(from.length, to.length); i++) {
-      if (from[i].t !== to[i].t) {
+      if (from[i].t !== to[i].t || isMatrix(from[i])) {
         break;
       }
       out.push(interpTransformValue(from[i], to[i], f));
     }
 
-    if (i < Math.min(from.length, to.length)) {
-      out.push(interpolateTransformsWithMatrices(from.slice(i), to.slice(i),
-          f));
+    if (i < Math.min(from.length, to.length) ||
+        from.some(isMatrix) || to.some(isMatrix)) {
+      if (from.decompositionPair !== to) {
+        from.decompositionPair = to;
+        from.decomposition = decomposeMatrix(convertToMatrix(from.slice(i)));
+      }
+      if (to.decompositionPair !== from) {
+        to.decompositionPair = from;
+        to.decomposition = decomposeMatrix(convertToMatrix(to.slice(i)));
+      }
+      out.push(interpolateDecomposedTransformsWithMatrices(
+          from.decomposition, to.decomposition, f));
       return out;
     }
 
@@ -4280,6 +4448,11 @@ var transformType = {
           } else {
             out += ', ' + value[i].d[1] + unit + ') ';
           }
+          break;
+        case 'rotate3d':
+          var unit = svgMode ? '' : 'deg';
+          out += value[i].t + '(' + value[i].d[0] + ', ' + value[i].d[1] +
+              ', ' + value[i].d[2] + ', ' + value[i].d[3] + unit + ') ';
           break;
         case 'translateX':
         case 'translateY':
@@ -4330,10 +4503,8 @@ var transformType = {
               value[i].d[1] + ', ' + value[i].d[2] + ') ';
           break;
         case 'matrix':
-          out += value[i].t + '(' +
-              n(value[i].d[0]) + ', ' + n(value[i].d[1]) + ', ' +
-              n(value[i].d[2]) + ', ' + n(value[i].d[3]) + ', ' +
-              n(value[i].d[4]) + ', ' + n(value[i].d[5]) + ') ';
+        case 'matrix3d':
+          out += value[i].t + '(' + value[i].d.map(n).join(', ') + ') ';
           break;
       }
     }

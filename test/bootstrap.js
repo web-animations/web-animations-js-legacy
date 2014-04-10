@@ -1274,4 +1274,6 @@ if (testType() != 'unit') {
   window.Date.now = testharness_timeline.now.bind(testharness_timeline);
 }
 
+window.inExploreMode = inExploreMode;
+
 })();
