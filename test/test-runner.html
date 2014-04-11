@@ -422,7 +422,7 @@ function changeTestState(test, newState) {
     }
 
     var test_iframe = test.querySelector('iframe');
-    processResults(test, test_iframe.contentWindow.expected_failures);
+    processResults(test, expectedFailuresForBrowser(test_iframe.contentWindow.expected_failures));
 
     break;
 
@@ -626,24 +626,57 @@ window.addEventListener(
 
 
 /**
+ * Filters expected test failures for ones that match the current browser
+ * configuration.
+ *
+ * @param {Array.<Object>} Test failure expectations for all browser
+ * configurations.
+ * @return {Object.<string, string>} Mapping from test regex to failure reason
+ * for current browser.
+ */
+function expectedFailuresForBrowser(expected_failures) {
+  var browser_expected_failures = {};
+  if (typeof expected_failures === 'object') {
+    expected_failures.forEach(function(expected_failure) {
+      if (expected_failure.browser_configurations.some(
+          browserConfigurationMatches)) {
+        expected_failure.tests.forEach(function(test) {
+          browser_expected_failures[test] = expected_failure.message;
+        });
+      }
+    });
+  }
+  return browser_expected_failures;
+}
+
+/**
+ * Returns whether the browser configuration pattern matches the browser
+ * configuration reported by bowser.js.
+ * Example:
+ * { name: 'Chrome', version: '28|29' }
+ * matches browser configuration:
+ * { name: 'Chrome', webkit: true, chrome: true, version: '28.0' }
+ *
+ * @param {Object} Key - RegExp value pairs to check against.
+ * @return {bool}
+ */
+function browserConfigurationMatches(browser_configuration) {
+  for (var browser_feature in browser_configuration) {
+    var valueRegex = new RegExp(browser_configuration[browser_feature]);
+    if (!valueRegex.test(bowser[browser_feature])) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
  * Processes the test's results and put the information into the test object.
  *
  * @param {Element} test DOM object representing the test.
  * @param {Array.<Object>} results List of testharness.js result objects.
  */
-function processResults(test, expected_failures) {
-  var browser_expected_failures = {};
-  for(var tname in expected_failures) {
-    for(var bname in bowser) {
-      var fails = expected_failures[tname][bname];
-      if ((typeof fails != "undefined") &&
-          (typeof fails == "boolean" && fails) ||
-          (typeof fails == "object" && fails.indexOf(bowser.version) != -1)) {
-        browser_expected_failures[tname] = expected_failures[tname];
-      }
-    }
-  }
-
+function processResults(test, browser_expected_failures) {
   var counts = {
     passed: 0,
     failed: 0,
