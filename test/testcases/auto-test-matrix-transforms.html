@@ -60,12 +60,13 @@ limitations under the License.
 <div style="height: 550px"></div>
 
 <script>
-var expected_failures = {
-  '/Auto generated tests at t=((?!(0.4|0.8|1.20+1|1.6|2))[0-9.]+)s/': {
-    msie: true,
-    message: "Getting weird numbers."
+var expected_failures = [
+  {
+    browser_configurations: [{ msie: true }],
+    tests: ['Auto generated tests at t=((?!(0.4|0.8|1.20+1|1.6|2))[0-9.]+)s'],
+    message: 'Getting weird numbers.',
   }
-};
+];
 </script>
 <script src="../bootstrap.js"></script>
 <script>

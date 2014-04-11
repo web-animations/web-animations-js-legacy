@@ -82,60 +82,47 @@ height: 600px;
 <div id="anim4" class="animation">&rarr;</div>
 
 <script>
-var expected_failures = {
-  // Firefox
-  '/#anim1/': {
-    firefox: true,
-    msie: true,
-    message: "Doesn't quite follow path correctly."
-  },
-  '/#anim2 at t=(0|1|2|10|11)s/': {
-    firefox: true,
-    message: "Doesn't quite follow path correctly."
-  },
-  '/#anim2 at t=(7|8)s/': {
-    firefox: ['26.0', '27.0'],
-    message: "Doesn't quite follow path correctly."
-  },
-  '/#anim2 at t=9s/' : {
-    firefox: ['28.0', '29.0', '30.0'],
-    message: "Doesn't quite follow path correctly."
-  },
-  '/#anim3 at t=(0|7|8|10)s/': {
-    firefox: true,
-    message: "Doesn't quite follow path correctly."
-  },
-  '/#anim3 at t=6s/': {
-    firefox: ['26.0', '27.0'],
-    message: "Doesn't quite follow path correctly."
-  },
-  '/#anim3 at t=5s/': {
-    firefox: ['28.0', '29.0', '30.0'],
-    message: "Doesn't quite follow path correctly."
-  },
-  '/#anim4 at t=(0|10)s/': {
-    firefox: true,
-    message: "Doesn't quite follow path correctly."
-  },
-  '/#anim4 at t=(3|8|9)s/': {
-    firefox: ['28.0', '29.0', '30.0'],
-    message: "Doesn't quite follow path correctly."
-  },
-
-  // Internet Explorer
-  '/#anim2 at t=(0|1|2|3|4|9|10|11)s/': {
-    msie: true,
-    message: "Doesn't quite follow path correctly."
-  },
-  '/#anim3 at t=(0|1|3|4|7|8|10|11)s/': {
-    msie: true,
-    message: "Doesn't quite follow path correctly."
-  },
-  '/#anim4 at t=(0|1|3|9|10|11)s/': {
-    msie: true,
-    message: "Doesn't quite follow path correctly."
-  },
-};
+var expected_failures = [
+  {
+    browser_configurations: [
+      { firefox: true },
+      { msie: true },
+    ],
+    tests: ['#anim1'],
+    message: 'Doesn\'t quite follow path correctly.',
+  }, {
+    browser_configurations: [{ firefox: true }],
+    tests: [
+      '#anim2 at t=(0|1|2|10|11)s',
+      '#anim3 at t=(0|7|8|10)s',
+      '#anim4 at t=(0|10)s',
+    ],
+    message: 'Doesn\'t quite follow path correctly.',
+  }, {
+    browser_configurations: [{ firefox: true, version: '26|27' }],
+    tests: [
+      '#anim2 at t=(7|8)s',
+      '#anim3 at t=6s',
+    ],
+    message: 'Doesn\'t quite follow path correctly.',
+  }, {
+    browser_configurations: [{ firefox: true, version: '28|29|30' }],
+    tests: [
+      '#anim2 at t=9s',
+      '#anim3 at t=5s',
+      '#anim4 at t=(3|8|9)s',
+    ],
+    message: 'Doesn\'t quite follow path correctly.',
+  }, {
+    browser_configurations: [{ msie: true }],
+    tests: [
+      '#anim2 at t=(0|1|2|3|4|9|10|11)s',
+      '#anim3 at t=(0|1|3|4|7|8|10|11)s',
+      '#anim4 at t=(0|1|3|9|10|11)s',
+    ],
+    message: 'Doesn\'t quite follow path correctly.',
+  }
+];
 </script>
 <script src="../bootstrap.js"></script>
 <script>

@@ -79,12 +79,13 @@ All three boxes should end up the same color as the outline.
 </div>
 
 <script>
-var expected_failures = {
-  '/Auto .*/': {
-    msie: true,
-    message: "IE returns rgba always."
+var expected_failures = [
+  {
+    browser_configurations: [{ msie: true }],
+    tests: ['Auto.*'],
+    message: 'IE returns rgba always.',
   }
-};
+];
 </script>
 <script src="../bootstrap.js"></script>
 <script>

@@ -43,31 +43,28 @@ p {
 
 </style>
 <script>
-var expected_failures = {
-  '/#font at t=(0|0.5|1|1.5)s/': {
-    firefox: true,
-    message: "Floating point issues."
-  },
-  '/#background at t=(0|0.5|1|1.5|2)s/': {
-    firefox: true,
-    message: "Setting background to 'auto' gets back 'auto auto'"
-  },
-  '#font at t=2s': {
-    firefox: true,
-    message: "Floating point issues."
-  },
-  '/#((?!(borderWidth|borderRadius|margin|padding)).*) at t=(0|0.5|1|1.5|2)s/': {
-    msie: true,
-    message: "IE returns rgba."
-  },
-  '/#borderWidth at t=(0.5|1|1.5)s/': {
-    msie: true,
-    message: "IE returns rgba."
-  },
-  '/#font at t=(.*)s/': {
-    chrome: ["31.0", "30.0"],
+var expected_failures = [
+  {
+    browser_configurations: [{ firefox: true }],
+    tests: ['#font at t=(0|0.5|1|1.5|2)s'],
+    message: 'Floating point issues.',
+  }, {
+    browser_configurations: [{ firefox: true }],
+    tests: ['#background at t=(0|0.5|1|1.5|2)s'],
+    message: 'Setting background to "auto" gets back "auto auto".',
+  }, {
+    browser_configurations: [{ msie: true }],
+    tests: [
+      '#((?!(borderWidth|borderRadius|margin|padding)).*) at t=(0|0.5|1|1.5|2)s',
+      '#borderWidth at t=(0.5|1|1.5)s',
+    ],
+    message: 'IE returns rgba.',
+  }, {
+    browser_configurations: [{ chrome: true, version: '30|31' }],
+    tests: ['#font'],
+    message: 'Different initial font-size.',
   }
-};
+];
 </script>
 <script src="../bootstrap.js"></script>
 <div id="container"></div>
