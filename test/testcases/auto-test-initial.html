@@ -58,44 +58,44 @@ word-spacing
 word word word word</pre>
 
 <script>
-var expected_failures = {
-  '/(#background) at t=0s/' : {
-    firefox: true,
-    message: "rgb(0, 0, 0) gets converted to 'transparent' in Firefox."
-  },
-  '#background at t=1s' : {
-    firefox: true,
-    message: "FIXME: Transparency is wrong."
-  },
-  '#border at t=2s' : {
-    firefox: true,
-    message: "FIXME: Border is wrong."
-  },
-  '#transform at t=0s' : {
-    msie: true,
-    message: "'none' in IE."
-  },
-  '#transform at t=1s' : {
-    msie: true,
-    message: "Very small value floating point issue."
-  },
-  '/#(background|border) at t=(1|2)s/' : {
-    msie: true,
-    message: "IE returns rbga values."
-  },
-  '/#text at t=0s/' : {
-    msie: true,
-    message: "IE returns rbga values."
-  },
-  '/#(text|outline) at t=(1|2)s/' : {
-    msie: true,
-    message: "IE returns rbga values."
-  },
-  '/#text at t=(0|1)s/': {
-    chrome: ["31.0", "30.0"],
-    firefox: true,
+var expected_failures = [
+  {
+    browser_configurations: [{ firefox: true }],
+    tests: ['#background at t=0s'],
+    message: 'rgb(0, 0, 0) gets converted to transparent in Firefox.',
+  }, {
+    browser_configurations: [{ firefox: true }],
+    tests: ['#background at t=1s'],
+    message: 'FIXME: Transparency is wrong.',
+  }, {
+    browser_configurations: [{ firefox: true }],
+    tests: ['#border at t=2s'],
+    message: 'FIXME: Border is wrong.',
+  }, {
+    browser_configurations: [{ msie: true }],
+    tests: ['#transform at t=0s'],
+    message: 'none in IE.',
+  }, {
+    browser_configurations: [{ msie: true }],
+    tests: ['#transform at t=1s'],
+    message: 'Very small value floating point issue.',
+  }, {
+    browser_configurations: [{ msie: true }],
+    tests: [
+      '#(background|border) at t=(1|2)s',
+      '#text at t=0s',
+      '#(text|outline) at t=(1|2)s',
+    ],
+    message: 'IE returns rbga values.',
+  }, {
+    browser_configurations: [
+      { chrome: true, version: '30|31' },
+      { firefox: true },
+    ],
+    tests: ['#text at t=(0|1)s'],
+    message: 'Different initial font-size.',
   }
-};
+];
 </script>
 <script src="../bootstrap.js"></script>
 <script>

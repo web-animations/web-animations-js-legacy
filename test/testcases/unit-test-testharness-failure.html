@@ -15,21 +15,21 @@ limitations under the License.
 -->
 <!DOCTYPE html>
 <script>
-
-var expected_failures = {
- 'Failing on Chrome 28': {
-   chrome: ["28.0"],
-   message: "This test is deliberately broken on Chrome 28.0"
- },
- '/Chrome for regexing/': {
-   chrome: true,
-   message: "This test is deliberately broken on all Chromes."
- },
- 'Failing on all Firefox': {
-   firefox: true,
-   message: "This test is deliberately broken on all Firefoxs."
- }
-};
+var expected_failures = [
+  {
+    browser_configurations: [{ chrome: true, version: '28' }],
+    tests: ['Failing on Chrome 28'],
+    message: 'This test is deliberately broken on Chrome 28.',
+  }, {
+    browser_configurations: [{ chrome: true }],
+    tests: ['Chrome for regexing'],
+    message: 'This test is deliberately broken on all Chrome versions.',
+  }, {
+    browser_configurations: [{ firefox: true }],
+    tests: ['Failing on all Firefox'],
+    message: 'This test is deliberately broken on all Firefox versions.',
+  }
+];
 </script>
 <script src="../bootstrap.js"></script>
 <script>

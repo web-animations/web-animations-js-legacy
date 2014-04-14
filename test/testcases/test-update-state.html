@@ -16,16 +16,17 @@ limitations under the License.
 <!DOCTYPE html><meta charset="UTF-8">
 
 <script>
-var expected_failures = {
-  'Updated style should be visible despite unrelated errors at t=5s': {
-    firefox: true,
-    message: "Issue with window sizing cause value to be zero rather then 500px."
-  },
-  'Changing the start time of a new player to before the current time should cause it to take effect at t=3s': {
-    msie: true,
-    message: "rgb != rgba"
+var expected_failures = [
+  {
+    browser_configurations: [{ firefox: true }],
+    tests: ['Updated style should be visible despite unrelated errors at t=5s'],
+    message: 'Issue with window sizing cause value to be zero rather then 500px.',
+  }, {
+    browser_configurations: [{ msie: true }],
+    tests: ['Changing the start time of a new player to before the current time should cause it to take effect at t=3s'],
+    message: 'IE returns rgba.',
   }
-};
+];
 </script>
 <script src="../bootstrap.js"></script>
 <script>

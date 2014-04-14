@@ -33,13 +33,16 @@ limitations under the License.
   <rect class="anim2" x="100px" y="10px" width="100px" height="100px"></rect>
 </svg>
 <script>
-var expected_failures = {
- '/Auto generated tests at t=(1|2|3|4|5|6)s/': {
-   msie: true,
-   firefox: true,
-   message: "Getting weird numbers in ctm."
- }
-};
+var expected_failures = [
+  {
+    browser_configurations: [
+      { firefox: true },
+      { msie: true },
+    ],
+    tests: ['Auto generated tests at t=(1|2|3|4|5|6)s'],
+    message: 'Getting weird numbers in ctm.',
+  }
+];
 </script>
 <script src="../bootstrap.js"></script>
 <script>
