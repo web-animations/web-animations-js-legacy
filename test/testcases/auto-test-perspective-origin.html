@@ -49,16 +49,17 @@ limitations under the License.
 <div id="testContainer" class="container"></div>
 
 <script>
-var expected_failures = {
-  '/tests at t=(1|1.5)s/': {
-    chrome: true,
-    message: '-webkit-perspective-origin shorthand behaviour is broken: crbug.com/361944'
+var expected_failures = [
+  {
+    browser_configurations: [{ chrome: true, version: '34|35' }],
+    tests: ['tests at t=(1|1.5)s'],
+    message: '-webkit-perspective-origin shorthand behaviour is broken: crbug.com/361944',
   }
-};
+];
 </script>
 <script src="../bootstrap.js"></script>
 <script>
-"use strict";
+'use strict';
 var perspectiveOrignTestCases = [
   '0 0',
   'left',
