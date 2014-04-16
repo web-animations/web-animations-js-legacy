@@ -610,7 +610,7 @@ timing_test(function() {
       assert_equals(player.currentTime, 4, "currentTime after waiting a while");
 
       // Extend source
-      player.source.specified.duration = 5;
+      player.source.timing.duration = 5;
       assert_equals(player.currentTime, 4, "currentTime after extending source");
       assert_false(player.finished, "Finished state after extending source");
 
@@ -635,7 +635,7 @@ timing_test(function() {
       assert_true(player.finished, "Finished state after ending normally");
 
       // Extend source
-      player.source.specified.duration = 5;
+      player.source.timing.duration = 5;
       assert_equals(player.currentTime, 3.0, "currentTime after extending source");
       assert_false(player.finished, "Finished state after extending source");
 
@@ -656,7 +656,7 @@ timing_test(function() {
     assert_false(player.finished, "Finished state before shortening");
 
     // Shorten source
-    player.source.specified.duration = 1;
+    player.source.timing.duration = 1;
     assert_equals(player.currentTime, 2.0, "currentTime after shortening");
     assert_true(player.finished, "Finished state after shortening");
 
@@ -681,7 +681,7 @@ timing_test(function() {
       assert_false(player.finished, "Finished state before shortening");
 
       // Shorten source
-      player.source.specified.duration = 1;
+      player.source.timing.duration = 1;
       assert_equals(player.currentTime, 1.7, "currentTime after shortening");
       assert_true(player.finished, "Finished state after shortening");
     });
@@ -698,7 +698,7 @@ timing_test(function() {
     assert_false(player.finished, "Finished state before shortening");
 
     // Shorten source
-    player.source.specified.duration = 1;
+    player.source.timing.duration = 1;
     assert_equals(player.currentTime, 2.0, "currentTime after shortening");
     assert_false(player.finished, "Finished state after shortening");
 
@@ -723,7 +723,7 @@ timing_test(function() {
       assert_true(player.finished, "Finished state after waiting");
 
       // "Add" content
-      player.source.specified.duration = 3;
+      player.source.timing.duration = 3;
 
       // We should pick up from 0, not jump 0.2s in
       assert_equals(player.currentTime, 0, "currentTime after extending");

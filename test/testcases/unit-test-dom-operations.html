@@ -29,7 +29,7 @@ function initGroup() {
 }
 
 function toOrdering(list) {
-  return [].map.call(list, function(animation) { return animation.specified.duration; });
+  return [].map.call(list, function(animation) { return animation.timing.duration; });
 }
 
 function assert_child_order(group, list, message) {

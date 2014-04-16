@@ -62,7 +62,7 @@ timing_test(function() {
   at(1, function() {
     assert_styles(element, {top: '100px'});
 
-    player.source.specified.delay = -1;
+    player.source.timing.delay = -1;
     assert_styles(element, {top: '200px'});
   });
 }, 'Updated style should be visible after change to specified timing');
@@ -76,7 +76,7 @@ timing_test(function() {
   at(2, function() {
     assert_styles(element, {right: '100px'});
 
-    group.children[0].specified.duration = 0.5;
+    group.children[0].timing.duration = 0.5;
     assert_styles(element, {right: '150px'});
 
     group.children[0].remove();
@@ -106,7 +106,7 @@ timing_test(function() {
       group.append(group);
     } catch (e) {
     }
-    player2.source.specified.delay = -1;
+    player2.source.timing.delay = -1;
     assert_styles(element, {bottom: '600px'});
   });
 }, 'Updated style should be visible despite unrelated errors');
