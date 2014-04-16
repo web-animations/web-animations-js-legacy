@@ -69,8 +69,8 @@ timing_test(function() {
     assert_false(inEffect(animElement), 'Animations should not be in effect by default after they end.');
     assert_true(inEffect(groupElement), 'Timing Groups should be in effect by default before after they end.');
 
-    changingAnim.specified.fill = 'auto';
-    changingGroup.specified.fill = 'auto';
+    changingAnim.timing.fill = 'auto';
+    changingGroup.timing.fill = 'auto';
     assert_false(inEffect(changingAnimElement), 'Updating Animation fill mode to auto should take effect immediately.');
     assert_true(inEffect(changingGroupElement), 'Updating Timing Group fill mode to auto should take effect immediately.');
   }, 'After phase');

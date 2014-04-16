@@ -30,7 +30,7 @@ var animationSequence = new AnimationSequence();
 // Animation
 test(function() {assert_equals(anim.duration,  0.0)},
      "Animation duration should use intrinsic value");
-anim.specified.duration = 1.0;
+anim.timing.duration = 1.0;
 test(function() {assert_equals(anim.duration,  1.0)},
      "Animation duration should use specified value");
 // AnimationGroup
@@ -39,7 +39,7 @@ test(function() {assert_equals(animationGroup.duration,  0.0)},
 animationGroup.append(anim);
 test(function() {assert_equals(animationGroup.duration,  3.0)},
      "AnimationGroup duration should be derived from child");
-animationGroup.specified.duration = 2.0;
+animationGroup.timing.duration = 2.0;
 test(function() {assert_equals(animationGroup.duration,  2.0)},
      "AnimationGroup duration should use specified value");
 // AnimationSequence
@@ -48,7 +48,7 @@ test(function() {assert_equals(animationSequence.duration,  0.0)},
 animationSequence.append(anim);
 test(function() {assert_equals(animationSequence.duration,  3.0)},
      "AnimationSequence duration should be derived from child");
-animationSequence.specified.duration = 4.0;
+animationSequence.timing.duration = 4.0;
 test(function() {assert_equals(animationSequence.duration,  4.0)},
      "AnimationSequence duration should use specified value");
 
@@ -59,7 +59,7 @@ test(function() {
   assert_equals(anim.duration,  1.0);
 }, "Animation.duration should be read-only");
 
-anim.specified.duration = 14.0;
+anim.timing.duration = 14.0;
 test(function() {assert_equals(anim.activeDuration,  42.0)},
      "activeDuration should always reflect TimedItem.duration");
 
