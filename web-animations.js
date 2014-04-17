@@ -33,19 +33,19 @@ function detectFeatures() {
   el.style.cssText = 'width: calc(0px);' +
                      'width: -webkit-calc(0px);';
   var calcFunction = el.style.width.split('(')[0];
-  function detectProperty() {
-    return [].filter.call(arguments, function(property) {
+  function detectProperty(candidateProperties) {
+    return [].filter.call(candidateProperties, function(property) {
       return property in el.style;
     })[0];
   }
-  var transformProperty = detectProperty(
-      'transform',
-      'webkitTransform',
-      'msTransform');
-  var perspectiveProperty = detectProperty(
-      'perspective',
-      'webkitPerspective',
-      'msPerspective');
+  var transformProperty = detectProperty([
+    'transform',
+    'webkitTransform',
+    'msTransform']);
+  var perspectiveProperty = detectProperty([
+    'perspective',
+    'webkitPerspective',
+    'msPerspective']);
   return {
     calcFunction: calcFunction,
     transformProperty: transformProperty,
