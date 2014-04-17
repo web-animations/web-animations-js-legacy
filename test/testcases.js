@@ -30,6 +30,8 @@ var tests = [
   'auto-test-partial-keyframes.html',
   'auto-test-path.html',
   'auto-test-pause.html',
+  'auto-test-perspective.html',
+  'auto-test-perspective-origin.html',
   'auto-test-playback-rate.html',
   'auto-test-rectangle.html',
   'auto-test-reparent.html',

@@ -33,18 +33,25 @@ function detectFeatures() {
   el.style.cssText = 'width: calc(0px);' +
                      'width: -webkit-calc(0px);';
   var calcFunction = el.style.width.split('(')[0];
-  var transformCandidates = [
+  function detectProperty(candidateProperties) {
+    return [].filter.call(candidateProperties, function(property) {
+      return property in el.style;
+    })[0];
+  }
+  var transformProperty = detectProperty([
     'transform',
     'webkitTransform',
-    'msTransform'
-  ];
-  var transformProperty = transformCandidates.filter(function(property) {
-    return property in el.style;
-  })[0];
+    'msTransform']);
+  var perspectiveProperty = detectProperty([
+    'perspective',
+    'webkitPerspective',
+    'msPerspective']);
   return {
     calcFunction: calcFunction,
     transformProperty: transformProperty,
-    transformOriginProperty: transformProperty + 'Origin'
+    transformOriginProperty: transformProperty + 'Origin',
+    perspectiveProperty: perspectiveProperty,
+    perspectiveOriginProperty: perspectiveProperty + 'Origin'
   };
 }
 var features = detectFeatures();
@@ -55,6 +62,10 @@ function prefixProperty(property) {
       return features.transformProperty;
     case 'transformOrigin':
       return features.transformOriginProperty;
+    case 'perspective':
+      return features.perspectiveProperty;
+    case 'perspectiveOrigin':
+      return features.perspectiveOriginProperty;
     default:
       return property;
   }
@@ -4598,6 +4609,8 @@ var propertyTypes = {
   paddingLeft: lengthType,
   paddingRight: lengthType,
   paddingTop: lengthType,
+  perspective: typeWithKeywords(['none'], lengthType),
+  perspectiveOrigin: originType,
   right: percentLengthAutoType,
   textIndent: typeWithKeywords(['each-line', 'hanging'], percentLengthType),
   textShadow: shadowType,
