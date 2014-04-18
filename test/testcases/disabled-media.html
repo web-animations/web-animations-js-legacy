@@ -327,7 +327,7 @@ timing_test(function() {
 timing_test(function() {
   var video = getNextVideo();
   at(0.0, function() {
-    dt.play(new ParGroup([createTestMediaReference(video, {playbackRate: 1.5})],
+    dt.play(new AnimationGroup([createTestMediaReference(video, {playbackRate: 1.5})],
         {playbackRate: 2.5}));
   });
   at(1.0, function() {
@@ -377,7 +377,7 @@ timing_test(function() {
 timing_test(function() {
   var video = getNextVideo();
   at(0.0, function() {
-    dt.play(new ParGroup(
+    dt.play(new AnimationGroup(
         [createTestMediaReference(video, {playbackRate: -0.5})],
         {playbackRate: 3.0, direction: "reverse"}));
   });
@@ -420,7 +420,7 @@ timing_test(function() {
 // TODO: Need to find a video with limited seek ranges.
 
 // Test that video is paused when its MediaReference is detached from its
-// Player.
+// AnimationPlayer.
 timing_test(function() {
   var video = getNextVideo();
   var player;
@@ -434,6 +434,6 @@ timing_test(function() {
   at(2.0, function() {
     assert_true(video.paused);
   });
-}, "Video should be paused when MediaReference is detached from its Player");
+}, "Video should be paused when MediaReference is detached from its AnimationPlayer");
 
 </script>

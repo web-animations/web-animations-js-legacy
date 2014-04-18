@@ -13,6 +13,7 @@ env:
     - BROWSER=Chrome-stable ARGS='-x -b Chrome -u'
     - BROWSER=Chrome-beta ARGS='-x -b Chrome -u'
     - BROWSER=Chrome-unstable ARGS='-x -b Chrome -u'
+    - BROWSER=Chrome-unstable ARGS='-x -b Chrome -u --flag=--enable-experimental-web-platform-features'
     - BROWSER=Firefox-stable ARGS='-x -b Firefox -u'
     - BROWSER=Firefox-beta ARGS='-x -b Firefox -u'
     - BROWSER=Firefox-aurora ARGS='-x -b Firefox -u'

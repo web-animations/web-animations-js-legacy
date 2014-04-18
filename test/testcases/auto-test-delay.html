@@ -32,7 +32,7 @@ limitations under the License.
 var anim = new Animation(a, [{ left: '100px'}, {left: '200px'}], 
   {delay: 0.2, duration: 0.3, endDelay: 0.4, iterations: 3, fill: 'both'});
 
-var par = new ParGroup([anim], {fill: 'none', iterations: 2})
+var par = new AnimationGroup([anim], {fill: 'none', iterations: 2})
 
 document.timeline.play(par);
 

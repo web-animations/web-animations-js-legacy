@@ -29,51 +29,51 @@ var anim = new Animation(elem, animFunc, 1.0);
 var clone = anim.clone();
 test(function() {assert_true(clone instanceof Animation)},
      "Clone should be an Animation");
-test(function() {assert_equals(clone.specified.duration, 1.0)},
+test(function() {assert_equals(clone.timing.duration, 1.0)},
      "Clone should take Timing.duration");
 test(function() {assert_equals(clone.target, elem)},
      "Clone should take target");
 
-// ParGroup
-var parGroup = new ParGroup([anim, clone], 4.0);
-var parGroupClone = parGroup.clone();
-test(function() {assert_true(parGroupClone instanceof ParGroup, true)},
-     "ParGroup clone should be a ParGroup");
-test(function() {assert_equals(parGroupClone.specified.duration, 4.0)},
-     "ParGroup clone should take Timing.duration");
-test(function() {assert_equals(parGroupClone.children.length, 2)},
-     "ParGroup clone should clone children");
-test(function() {assert_not_equals(parGroupClone.children[0], anim)},
-     "ParGroup clone should clone first child");
-test(function() {assert_equals(parGroupClone.children[0].duration, 1.0)},
-     "ParGroup clone should clone first child's duration");
-test(function() {assert_not_equals(parGroupClone.children[1], clone)},
-     "ParGroup clone should clone second child");
-test(function() {assert_equals(parGroupClone.children[1].duration, 1.0)},
-     "ParGroup clone should clone second child's duration");
+// AnimationGroup
+var animationGroup = new AnimationGroup([anim, clone], 4.0);
+var animationGroupClone = animationGroup.clone();
+test(function() {assert_true(animationGroupClone instanceof AnimationGroup, true)},
+     "AnimationGroup clone should be a AnimationGroup");
+test(function() {assert_equals(animationGroupClone.timing.duration, 4.0)},
+     "AnimationGroup clone should take Timing.duration");
+test(function() {assert_equals(animationGroupClone.children.length, 2)},
+     "AnimationGroup clone should clone children");
+test(function() {assert_not_equals(animationGroupClone.children[0], anim)},
+     "AnimationGroup clone should clone first child");
+test(function() {assert_equals(animationGroupClone.children[0].duration, 1.0)},
+     "AnimationGroup clone should clone first child's duration");
+test(function() {assert_not_equals(animationGroupClone.children[1], clone)},
+     "AnimationGroup clone should clone second child");
+test(function() {assert_equals(animationGroupClone.children[1].duration, 1.0)},
+     "AnimationGroup clone should clone second child's duration");
 
-// SeqGroup
-var seqGroup = new SeqGroup([anim, clone], 6.0);
-var seqGroupClone = seqGroup.clone();
-test(function() {assert_true(seqGroupClone instanceof SeqGroup)},
-     "SeqGroup clone should be a SeqGroup");
-test(function() {assert_equals(seqGroupClone.specified.duration, 6.0)},
-     "SeqGroup clone should take Timing.duration");
-test(function() {assert_equals(seqGroupClone.children.length, 2)},
-     "SeqGroup clone should clone children");
-test(function() {assert_not_equals(seqGroupClone.children[0], anim)},
-     "SeqGroup clone should clone first child");
-test(function() {assert_equals(seqGroupClone.children[0].duration, 1.0)},
-     "SeqGroup clone should clone first child's duration");
-test(function() {assert_not_equals(seqGroupClone.children[1], clone)},
-     "SeqGroup clone should clone second child");
-test(function() {assert_equals(seqGroupClone.children[1].duration, 1.0)},
-     "SeqGroup clone should clone second child's duration");
+// AnimationSequence
+var animationSequence = new AnimationSequence([anim, clone], 6.0);
+var animationSequenceClone = animationSequence.clone();
+test(function() {assert_true(animationSequenceClone instanceof AnimationSequence)},
+     "AnimationSequence clone should be a AnimationSequence");
+test(function() {assert_equals(animationSequenceClone.timing.duration, 6.0)},
+     "AnimationSequence clone should take Timing.duration");
+test(function() {assert_equals(animationSequenceClone.children.length, 2)},
+     "AnimationSequence clone should clone children");
+test(function() {assert_not_equals(animationSequenceClone.children[0], anim)},
+     "AnimationSequence clone should clone first child");
+test(function() {assert_equals(animationSequenceClone.children[0].duration, 1.0)},
+     "AnimationSequence clone should clone first child's duration");
+test(function() {assert_not_equals(animationSequenceClone.children[1], clone)},
+     "AnimationSequence clone should clone second child");
+test(function() {assert_equals(animationSequenceClone.children[1].duration, 1.0)},
+     "AnimationSequence clone should clone second child's duration");
 
 // Child
 var childClone = anim.clone();
-test(function() {assert_equals(anim.parent, seqGroup)},
-     "Child clone should not equal seqGroup");
+test(function() {assert_equals(anim.parent, animationSequence)},
+     "Child clone should not equal animationSequence");
 test(function() {assert_equals(childClone.parent, null)},
      "Child clone should not take parent");
 

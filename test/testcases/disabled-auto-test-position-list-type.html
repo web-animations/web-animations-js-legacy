@@ -95,7 +95,7 @@ for (var i = 0; i < endPositions.length; i++) {
   pre.className = 'anim';
   pre.innerText = 'background-position:\nfrom: ' + startPosition + '\nto: ' + endPosition;
   document.querySelector('#container').appendChild(pre);
-  document.timeline.play(new Animation(pre, new KeyframeAnimationEffect([
+  document.timeline.play(new Animation(pre, new KeyframeEffect([
     { backgroundPosition: startPosition },
     { backgroundPosition: endPosition },
   ]), { duration:2, easing: 'ease-in'}));

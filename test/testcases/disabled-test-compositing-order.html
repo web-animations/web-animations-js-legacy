@@ -44,11 +44,11 @@ var noop = {color: "red"};
 // because the second animation has a later start time, it should be composited
 // second, so the div should end up on the left.
 var target1 = document.getElementById("target1");
-var player = document.timeline.play(new ParGroup([
-  new ParGroup([
+var player = document.timeline.play(new AnimationGroup([
+  new AnimationGroup([
     new Animation(target1, leftToRight, 1.0),
   ]),
-  new SeqGroup([
+  new AnimationSequence([
     new Animation(target1, noop, 2.0),
     new Animation(target1, rightToLeft, 1.0),
   ]),
@@ -60,13 +60,13 @@ timing_test(function() {
 
 // Test that compositing order takes account of playback rate.
 //
-// The start time of the first animation is 0.0. The SeqGroup has a playback
+// The start time of the first animation is 0.0. The AnimationSequence has a playback
 // rate of 4.0, so the effective start time of its child animation is 2.0. So
 // the the div should end up on the left at time 3.0.
 var target2 = document.getElementById("target2");
-var player = document.timeline.play(new ParGroup([
+var player = document.timeline.play(new AnimationGroup([
   new Animation(target2, leftToRight, 1.0),
-  new SeqGroup([
+  new AnimationSequence([
     new Animation(target1, noop, 8.0),
     new Animation(target2, rightToLeft, 4.0),
   ], {playbackRate: 4.0}),
@@ -76,7 +76,7 @@ timing_test(function() {
     at(3.0, function() {assert_equals(getComputedStyle(target2).getPropertyValue("left"), "100px")});
   }, "Second animation should have later compositing order");
 
-// Test compositing order follows Player start time order.
+// Test compositing order follows AnimationPlayer start time order.
 var target3 = document.getElementById("target3");
 var player1 = document.timeline.play(
   new Animation(target3, leftToRight, 1.0));
@@ -90,16 +90,16 @@ timing_test(function() {
 
 // Test compositing order follows tree order.
 var target4 = document.getElementById("target4");
-var player = document.timeline.play(new ParGroup([
+var player = document.timeline.play(new AnimationGroup([
   new Animation(target4, leftToRightLarge, 1.0),
-  new SeqGroup([
+  new AnimationSequence([
     new Animation(target4, leftToRightLarge, 1.0),
-    new ParGroup([
+    new AnimationGroup([
       new Animation(target4, leftToRightLarge, 1.0),
       new Animation(target4, leftToRightLarge, 1.0),
     ]),
   ]),
-  new ParGroup([
+  new AnimationGroup([
     new Animation(target4, leftToRightLarge, 1.0),
     new Animation(target4, leftToRight, 1.0),
   ]),

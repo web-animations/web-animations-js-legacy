@@ -28,28 +28,28 @@ div#targets div {
 <div id="targets"></div>
 
 <script>
-var expected_failures = {
-  'Add-composite the neutral value onto a percent length type property with default value': {
-    chrome: true,
-    message: "getComputedStyle is broken under Chrome and this will return 'auto' while the specification says it should return pixels. https://code.google.com/p/chromium/issues/detail?id=229280"
-  },
-  '/(Add|Replace)-composite a color type property at t=1s/' : {
-    msie: true,
-    message: "IE returns rbga values."
-  },
-  '/(Add|Replace)-composite a shadow type property at t=1s/' : {
-    msie: true,
-    message: "IE returns different shadow format"
-  },
-  '/Add-composite the neutral value onto a (percent length|shadow|transform) type property with default value at t=0s/' : {
-    msie: true,
-    message: "IE returns auto|none|none"
-  },
-  'Add-composite the neutral value onto a shadow type property at t=0s' : {
-    msie: true,
-    message: "IE returns different shadow format"
+var expected_failures = [
+  {
+    browser_configurations: [{ chrome: true }],
+    tests: ['Add-composite the neutral value onto a percent length type property with default value'],
+    message: 'getComputedStyle is broken under Chrome and this will return auto while the specification says it should return pixels. crbug.com/229280',
+  }, {
+    browser_configurations: [{ msie: true }],
+    tests: ['(Add|Replace)-composite a color type property at t=1s'],
+    message: 'IE returns rbga values.',
+  }, {
+    browser_configurations: [{ msie: true }],
+    tests: [
+      '(Add|Replace)-composite a shadow type property at t=1s',
+      'Add-composite the neutral value onto a shadow type property at t=0s',
+    ],
+    message: 'IE returns different shadow format.',
+  }, {
+    browser_configurations: [{ msie: true }],
+    tests: ['Add-composite the neutral value onto a (percent length|shadow|transform) type property with default value at t=0s'],
+    message: 'IE returns auto|none|none.',
   }
-};
+];
 </script>
 <script src="../bootstrap.js"></script>
 <script>
@@ -62,13 +62,13 @@ function testComposite(property, initialValue, composite, keyframeValue, offset,
   var target = document.createElement('div');
   document.getElementById('targets').appendChild(target);
   if (initialValue !== undefined && initialValue !== null) {
-    target.style[property === 'transform' ? test_features.transformProperty : property] = initialValue;
+    target.style[_WebAnimationsTestingUtilities._prefixProperty(property)] = initialValue;
   }
   var keyframes = {};
   keyframes[property] = keyframeValue;
   keyframes.composite = composite;
   timing_test(function() {
-    document.timeline.play(new Animation(target, keyframes, 1.0));
+    document.timeline.play(new Animation(target, keyframes, {duration: 1, fill: 'forwards'}));
     at(offset, function() {
       var styles = {};
       styles[property] = expectedValue;

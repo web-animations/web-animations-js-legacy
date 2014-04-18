@@ -56,7 +56,7 @@ window.addEventListener('load', function() {
   s.addEventListener('load', function() {
     document.timeline.play(new Animation(a,
       [{left: "0px"}, {left: "200px"}],
-      0.5
+      {duration: 0.5, fill: 'forwards'}
     ));
 
   })

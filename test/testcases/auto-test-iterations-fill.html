@@ -128,17 +128,18 @@ var groups = [];
 
 for (var i = 0; i < directions.length; i++) {
   var dir = directions[i];
-  groups.push(new ParGroup([], {
+  groups.push(new AnimationGroup([], {
     delay: 1,
     duration: 8,
     iterations: 3,
     playbackRate: 2,
     direction: dir,
+    fill: 'forwards',
   }));
 }
 
-function sampleFunc(timeFraction, iteration, target) {
-  target.innerHTML = Math.floor(timeFraction * 1000) / 1000 + " : " + iteration;
+function sampleFunc(timeFraction, animation) {
+  animation.target.innerHTML = Math.floor(timeFraction * 1000) / 1000 + " : " + animation.currentIteration;
 }
 
 for (var i = 0; i < fills.length; i++) {
@@ -151,7 +152,7 @@ for (var i = 0; i < fills.length; i++) {
       fill: fills[i],
       playbackRate: 0.8
     }));
-    groups[j].append(new Animation(divs[j], {sample: sampleFunc}, {
+    groups[j].append(new Animation(divs[j], sampleFunc, {
       delay: 1,
       duration: 1,
       iterations: 2,

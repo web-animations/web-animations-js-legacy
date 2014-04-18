@@ -129,13 +129,13 @@ window.addEventListener('load', function () {
   spacing.style.width = '600px';
   document.body.appendChild(spacing);
 
-  var parGroup = new ParGroup([], {iterations: Infinity, direction: 'alternate'});
+  var animationGroup = new AnimationGroup([], {iterations: Infinity, direction: 'alternate'});
   for (var i = 0; i < particleCount; i++) {
     var particle = new Particle();
-    parGroup.append(particle.generateAnimation(animationDuration));
+    animationGroup.append(particle.generateAnimation(animationDuration));
     particles.push(particle);
   }
-  player = document.timeline.play(parGroup);
+  player = document.timeline.play(animationGroup);
 
   Perf.oncomplete = cleanUp;
   Perf.start();

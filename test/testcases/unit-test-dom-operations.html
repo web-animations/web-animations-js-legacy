@@ -25,11 +25,11 @@ var anims = [body, body, body, body, body, body, body, body, body, body].map(fun
 });
 
 function initGroup() {
- return new ParGroup(anims.slice(0, 5));
+ return new AnimationGroup(anims.slice(0, 5));
 }
 
 function toOrdering(list) {
-  return [].map.call(list, function(animation) { return animation.specified.duration; });
+  return [].map.call(list, function(animation) { return animation.timing.duration; });
 }
 
 function assert_child_order(group, list, message) {
@@ -37,7 +37,7 @@ function assert_child_order(group, list, message) {
 }
 
 test(function() {
-  var group = new ParGroup();
+  var group = new AnimationGroup();
   group.append(anims[5]);
   assert_child_order(group, [5],
     'append on empty group should work');
@@ -51,7 +51,7 @@ test(function() {
 }, 'append');
 
 test(function() {
-  var group = new ParGroup();
+  var group = new AnimationGroup();
   group.prepend(anims[5]);
   assert_child_order(group, [5],
     'prepend on empty group should work');
@@ -139,9 +139,9 @@ test(function() {
 
 test(function() {
   var group = initGroup();
-  var group2 = new ParGroup();
+  var group2 = new AnimationGroup();
   group2.append(group);
-  var group3 = new SeqGroup();
+  var group3 = new AnimationSequence();
   group3.append(group);
   assert_throws("HierarchyRequestError",
     function() {

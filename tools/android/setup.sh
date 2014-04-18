@@ -90,24 +90,29 @@ if [ -e Chrome.apk ]; then
   CHROME_APP=com.google.android.apps.chrome
   CHROME_ACT=.Main
 else
-  if [ ! -e chrome-android/apks/ChromiumTestShell.apk ]; then
-    LATEST=`curl -s http://commondatastorage.googleapis.com/chromium-browser-continuous/Android/LAST_CHANGE`
-    REMOTE_APK=http://commondatastorage.googleapis.com/chromium-browser-continuous/Android/$LATEST/chrome-android.zip
+  if [ ! -e chrome-android/apks/ChromeShell.apk ]; then
+    LATEST_APK=`curl -s http://commondatastorage.googleapis.com/chromium-browser-continuous/Android/LAST_CHANGE`
+    REMOTE_APK=http://commondatastorage.googleapis.com/chromium-browser-continuous/Android/$LATEST_APK/chrome-android.zip
     wget -c $REMOTE_APK
     unzip chrome-android.zip
   fi
-  CHROME_APK=$ANDROID_DIR/chrome-android/apks/ChromiumTestShell.apk
-  CHROME_APP=org.chromium.chrome.testshell
-  CHROME_ACT=.ChromiumTestShellActivity
+  CHROME_APK=$ANDROID_DIR/chrome-android/apks/ChromeShell.apk
+  CHROME_APP=org.chromium.chrome.shell
+  CHROME_ACT=.ChromeShellActivity
 fi
 
-$ADB install $CHROME_APK
+function start_chrome () {
+  $ADB shell am start -a android.intent.action.MAIN -n $CHROME_APP/$CHROME_ACT -W
+}
+
+if start_chrome | grep -q "does not exist"; then
+  $ADB install $CHROME_APK
+fi
 
 # Check the chrome binary actually starts without segfaulting
-$ADB shell input keyevent 82   # Send the menu key to unlock the screen
-$ADB shell am start -a android.intent.action.MAIN -n $CHROME_APP/$CHROME_ACT -W  # Start chrome
+start_chrome
 sleep 2
-if $ADB shell am start -a android.intent.action.MAIN -n $CHROME_APP/$CHROME_ACT -W | grep -q "Activity not started, its current task"; then
+if start_chrome | grep -q "its current task has been brought to the front"; then
   echo "Chrome seems to have started okay."
 else
   echo "Chrome seems to have crashed!"
@@ -118,8 +123,14 @@ fi
 
 # Download and start the chromedriver binary
 if [ ! -e chromedriver ]; then
-  wget -c http://chromedriver.storage.googleapis.com/2.6/chromedriver_linux64.zip -O chromedriver.zip
-  unzip chromedriver.zip
+  # TODO: Use the latest release of chromedriver instead of this custom build once version 3.0 comes out.
+  # LATEST_CHROMEDRIVER=`curl -s http://chromedriver.storage.googleapis.com/LATEST_RELEASE`
+  # wget -c http://chromedriver.storage.googleapis.com/$LATEST_CHROMEDRIVER/chromedriver_linux64.zip -O chromedriver.zip
+  # unzip chromedriver.zip
+
+  # This version of chromedriver was build from the Chromium repository at r262639 on 2014-04-09.
+  wget https://googledrive.com/host/0B6C-LL9qmW-IYVFrdURCMHZlM1U -O chromedriver
+  chmod 0755 chromedriver
 fi
 
 CHROMEDRIVER_NOTRUNNING=true

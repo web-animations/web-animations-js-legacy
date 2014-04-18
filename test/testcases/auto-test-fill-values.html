@@ -19,120 +19,96 @@ limitations under the License.
 .animContainer {
   position: absolute;
   left: 0px;
-  height: 100px;
+  height: 10px;
 }
 
 .anim {
   left: 0px;
-  width: 300px;
+  width: 400px;
   height: 25px;
   background-color: #FAA;
   position: relative;
+  font-size: 13px;
+  border-top: 1px solid black;
 }
 
-.exp {
-  border-right: 1px solid black;
-}
+.expect { border-right: 1px solid black; }
+.expect.no-effect { width: 400px; }
+.expect.first-frame { width: 500px; }
+.expect.last-frame { width: 600px; }
 
-#ca {
-  top: 50px;
-}
+.dir-normal { top: 50px; }
+.dir-reverse { top: 350px; }
+.dir-alternate { top: 650px; }
+.dir-alternate-reverse { top: 950px; }
 
-#cb {
-  top: 300px;
-}
-
-#cc {
-  top: 550px;
-}
-
-
-#cd {
-  top: 800px;
-}
-
+.spacing { height: 1200px; }
 </style>
 
 <div>Right edge of each box should align with black line at end of test.</div>
 
-<div class="animContainer" id="ca">
-  <div style="width: 300px;" class="exp"><div id="a" class="anim"></div></div>
-  <div style="width: 300px;" class="exp"><div id="b" class="anim"></div></div>
-  <div style="width: 300px;" class="exp"><div id="c" class="anim"></div></div>
-  <div style="width: 300px;" class="exp"><div id="d" class="anim"></div></div>
-  <div style="width: 500px;" class="exp"><div id="e" class="anim"></div></div>
-  <div style="width: 500px;" class="exp"><div id="f" class="anim"></div></div>
-  <div style="width: 500px;" class="exp"><div id="g" class="anim"></div></div>
-  <div style="width: 500px;" class="exp"><div id="h" class="anim"></div></div>
+<div class="animContainer dir-normal">
+  <div class="expect no-effect"><div class="anim fill-none"></div></div>
+  <div class="expect no-effect"><div class="anim fill-backwards"></div></div>
+  <div class="expect last-frame"><div class="anim fill-forwards"></div></div>
+  <div class="expect last-frame"><div class="anim fill-both"></div></div>
+  <div class="expect no-effect"><div class="anim fill-auto"></div></div>
 </div>
 
-<div class="animContainer" id="cb">
-  <div style="width: 300px;" class="exp"><div id="i" class="anim"></div></div>
-  <div style="width: 300px;" class="exp"><div id="j" class="anim"></div></div>
-  <div style="width: 300px;" class="exp"><div id="k" class="anim"></div></div>
-  <div style="width: 300px;" class="exp"><div id="l" class="anim"></div></div>
-  <div style="width: 400px;" class="exp"><div id="m" class="anim"></div></div>
-  <div style="width: 400px;" class="exp"><div id="n" class="anim"></div></div>
-  <div style="width: 400px;" class="exp"><div id="o" class="anim"></div></div>
-  <div style="width: 400px;" class="exp"><div id="p" class="anim"></div></div>
+<div class="animContainer dir-reverse">
+  <div class="expect no-effect"><div class="anim fill-none"></div></div>
+  <div class="expect no-effect"><div class="anim fill-backwards"></div></div>
+  <div class="expect first-frame"><div class="anim fill-forwards"></div></div>
+  <div class="expect first-frame"><div class="anim fill-both"></div></div>
+  <div class="expect no-effect"><div class="anim fill-auto"></div></div>
 </div>
 
-<div class="animContainer" id="cc">
-  <div style="width: 300px;" class="exp"><div id="q" class="anim"></div></div>
-  <div style="width: 300px;" class="exp"><div id="r" class="anim"></div></div>
-  <div style="width: 300px;" class="exp"><div id="s" class="anim"></div></div>
-  <div style="width: 300px;" class="exp"><div id="t" class="anim"></div></div>
-  <div style="width: 400px;" class="exp"><div id="u" class="anim"></div></div>
-  <div style="width: 400px;" class="exp"><div id="v" class="anim"></div></div>
-  <div style="width: 400px;" class="exp"><div id="w" class="anim"></div></div>
-  <div style="width: 400px;" class="exp"><div id="x" class="anim"></div></div>
+<div class="animContainer dir-alternate">
+  <div class="expect no-effect"><div class="anim fill-none"></div></div>
+  <div class="expect no-effect"><div class="anim fill-backwards"></div></div>
+  <div class="expect first-frame"><div class="anim fill-forwards"></div></div>
+  <div class="expect first-frame"><div class="anim fill-both"></div></div>
+  <div class="expect no-effect"><div class="anim fill-auto"></div></div>
 </div>
 
-<div class="animContainer" id="cd">
-  <div style="width: 300px;" class="exp"><div id="y" class="anim"></div></div>
-  <div style="width: 300px;" class="exp"><div id="z" class="anim"></div></div>
-  <div style="width: 300px;" class="exp"><div id="aa" class="anim"></div></div>
-  <div style="width: 300px;" class="exp"><div id="ab" class="anim"></div></div>
-  <div style="width: 500px;" class="exp"><div id="ac" class="anim"></div></div>
-  <div style="width: 500px;" class="exp"><div id="ad" class="anim"></div></div>
-  <div style="width: 500px;" class="exp"><div id="ae" class="anim"></div></div>
-  <div style="width: 500px;" class="exp"><div id="af" class="anim"></div></div>
+<div class="animContainer dir-alternate-reverse">
+  <div class="expect no-effect"><div class="anim fill-none"></div></div>
+  <div class="expect no-effect"><div class="anim fill-backwards"></div></div>
+  <div class="expect last-frame"><div class="anim fill-forwards"></div></div>
+  <div class="expect last-frame"><div class="anim fill-both"></div></div>
+  <div class="expect no-effect"><div class="anim fill-auto"></div></div>
 </div>
 
-<div style="height: 1000px;"></div>
+<div class="spacing"></div>
 
 <script src="../bootstrap.js"></script>
 <script>
-"use strict";
+'use strict';
 
-var containers = ["ca", "cb", "cc", "cd"];
-var directions = ["normal", "reverse", "alternate", "alternate-reverse"];
-var fills = ["none", "backwards", "forwards", "both"];
-var effect = [{left: "100px"}, {left: "200px"}];
+var directions = ['normal', 'reverse', 'alternate', 'alternate-reverse'];
+var fills = ['none', 'backwards', 'forwards', 'both', 'auto'];
+var effect = [{left: '100px'}, {left: '200px'}];
+var nextId = 0;
 
-for (var i = 0; i < containers.length; i++) {
-  var divs =
-      document.getElementById(containers[i]).getElementsByClassName('anim');
-  for (var j = 0; j < fills.length; j++) {
-    document.timeline.play(
-        new Animation(divs[2 * j], effect, {
-          iterations: 4,
-          direction: directions[i],
-          duration: 1,
-          fill: fills[j]
-        }));
-    divs[2 * j].innerHTML = "dir: " + directions[i] + " fill: " + fills[j] +
-        " dur: 1";
-    document.timeline.play(
-        new Animation(divs[2 * j + 1], effect, {
-          iterations: 4,
-          direction: directions[i],
-          duration: 0,
-          fill: fills[j]
-        }));
-    divs[2 * j + 1].innerHTML = "dir: " + directions[i] + " fill: " + fills[j] +
-        " dur: 0";
-  }
+function testCase(element, direction, fill, duration) {
+  document.timeline.play(
+      new Animation(element, effect, {
+        iterations: 4,
+        direction: direction,
+        fill: fill,
+        duration: duration,
+      }));
+  element.id = 'anim' + (nextId++);
+  element.textContent = 'ID: ' + element.id + ' | dir: ' + direction + ' | fill: ' + fill + ' | dur: ' + duration;
 }
 
+directions.forEach(function (direction) {
+  fills.forEach(function (fill) {
+    var dur0 = document.querySelector('.dir-' + direction + ' .fill-' + fill);
+    var dur1 = dur0.cloneNode(true);
+    dur0.parentElement.insertBefore(dur1, dur0);
+    testCase(dur1, direction, fill, 1);
+    testCase(dur0, direction, fill, 0);
+  });
+});
 </script>

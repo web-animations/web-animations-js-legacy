@@ -28,12 +28,13 @@ td.anim {
 </table>
 
 <script>
-var expected_failures = {
-  '/Auto.*/': {
-    msie: true,
-    message: "IE returns rgba always."
+var expected_failures = [
+  {
+    browser_configurations: [{ msie: true }],
+    tests: ['Auto.*'],
+    message: 'IE returns rgba always.',
   }
-};
+];
 </script>
 <script src="../bootstrap.js"></script>
 <script>
@@ -195,7 +196,7 @@ for (var i = 0; i < divs.length; i++) {
   var effect = colorsToAnimate.map(function(value) {
     return { backgroundColor: value };
   });
-  document.timeline.play(new Animation(divs[i], effect, 4));
+  document.timeline.play(new Animation(divs[i], effect, {duration: 4, fill: 'forwards'}));
 }
 
 //document.timeline.play(new Animation(document.body,

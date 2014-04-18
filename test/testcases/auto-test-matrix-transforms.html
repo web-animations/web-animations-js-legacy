@@ -60,12 +60,13 @@ limitations under the License.
 <div style="height: 550px"></div>
 
 <script>
-var expected_failures = {
-  '/Auto generated tests at t=((?!(0.4|0.8|1.20+1|1.6|2))[0-9.]+)s/': {
-    msie: true,
-    message: "Getting weird numbers."
+var expected_failures = [
+  {
+    browser_configurations: [{ msie: true }],
+    tests: ['Auto generated tests at t=((?!(0.4|0.8|1.20+1|1.6|2))[0-9.]+)s'],
+    message: 'Getting weird numbers.',
   }
-};
+];
 </script>
 <script src="../bootstrap.js"></script>
 <script>
@@ -78,10 +79,12 @@ var e = document.querySelector("#e")
 
 var dt = document.timeline;
 
-dt.play(new Animation(a, {transform: "translate(100px)"}, 2));
-dt.play(new Animation(b, {transform: "translate(100px)"}, 2));
-dt.play(new Animation(c, {transform: "translate(100px)"}, 2));
-dt.play(new Animation(d, {transform: "translate(100px) rotate(45deg)"}, 2));
+var timing = {duration: 2, fill: 'forwards'};
+
+dt.play(new Animation(a, {transform: "translate(100px)"}, timing));
+dt.play(new Animation(b, {transform: "translate(100px)"}, timing));
+dt.play(new Animation(c, {transform: "translate(100px)"}, timing));
+dt.play(new Animation(d, {transform: "translate(100px) rotate(45deg)"}, timing));
 dt.play(new Animation(e,
-    {transform: "translate(100px) rotate(20deg) scale(0.5)"}, 2));
+    {transform: "translate(100px) rotate(20deg) scale(0.5)"}, timing));
 </script>
