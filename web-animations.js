@@ -1902,6 +1902,7 @@ var MotionPathEffect = function(path, autoRotate, preTransform, composite,
     this.autoRotate = isDefined(autoRotate) ? autoRotate : 'none';
     this.preTransform = isDefined(preTransform) ? transformType.fromCssValue(preTransform) : [];
     this._path = document.createElementNS(SVG_NS, 'path');
+    if (path instanceof SVGPathSegList) {
       this.segments = path;
     } else {
       var tempPath = document.createElementNS(SVG_NS, 'path');
