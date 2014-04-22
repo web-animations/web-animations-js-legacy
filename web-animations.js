@@ -694,7 +694,7 @@ AnimationPlayer.prototype = {
     if (this._needsLegacyHandlerPass) {
       var timeDelta = this._unlimitedCurrentTime - this._lastCurrentTime;
       if (timeDelta > 0) {
-        this.source._generateEvents(
+        this.source._generateLegacyEvents(
             this._lastCurrentTime, this._unlimitedCurrentTime,
             this.timeline.currentTime, 1);
       }
@@ -1098,7 +1098,7 @@ TimedItem.prototype = {
         hasEventHandlersForEvent(this, 'end') ||
         hasEventHandlersForEvent(this, 'cancel');
   },
-  _generateChildEventsForRange: function() { },
+  _generateChildLegacyEventsForRange: function() { },
   _toSubRanges: function(fromTime, toTime, iterationTimes) {
     if (fromTime > toTime) {
       var revRanges = this._toSubRanges(toTime, fromTime, iterationTimes);
@@ -1128,7 +1128,7 @@ TimedItem.prototype = {
     ranges.push([currentStart, toTime]);
     return {start: skipped, delta: 1, ranges: ranges};
   },
-  _generateEvents: function(fromTime, toTime, globalTime, deltaScale) {
+  _generateLegacyEvents: function(fromTime, toTime, globalTime, deltaScale) {
     function toGlobal(time) {
       return (globalTime - (toTime - (time / deltaScale)));
     }
@@ -1196,7 +1196,7 @@ TimedItem.prototype = {
         iterFraction = 1 -
             (this.timing.iterationStart + this.timing.iterations) % 1;
       }
-      this._generateChildEventsForRange(
+      this._generateChildLegacyEventsForRange(
           subranges.ranges[i][0], subranges.ranges[i][1],
           fromTime, toTime, currentIter - iterFraction,
           globalTime, deltaScale * this.timing.playbackRate);
@@ -1636,7 +1636,7 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
             function(a, b) { return a || b._hasLegacyEventHandlers(); },
             false));
   },
-  _generateChildEventsForRange: function(localStart, localEnd, rangeStart,
+  _generateChildLegacyEventsForRange: function(localStart, localEnd, rangeStart,
       rangeEnd, iteration, globalTime, deltaScale) {
     var start;
     var end;
@@ -1660,7 +1660,7 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
     end -= iteration * this.duration / deltaScale;
 
     for (var i = 0; i < this._children.length; i++) {
-      this._children[i]._generateEvents(
+      this._children[i]._generateLegacyEvents(
           start, end, globalTime - endDelta, deltaScale);
     }
   }
