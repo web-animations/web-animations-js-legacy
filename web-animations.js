@@ -93,21 +93,22 @@ var abstractMethod = function() {
   throw 'Abstract method not implemented.';
 };
 
-var deprecated = function(name, deprecationDate, advice) {
+var deprecated = function(name, deprecationDate, advice, plural) {
   if (deprecationsSilenced[name]) {
     return;
   }
+  var auxVerb = plural ? 'are' : 'is';
   var today = new Date();
   var cutoffDate = new Date(deprecationDate);
   cutoffDate.setMonth(cutoffDate.getMonth() + 3); // 3 months grace period
 
   if (today < cutoffDate) {
     console.warn('Web Animations: ' + name +
-        ' is deprecated and will stop working on ' +
+        ' ' + auxVerb + ' deprecated and will stop working on ' +
         cutoffDate.toDateString() + '. ' + advice);
     deprecationsSilenced[name] = true;
   } else {
-    throw new Error(name + ' is no longer supported. ' + advice);
+    throw new Error(name + ' ' + auxVerb + ' no longer supported. ' + advice);
   }
 };
 
@@ -976,6 +977,7 @@ TimedItem.prototype = {
     return this._getOnHandler('cancel');
   },
   _setOnHandler: function(type, func) {
+    this._deprecatedTimedItemEvents();
     if (typeof func === 'function') {
       this._onHandlers[type] = {
         callback: func,
@@ -992,12 +994,18 @@ TimedItem.prototype = {
     }
   },
   _getOnHandler: function(type) {
+    this._deprecatedTimedItemEvents();
     if (isDefinedAndNotNull(this._onHandlers[type])) {
       return this._onHandlers[type].func;
     }
     return null;
   },
+  _deprecatedTimedItemEvents: function() {
+    deprecated('TimedItem events', '2014-04-22',
+        'Please use the AnimationPlayer finish event instead.', true);
+  },
   addEventListener: function(type, func) {
+    this._deprecatedTimedItemEvents();
     if (typeof func !== 'function' || !(type === 'start' ||
         type === 'iteration' || type === 'end' || type === 'cancel')) {
       return;
