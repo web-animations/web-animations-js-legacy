@@ -1,5 +1,5 @@
 timing_test(function() {
-  at(0, function() {
+  at(0 * 1000, function() {
     assert_styles(".anim", [
       {'transform':'none'},
       {'transform':'matrix(0.5, 0, 0, 0.5, 0, 0)'},
@@ -8,7 +8,7 @@ timing_test(function() {
       {'transform':'matrix(1.4142, 1.4142, -1.4142, 1.4142, 141.4214, 141.4214)'},
     ]);
   });
-  at(0.4, function() {
+  at(0.4 * 1000, function() {
     assert_styles(".anim", [
       {'transform':'matrix(1, 0, 0, 1, 20, 0)'},
       {'transform':'matrix(0.6, 0, 0, 0.6, 20, 0)'},
@@ -17,7 +17,7 @@ timing_test(function() {
       {'transform':'matrix(1.3023, 1.0927, -1.0927, 1.3023, 133.1371, 113.1371)'},
     ]);
   });
-  at(0.8, function() {
+  at(0.8 * 1000, function() {
     assert_styles(".anim", [
       {'transform':'matrix(1, 0, 0, 1, 40, 0)'},
       {'transform':'matrix(0.7, 0, 0, 0.7, 40, 0)'},
@@ -26,7 +26,7 @@ timing_test(function() {
       {'transform':'matrix(1.1468, 0.803, -0.803, 1.1468, 124.8528, 84.8528)'},
     ]);
   });
-  at(1.2000000000000002, function() {
+  at(1.2000000000000002 * 1000, function() {
     assert_styles(".anim", [
       {'transform':'matrix(1, 0, 0, 1, 60, 0)'},
       {'transform':'matrix(0.8, 0, 0, 0.8, 60, 0)'},
@@ -35,7 +35,7 @@ timing_test(function() {
       {'transform':'matrix(0.9526, 0.55, -0.55, 0.9526, 116.5685, 56.5685)'},
     ]);
   });
-  at(1.6, function() {
+  at(1.6 * 1000, function() {
     assert_styles(".anim", [
       {'transform':'matrix(1, 0, 0, 1, 80, 0)'},
       {'transform':'matrix(0.9, 0, 0, 0.9, 80, 0)'},
@@ -44,7 +44,7 @@ timing_test(function() {
       {'transform':'matrix(0.725, 0.3381, -0.3381, 0.725, 108.2843, 28.2843)'},
     ]);
   });
-  at(2, function() {
+  at(2 * 1000, function() {
     assert_styles(".anim", [
       {'transform':'matrix(1, 0, 0, 1, 100, 0)'},
       {'transform':'matrix(1, 0, 0, 1, 100, 0)'},

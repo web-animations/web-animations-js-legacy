@@ -107,7 +107,7 @@ directions.forEach(function (direction) {
     var dur0 = document.querySelector('.dir-' + direction + ' .fill-' + fill);
     var dur1 = dur0.cloneNode(true);
     dur0.parentElement.insertBefore(dur1, dur0);
-    testCase(dur1, direction, fill, 1);
+    testCase(dur1, direction, fill, 1000);
     testCase(dur0, direction, fill, 0);
   });
 });

@@ -79,7 +79,7 @@ var e = document.querySelector("#e")
 
 var dt = document.timeline;
 
-var timing = {duration: 2, fill: 'forwards'};
+var timing = {duration: 2 * 1000, fill: 'forwards'};
 
 dt.play(new Animation(a, {transform: "translate(100px)"}, timing));
 dt.play(new Animation(b, {transform: "translate(100px)"}, timing));

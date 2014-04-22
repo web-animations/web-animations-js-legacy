@@ -65,18 +65,18 @@ limitations under the License.
 
 var effect = [{left: "100px"}, {left: "200px"}];
 
-var a1 = new Animation(document.querySelector("#a"), effect, {duration: 2.6, fill: "forwards"});
-var a2 = new Animation(document.querySelector("#b"), effect, {duration: 2.5, fill: "forwards"});
-var a3 = new Animation(document.querySelector("#c"), effect, {duration: 2.5, fill: "forwards"});
-var a4 = new Animation(document.querySelector("#d"), effect, {duration: 2.3, fill: "forwards"});
+var a1 = new Animation(document.querySelector("#a"), effect, {duration: 2.6 * 1000, fill: "forwards"});
+var a2 = new Animation(document.querySelector("#b"), effect, {duration: 2.5 * 1000, fill: "forwards"});
+var a3 = new Animation(document.querySelector("#c"), effect, {duration: 2.5 * 1000, fill: "forwards"});
+var a4 = new Animation(document.querySelector("#d"), effect, {duration: 2.3 * 1000, fill: "forwards"});
 var pgroup1 = new AnimationGroup([a1, a2], {name: "p1", fill: "forwards"});
 var pgroup2 = new AnimationGroup([a3, a4], {name: "p2", fill: "forwards"});
 var player = document.timeline.play(
     new AnimationSequence([pgroup1, pgroup2], {name: "s", fill: "forwards"}));
 
-at(1.0, function() { player.pause(); });
-at(2.0, function() { player.play(); });
-at(4.0, function() { player.pause(); });
-at(5.0, function() { player.play(); });
+at(1.0 * 1000, function() { player.pause(); });
+at(2.0 * 1000, function() { player.play(); });
+at(4.0 * 1000, function() { player.pause(); });
+at(5.0 * 1000, function() { player.play(); });
 
 </script>

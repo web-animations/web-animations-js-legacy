@@ -61,29 +61,29 @@ word word word word</pre>
 var expected_failures = [
   {
     browser_configurations: [{ firefox: true }],
-    tests: ['#background at t=0ms'],
+    tests: ['#background at t=0000ms'],
     message: 'rgb(0, 0, 0) gets converted to transparent in Firefox.',
   }, {
     browser_configurations: [{ firefox: true }],
-    tests: ['#background at t=1ms'],
+    tests: ['#background at t=1000ms'],
     message: 'FIXME: Transparency is wrong.',
   }, {
     browser_configurations: [{ firefox: true }],
-    tests: ['#border at t=2ms'],
+    tests: ['#border at t=2000ms'],
     message: 'FIXME: Border is wrong.',
   }, {
     browser_configurations: [{ msie: true }],
-    tests: ['#transform at t=0ms'],
+    tests: ['#transform at t=0000ms'],
     message: 'none in IE.',
   }, {
     browser_configurations: [{ msie: true }],
-    tests: ['#transform at t=1ms'],
+    tests: ['#transform at t=1000ms'],
     message: 'Very small value floating point issue.',
   }, {
     browser_configurations: [{ msie: true }],
     tests: [
       '#(background|border) at t=(1|2)ms',
-      '#text at t=0ms',
+      '#text at t=0000ms',
       '#(text|outline) at t=(1|2)ms',
     ],
     message: 'IE returns rbga values.',
@@ -101,7 +101,7 @@ var expected_failures = [
 <script>
 "use strict";
 
-var timing = {duration: 2, fill: 'forwards'};
+var timing = {duration: 2 * 1000, fill: 'forwards'};
 
 document.timeline.play(new Animation(document.querySelector('#allToInitial'), [{
   backgroundColor: 'initial',

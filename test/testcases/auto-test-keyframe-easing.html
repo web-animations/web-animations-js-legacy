@@ -43,7 +43,7 @@ var easings = [
 ];
 
 var keyframeHeight = 50;
-var timing = {duration: easings.length, fill: 'forwards'};
+var timing = {duration: easings.length * 1000, fill: 'forwards'};
 
 control.animate({height: easings.length * keyframeHeight + 'px'}, timing);
 

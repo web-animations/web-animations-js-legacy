@@ -74,7 +74,7 @@ var perspectiveOrignTestCases = [
 ];
 perspectiveOrignTestCases.forEach(function(testCase) {
   var test = createBoxedItem('test', testCase);
-  test.animate({perspectiveOrigin: testCase}, {duration: 2, fill: 'forwards'});
+  test.animate({perspectiveOrigin: testCase}, {duration: 2 * 1000, fill: 'forwards'});
   testContainer.appendChild(test);
 
   var expectation = createBoxedItem('expectation', testCase);
