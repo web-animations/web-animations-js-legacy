@@ -1,16 +1,16 @@
 timing_test(function() {
   at(0 * 1000, function() {
     assert_styles("#anim1", {'transform':'matrix(0.7071067811865476, 0.7071067811865475, -0.7071067811865475, 0.7071067811865476, 87.5, 87.5)'});
-  }, "Check #anim1 at t=0000ms");
+  }, "Check #anim1 at t=0ms");
   at(0 * 1000, function() {
     assert_styles("#anim2", {'transform':'matrix(0.9701425001453319, 0.24253562503633294, -0.24253562503633294, 0.9701425001453319, 387.5, 87.5)'});
-  }, "Check #anim2 at t=0000ms");
+  }, "Check #anim2 at t=0ms");
   at(0 * 1000, function() {
     assert_styles("#anim3", {'transform':'matrix(0.315770091409682, 0.9488357336078364, -0.9488357336078364, 0.315770091409682, 87.5, 287.5)'});
-  }, "Check #anim3 at t=0000ms");
+  }, "Check #anim3 at t=0ms");
   at(0 * 1000, function() {
     assert_styles("#anim4", {'transform':'matrix(0.7992672511833444, 0.6009757575691558, -0.6009757575691558, 0.7992672511833444, 387.5, 287.5)'});
-  }, "Check #anim4 at t=0000ms");
+  }, "Check #anim4 at t=0ms");
   at(1 * 1000, function() {
     assert_styles("#anim1", {'transform':'matrix(0.9579312613870519, 0.28699773249524424, -0.28699773249524424, 0.9579312613870519, 101.79008483886719, 131.62628173828125)'});
   }, "Check #anim1 at t=1000ms");
