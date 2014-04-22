@@ -61,7 +61,7 @@ word word word word</pre>
 var expected_failures = [
   {
     browser_configurations: [{ firefox: true }],
-    tests: ['#background at t=0000ms'],
+    tests: ['#background at t=0ms'],
     message: 'rgb(0, 0, 0) gets converted to transparent in Firefox.',
   }, {
     browser_configurations: [{ firefox: true }],
@@ -73,7 +73,7 @@ var expected_failures = [
     message: 'FIXME: Border is wrong.',
   }, {
     browser_configurations: [{ msie: true }],
-    tests: ['#transform at t=0000ms'],
+    tests: ['#transform at t=0ms'],
     message: 'none in IE.',
   }, {
     browser_configurations: [{ msie: true }],
@@ -82,9 +82,9 @@ var expected_failures = [
   }, {
     browser_configurations: [{ msie: true }],
     tests: [
-      '#(background|border) at t=(1|2)ms',
+      '#(background|border) at t=(1|2)000ms',
       '#text at t=0000ms',
-      '#(text|outline) at t=(1|2)ms',
+      '#(text|outline) at t=(1|2)000ms',
     ],
     message: 'IE returns rbga values.',
   }, {
