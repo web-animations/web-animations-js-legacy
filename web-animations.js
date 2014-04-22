@@ -328,11 +328,11 @@ var addEventHandler = function(eventTarget, type, handler) {
   }
   eventTarget._handlers[type].push(handler);
 };
-var removeEventHandler = function(eventTarget, type, func) {
+var removeEventHandler = function(eventTarget, type, handler) {
   if (!eventTarget._handlers[type]) {
     return;
   }
-  var index = eventTarget._handlers[type].indexOf(func);
+  var index = eventTarget._handlers[type].indexOf(handler);
   if (index === -1) {
     return;
   }
@@ -364,6 +364,28 @@ var callEventHandlers = function(eventTarget, type, event) {
     }
   }, 0);
 };
+var createEventPrototype = function() {
+  var prototype = Object.create(window.Event.prototype, {
+    type: { get: function() { return this._type; } },
+    target: { get: function() { return this._target; } },
+    currentTarget: { get: function() { return this._target; } },
+    eventPhase: { get: function() { return this._eventPhase; } },
+    bubbles: { get: function() { return false; } },
+    cancelable: { get: function() { return false; } },
+    timeStamp: { get: function() { return this._timeStamp; } },
+    defaultPrevented: { get: function() { return false; } }
+  });
+  prototype._type = '';
+  prototype._target = null;
+  prototype._eventPhase = Event.NONE;
+  prototype._timeStamp = 0;
+  prototype._initialize = function(target) {
+    this._target = target;
+    this._eventPhase = Event.AT_TARGET;
+    this._timeStamp = cachedClockTime();
+  };
+  return prototype;
+};
 
 
 
@@ -387,8 +409,10 @@ var AnimationPlayer = function(token, source, timeline) {
     this._hasTicked = false;
 
     this.source = source;
-    this._checkForHandlers();
+    this._checkForLegacyHandlers();
     this._lastCurrentTime = undefined;
+    this._finishedFlag = false;
+    initializeEventTarget(this);
 
     playersAreSorted = false;
     maybeRestartAnimation();
@@ -413,7 +437,7 @@ AnimationPlayer.prototype = {
         this._update();
         maybeRestartAnimation();
       }
-      this._checkForHandlers();
+      this._checkForLegacyHandlers();
     } finally {
       exitModifyCurrentAnimationState(repeatLastTick);
     }
@@ -546,8 +570,11 @@ AnimationPlayer.prototype = {
     return this._playbackRate;
   },
   get finished() {
-    return this.source &&
-        ((this.playbackRate > 0 && this.currentTime >= this.source.endTime) ||
+    return this._isLimited;
+  },
+  get _isLimited() {
+    var sourceEnd = this.source ? this.source.endTime : 0;
+    return ((this.playbackRate > 0 && this.currentTime >= sourceEnd) ||
         (this.playbackRate < 0 && this.currentTime <= 0));
   },
   cancel: function() {
@@ -630,19 +657,41 @@ AnimationPlayer.prototype = {
       this.source._getAnimationsTargetingElement(element, animations);
     }
   },
-  _handlerAdded: function() {
-    this._needsHandlerPass = true;
+  set onfinish(handler) {
+    return setOnEventHandler(this, 'finish', handler);
   },
-  _checkForHandlers: function() {
-    this._needsHandlerPass = this.source !== null &&
-        this.source._hasEventHandlers();
+  get onfinish() {
+    return getOnEventHandler(this, 'finish');
+  },
+  addEventListener: function(type, handler) {
+    if (type === 'finish') {
+      addEventHandler(this, type, handler);
+    }
+  },
+  removeEventListener: function(type, handler) {
+    if (type === 'finish') {
+      removeEventHandler(this, type, handler);
+    }
   },
   _generateEvents: function() {
+    if (!this._finishedFlag && this.finished &&
+        hasEventHandlersForEvent(this, 'finish')) {
+      var event = new AnimationPlayerEvent('finish', {
+        currentTime: this.currentTime,
+        timelineTime: this.timeline.currentTime
+      });
+      event._initialize(this.target);
+      callEventHandlers(this, 'finish', event);
+    }
+    this._finishedFlag = this.finished;
+
+    // The following code is for deprecated TimedItem event handling and should
+    // be removed once we stop supporting it.
     if (!isDefinedAndNotNull(this._lastCurrentTime)) {
       this._lastCurrentTime = 0;
     }
 
-    if (this._needsHandlerPass) {
+    if (this._needsLegacyHandlerPass) {
       var timeDelta = this._unlimitedCurrentTime - this._lastCurrentTime;
       if (timeDelta > 0) {
         this.source._generateEvents(
@@ -652,6 +701,15 @@ AnimationPlayer.prototype = {
     }
 
     this._lastCurrentTime = this._unlimitedCurrentTime;
+  },
+  // These two legacy methods are for deprecated TimedItem event handling and
+  // should be removed once we stop supporting it.
+  _legacyHandlerAdded: function() {
+    this._needsLegacyHandlerPass = true;
+  },
+  _checkForLegacyHandlers: function() {
+    this._needsLegacyHandlerPass = this.source !== null &&
+        this.source._hasLegacyEventHandlers();
   },
   _registerOnTimeline: function() {
     if (!this._registeredOnTimeline) {
@@ -664,6 +722,17 @@ AnimationPlayer.prototype = {
     this._registeredOnTimeline = false;
   }
 };
+
+
+
+/** @constructor */
+var AnimationPlayerEvent = function(type, eventInit) {
+  this._type = type;
+  this.currentTime = eventInit.currentTime;
+  this.timelineTime = eventInit.timelineTime;
+};
+
+AnimationPlayerEvent.prototype = createEventPrototype();
 
 
 
@@ -1023,7 +1092,7 @@ TimedItem.prototype = {
   _hasFutureEffect: function() {
     return this._isCurrent() || this._fill !== 'none';
   },
-  _hasEventHandlers: function() {
+  _hasLegacyEventHandlers: function() {
     return hasEventHandlersForEvent(this, 'start') ||
         hasEventHandlersForEvent(this, 'iteration') ||
         hasEventHandlersForEvent(this, 'end') ||
@@ -1170,9 +1239,9 @@ var deprecatedTimedItemEvents = function() {
         setOnEventHandler(this, eventName, handler);
         if (this.player) {
           if (typeof func === 'function') {
-            this.player._handlerAdded();
+            this.player._legacyHandlerAdded();
           } else {
-            this.player._checkForHandlers();
+            this.player._checkForLegacyHandlers();
           }
         }
       });
@@ -1188,7 +1257,7 @@ defineDeprecatedProperty(TimedItem.prototype, 'addEventListener', function() {
     }
     addEventHandler(this, type, handler);
     if (this.player) {
-      this.player._handlerAdded();
+      this.player._legacyHandlerAdded();
     }
   }
 });
@@ -1198,7 +1267,7 @@ defineDeprecatedProperty(TimedItem.prototype, 'removeEventListener',
       return function(type, handler) {
         removeEventHandler(this, type, handler);
         if (this.player) {
-          this.player._checkForHandlers();
+          this.player._checkForLegacyHandlers();
         }
       }
     });
@@ -1208,7 +1277,7 @@ var TimingEvent = function(
   if (token !== constructorToken) {
     throw new TypeError('Illegal constructor');
   }
-  this._target = target;
+  this._initialize(target);
   this._type = type;
   this.localTime = localTime;
   this.timelineTime = timelineTime;
@@ -1216,38 +1285,7 @@ var TimingEvent = function(
   this.seeked = seeked ? true : false;
 };
 
-TimingEvent.prototype = Object.create(window.Event.prototype, {
-  target: {
-    get: function() {
-      return this._target;
-    }
-  },
-  cancelable: {
-    get: function() {
-      return false;
-    }
-  },
-  cancelBubble: {
-    get: function() {
-      return false;
-    }
-  },
-  defaultPrevented: {
-    get: function() {
-      return false;
-    }
-  },
-  eventPhase: {
-    get: function() {
-      return 0;
-    }
-  },
-  type: {
-    get: function() {
-      return this._type;
-    }
-  }
-});
+TimingEvent.prototype = createEventPrototype();
 
 var isEffectCallback = function(animationEffect) {
   return typeof animationEffect === 'function';
@@ -1437,7 +1475,7 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
     this._updateChildStartTimes();
 
     if (this.player) {
-      this.player._checkForHandlers();
+      this.player._checkForLegacyHandlers();
     }
 
     this._isInChildrenStateModified = false;
@@ -1591,11 +1629,11 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
         this.localTime + ') ' + ' [' +
         this._children.map(function(a) { return a.toString(); }) + ']';
   },
-  _hasEventHandlers: function() {
-    return TimedItem.prototype._hasEventHandlers.call(this) || (
+  _hasLegacyEventHandlers: function() {
+    return TimedItem.prototype._hasLegacyEventHandlers.call(this) || (
         this._children.length > 0 &&
         this._children.reduce(
-            function(a, b) { return a || b._hasEventHandlers(); },
+            function(a, b) { return a || b._hasLegacyEventHandlers(); },
             false));
   },
   _generateChildEventsForRange: function(localStart, localEnd, rangeStart,
