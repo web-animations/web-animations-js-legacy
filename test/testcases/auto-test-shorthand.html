@@ -46,17 +46,17 @@ p {
 var expected_failures = [
   {
     browser_configurations: [{ firefox: true }],
-    tests: ['#font at t=(0|0.5|1|1.5|2)s'],
+    tests: ['#font at t=(0|0.5|1|1.5|2)ms'],
     message: 'Floating point issues.',
   }, {
     browser_configurations: [{ firefox: true }],
-    tests: ['#background at t=(0|0.5|1|1.5|2)s'],
+    tests: ['#background at t=(0|0.5|1|1.5|2)ms'],
     message: 'Setting background to "auto" gets back "auto auto".',
   }, {
     browser_configurations: [{ msie: true }],
     tests: [
-      '#((?!(borderWidth|borderRadius|margin|padding)).*) at t=(0|0.5|1|1.5|2)s',
-      '#borderWidth at t=(0.5|1|1.5)s',
+      '#((?!(borderWidth|borderRadius|margin|padding)).*) at t=(0|0.5|1|1.5|2)ms',
+      '#borderWidth at t=(0.5|1|1.5)ms',
     ],
     message: 'IE returns rgba.',
   }, {

@@ -61,30 +61,30 @@ word word word word</pre>
 var expected_failures = [
   {
     browser_configurations: [{ firefox: true }],
-    tests: ['#background at t=0s'],
+    tests: ['#background at t=0ms'],
     message: 'rgb(0, 0, 0) gets converted to transparent in Firefox.',
   }, {
     browser_configurations: [{ firefox: true }],
-    tests: ['#background at t=1s'],
+    tests: ['#background at t=1ms'],
     message: 'FIXME: Transparency is wrong.',
   }, {
     browser_configurations: [{ firefox: true }],
-    tests: ['#border at t=2s'],
+    tests: ['#border at t=2ms'],
     message: 'FIXME: Border is wrong.',
   }, {
     browser_configurations: [{ msie: true }],
-    tests: ['#transform at t=0s'],
+    tests: ['#transform at t=0ms'],
     message: 'none in IE.',
   }, {
     browser_configurations: [{ msie: true }],
-    tests: ['#transform at t=1s'],
+    tests: ['#transform at t=1ms'],
     message: 'Very small value floating point issue.',
   }, {
     browser_configurations: [{ msie: true }],
     tests: [
-      '#(background|border) at t=(1|2)s',
-      '#text at t=0s',
-      '#(text|outline) at t=(1|2)s',
+      '#(background|border) at t=(1|2)ms',
+      '#text at t=0ms',
+      '#(text|outline) at t=(1|2)ms',
     ],
     message: 'IE returns rbga values.',
   }, {
@@ -92,7 +92,7 @@ var expected_failures = [
       { chrome: true, version: '30|31' },
       { firefox: true },
     ],
-    tests: ['#text at t=(0|1)s'],
+    tests: ['#text at t=(0|1)ms'],
     message: 'Different initial font-size.',
   }
 ];

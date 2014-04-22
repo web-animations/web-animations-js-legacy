@@ -103,7 +103,7 @@ timing_test(function() {
       {'transform':'matrix(0.7386, 0.1302, -0.1302, 0.7386, 100, 0)'},
     ]);
   });
-  // This check is equivalent to checking at t=1s, it is placed all the way out here to allow manual viewing
+  // This check is equivalent to checking at t=1s, it ims placed all the way out here to allow manual viewing
   // to inspect multiple cycles of the animation at a time. The animation stops after all checks have completed.
   at(100001, function() {
     assert_styles(".test", [
