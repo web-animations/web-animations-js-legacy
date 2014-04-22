@@ -112,6 +112,17 @@ var deprecated = function(name, deprecationDate, advice, plural) {
   }
 };
 
+var defineDeprecatedProperty = function(object, property, getFunc, setFunc) {
+  var descriptor = {
+    get: getFunc,
+    configurable: true
+  };
+  if (setFunc) {
+    descriptor.set = setFunc;
+  }
+  Object.defineProperty(object, property, descriptor);
+};
+
 var IndexSizeError = function(message) {
   Error.call(this);
   this.name = 'IndexSizeError';
@@ -605,15 +616,6 @@ var TimedItem = function(token, timingInput) {
   this._handlers = {};
   this._onHandlers = {};
   this._fill = this._resolveFillMode(this.timing.fill);
-
-  // specified is deprecated
-  Object.defineProperty(this, 'specified', {
-    get: function() {
-      deprecated('specified', '2014-04-16', 'Please use timing instead.');
-      return this.timing;
-    },
-    configurable: true
-  });
 };
 
 TimedItem.prototype = {
@@ -952,32 +954,7 @@ TimedItem.prototype = {
   _hasFutureEffect: function() {
     return this._isCurrent() || this._fill !== 'none';
   },
-  set onstart(func) {
-    this._setOnHandler('start', func);
-  },
-  get onstart() {
-    return this._getOnHandler('start');
-  },
-  set oniteration(func) {
-    this._setOnHandler('iteration', func);
-  },
-  get oniteration() {
-    return this._getOnHandler('iteration');
-  },
-  set onend(func) {
-    this._setOnHandler('end', func);
-  },
-  get onend() {
-    return this._getOnHandler('end');
-  },
-  set oncancel(func) {
-    this._setOnHandler('cancel', func);
-  },
-  get oncancel() {
-    return this._getOnHandler('cancel');
-  },
   _setOnHandler: function(type, func) {
-    this._deprecatedTimedItemEvents();
     if (typeof func === 'function') {
       this._onHandlers[type] = {
         callback: func,
@@ -994,48 +971,10 @@ TimedItem.prototype = {
     }
   },
   _getOnHandler: function(type) {
-    this._deprecatedTimedItemEvents();
     if (isDefinedAndNotNull(this._onHandlers[type])) {
       return this._onHandlers[type].func;
     }
     return null;
-  },
-  _deprecatedTimedItemEvents: function() {
-    deprecated('TimedItem events', '2014-04-22',
-        'Please use the AnimationPlayer finish event instead.', true);
-  },
-  addEventListener: function(type, func) {
-    this._deprecatedTimedItemEvents();
-    if (typeof func !== 'function' || !(type === 'start' ||
-        type === 'iteration' || type === 'end' || type === 'cancel')) {
-      return;
-    }
-    if (!isDefinedAndNotNull(this._handlers[type])) {
-      this._handlers[type] = [];
-    } else if (this._handlers[type].indexOf(func) !== -1) {
-      return;
-    }
-    this._handlers[type].push(func);
-    if (this.player) {
-      this.player._handlerAdded();
-    }
-  },
-  removeEventListener: function(type, func) {
-    if (!this._handlers[type]) {
-      return;
-    }
-    var index = this._handlers[type].indexOf(func);
-    if (index === -1) {
-      return;
-    }
-    this._handlers[type].splice(index, 1);
-    if (isDefinedAndNotNull(this._onHandlers[type]) &&
-        (index < this._onHandlers[type].index)) {
-      this._onHandlers[type].index -= 1;
-    }
-    if (this.player) {
-      this.player._checkForHandlers();
-    }
   },
   _hasHandlers: function() {
     return this._hasHandlersForEvent('start') ||
@@ -1188,6 +1127,65 @@ TimedItem.prototype = {
     }
   }
 };
+
+defineDeprecatedProperty(TimedItem.prototype, 'specified', function() {
+  deprecated('specified', '2014-04-16', 'Please use timing instead.');
+  return this.timing;
+});
+var deprecatedTimedItemEvents = function() {
+  deprecated('TimedItem events', '2014-04-22',
+      'Please use the AnimationPlayer finish event instead.', true);
+};
+['start', 'iteration', 'end', 'cancel'].forEach(function(eventName) {
+  defineDeprecatedProperty(TimedItem.prototype, 'on' + eventName,
+      function() {
+        deprecatedTimedItemEvents();
+        return this._getOnHandler(eventName);
+      },
+      function(handler) {
+        deprecatedTimedItemEvents();
+        this._setOnHandler(eventName, handler);
+      });
+});
+defineDeprecatedProperty(TimedItem.prototype, 'addEventListener', function() {
+  deprecatedTimedItemEvents();
+  return function(type, func) {
+    if (typeof func !== 'function' || !(type === 'start' ||
+        type === 'iteration' || type === 'end' || type === 'cancel')) {
+      return;
+    }
+    if (!isDefinedAndNotNull(this._handlers[type])) {
+      this._handlers[type] = [];
+    } else if (this._handlers[type].indexOf(func) !== -1) {
+      return;
+    }
+    this._handlers[type].push(func);
+    if (this.player) {
+      this.player._handlerAdded();
+    }
+  }
+});
+defineDeprecatedProperty(TimedItem.prototype, 'removeEventListener',
+    function() {
+      deprecatedTimedItemEvents();
+      return function(type, func) {
+        if (!this._handlers[type]) {
+          return;
+        }
+        var index = this._handlers[type].indexOf(func);
+        if (index === -1) {
+          return;
+        }
+        this._handlers[type].splice(index, 1);
+        if (isDefinedAndNotNull(this._onHandlers[type]) &&
+            (index < this._onHandlers[type].index)) {
+          this._onHandlers[type].index -= 1;
+        }
+        if (this.player) {
+          this.player._checkForHandlers();
+        }
+      }
+    });
 
 var TimingEvent = function(
     token, target, type, localTime, timelineTime, iterationIndex, seeked) {
@@ -5633,14 +5631,10 @@ window._WebAnimationsTestingUtilities = {
   _prefixProperty: prefixProperty
 };
 
-// Timeline is deprecated
-Object.defineProperty(window, 'Timeline', {
-  get: function() {
-    deprecated('Timeline', '2014-04-08',
-        'Please use AnimationTimeline instead.');
-    return AnimationTimeline;
-  },
-  configurable: true
+defineDeprecatedProperty(window, 'Timeline', function() {
+  deprecated('Timeline', '2014-04-08',
+      'Please use AnimationTimeline instead.');
+  return AnimationTimeline;
 });
 
 })();
