@@ -296,6 +296,75 @@ var PLAYERS = [];
 var playersAreSorted = false;
 var playerSequenceNumber = 0;
 
+// Methods for event target objects.
+var initializeEventTarget = function(eventTarget) {
+  eventTarget._handlers = {};
+  eventTarget._onHandlers = {};
+};
+var setOnEventHandler = function(eventTarget, type, handler) {
+  if (typeof handler === 'function') {
+    eventTarget._onHandlers[type] = {
+      callback: handler,
+      index: (eventTarget._handlers[type] || []).length
+    };
+  } else {
+    eventTarget._onHandlers[type] = null;
+  }
+};
+var getOnEventHandler = function(eventTarget, type) {
+  if (isDefinedAndNotNull(eventTarget._onHandlers[type])) {
+    return eventTarget._onHandlers[type].callback;
+  }
+  return null;
+};
+var addEventHandler = function(eventTarget, type, handler) {
+  if (typeof handler !== 'function') {
+    return;
+  }
+  if (!isDefinedAndNotNull(eventTarget._handlers[type])) {
+    eventTarget._handlers[type] = [];
+  } else if (eventTarget._handlers[type].indexOf(handler) !== -1) {
+    return;
+  }
+  eventTarget._handlers[type].push(handler);
+};
+var removeEventHandler = function(eventTarget, type, func) {
+  if (!eventTarget._handlers[type]) {
+    return;
+  }
+  var index = eventTarget._handlers[type].indexOf(func);
+  if (index === -1) {
+    return;
+  }
+  eventTarget._handlers[type].splice(index, 1);
+  if (isDefinedAndNotNull(eventTarget._onHandlers[type]) &&
+      (index < eventTarget._onHandlers[type].index)) {
+    eventTarget._onHandlers[type].index -= 1;
+  }
+};
+var hasEventHandlersForEvent = function(eventTarget, type) {
+  return (isDefinedAndNotNull(eventTarget._handlers[type]) &&
+      eventTarget._handlers[type].length > 0) ||
+      isDefinedAndNotNull(eventTarget._onHandlers[type]);
+};
+var callEventHandlers = function(eventTarget, type, event) {
+  var callbackList;
+  if (isDefinedAndNotNull(eventTarget._handlers[type])) {
+    callbackList = eventTarget._handlers[type].slice();
+  } else {
+    callbackList = [];
+  }
+  if (isDefinedAndNotNull(eventTarget._onHandlers[type])) {
+    callbackList.splice(eventTarget._onHandlers[type].index, 0,
+        eventTarget._onHandlers[type].callback);
+  }
+  setTimeout(function() {
+    for (var i = 0; i < callbackList.length; i++) {
+      callbackList[i].call(eventTarget, event);
+    }
+  }, 0);
+};
+
 
 
 /** @constructor */
@@ -565,7 +634,8 @@ AnimationPlayer.prototype = {
     this._needsHandlerPass = true;
   },
   _checkForHandlers: function() {
-    this._needsHandlerPass = this.source !== null && this.source._hasHandlers();
+    this._needsHandlerPass = this.source !== null &&
+        this.source._hasEventHandlers();
   },
   _generateEvents: function() {
     if (!isDefinedAndNotNull(this._lastCurrentTime)) {
@@ -613,9 +683,8 @@ var TimedItem = function(token, timingInput) {
   this._player = null;
   this._parent = null;
   this._updateInternalState();
-  this._handlers = {};
-  this._onHandlers = {};
   this._fill = this._resolveFillMode(this.timing.fill);
+  initializeEventTarget(this);
 };
 
 TimedItem.prototype = {
@@ -954,54 +1023,11 @@ TimedItem.prototype = {
   _hasFutureEffect: function() {
     return this._isCurrent() || this._fill !== 'none';
   },
-  _setOnHandler: function(type, func) {
-    if (typeof func === 'function') {
-      this._onHandlers[type] = {
-        callback: func,
-        index: (this._handlers[type] || []).length
-      };
-      if (this.player) {
-        this.player._handlerAdded();
-      }
-    } else {
-      this._onHandlers[type] = null;
-      if (this.player) {
-        this.player._checkForHandlers();
-      }
-    }
-  },
-  _getOnHandler: function(type) {
-    if (isDefinedAndNotNull(this._onHandlers[type])) {
-      return this._onHandlers[type].func;
-    }
-    return null;
-  },
-  _hasHandlers: function() {
-    return this._hasHandlersForEvent('start') ||
-        this._hasHandlersForEvent('iteration') ||
-        this._hasHandlersForEvent('end') || this._hasHandlersForEvent('cancel');
-  },
-  _hasHandlersForEvent: function(type) {
-    return (isDefinedAndNotNull(this._handlers[type]) &&
-        this._handlers[type].length > 0) ||
-        isDefinedAndNotNull(this._onHandlers[type]);
-  },
-  _callHandlers: function(type, event) {
-    var callbackList;
-    if (isDefinedAndNotNull(this._handlers[type])) {
-      callbackList = this._handlers[type].slice();
-    } else {
-      callbackList = [];
-    }
-    if (isDefinedAndNotNull(this._onHandlers[type])) {
-      callbackList.splice(this._onHandlers[type].index, 0,
-          this._onHandlers[type].callback);
-    }
-    setTimeout(function() {
-      for (var i = 0; i < callbackList.length; i++) {
-        callbackList[i].call(this, event);
-      }
-    }, 0);
+  _hasEventHandlers: function() {
+    return hasEventHandlersForEvent(this, 'start') ||
+        hasEventHandlersForEvent(this, 'iteration') ||
+        hasEventHandlersForEvent(this, 'end') ||
+        hasEventHandlersForEvent(this, 'cancel');
   },
   _generateChildEventsForRange: function() { },
   _toSubRanges: function(fromTime, toTime, iterationTimes) {
@@ -1046,16 +1072,16 @@ TimedItem.prototype = {
     }
     var startTime = this.startTime + this.timing.delay;
 
-    if (this._hasHandlersForEvent('start')) {
+    if (hasEventHandlersForEvent(this, 'start')) {
       // Did we pass the start of this animation in the forward direction?
       if (fromTime <= startTime && toTime > startTime) {
-        this._callHandlers('start', new TimingEvent(constructorToken, this,
-            'start', this.timing.delay, toGlobal(startTime),
-            firstIteration));
+        callEventHandlers(this, 'start',
+            new TimingEvent(
+                constructorToken, this, 'start', this.timing.delay,
+                toGlobal(startTime), firstIteration));
       // Did we pass the end of this animation in the reverse direction?
       } else if (fromTime > this.endTime && toTime <= this.endTime) {
-        this._callHandlers(
-            'start',
+        callEventHandlers(this, 'start',
             new TimingEvent(
                 constructorToken, this, 'start', this.endTime - this.startTime,
                 toGlobal(this.endTime), lastIteration));
@@ -1086,10 +1112,9 @@ TimedItem.prototype = {
 
     for (var i = 0; i < subranges.ranges.length; i++) {
       var currentIter = subranges.start + i * subranges.delta;
-      if (i > 0 && this._hasHandlersForEvent('iteration')) {
+      if (i > 0 && hasEventHandlersForEvent(this, 'iteration')) {
         var iterTime = subranges.ranges[i][0];
-        this._callHandlers(
-            'iteration',
+        callEventHandlers(this, 'iteration',
             new TimingEvent(
                 constructorToken, this, 'iteration', iterTime - this.startTime,
                 toGlobal(iterTime), currentIter));
@@ -1108,18 +1133,16 @@ TimedItem.prototype = {
           globalTime, deltaScale * this.timing.playbackRate);
     }
 
-    if (this._hasHandlersForEvent('end')) {
+    if (hasEventHandlersForEvent(this, 'end')) {
       // Did we pass the end of this animation in the forward direction?
       if (fromTime < this.endTime && toTime >= this.endTime) {
-        this._callHandlers(
-            'end',
+        callEventHandlers(this, 'end',
             new TimingEvent(
                 constructorToken, this, 'end', this.endTime - this.startTime,
                 toGlobal(this.endTime), lastIteration));
       // Did we pass the start of this animation in the reverse direction?
       } else if (fromTime >= startTime && toTime < startTime) {
-        this._callHandlers(
-            'end',
+        callEventHandlers(this, 'end',
             new TimingEvent(
                 constructorToken, this, 'end', this.timing.delay,
                 toGlobal(startTime), firstIteration));
@@ -1140,26 +1163,30 @@ var deprecatedTimedItemEvents = function() {
   defineDeprecatedProperty(TimedItem.prototype, 'on' + eventName,
       function() {
         deprecatedTimedItemEvents();
-        return this._getOnHandler(eventName);
+        return getOnEventHandler(this, eventName);
       },
       function(handler) {
         deprecatedTimedItemEvents();
-        this._setOnHandler(eventName, handler);
+        setOnEventHandler(this, eventName, handler);
+        if (this.player) {
+          if (typeof func === 'function') {
+            this.player._handlerAdded();
+          } else {
+            this.player._checkForHandlers();
+          }
+        }
       });
 });
 defineDeprecatedProperty(TimedItem.prototype, 'addEventListener', function() {
   deprecatedTimedItemEvents();
-  return function(type, func) {
-    if (typeof func !== 'function' || !(type === 'start' ||
-        type === 'iteration' || type === 'end' || type === 'cancel')) {
+  return function(type, handler) {
+    if (type !== 'start' &&
+        type !== 'iteration' &&
+        type !== 'end' &&
+        type !== 'cancel') {
       return;
     }
-    if (!isDefinedAndNotNull(this._handlers[type])) {
-      this._handlers[type] = [];
-    } else if (this._handlers[type].indexOf(func) !== -1) {
-      return;
-    }
-    this._handlers[type].push(func);
+    addEventHandler(this, type, handler);
     if (this.player) {
       this.player._handlerAdded();
     }
@@ -1168,19 +1195,8 @@ defineDeprecatedProperty(TimedItem.prototype, 'addEventListener', function() {
 defineDeprecatedProperty(TimedItem.prototype, 'removeEventListener',
     function() {
       deprecatedTimedItemEvents();
-      return function(type, func) {
-        if (!this._handlers[type]) {
-          return;
-        }
-        var index = this._handlers[type].indexOf(func);
-        if (index === -1) {
-          return;
-        }
-        this._handlers[type].splice(index, 1);
-        if (isDefinedAndNotNull(this._onHandlers[type]) &&
-            (index < this._onHandlers[type].index)) {
-          this._onHandlers[type].index -= 1;
-        }
+      return function(type, handler) {
+        removeEventHandler(this, type, handler);
         if (this.player) {
           this.player._checkForHandlers();
         }
@@ -1575,11 +1591,11 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
         this.localTime + ') ' + ' [' +
         this._children.map(function(a) { return a.toString(); }) + ']';
   },
-  _hasHandlers: function() {
-    return TimedItem.prototype._hasHandlers.call(this) || (
+  _hasEventHandlers: function() {
+    return TimedItem.prototype._hasEventHandlers.call(this) || (
         this._children.length > 0 &&
         this._children.reduce(
-            function(a, b) { return a || b._hasHandlers(); },
+            function(a, b) { return a || b._hasEventHandlers(); },
             false));
   },
   _generateChildEventsForRange: function(localStart, localEnd, rangeStart,
