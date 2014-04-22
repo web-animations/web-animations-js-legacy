@@ -68,6 +68,7 @@ var tests = [
   'test-player.html',
   'test-player-addeventlistener.html',
   'test-player-cleanup.html',
+  'test-player-finish-event.html',
   'test-player-sort.html',
   'test-pseudo-element-reference.html',
   'test-repeated-pause.html',
