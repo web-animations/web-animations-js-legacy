@@ -49,7 +49,7 @@ at(0.5, function() {
 testharness_timeline.schedule(function() {
   target.style.left = '50px';
   assert_styles(target, {left: '150px'}, 'getComputedStyle() should return correct value after setting inline style.');
-}, 1000);
+}, 1);
 
 at(1.5, function() {
   assert_equals(1, target.style.length);
@@ -58,7 +58,7 @@ at(1.5, function() {
 
 testharness_timeline.schedule(function() {
   target.style.cssText = 'left: 100px; background-color: green;';
-}, 2500);
+}, 2.5);
 
 at(3, function() {
   assert_equals(2, target.style.length);
