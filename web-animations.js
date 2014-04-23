@@ -241,9 +241,6 @@ var AnimationTimeline = function(token) {
   }
   // TODO: This will probably need to change.
   this._startTime = documentTimeZeroAsClockTime;
-  if (this._startTime !== undefined) {
-    this._startTime /= 1000;
-  }
 };
 
 AnimationTimeline.prototype = {
@@ -252,8 +249,6 @@ AnimationTimeline.prototype = {
       this._startTime = documentTimeZeroAsClockTime;
       if (this._startTime === undefined) {
         return null;
-      } else {
-        this._startTime /= 1000;
       }
     }
     return relativeTime(cachedClockTime(), this._startTime);
@@ -5450,7 +5445,7 @@ var cachedClockTime = function() {
     lastClockTimeMillis = cachedClockTimeMillis;
     setTimeout(function() { cachedClockTimeMillis = undefined; }, 0);
   }
-  return cachedClockTimeMillis / 1000;
+  return cachedClockTimeMillis;
 };
 
 

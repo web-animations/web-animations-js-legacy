@@ -196,7 +196,7 @@ for (var i = 0; i < divs.length; i++) {
   var effect = colorsToAnimate.map(function(value) {
     return { backgroundColor: value };
   });
-  document.timeline.play(new Animation(divs[i], effect, {duration: 4, fill: 'forwards'}));
+  document.timeline.play(new Animation(divs[i], effect, {duration: 4 * 1000, fill: 'forwards'}));
 }
 
 //document.timeline.play(new Animation(document.body,

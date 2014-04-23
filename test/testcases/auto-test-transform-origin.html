@@ -73,7 +73,7 @@ testCases.forEach(function(testCase) {
   expectationContainer.appendChild(expectation);
 
   var test = createBox('test')
-  test.animate({transformOrigin: testCase}, {duration: 2, fill: 'forwards'});
+  test.animate({transformOrigin: testCase}, {duration: 2 * 1000, fill: 'forwards'});
   test.textContent = testCase;
   testContainer.appendChild(test);
 });

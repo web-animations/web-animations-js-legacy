@@ -165,7 +165,7 @@ function createVideo() {
 
 function testOnceVideosLoaded(callback, message) {
   timing_test(function() {
-    at(0.0, callback);
+    at(0.0 * 1000, callback);
   }, message);
 }
 
@@ -206,7 +206,7 @@ testOnceVideosLoaded(function() {
 // Test basic use.
 timing_test(function() {
   var video = getNextVideo();
-  at(0.0, function() {
+  at(0.0 * 1000, function() {
     dt.play(createTestMediaReference(video));
     assert_equals(video.playbackRate,  1.0);
     assert_false(video.paused);
@@ -217,14 +217,14 @@ timing_test(function() {
 // of duration.
 timing_test(function() {
   var video = getNextVideo();
-  at(0.0, function() {
+  at(0.0 * 1000, function() {
     dt.play(createTestMediaReference(video, 3.0));
   });
-  at(3.0, function() {
+  at(3.0 * 1000, function() {
     assert_equals(video.currentTime, 3.0);
     assert_true(video.paused);
   });
-  at(4.0, function() {
+  at(4.0 * 1000, function() {
     assert_equals(video.currentTime, 3.0);
     assert_true(video.paused);
   });
@@ -234,7 +234,7 @@ timing_test(function() {
 // remainder of duration.
 timing_test(function() {
   var video = getNextVideo();
-  at(0.0, function() {
+  at(0.0 * 1000, function() {
     dt.play(createTestMediaReference(video, video.duration + 2));
   });
   // We can't use video.duration here because the video isn't yet loaded.
@@ -253,10 +253,10 @@ timing_test(function() {
 // duration.
 timing_test(function() {
   var video = getNextVideo();
-  at(0.0, function() {
+  at(0.0 * 1000, function() {
     dt.play(createTestMediaReference(video, 1.0));
   });
-  at(2.0, function() {
+  at(2.0 * 1000, function() {
     assert_equals(video.currentTime,  1.0);
     assert_equals(video.paused,  true);
   });
@@ -265,7 +265,7 @@ timing_test(function() {
 // Test fill with video length limiting. Video should be at end.
 timing_test(function() {
   var video = getNextVideo();
-  at(0.0, function() {
+  at(0.0 * 1000, function() {
     dt.play(createTestMediaReference(video), video.duration + 1.0);
   });
   // We can't use video.duration here because the video isn't yet loaded.
@@ -277,7 +277,7 @@ timing_test(function() {
 // Test no fill. Video should be frozen at start.
 timing_test(function() {
   var video = getNextVideo();
-  at(0.0, function() {
+  at(0.0 * 1000, function() {
     dt.play(createTestMediaReference(video, {fill: "none"}));
   });
   // We can't use video.duration here because the video isn't yet loaded.
@@ -290,11 +290,11 @@ timing_test(function() {
 // Test iterations.
 timing_test(function() {
   var video = getNextVideo();
-  at(0.0, function() {
+  at(0.0 * 1000, function() {
     dt.play(createTestMediaReference(video,
-        {iterations: 2.0, duration: 1.0}));
+        {iterations: 2.0, duration: 1.0 * 1000}));
   });
-  at(1.5, function() {
+  at(1.5 * 1000, function() {
     assert_equals(video.currentTime,  0.5);
   });
 }, "Video should respect iterations");
@@ -302,11 +302,11 @@ timing_test(function() {
 // Test iterationStart.
 timing_test(function() {
   var video = getNextVideo();
-  at(0.0, function() {
+  at(0.0 * 1000, function() {
     dt.play(createTestMediaReference(video,
-        {iterationStart: 0.5, duration: 2.0}));
+        {iterationStart: 0.5, duration: 2.0 * 1000}));
   });
-  at(0.5, function() {
+  at(0.5 * 1000, function() {
     assert_equals(video.currentTime,  1.5);
   });
 }, "Video should respect iterationStart");
@@ -314,10 +314,10 @@ timing_test(function() {
 // Test playback rate.
 timing_test(function() {
   var video = getNextVideo();
-  at(0.0, function() {
+  at(0.0 * 1000, function() {
     dt.play(createTestMediaReference(video, {playbackRate: 2.0}));
   });
-  at(1.0, function() {
+  at(1.0 * 1000, function() {
     assert_equals(video.currentTime, 2.0);
     assert_equals(video.playbackRate, 2.0);
   });
@@ -326,11 +326,11 @@ timing_test(function() {
 // Test heirachy of playback rates.
 timing_test(function() {
   var video = getNextVideo();
-  at(0.0, function() {
+  at(0.0 * 1000, function() {
     dt.play(new AnimationGroup([createTestMediaReference(video, {playbackRate: 1.5})],
         {playbackRate: 2.5}));
   });
-  at(1.0, function() {
+  at(1.0 * 1000, function() {
     assert_equals(video.currentTime, 3.75);
     assert_equals(video.playbackRate, 3.75);
   });
@@ -339,11 +339,11 @@ timing_test(function() {
 // Test interaction with MediaElement.defaultPlaybackRate.
 timing_test(function() {
   var video = getNextVideo();
-  at(0.0, function() {
+  at(0.0 * 1000, function() {
     video.defaultPlaybackRate = 2.5;
     dt.play(createTestMediaReference(video, {playbackRate: 1.5}));
   });
-  at(1.0, function() {
+  at(1.0 * 1000, function() {
     assert_equals(video.currentTime, 3.75);
     assert_equals(video.playbackRate, 3.75);
   });
@@ -352,10 +352,10 @@ timing_test(function() {
 // Test reversing.
 timing_test(function() {
   var video = getNextVideo();
-  at(0.0, function() {
+  at(0.0 * 1000, function() {
     dt.play(createTestMediaReference(video, {direction: "reverse"}));
   });
-  at(1.0, function() {
+  at(1.0 * 1000, function() {
     assert_approx_equals(video.currentTime, video.duration - 1.0, 0.0001);
     assert_equals(video.playbackRate, -1.0);
   });
@@ -364,10 +364,10 @@ timing_test(function() {
 // Test negative playback rate.
 timing_test(function() {
   var video = getNextVideo();
-  at(0.0, function() {
+  at(0.0 * 1000, function() {
     dt.play(createTestMediaReference(video, {playbackRate: -0.5}));
   });
-  at(1.0, function() {
+  at(1.0 * 1000, function() {
     assert_approx_equals(video.currentTime, video.duration - 0.5, 0.0001);
     assert_equals(video.playbackRate, -0.5);
   });
@@ -376,12 +376,12 @@ timing_test(function() {
 // Test interaction of reversing and playback rate.
 timing_test(function() {
   var video = getNextVideo();
-  at(0.0, function() {
+  at(0.0 * 1000, function() {
     dt.play(new AnimationGroup(
         [createTestMediaReference(video, {playbackRate: -0.5})],
         {playbackRate: 3.0, direction: "reverse"}));
   });
-  at(1.0, function() {
+  at(1.0 * 1000, function() {
     assert_equals(video.currentTime, 1.5);
     assert_equals(video.playbackRate, 1.5);
   });
@@ -390,11 +390,11 @@ timing_test(function() {
 // Test zero duration.
 timing_test(function() {
   var video = getNextVideo();
-  at(0.0, function() {
+  at(0.0 * 1000, function() {
     dt.play(createTestMediaReference(video, 0.0));
     assert_equals(video.currentTime,  0.0);
   });
-  at(1.0, function() {
+  at(1.0 * 1000, function() {
     assert_equals(video.currentTime,  0.0);
   });
 }, "Video should start at time zero when duration is zero");
@@ -405,13 +405,13 @@ timing_test(function() {
 // Test that media elements are removed from their MediaController.
 timing_test(function() {
   var video = getNextVideo();
-  at(0.0, function() {
+  at(0.0 * 1000, function() {
     video.controller = new MediaController();
     dt.play(createTestMediaReference(video));
     assert_equals(video.controller,  null);
   });
   // Seeking the video will throw if the controller has not been detached.
-  at(1.0, function() {
+  at(1.0 * 1000, function() {
     assert_equals(video.currentTime,  1.0);
   });
 }, "Video should be detached from controller when used in MediaReference");
@@ -424,14 +424,14 @@ timing_test(function() {
 timing_test(function() {
   var video = getNextVideo();
   var player;
-  at(0.0, function() {
+  at(0.0 * 1000, function() {
     player = dt.play(createTestMediaReference(video));
   });
-  at(1.0, function() {
+  at(1.0 * 1000, function() {
     assert_false(video.paused);
     player.source = null;
   });
-  at(2.0, function() {
+  at(2.0 * 1000, function() {
     assert_true(video.paused);
   });
 }, "Video should be paused when MediaReference is detached from its AnimationPlayer");
