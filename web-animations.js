@@ -680,7 +680,7 @@ AnimationPlayer.prototype = {
         currentTime: this.currentTime,
         timelineTime: this.timeline.currentTime
       });
-      event._initialize(this.target);
+      event._initialize(this);
       callEventHandlers(this, 'finish', event);
     }
     this._finishedFlag = this.finished;
