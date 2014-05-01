@@ -35,6 +35,7 @@ function assertFinishEvents(description, player, expectedEvents) {
         asyncTestHandle.step(function() {
           assert_equals(event.currentTime, expectedEvent.currentTime, 'event.currentTime');
           assert_equals(event.timelineTime, expectedEvent.timelineTime, 'event.timelineTime');
+          assert_equals(event.target, player, 'event.target');
           assert_approx_equals(document.timeline.currentTime, expectedEvent.timelineTime, 50, 'timeline.currentTime');
         });
         asyncTestHandle.done();
