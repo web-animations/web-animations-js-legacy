@@ -1880,8 +1880,9 @@ function toUsableValue(property, value) {
       if (underlying == undefined) {
         throw new TypeError('Underlying value undefined');
       }
-      var internalUnderlying = propertyTypes[property].fromCssValue(underlying);
-      return propertyTypes[property].toCssValue(value.compositeOnto(property, internalUnderlying));
+      var propertyType = getType(property);
+      var internalUnderlying = propertyType.fromCssValue(underlying);
+      return propertyType.toCssValue(value.compositeOnto(property, internalUnderlying));
     }
   }   
 }
