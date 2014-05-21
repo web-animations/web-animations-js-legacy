@@ -1882,7 +1882,8 @@ function toUsableValue(property, value) {
       }
       var propertyType = getType(property);
       var internalUnderlying = propertyType.fromCssValue(underlying);
-      return propertyType.toCssValue(value.compositeOnto(property, internalUnderlying));
+      return propertyType.toCssValue(value.compositeOnto(property,
+	  internalUnderlying));
     }
   }   
 }
