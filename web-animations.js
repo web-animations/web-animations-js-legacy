@@ -1634,7 +1634,7 @@ MediaReference.prototype = createObject(TimedItem.prototype, {
 
 function toUsableValue(property, value) {
   if (!value.dependsOnUnderlyingValue()) {
-    var result = propertyTypes[property].toCssValue(value.compositeOnto(property, undefined));
+    var result = getType(property).toCssValue(value.compositeOnto(property, undefined));
     return function() { return result; };
   } else {
     return function(underlying) {
@@ -1644,9 +1644,9 @@ function toUsableValue(property, value) {
       var propertyType = getType(property);
       var internalUnderlying = propertyType.fromCssValue(underlying);
       return propertyType.toCssValue(value.compositeOnto(property,
-	  internalUnderlying));
+          internalUnderlying));
     }
-  }   
+  }
 }
 
 function toUsableValues(dict) {
