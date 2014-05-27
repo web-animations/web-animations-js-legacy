@@ -7,4 +7,6 @@ selenium
 # Requirements for using -x
 pyvirtualdisplay
 pyscreenshot
+--allow-external=PIL
+--allow-unverified=PIL
 PIL

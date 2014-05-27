@@ -29,6 +29,10 @@ EOF
 
   if virtualenv --system-site-packages .; then
     echo -e;
+    (
+      source bin/activate
+      pip install --upgrade pip
+    )
   else
    cat <<EOF
 Was unable to set up the virtualenv environment. Please see output for errors.
