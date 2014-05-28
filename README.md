@@ -139,7 +139,7 @@ Groups also take an optional TimingDictionary parameter (see below), which among
 TimingDictionaries are used to control the internal timing of an animation (players control how an animation progresses relative to document time). TimingDictionaries have several properties that can be tweaked:
 
 - **duration**: the duration of a single iteration of the animation
-- **iterations**: the number of iterations of the animation that will be played (fractional iterationss are allowed)
+- **iterations**: the number of iterations of the animation that will be played (fractional iterations are allowed)
 - **iterationStart**: the start offset of the first iteration
 - **fill**: whether the animation has effect before starting the first iteration and/or after finishing the final iteration
 - **delay**: the time between the animation's start time and the first animation effect of the animation
