@@ -1,5 +1,5 @@
 timing_test(function() {
-  at(0, function() {
+  at(0 * 1000, function() {
     assert_styles(".test", [
       {'transform':'none'},
       {'transform':'none'},
@@ -51,7 +51,7 @@ timing_test(function() {
       {'transform':'matrix(0.4698, 0.171, -0.171, 0.4698, 100, 0)'},
     ]);
   });
-  at(0.5, function() {
+  at(0.5 * 1000, function() {
     assert_styles(".test", [
       {'transform':'matrix(1, 0, 0, 1, 0, 0)'},
       {'transform':'matrix(0.9192, 0.3808, -0.3808, 0.9192, 5, 10)'},
@@ -103,9 +103,9 @@ timing_test(function() {
       {'transform':'matrix(0.7386, 0.1302, -0.1302, 0.7386, 100, 0)'},
     ]);
   });
-  // This check is equivalent to checking at t=1s, it is placed all the way out here to allow manual viewing
+  // This check is equivalent to checking at t=1000ms, it is placed all the way out here to allow manual viewing
   // to inspect multiple cycles of the animation at a time. The animation stops after all checks have completed.
-  at(100001, function() {
+  at(100001 * 1000, function() {
     assert_styles(".test", [
       {'transform':'matrix(1, 0, 0, 1, 0, 0)'},
       {'transform':'matrix(0.7, 0.7, -0.7, 0.7, 10, 20)'},

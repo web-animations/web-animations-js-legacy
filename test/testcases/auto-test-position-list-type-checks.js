@@ -1,5 +1,5 @@
 timing_test(function() {
-  at(0, function() {
+  at(0 * 1000, function() {
     assert_styles(".anim", [
       {'backgroundPosition':'0% 0%'},
       {'backgroundPosition':'0% 0%'},
@@ -35,7 +35,7 @@ timing_test(function() {
     ]);
   });
   // TODO: Generate more inbetween values to compare against.
-  at(2, function() {
+  at(2 * 1000, function() {
     assert_styles(".anim", [
       {'backgroundPosition':'0% 50%'},
       {'backgroundPosition':'50% 50%'},

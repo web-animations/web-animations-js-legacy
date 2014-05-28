@@ -104,7 +104,7 @@ for (var i = 0; i < transformValues.length; i++) {
       animations.push(new Animation(div, [
         {transform: transformValues[i][j]},
         {transform: transformValues[i][k]},
-      ], {duration: 2, fill: 'forwards'}));
+      ], {duration: 2 * 1000, fill: 'forwards'}));
 
       x += separation_x;
       if (x > max_x) {

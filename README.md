@@ -37,7 +37,7 @@ a `<div>` over 0.5 seconds. The animation alternates producing a pulsing effect.
           {opacity: "1.0", transform: "scale(1)"}
         ],
         {
-          direction: "alternate", duration: 0.5, iterations: Infinity
+          direction: "alternate", duration: 500, iterations: Infinity
         }));
     </script>
 
@@ -52,7 +52,7 @@ important ones here: Animations, AnimationEffects, TimingDictionaries, TimingGro
 An `Animation` object defines a single animation effect that applies to a single element target. For example:
 
     var animation = new Animation(targetElement,
-        [{left: '0px'}, {left: '100px'}], 2);
+        [{left: '0px'}, {left: '100px'}], 2000);
 
 Here, the target element's "left" CSS property is modified smoothly from `0px` to `100px` over 2 seconds.
 
@@ -98,7 +98,7 @@ A `MotionPathEffect` allows elements to be animated along SVG-style paths. For e
     </svg>
     <script>
       var animFunc = new MotionPathEffect(document.querySelector('#path').pathSegList);
-      var animation = new Animation(targetElement, animFunc, 2);
+      var animation = new Animation(targetElement, animFunc, 2000);
     </script>
 
 #### Custom animation effects
@@ -162,10 +162,10 @@ The following example illustrates these rules:
 
     var animationGroup = new AnimationGroup([
       new AnimationSequence([
-        new Animation(..., {duration: 3}),
-        new Animation(..., {duration: 5, fill: 'both'})
-      ], {duration: 6, delay: 3, fill: 'none'}),
-      new Animation(..., {duration: 8, fill: 'forward'})
+        new Animation(..., {duration: 3000}),
+        new Animation(..., {duration: 5000, fill: 'both'})
+      ], {duration: 6000, delay: 3000, fill: 'none'}),
+      new Animation(..., {duration: 8000, fill: 'forward'})
     ], {iterations: 2, fill: 'forward'});
 
 In this example:
@@ -211,11 +211,11 @@ following approach to prefix handling:
 writing animated properties back to the platform.
 - where possible, the polyfill will *only* accept unprefixed versions of experimental features. For example:
 
-        var animation = new Animation(elem, {"transform": "translate(100px, 100px)"}, 2);
+        var animation = new Animation(elem, {"transform": "translate(100px, 100px)"}, 2000);
 
   will work in all browsers that implement a conforming version of `transform`, but
 
-        var animation =  new Animation(elem, {"-webkit-transform": "translate(100px, 100px)"}, 2);
+        var animation =  new Animation(elem, {"-webkit-transform": "translate(100px, 100px)"}, 2000);
     
   will not work anywhere.
 

@@ -59,7 +59,7 @@ var perspectiveTestCases = [
 ];
 perspectiveTestCases.forEach(function(testCase) {
   var test = createBoxedItem('test', testCase);
-  test.animate({perspective: testCase}, {duration: 2, fill: 'forwards'});
+  test.animate({perspective: testCase}, {duration: 2 * 1000, fill: 'forwards'});
   testContainer.appendChild(test);
 
   var expectation = createBoxedItem('expectation', testCase);

@@ -38,7 +38,7 @@ limitations under the License.
 "use strict";
 
 var effect = [{left: "100px"}, {left: "200px"}];
-var timing = {duration: 1, fill: 'forwards'};
+var timing = {duration: 1 * 1000, fill: 'forwards'};
 
 // Top level animation.
 document.timeline.play(new Animation(document.getElementById("a"),

@@ -93,22 +93,34 @@ var abstractMethod = function() {
   throw 'Abstract method not implemented.';
 };
 
-var deprecated = function(name, deprecationDate, advice) {
+var deprecated = function(name, deprecationDate, advice, plural) {
   if (deprecationsSilenced[name]) {
     return;
   }
+  var auxVerb = plural ? 'are' : 'is';
   var today = new Date();
   var cutoffDate = new Date(deprecationDate);
   cutoffDate.setMonth(cutoffDate.getMonth() + 3); // 3 months grace period
 
   if (today < cutoffDate) {
     console.warn('Web Animations: ' + name +
-        ' is deprecated and will stop working on ' +
+        ' ' + auxVerb + ' deprecated and will stop working on ' +
         cutoffDate.toDateString() + '. ' + advice);
     deprecationsSilenced[name] = true;
   } else {
-    throw new Error(name + ' is no longer supported. ' + advice);
+    throw new Error(name + ' ' + auxVerb + ' no longer supported. ' + advice);
   }
+};
+
+var defineDeprecatedProperty = function(object, property, getFunc, setFunc) {
+  var descriptor = {
+    get: getFunc,
+    configurable: true
+  };
+  if (setFunc) {
+    descriptor.set = setFunc;
+  }
+  Object.defineProperty(object, property, descriptor);
 };
 
 var IndexSizeError = function(message) {
@@ -241,9 +253,6 @@ var AnimationTimeline = function(token) {
   }
   // TODO: This will probably need to change.
   this._startTime = documentTimeZeroAsClockTime;
-  if (this._startTime !== undefined) {
-    this._startTime /= 1000;
-  }
 };
 
 AnimationTimeline.prototype = {
@@ -252,8 +261,6 @@ AnimationTimeline.prototype = {
       this._startTime = documentTimeZeroAsClockTime;
       if (this._startTime === undefined) {
         return null;
-      } else {
-        this._startTime /= 1000;
       }
     }
     return relativeTime(cachedClockTime(), this._startTime);
@@ -289,6 +296,97 @@ var PLAYERS = [];
 var playersAreSorted = false;
 var playerSequenceNumber = 0;
 
+// Methods for event target objects.
+var initializeEventTarget = function(eventTarget) {
+  eventTarget._handlers = {};
+  eventTarget._onHandlers = {};
+};
+var setOnEventHandler = function(eventTarget, type, handler) {
+  if (typeof handler === 'function') {
+    eventTarget._onHandlers[type] = {
+      callback: handler,
+      index: (eventTarget._handlers[type] || []).length
+    };
+  } else {
+    eventTarget._onHandlers[type] = null;
+  }
+};
+var getOnEventHandler = function(eventTarget, type) {
+  if (isDefinedAndNotNull(eventTarget._onHandlers[type])) {
+    return eventTarget._onHandlers[type].callback;
+  }
+  return null;
+};
+var addEventHandler = function(eventTarget, type, handler) {
+  if (typeof handler !== 'function') {
+    return;
+  }
+  if (!isDefinedAndNotNull(eventTarget._handlers[type])) {
+    eventTarget._handlers[type] = [];
+  } else if (eventTarget._handlers[type].indexOf(handler) !== -1) {
+    return;
+  }
+  eventTarget._handlers[type].push(handler);
+};
+var removeEventHandler = function(eventTarget, type, handler) {
+  if (!eventTarget._handlers[type]) {
+    return;
+  }
+  var index = eventTarget._handlers[type].indexOf(handler);
+  if (index === -1) {
+    return;
+  }
+  eventTarget._handlers[type].splice(index, 1);
+  if (isDefinedAndNotNull(eventTarget._onHandlers[type]) &&
+      (index < eventTarget._onHandlers[type].index)) {
+    eventTarget._onHandlers[type].index -= 1;
+  }
+};
+var hasEventHandlersForEvent = function(eventTarget, type) {
+  return (isDefinedAndNotNull(eventTarget._handlers[type]) &&
+      eventTarget._handlers[type].length > 0) ||
+      isDefinedAndNotNull(eventTarget._onHandlers[type]);
+};
+var callEventHandlers = function(eventTarget, type, event) {
+  var callbackList;
+  if (isDefinedAndNotNull(eventTarget._handlers[type])) {
+    callbackList = eventTarget._handlers[type].slice();
+  } else {
+    callbackList = [];
+  }
+  if (isDefinedAndNotNull(eventTarget._onHandlers[type])) {
+    callbackList.splice(eventTarget._onHandlers[type].index, 0,
+        eventTarget._onHandlers[type].callback);
+  }
+  setTimeout(function() {
+    for (var i = 0; i < callbackList.length; i++) {
+      callbackList[i].call(eventTarget, event);
+    }
+  }, 0);
+};
+var createEventPrototype = function() {
+  var prototype = Object.create(window.Event.prototype, {
+    type: { get: function() { return this._type; } },
+    target: { get: function() { return this._target; } },
+    currentTarget: { get: function() { return this._target; } },
+    eventPhase: { get: function() { return this._eventPhase; } },
+    bubbles: { get: function() { return false; } },
+    cancelable: { get: function() { return false; } },
+    timeStamp: { get: function() { return this._timeStamp; } },
+    defaultPrevented: { get: function() { return false; } }
+  });
+  prototype._type = '';
+  prototype._target = null;
+  prototype._eventPhase = Event.NONE;
+  prototype._timeStamp = 0;
+  prototype._initialize = function(target) {
+    this._target = target;
+    this._eventPhase = Event.AT_TARGET;
+    this._timeStamp = cachedClockTime();
+  };
+  return prototype;
+};
+
 
 
 /** @constructor */
@@ -311,8 +409,10 @@ var AnimationPlayer = function(token, source, timeline) {
     this._hasTicked = false;
 
     this.source = source;
-    this._checkForHandlers();
+    this._checkForLegacyHandlers();
     this._lastCurrentTime = undefined;
+    this._finishedFlag = false;
+    initializeEventTarget(this);
 
     playersAreSorted = false;
     maybeRestartAnimation();
@@ -337,7 +437,7 @@ AnimationPlayer.prototype = {
         this._update();
         maybeRestartAnimation();
       }
-      this._checkForHandlers();
+      this._checkForLegacyHandlers();
     } finally {
       exitModifyCurrentAnimationState(repeatLastTick);
     }
@@ -470,8 +570,11 @@ AnimationPlayer.prototype = {
     return this._playbackRate;
   },
   get finished() {
-    return this.source &&
-        ((this.playbackRate > 0 && this.currentTime >= this.source.endTime) ||
+    return this._isLimited;
+  },
+  get _isLimited() {
+    var sourceEnd = this.source ? this.source.endTime : 0;
+    return ((this.playbackRate > 0 && this.currentTime >= sourceEnd) ||
         (this.playbackRate < 0 && this.currentTime <= 0));
   },
   cancel: function() {
@@ -554,27 +657,59 @@ AnimationPlayer.prototype = {
       this.source._getAnimationsTargetingElement(element, animations);
     }
   },
-  _handlerAdded: function() {
-    this._needsHandlerPass = true;
+  set onfinish(handler) {
+    return setOnEventHandler(this, 'finish', handler);
   },
-  _checkForHandlers: function() {
-    this._needsHandlerPass = this.source !== null && this.source._hasHandlers();
+  get onfinish() {
+    return getOnEventHandler(this, 'finish');
+  },
+  addEventListener: function(type, handler) {
+    if (type === 'finish') {
+      addEventHandler(this, type, handler);
+    }
+  },
+  removeEventListener: function(type, handler) {
+    if (type === 'finish') {
+      removeEventHandler(this, type, handler);
+    }
   },
   _generateEvents: function() {
+    if (!this._finishedFlag && this.finished &&
+        hasEventHandlersForEvent(this, 'finish')) {
+      var event = new AnimationPlayerEvent('finish', {
+        currentTime: this.currentTime,
+        timelineTime: this.timeline.currentTime
+      });
+      event._initialize(this);
+      callEventHandlers(this, 'finish', event);
+    }
+    this._finishedFlag = this.finished;
+
+    // The following code is for deprecated TimedItem event handling and should
+    // be removed once we stop supporting it.
     if (!isDefinedAndNotNull(this._lastCurrentTime)) {
       this._lastCurrentTime = 0;
     }
 
-    if (this._needsHandlerPass) {
+    if (this._needsLegacyHandlerPass) {
       var timeDelta = this._unlimitedCurrentTime - this._lastCurrentTime;
       if (timeDelta > 0) {
-        this.source._generateEvents(
+        this.source._generateLegacyEvents(
             this._lastCurrentTime, this._unlimitedCurrentTime,
             this.timeline.currentTime, 1);
       }
     }
 
     this._lastCurrentTime = this._unlimitedCurrentTime;
+  },
+  // These two legacy methods are for deprecated TimedItem event handling and
+  // should be removed once we stop supporting it.
+  _legacyHandlerAdded: function() {
+    this._needsLegacyHandlerPass = true;
+  },
+  _checkForLegacyHandlers: function() {
+    this._needsLegacyHandlerPass = this.source !== null &&
+        this.source._hasLegacyEventHandlers();
   },
   _registerOnTimeline: function() {
     if (!this._registeredOnTimeline) {
@@ -587,6 +722,17 @@ AnimationPlayer.prototype = {
     this._registeredOnTimeline = false;
   }
 };
+
+
+
+/** @constructor */
+var AnimationPlayerEvent = function(type, eventInit) {
+  this._type = type;
+  this.currentTime = eventInit.currentTime;
+  this.timelineTime = eventInit.timelineTime;
+};
+
+AnimationPlayerEvent.prototype = createEventPrototype();
 
 
 
@@ -606,18 +752,8 @@ var TimedItem = function(token, timingInput) {
   this._player = null;
   this._parent = null;
   this._updateInternalState();
-  this._handlers = {};
-  this._onHandlers = {};
   this._fill = this._resolveFillMode(this.timing.fill);
-
-  // specified is deprecated
-  Object.defineProperty(this, 'specified', {
-    get: function() {
-      deprecated('specified', '2014-04-16', 'Please use timing instead.');
-      return this.timing;
-    },
-    configurable: true
-  });
+  initializeEventTarget(this);
 };
 
 TimedItem.prototype = {
@@ -956,112 +1092,13 @@ TimedItem.prototype = {
   _hasFutureEffect: function() {
     return this._isCurrent() || this._fill !== 'none';
   },
-  set onstart(func) {
-    this._setOnHandler('start', func);
+  _hasLegacyEventHandlers: function() {
+    return hasEventHandlersForEvent(this, 'start') ||
+        hasEventHandlersForEvent(this, 'iteration') ||
+        hasEventHandlersForEvent(this, 'end') ||
+        hasEventHandlersForEvent(this, 'cancel');
   },
-  get onstart() {
-    return this._getOnHandler('start');
-  },
-  set oniteration(func) {
-    this._setOnHandler('iteration', func);
-  },
-  get oniteration() {
-    return this._getOnHandler('iteration');
-  },
-  set onend(func) {
-    this._setOnHandler('end', func);
-  },
-  get onend() {
-    return this._getOnHandler('end');
-  },
-  set oncancel(func) {
-    this._setOnHandler('cancel', func);
-  },
-  get oncancel() {
-    return this._getOnHandler('cancel');
-  },
-  _setOnHandler: function(type, func) {
-    if (typeof func === 'function') {
-      this._onHandlers[type] = {
-        callback: func,
-        index: (this._handlers[type] || []).length
-      };
-      if (this.player) {
-        this.player._handlerAdded();
-      }
-    } else {
-      this._onHandlers[type] = null;
-      if (this.player) {
-        this.player._checkForHandlers();
-      }
-    }
-  },
-  _getOnHandler: function(type) {
-    if (isDefinedAndNotNull(this._onHandlers[type])) {
-      return this._onHandlers[type].func;
-    }
-    return null;
-  },
-  addEventListener: function(type, func) {
-    if (typeof func !== 'function' || !(type === 'start' ||
-        type === 'iteration' || type === 'end' || type === 'cancel')) {
-      return;
-    }
-    if (!isDefinedAndNotNull(this._handlers[type])) {
-      this._handlers[type] = [];
-    } else if (this._handlers[type].indexOf(func) !== -1) {
-      return;
-    }
-    this._handlers[type].push(func);
-    if (this.player) {
-      this.player._handlerAdded();
-    }
-  },
-  removeEventListener: function(type, func) {
-    if (!this._handlers[type]) {
-      return;
-    }
-    var index = this._handlers[type].indexOf(func);
-    if (index === -1) {
-      return;
-    }
-    this._handlers[type].splice(index, 1);
-    if (isDefinedAndNotNull(this._onHandlers[type]) &&
-        (index < this._onHandlers[type].index)) {
-      this._onHandlers[type].index -= 1;
-    }
-    if (this.player) {
-      this.player._checkForHandlers();
-    }
-  },
-  _hasHandlers: function() {
-    return this._hasHandlersForEvent('start') ||
-        this._hasHandlersForEvent('iteration') ||
-        this._hasHandlersForEvent('end') || this._hasHandlersForEvent('cancel');
-  },
-  _hasHandlersForEvent: function(type) {
-    return (isDefinedAndNotNull(this._handlers[type]) &&
-        this._handlers[type].length > 0) ||
-        isDefinedAndNotNull(this._onHandlers[type]);
-  },
-  _callHandlers: function(type, event) {
-    var callbackList;
-    if (isDefinedAndNotNull(this._handlers[type])) {
-      callbackList = this._handlers[type].slice();
-    } else {
-      callbackList = [];
-    }
-    if (isDefinedAndNotNull(this._onHandlers[type])) {
-      callbackList.splice(this._onHandlers[type].index, 0,
-          this._onHandlers[type].callback);
-    }
-    setTimeout(function() {
-      for (var i = 0; i < callbackList.length; i++) {
-        callbackList[i].call(this, event);
-      }
-    }, 0);
-  },
-  _generateChildEventsForRange: function() { },
+  _generateChildLegacyEventsForRange: function() { },
   _toSubRanges: function(fromTime, toTime, iterationTimes) {
     if (fromTime > toTime) {
       var revRanges = this._toSubRanges(toTime, fromTime, iterationTimes);
@@ -1091,7 +1128,7 @@ TimedItem.prototype = {
     ranges.push([currentStart, toTime]);
     return {start: skipped, delta: 1, ranges: ranges};
   },
-  _generateEvents: function(fromTime, toTime, globalTime, deltaScale) {
+  _generateLegacyEvents: function(fromTime, toTime, globalTime, deltaScale) {
     function toGlobal(time) {
       return (globalTime - (toTime - (time / deltaScale)));
     }
@@ -1104,16 +1141,16 @@ TimedItem.prototype = {
     }
     var startTime = this.startTime + this.timing.delay;
 
-    if (this._hasHandlersForEvent('start')) {
+    if (hasEventHandlersForEvent(this, 'start')) {
       // Did we pass the start of this animation in the forward direction?
       if (fromTime <= startTime && toTime > startTime) {
-        this._callHandlers('start', new TimingEvent(constructorToken, this,
-            'start', this.timing.delay, toGlobal(startTime),
-            firstIteration));
+        callEventHandlers(this, 'start',
+            new TimingEvent(
+                constructorToken, this, 'start', this.timing.delay,
+                toGlobal(startTime), firstIteration));
       // Did we pass the end of this animation in the reverse direction?
       } else if (fromTime > this.endTime && toTime <= this.endTime) {
-        this._callHandlers(
-            'start',
+        callEventHandlers(this, 'start',
             new TimingEvent(
                 constructorToken, this, 'start', this.endTime - this.startTime,
                 toGlobal(this.endTime), lastIteration));
@@ -1144,10 +1181,9 @@ TimedItem.prototype = {
 
     for (var i = 0; i < subranges.ranges.length; i++) {
       var currentIter = subranges.start + i * subranges.delta;
-      if (i > 0 && this._hasHandlersForEvent('iteration')) {
+      if (i > 0 && hasEventHandlersForEvent(this, 'iteration')) {
         var iterTime = subranges.ranges[i][0];
-        this._callHandlers(
-            'iteration',
+        callEventHandlers(this, 'iteration',
             new TimingEvent(
                 constructorToken, this, 'iteration', iterTime - this.startTime,
                 toGlobal(iterTime), currentIter));
@@ -1160,24 +1196,22 @@ TimedItem.prototype = {
         iterFraction = 1 -
             (this.timing.iterationStart + this.timing.iterations) % 1;
       }
-      this._generateChildEventsForRange(
+      this._generateChildLegacyEventsForRange(
           subranges.ranges[i][0], subranges.ranges[i][1],
           fromTime, toTime, currentIter - iterFraction,
           globalTime, deltaScale * this.timing.playbackRate);
     }
 
-    if (this._hasHandlersForEvent('end')) {
+    if (hasEventHandlersForEvent(this, 'end')) {
       // Did we pass the end of this animation in the forward direction?
       if (fromTime < this.endTime && toTime >= this.endTime) {
-        this._callHandlers(
-            'end',
+        callEventHandlers(this, 'end',
             new TimingEvent(
                 constructorToken, this, 'end', this.endTime - this.startTime,
                 toGlobal(this.endTime), lastIteration));
       // Did we pass the start of this animation in the reverse direction?
       } else if (fromTime >= startTime && toTime < startTime) {
-        this._callHandlers(
-            'end',
+        callEventHandlers(this, 'end',
             new TimingEvent(
                 constructorToken, this, 'end', this.timing.delay,
                 toGlobal(startTime), firstIteration));
@@ -1195,12 +1229,64 @@ TimedItem.prototype = {
   }
 };
 
+defineDeprecatedProperty(TimedItem.prototype, 'specified', function() {
+  deprecated('specified', '2014-04-16', 'Please use timing instead.');
+  return this.timing;
+});
+var deprecatedTimedItemEvents = function() {
+  deprecated('TimedItem events', '2014-04-22',
+      'Please use the AnimationPlayer finish event instead.', true);
+};
+['start', 'iteration', 'end', 'cancel'].forEach(function(eventName) {
+  defineDeprecatedProperty(TimedItem.prototype, 'on' + eventName,
+      function() {
+        deprecatedTimedItemEvents();
+        return getOnEventHandler(this, eventName);
+      },
+      function(handler) {
+        deprecatedTimedItemEvents();
+        setOnEventHandler(this, eventName, handler);
+        if (this.player) {
+          if (typeof func === 'function') {
+            this.player._legacyHandlerAdded();
+          } else {
+            this.player._checkForLegacyHandlers();
+          }
+        }
+      });
+});
+defineDeprecatedProperty(TimedItem.prototype, 'addEventListener', function() {
+  deprecatedTimedItemEvents();
+  return function(type, handler) {
+    if (type !== 'start' &&
+        type !== 'iteration' &&
+        type !== 'end' &&
+        type !== 'cancel') {
+      return;
+    }
+    addEventHandler(this, type, handler);
+    if (this.player) {
+      this.player._legacyHandlerAdded();
+    }
+  }
+});
+defineDeprecatedProperty(TimedItem.prototype, 'removeEventListener',
+    function() {
+      deprecatedTimedItemEvents();
+      return function(type, handler) {
+        removeEventHandler(this, type, handler);
+        if (this.player) {
+          this.player._checkForLegacyHandlers();
+        }
+      }
+    });
+
 var TimingEvent = function(
     token, target, type, localTime, timelineTime, iterationIndex, seeked) {
   if (token !== constructorToken) {
     throw new TypeError('Illegal constructor');
   }
-  this._target = target;
+  this._initialize(target);
   this._type = type;
   this.localTime = localTime;
   this.timelineTime = timelineTime;
@@ -1208,38 +1294,7 @@ var TimingEvent = function(
   this.seeked = seeked ? true : false;
 };
 
-TimingEvent.prototype = Object.create(window.Event.prototype, {
-  target: {
-    get: function() {
-      return this._target;
-    }
-  },
-  cancelable: {
-    get: function() {
-      return false;
-    }
-  },
-  cancelBubble: {
-    get: function() {
-      return false;
-    }
-  },
-  defaultPrevented: {
-    get: function() {
-      return false;
-    }
-  },
-  eventPhase: {
-    get: function() {
-      return 0;
-    }
-  },
-  type: {
-    get: function() {
-      return this._type;
-    }
-  }
-});
+TimingEvent.prototype = createEventPrototype();
 
 var isEffectCallback = function(animationEffect) {
   return typeof animationEffect === 'function';
@@ -1433,7 +1488,7 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
     this._updateChildStartTimes();
 
     if (this.player) {
-      this.player._checkForHandlers();
+      this.player._checkForLegacyHandlers();
     }
 
     this._isInChildrenStateModified = false;
@@ -1587,14 +1642,14 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
         this.localTime + ') ' + ' [' +
         this._children.map(function(a) { return a.toString(); }) + ']';
   },
-  _hasHandlers: function() {
-    return TimedItem.prototype._hasHandlers.call(this) || (
+  _hasLegacyEventHandlers: function() {
+    return TimedItem.prototype._hasLegacyEventHandlers.call(this) || (
         this._children.length > 0 &&
         this._children.reduce(
-            function(a, b) { return a || b._hasHandlers(); },
+            function(a, b) { return a || b._hasLegacyEventHandlers(); },
             false));
   },
-  _generateChildEventsForRange: function(localStart, localEnd, rangeStart,
+  _generateChildLegacyEventsForRange: function(localStart, localEnd, rangeStart,
       rangeEnd, iteration, globalTime, deltaScale) {
     var start;
     var end;
@@ -1618,7 +1673,7 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
     end -= iteration * this.duration / deltaScale;
 
     for (var i = 0; i < this._children.length; i++) {
-      this._children[i]._generateEvents(
+      this._children[i]._generateLegacyEvents(
           start, end, globalTime - endDelta, deltaScale);
     }
   }
@@ -5495,7 +5550,7 @@ var cachedClockTime = function() {
     lastClockTimeMillis = cachedClockTimeMillis;
     setTimeout(function() { cachedClockTimeMillis = undefined; }, 0);
   }
-  return cachedClockTimeMillis / 1000;
+  return cachedClockTimeMillis;
 };
 
 
@@ -5675,14 +5730,10 @@ window._WebAnimationsTestingUtilities = {
   _prefixProperty: prefixProperty
 };
 
-// Timeline is deprecated
-Object.defineProperty(window, 'Timeline', {
-  get: function() {
-    deprecated('Timeline', '2014-04-08',
-        'Please use AnimationTimeline instead.');
-    return AnimationTimeline;
-  },
-  configurable: true
+defineDeprecatedProperty(window, 'Timeline', function() {
+  deprecated('Timeline', '2014-04-08',
+      'Please use AnimationTimeline instead.');
+  return AnimationTimeline;
 });
 
 })();

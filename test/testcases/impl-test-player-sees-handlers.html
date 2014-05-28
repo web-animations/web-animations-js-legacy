@@ -25,35 +25,35 @@ var body = document.querySelector("body");
 test(function() {
   var anAnimation = new Animation(body, {left: '100px'}, 1);
   var player = document.timeline.play(anAnimation);
-  assert_false(player._needsHandlerPass);
+  assert_false(player._needsLegacyHandlerPass);
   anAnimation.onstart = function() { };
-  assert_true(player._needsHandlerPass);
+  assert_true(player._needsLegacyHandlerPass);
   anAnimation.onstart = undefined;
-  assert_false(player._needsHandlerPass);
+  assert_false(player._needsLegacyHandlerPass);
 }, 'player sees handler changes after play called');
 
 test(function() {
   var anAnimation = new Animation(body, {left: '100px'}, 1);
   anAnimation.onend = function() { };
   var player = document.timeline.play(anAnimation);
-  assert_true(player._needsHandlerPass);
+  assert_true(player._needsLegacyHandlerPass);
   anAnimation.onend = null;
-  assert_false(player._needsHandlerPass);
+  assert_false(player._needsLegacyHandlerPass);
   var player = document.timeline.play(anAnimation);
-  assert_false(player._needsHandlerPass);
+  assert_false(player._needsLegacyHandlerPass);
 }, 'player gets appropriate handler state for changes before play is called');
 
 test(function() {
   var anAnimation = new Animation(body, {left: '100px'}, 1);
   anAnimation.oniteration = function() { };
   var player = document.timeline.play(anAnimation);
-  assert_true(player._needsHandlerPass);
+  assert_true(player._needsLegacyHandlerPass);
   anAnimation.oncancel = function() { };
-  assert_true(player._needsHandlerPass);
+  assert_true(player._needsLegacyHandlerPass);
   anAnimation.oniteration = null;
-  assert_true(player._needsHandlerPass);
+  assert_true(player._needsLegacyHandlerPass);
   anAnimation.oncancel = undefined;
-  assert_false(player._needsHandlerPass);
+  assert_false(player._needsLegacyHandlerPass);
 }, 'player needs a handler pass while at least one handler exists in the tree');
 
 test(function() {
@@ -67,21 +67,21 @@ test(function() {
   ]);
   aTree.children[1].onend = function() { };
   var player = document.timeline.play(aTree);
-  assert_true(player._needsHandlerPass);
+  assert_true(player._needsLegacyHandlerPass);
   aTree.children[1].onend = undefined;
-  assert_false(player._needsHandlerPass);
+  assert_false(player._needsLegacyHandlerPass);
   aTree.children[0].children[0].onstart = function() { };
-  assert_true(player._needsHandlerPass);
+  assert_true(player._needsLegacyHandlerPass);
   aTree.children[0].children[1].oncancel = function() { };
-  assert_true(player._needsHandlerPass);
+  assert_true(player._needsLegacyHandlerPass);
   aTree.children[0].children[0].onstart = null;
-  assert_true(player._needsHandlerPass);
+  assert_true(player._needsLegacyHandlerPass);
   aTree.children[0].children[1].oncancel = undefined;
-  assert_false(player._needsHandlerPass);
+  assert_false(player._needsLegacyHandlerPass);
   aTree.oniteration = function() { };
-  assert_true(player._needsHandlerPass);
+  assert_true(player._needsLegacyHandlerPass);
   aTree.oniteration = null;
-  assert_false(player._needsHandlerPass);
+  assert_false(player._needsLegacyHandlerPass);
 }, 'needsHandlerPass correctly calculated for non-trivial trees');
 
 test(function() {
@@ -89,7 +89,7 @@ test(function() {
   anAnimation.onstart = function() { };
   var aGroup = new AnimationGroup([anAnimation]);
   var player = document.timeline.play(aGroup);
-  assert_true(player._needsHandlerPass);
+  assert_true(player._needsLegacyHandlerPass);
 }, 'needsHandlerPass correctly passed from child to parent on construction');
 
 test(function() {
@@ -98,7 +98,7 @@ test(function() {
   var aGroup = new AnimationGroup([]);
   aGroup.append(anAnimation);
   var player = document.timeline.play(aGroup);
-  assert_true(player._needsHandlerPass);
+  assert_true(player._needsLegacyHandlerPass);
 }, 'needsHandlerPass correctly passed from child to parent on addition');
 
 test(function() {
@@ -107,7 +107,7 @@ test(function() {
   var aGroup = new AnimationGroup([]);
   var player = document.timeline.play(aGroup);
   aGroup.append(anAnimation);
-  assert_true(player._needsHandlerPass);
+  assert_true(player._needsLegacyHandlerPass);
 }, 'needsHandlerPass correctly passed from child to parent on ' +
    'addition after player creation');
 </script>

@@ -53,5 +53,5 @@ animation.addEventListener('end', function() {
 });
 document.timeline.play(animation);
 
-timing_test(function() {at(1, function() {});}, 'Force testharness to execute to 1 second.');
+timing_test(function() {at(1 * 1000, function() {});}, 'Force testharness to execute to 1 second.');
 </script>

@@ -93,32 +93,25 @@ var expected_failures = [
   }, {
     browser_configurations: [{ firefox: true }],
     tests: [
-      '#anim2 at t=(0|1|2|10|11)s',
-      '#anim3 at t=(0|7|8|10)s',
-      '#anim4 at t=(0|10)s',
+      '#anim2 at t=(0|(1|2|10|11)000)ms',
+      '#anim3 at t=(0|(7|8|10)000)ms',
+      '#anim4 at t=(0|10000)ms',
     ],
     message: 'Doesn\'t quite follow path correctly.',
   }, {
-    browser_configurations: [{ firefox: true, version: '26|27' }],
+    browser_configurations: [{ firefox: true, version: '29|30|31' }],
     tests: [
-      '#anim2 at t=(7|8)s',
-      '#anim3 at t=6s',
-    ],
-    message: 'Doesn\'t quite follow path correctly.',
-  }, {
-    browser_configurations: [{ firefox: true, version: '28|29|30' }],
-    tests: [
-      '#anim2 at t=9s',
-      '#anim3 at t=5s',
-      '#anim4 at t=(3|8|9)s',
+      '#anim2 at t=9000ms',
+      '#anim3 at t=5000ms',
+      '#anim4 at t=(3|8|9)000ms',
     ],
     message: 'Doesn\'t quite follow path correctly.',
   }, {
     browser_configurations: [{ msie: true }],
     tests: [
-      '#anim2 at t=(0|1|2|3|4|9|10|11)s',
-      '#anim3 at t=(0|1|3|4|7|8|10|11)s',
-      '#anim4 at t=(0|1|3|9|10|11)s',
+      '#anim2 at t=(0|(1|2|3|4|9|10|11)000)ms',
+      '#anim3 at t=(0|(1|3|4|7|8|10|11)000)ms',
+      '#anim4 at t=(0|(1|3|9|10|11)000)ms',
     ],
     message: 'Doesn\'t quite follow path correctly.',
   }
@@ -131,25 +124,25 @@ var expected_failures = [
 var animFunc1 = new MotionPathEffect(
     document.querySelector('#path1').pathSegList, 'auto-rotate', 'translate(-12.5px, -12.5px)');
 document.timeline.play(new Animation(document.querySelector("#anim1"),
-    animFunc1, {duration: 10, iterations: 2}));
+    animFunc1, {duration: 10 * 1000, iterations: 2}));
 
 var animFunc2 = new MotionPathEffect(
     document.querySelector('#path2').pathSegList, 'auto-rotate', 'translate(-12.5px, -12.5px)');
 document.timeline.play(new Animation(document.querySelector("#anim2"),
-    animFunc2, {duration: 10, iterations: 2}));
+    animFunc2, {duration: 10 * 1000, iterations: 2}));
 
 var animFunc3 = new MotionPathEffect(
     document.querySelector('#path3').pathSegList, 'auto-rotate', 'translate(-12.5px, -12.5px)');
 document.timeline.play(new Animation(
     document.querySelector("#anim3"), animFunc3,
-    {duration: 10, iterations: 2, easing: "paced"}));
+    {duration: 10 * 1000, iterations: 2, easing: "paced"}));
 
 var animFunc4KeyFrames = new KeyframeEffect(
     [{transform: "translate(387.5px, 287.5px) rotate(180deg)"}], "replace");
 var animFunc4Path = new MotionPathEffect(
     document.querySelector('#path4').pathSegList, 'auto-rotate', 'translate(-12.5px, -12.5px)');
 var anim4 = new Animation(document.querySelector("#anim4"), animFunc4Path,
-    {duration: 10, iterations: 2, easing: "paced"});
+    {duration: 10 * 1000, iterations: 2, easing: "paced"});
 document.timeline.play(anim4);
 
 testharness_timeline.schedule(function() {

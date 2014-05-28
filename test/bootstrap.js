@@ -490,7 +490,7 @@ window.assert_styles = assert_styles;
  * Schedule something to be called at a given time.
  *
  * @constructor
- * @param {number} millis Microseconds after start at which the callback should
+ * @param {number} millis Milliseconds after start at which the callback should
  *   be called.
  * @param {bool} autostart Auto something...
  */
@@ -1132,15 +1132,15 @@ function timing_test(f, desc) {
   /**
    * at function inside a timing_test function allows testing things at a
    * given time rather then onload.
-   * @param {number} seconds Seconds after page load to run the tests.
+   * @param {number} millis Milliseconds after page load to run the tests.
    * @param {function()} f Closure containing the asserts to be run.
    * @param {string} desc Description 
    */
-  var at = function(seconds, f, desc_at) {
-    assert_true(typeof seconds == 'number', "at's first argument shoud be a number.");
-    assert_true(!isNaN(seconds), "at's first argument should be a number not NaN!");
-    assert_true(seconds >= 0, "at's first argument should be greater then 0.");
-    assert_true(isFinite(seconds), "at's first argument should be finite.");
+  var at = function(millis, f, desc_at) {
+    assert_true(typeof millis == 'number', "at's first argument shoud be a number.");
+    assert_true(!isNaN(millis), "at's first argument should be a number not NaN!");
+    assert_true(millis >= 0, "at's first argument should be greater then 0.");
+    assert_true(isFinite(millis), "at's first argument should be finite.");
 
     assert_true(typeof f == 'function', "at's second argument should be a function.");
 
@@ -1154,9 +1154,9 @@ function timing_test(f, desc) {
       desc_at = 'Unnamed assert';
     }
 
-    var t = async_test(desc_at + ' at t=' + seconds + 's');
+    var t = async_test(desc_at + ' at t=' + millis + 'ms');
     t.f = f;
-    window.testharness_timeline.schedule(t, seconds * 1000.0);
+    window.testharness_timeline.schedule(t, millis);
   };
   override_at(at, f);
 }
@@ -1170,14 +1170,14 @@ function test_without_at(f, desc) {
 
 /**
  * at function schedules a to be called at a given point.
- * @param {number} seconds Seconds after page load to run the function.
+ * @param {number} millis Milliseconds after page load to run the function.
  * @param {function()} f Function to be called. Called with no arguments
  */
-function at(seconds, f) {
-  assert_true(typeof seconds == 'number', "at's first argument shoud be a number.");
+function at(millis, f) {
+  assert_true(typeof millis == 'number', "at's first argument shoud be a number.");
   assert_true(typeof f == 'function', "at's second argument should be a function.");
 
-  window.testharness_timeline.schedule(f, seconds * 1000.0);
+  window.testharness_timeline.schedule(f, millis);
 }
 
 window.testharness_after_loaded = function() {

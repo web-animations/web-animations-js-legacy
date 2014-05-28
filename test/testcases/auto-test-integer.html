@@ -48,5 +48,5 @@ for (var i = 0; i < totalWidth; i += width) {
   document.body.insertBefore(div, marker);
 }
 document.timeline.play(new Animation(document.querySelector("#test"),
-    [{zIndex: String(startZ)}, {zIndex: String(endZ)}], {duration: 3, fill: 'forwards'}));
+    [{zIndex: String(startZ)}, {zIndex: String(endZ)}], {duration: 3 * 1000, fill: 'forwards'}));
 </script>

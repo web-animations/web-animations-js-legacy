@@ -52,7 +52,7 @@ limitations under the License.
 var expected_failures = [
   {
     browser_configurations: [{ chrome: true, version: '34|35' }],
-    tests: ['tests at t=(1|1.5)s'],
+    tests: ['tests at t=(1000|1500)ms'],
     message: '-webkit-perspective-origin shorthand behaviour is broken: crbug.com/361944',
   }
 ];
@@ -74,7 +74,7 @@ var perspectiveOrignTestCases = [
 ];
 perspectiveOrignTestCases.forEach(function(testCase) {
   var test = createBoxedItem('test', testCase);
-  test.animate({perspectiveOrigin: testCase}, {duration: 2, fill: 'forwards'});
+  test.animate({perspectiveOrigin: testCase}, {duration: 2 * 1000, fill: 'forwards'});
   testContainer.appendChild(test);
 
   var expectation = createBoxedItem('expectation', testCase);

@@ -49,7 +49,7 @@ This test is currently broken.
 
 var a1 = new Animation(document.querySelector("#a"),
     [{left: "0px"}, {left: "500px"}],
-    {duration: 10, direction: 'alternating', iterations: Infinity});
+    {duration: 10 * 1000, direction: 'alternating', iterations: Infinity});
 var player1 = document.timeline.play(a1);
 
 var a2 = new Animation(undefined,
