@@ -15,5 +15,5 @@ fi
 # Comment out the (function() {} ) wrapper
 sed -e'17s-^-//-' -e'$s-^-//-' web-animations.js > web-animations-4lint.js
 
-gjslint --summary --nojsdoc --strict web-animations-4lint.js
+gjslint --summary --nojsdoc web-animations-4lint.js
 exit $?
