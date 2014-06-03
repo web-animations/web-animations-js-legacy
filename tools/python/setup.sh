@@ -39,17 +39,22 @@ fi
 
 source bin/activate
 
-# Check if the dependencies are installed
-pip install --no-download -r requirements.txt > /dev/null 2>&1
-if [ $? -ne 0 ]; then
-  # Install dependencies
-  pip install -r requirements.txt --upgrade
+function ensureRequirementsMet() {
+  # Check if installed
+  pip install --no-download $@ > /dev/null 2>&1
   if [ $? -ne 0 ]; then
-    cat <<EOF
-Unable to install the required dependencies. Please see error output above.
+    # Install dependencies
+    pip install --upgrade $@
+    if [ $? -ne 0 ]; then
+      cat <<EOF
+Unable to install dependencies. Please see error output above.
 EOF
-    exit 1
+      exit 1
+    fi
   fi
-fi
+}
+
+ensureRequirementsMet 'pip>=1.5'
+ensureRequirementsMet -r requirements.txt
 
 cd $OLD_PWD
