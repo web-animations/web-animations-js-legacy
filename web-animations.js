@@ -1860,31 +1860,13 @@ MediaReference.prototype = createObject(TimedItem.prototype, {
 
 
 /** @constructor */
-var AnimationEffect = function(token, accumulate) {
+var AnimationEffect = function(token) {
   if (token !== constructorToken) {
     throw new TypeError('Illegal constructor');
-  }
-  enterModifyCurrentAnimationState();
-  try {
-    this.accumulate = accumulate;
-  } finally {
-    exitModifyCurrentAnimationState(null);
   }
 };
 
 AnimationEffect.prototype = {
-  get accumulate() {
-    return this._accumulate;
-  },
-  set accumulate(value) {
-    enterModifyCurrentAnimationState();
-    try {
-      // Use the default value if an invalid string is specified.
-      this._accumulate = value === 'sum' ? 'sum' : 'none';
-    } finally {
-      exitModifyCurrentAnimationState(repeatLastTick);
-    }
-  },
   _sample: abstractMethod,
   clone: abstractMethod,
   toString: abstractMethod
@@ -1897,11 +1879,10 @@ var clamp = function(x, min, max) {
 
 
 /** @constructor */
-var MotionPathEffect = function(path, autoRotate, angle, composite,
-    accumulate) {
+var MotionPathEffect = function(path, autoRotate, angle, composite) {
   enterModifyCurrentAnimationState();
   try {
-    AnimationEffect.call(this, constructorToken, accumulate);
+    AnimationEffect.call(this, constructorToken);
 
     this.composite = composite;
 
@@ -2173,10 +2154,10 @@ var normalizeKeyframeDictionary = function(properties) {
 
 /** @constructor */
 var KeyframeEffect = function(oneOrMoreKeyframeDictionaries,
-    composite, accumulate) {
+    composite) {
   enterModifyCurrentAnimationState();
   try {
-    AnimationEffect.call(this, constructorToken, accumulate);
+    AnimationEffect.call(this, constructorToken);
 
     this.composite = composite;
 
@@ -2225,49 +2206,6 @@ KeyframeEffect.prototype = createObject(AnimationEffect.prototype, {
     }
   },
   _sampleForProperty: function(frames, timeFraction, currentIteration) {
-    var unaccumulatedValue = this._getUnaccumulatedValue(frames, timeFraction);
-
-    // We can only accumulate if this iteration is strictly positive and if all
-    // keyframes use the same composite operation.
-    if (this.accumulate === 'sum' &&
-        currentIteration > 0 &&
-        this._allKeyframesUseSameCompositeOperation(frames)) {
-      // TODO: The spec is vague about the order of addition here when using add
-      // composition.
-      return new AccumulatedCompositableValue(unaccumulatedValue,
-          this._getAccumulatingValue(frames), currentIteration);
-    }
-
-    return unaccumulatedValue;
-  },
-  _getAccumulatingValue: function(frames) {
-    ASSERT_ENABLED && assert(
-        this._allKeyframesUseSameCompositeOperation(frames),
-        'Accumulation only valid if all frames use same composite operation');
-
-    // This is a BlendedCompositableValue, though because the offset is 1.0, we
-    // could simplify it to an AddReplaceCompositableValue representing the
-    // keyframe at offset 1.0. We don't do this because the spec is likely to
-    // change such that there is no guarantee that a keyframe with offset 1.0 is
-    // present.
-    // TODO: Consider caching this.
-    var unaccumulatedValueAtOffsetOne = this._getUnaccumulatedValue(
-        frames, 1.0);
-
-    if (this._compositeForKeyframe(frames[0]) === 'add') {
-      return unaccumulatedValueAtOffsetOne;
-    }
-
-    // For replace composition, we must evaluate the BlendedCompositableValue
-    // to get a concrete value (note that the choice of underlying value is
-    // irrelevant since it uses replace composition). We then form a new
-    // AddReplaceCompositable value to add-composite this concrete value.
-    ASSERT_ENABLED && assert(
-        !unaccumulatedValueAtOffsetOne.dependsOnUnderlyingValue());
-    return new AddReplaceCompositableValue(
-        unaccumulatedValueAtOffsetOne.compositeOnto(null, null), 'add');
-  },
-  _getUnaccumulatedValue: function(frames, timeFraction) {
     ASSERT_ENABLED && assert(
         frames.length >= 2,
         'Interpolation requires at least two keyframes');
@@ -2366,8 +2304,7 @@ KeyframeEffect.prototype = createObject(AnimationEffect.prototype, {
     return this._cachedPropertySpecificKeyframes;
   },
   clone: function() {
-    var result = new KeyframeEffect([], this.composite,
-        this.accumulate);
+    var result = new KeyframeEffect([], this.composite);
     result._keyframeDictionaries = this._keyframeDictionaries.slice(0);
     return result;
   },
@@ -4945,37 +4882,6 @@ BlendedCompositableValue.prototype = createObject(
         }
       }
     });
-
-
-
-/** @constructor */
-var AccumulatedCompositableValue = function(
-    bottomValue, accumulatingValue, accumulationCount) {
-  this.bottomValue = bottomValue;
-  this.accumulatingValue = accumulatingValue;
-  this.accumulationCount = accumulationCount;
-  ASSERT_ENABLED && assert(this.accumulationCount > 0,
-      'Accumumlation count should be strictly positive');
-};
-
-AccumulatedCompositableValue.prototype = createObject(
-    CompositableValue.prototype, {
-      compositeOnto: function(property, underlyingValue) {
-        // The spec defines accumulation recursively, but we do it iteratively
-        // to better handle large numbers of iterations.
-        var result = this.bottomValue.compositeOnto(property, underlyingValue);
-        for (var i = 0; i < this.accumulationCount; i++) {
-          result = this.accumulatingValue.compositeOnto(property, result);
-        }
-        return result;
-      },
-      dependsOnUnderlyingValue: function() {
-        return this.bottomValue.dependsOnUnderlyingValue() &&
-            this.accumulatingValue.dependsOnUnderlyingValue();
-      }
-    });
-
-
 
 /** @constructor */
 var CompositedPropertyMap = function(target) {
