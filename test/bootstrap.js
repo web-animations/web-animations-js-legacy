@@ -148,6 +148,9 @@ function instrument(src) {
 
 var svg_properties = {
   cx: 1,
+  cy: 1,
+  height: 1,
+  r: 1,
   width: 1,
   x: 1,
   y: 1

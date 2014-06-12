@@ -40,6 +40,7 @@ var tests = [
   'auto-test-start-time.html',
   'auto-test-start-time-iterations.html',
   'auto-test-svg-anim.html',
+  'auto-test-svg-circle.html',
   'auto-test-text-shadow.html',
   'auto-test-timing-functions.html',
   'auto-test-to-animation.html',

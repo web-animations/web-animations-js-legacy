@@ -4569,6 +4569,7 @@ var propertyTypes = {
   clip: typeWithKeywords(['auto'], rectangleType),
   color: colorType,
   cx: lengthType,
+  cy: lengthType,
 
   // TODO: Handle these keywords properly.
   fontSize: typeWithKeywords(['smaller', 'larger'], percentLengthType),
@@ -4604,6 +4605,7 @@ var propertyTypes = {
   paddingTop: lengthType,
   perspective: typeWithKeywords(['none'], lengthType),
   perspectiveOrigin: originType,
+  r: lengthType,
   right: percentLengthAutoType,
   textIndent: typeWithKeywords(['each-line', 'hanging'], percentLengthType),
   textShadow: shadowType,
@@ -4638,6 +4640,9 @@ var propertyTypes = {
 
 var svgProperties = {
   'cx': 1,
+  'cy': 1,
+  'height': 1,
+  'r': 1,
   'width': 1,
   'x': 1,
   'y': 1
