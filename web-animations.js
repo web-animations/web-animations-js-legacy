@@ -4570,6 +4570,8 @@ var propertyTypes = {
   color: colorType,
   cx: lengthType,
   cy: lengthType,
+  fill: colorType,
+  floodColor: colorType,
 
   // TODO: Handle these keywords properly.
   fontSize: typeWithKeywords(['smaller', 'larger'], percentLengthType),
@@ -4578,6 +4580,7 @@ var propertyTypes = {
   height: percentLengthAutoType,
   left: percentLengthAutoType,
   letterSpacing: typeWithKeywords(['normal'], lengthType),
+  lightingColor: colorType,
   lineHeight: percentLengthType, // TODO: Should support numberType as well.
   marginBottom: lengthAutoType,
   marginLeft: lengthAutoType,
@@ -4607,6 +4610,8 @@ var propertyTypes = {
   perspectiveOrigin: originType,
   r: lengthType,
   right: percentLengthAutoType,
+  stopColor: colorType,
+  stroke: colorType,
   textIndent: typeWithKeywords(['each-line', 'hanging'], percentLengthType),
   textShadow: shadowType,
   top: percentLengthAutoType,
@@ -4641,8 +4646,13 @@ var propertyTypes = {
 var svgProperties = {
   'cx': 1,
   'cy': 1,
+  'fill': 1,
+  'floodColor': 1,
   'height': 1,
+  'lightingColor': 1,
   'r': 1,
+  'stopColor': 1,
+  'stroke': 1,
   'width': 1,
   'x': 1,
   'y': 1
