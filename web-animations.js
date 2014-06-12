@@ -5594,7 +5594,8 @@ window._WebAnimationsTestingUtilities = {
   _types: propertyTypes,
   _knownPlayers: PLAYERS,
   _pacedTimingFunction: PacedTimingFunction,
-  _prefixProperty: prefixProperty
+  _prefixProperty: prefixProperty,
+  _propertyIsSVGAttrib: propertyIsSVGAttrib
 };
 
 defineDeprecatedProperty(window, 'Timeline', function() {

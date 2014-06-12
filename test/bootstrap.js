@@ -145,22 +145,6 @@ function instrument(src) {
   var inst = window.__resources__[src] = new Instrumenter().instrumentSync(js, src);
 }
 
-
-var svg_properties = {
-  cx: 1,
-  cy: 1,
-  height: 1,
-  r: 1,
-  width: 1,
-  x: 1,
-  y: 1
-};
-
-var is_svg_attrib = function(property, target) {
-  return target.namespaceURI == 'http://www.w3.org/2000/svg' &&
-      property in svg_properties;
-};
-
 var svg_namespace_uri = 'http://www.w3.org/2000/svg';
 
 /**
@@ -342,7 +326,7 @@ function _assert_style_element(object, style, description) {
 
       var output_prop_name = _WebAnimationsTestingUtilities._prefixProperty(prop_name);
 
-      var is_svg = is_svg_attrib(prop_name, object);
+      var is_svg = _WebAnimationsTestingUtilities._propertyIsSVGAttrib(prop_name, object);
       if (is_svg) {
         reference_element.setAttribute(prop_name, prop_value);
 

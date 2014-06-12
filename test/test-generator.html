@@ -39,6 +39,7 @@ input#iframeSrc {
 <div> Outputted Checks </div>
 <pre id = "checks"></pre>
 
+<script src="../web-animations.js"></script>
 <script>
 "use strict";
 
@@ -167,21 +168,6 @@ function findElementsToCheck(rawString){
   }
 }
 
-var svgProperties = {
-  'cx': 1,
-  'cy': 1,
-  'height': 1,
-  'r': 1,
-  'width': 1,
-  'x': 1,
-  'y': 1,
-};
-
-var propertyIsSVGAttrib = function(property, target) {
-  return target.namespaceURI == 'http://www.w3.org/2000/svg' &&
-      property in svgProperties;
-};
-
 function generate(time){
   console.log("Generating checks for t=", time);
 
@@ -193,7 +179,7 @@ function generate(time){
       var propsPrint = "{";
       for (var j in checks[x].properties){
         var p = checks[x].properties[j];
-        var isSVG = propertyIsSVGAttrib(p, checks[x].object[i]);
+        var isSVG = _WebAnimationsTestingUtilities._propertyIsSVGAttrib(p, checks[x].object[i]);
 
         if(isSVG) var props = checks[x].object[i].attributes;
         else var props = checks[x].object[i].currentStyle ||
