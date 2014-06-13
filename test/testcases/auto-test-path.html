@@ -107,6 +107,14 @@ var expected_failures = [
     ],
     message: 'Doesn\'t quite follow path correctly.',
   }, {
+    browser_configurations: [{ firefox: true, version: '31' }],
+    tests: [
+      '#anim2',
+      '#anim3',
+      '#anim4 at t=(1|2|7|11)000ms',
+    ],
+    message: 'SVGPath.getTotalLength() broken in Firefox https://bugzilla.mozilla.org/show_bug.cgi?id=1024926',
+  }, {
     browser_configurations: [{ msie: true }],
     tests: [
       '#anim2 at t=(0|(1|2|3|4|9|10|11)000)ms',
