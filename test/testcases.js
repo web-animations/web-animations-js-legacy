@@ -42,7 +42,6 @@ var tests = [
   'auto-test-svg-anim.html',
   'auto-test-svg-circle.html',
   'auto-test-svg-color.html',
-  'auto-test-svg-transform.html',
   'auto-test-text-shadow.html',
   'auto-test-timing-functions.html',
   'auto-test-to-animation.html',
