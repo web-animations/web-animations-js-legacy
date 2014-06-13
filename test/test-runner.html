@@ -704,13 +704,13 @@ function processResults(test, browser_expected_failures) {
     }
     if (expected_failure !== null && result.status != result.NOTRUN) {
       if (result.status != result.FAIL) {
-        result.message = "Expected failure (" + expected_failure.message + "), actually " +
+        result.message = "Expected failure (" + expected_failure + "), actually " +
           {0: 'PASS', 2: 'TIMEOUT', 3:'NOTRUN'}[result.status] + " " +
           result.message;
         result.status = result.FAIL;
       } else {
         result.status = result.PASS;
-        result.message = "Expected failure (" + expected_failure.message + "): " + result.message;
+        result.message = "Expected failure (" + expected_failure + "): " + result.message;
       }
       counts.expected_failed++;
     }
