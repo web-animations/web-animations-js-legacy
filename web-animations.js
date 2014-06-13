@@ -4653,6 +4653,7 @@ var svgProperties = {
   'r': 1,
   'stopColor': 1,
   'stroke': 1,
+  'transform': 1,
   'width': 1,
   'x': 1,
   'y': 1
