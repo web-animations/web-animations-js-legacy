@@ -155,7 +155,7 @@ backwards fills, and animation forwards fills. There are a few simple rules whic
 - Animations only fill beyond their parent iteration if:
     - the relevant fill value is selected for the animation;
     - the matching fill value is selected for the parent; and
-    - this is the first parent iteration (for `fill: 'backward'`) or last parent iteration (for `fill: 'forward'`)
+    - this is the first parent iteration (for `fill: 'backwards'`) or last parent iteration (for `fill: 'forwards'`)
 - Missing `duration` values for TimingGroups are generated based on the calculated durations of the child animations.
 
 The following example illustrates these rules:
@@ -165,8 +165,8 @@ The following example illustrates these rules:
         new Animation(..., {duration: 3000}),
         new Animation(..., {duration: 5000, fill: 'both'})
       ], {duration: 6000, delay: 3000, fill: 'none'}),
-      new Animation(..., {duration: 8000, fill: 'forward'})
-    ], {iterations: 2, fill: 'forward'});
+      new Animation(..., {duration: 8000, fill: 'forwards'})
+    ], {iterations: 2, fill: 'forwards'});
 
 In this example:
 
@@ -175,7 +175,7 @@ second child animation will only play for the first 3 of its 5 second duration
 - The `AnimationGroup` has no explicit duration, and will be provided with a
 calculated duration of the max (`duration + delay`) of its children - in this case 9 seconds.
 - Although `fill: "both"` is specified for the second `Animation` within the `AnimationSequence`, the `AnimationSequence` itself has a `fill` of "none". Hence, as the animation ends right at the end of the `AnimationSequence`, the animation will only fill backwards, and only up until the boundary of the `AnimationSequence` (i.e. 3 seconds after the start of the `AnimationGroup`).
-- The `Animation` inside the `AnimationGroup` and the `AnimationGroup` are both `fill: "forward"`. Therefore the animation will fill forward in two places: 
+- The `Animation` inside the `AnimationGroup` and the `AnimationGroup` are both `fill: "forwards"`. Therefore the animation will fill forward in two places: 
     - from 8 seconds after the `AnimationGroup` starts until the second iteration of the `AnimationGroup` starts (i.e. for 1 second)
     - from 17 seconds after the `AnimationGroup` starts, extending forward indefinitely.
 
