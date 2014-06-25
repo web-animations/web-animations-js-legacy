@@ -957,6 +957,10 @@ TimedItem.prototype = {
         this._modulusWithClosedOpenRange(
             adjustedAnimationTime, this.duration);
     this._iterationTime = this._scaleIterationTime(unscaledIterationTime);
+    if (this.duration == Infinity) {
+      this._timeFraction = 0;
+      return;
+    }
     this._timeFraction = this._iterationTime / this.duration;
     ASSERT_ENABLED && assert(
         this._timeFraction >= 0.0 && this._timeFraction <= 1.0,
