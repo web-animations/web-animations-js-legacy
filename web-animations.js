@@ -4570,6 +4570,8 @@ var propertyTypes = {
   color: colorType,
   cx: lengthType,
   cy: lengthType,
+  dx: lengthType,
+  dy: lengthType,
   fill: colorType,
   floodColor: colorType,
 
@@ -4646,6 +4648,8 @@ var propertyTypes = {
 var svgProperties = {
   'cx': 1,
   'cy': 1,
+  'dx': 1,
+  'dy': 1,
   'fill': 1,
   'floodColor': 1,
   'height': 1,
