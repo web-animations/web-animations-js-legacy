@@ -138,8 +138,8 @@ for (var i = 0; i < directions.length; i++) {
   }));
 }
 
-function sampleFunc(timeFraction, animation) {
-  animation.target.innerHTML = Math.floor(timeFraction * 1000) / 1000 + " : " + animation.currentIteration;
+function sampleFunc(timeFraction, target, animation) {
+  target.innerHTML = Math.floor(timeFraction * 1000) / 1000 + " : " + animation.currentIteration;
 }
 
 for (var i = 0; i < fills.length; i++) {

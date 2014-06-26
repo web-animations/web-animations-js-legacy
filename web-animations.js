@@ -1331,7 +1331,6 @@ var Animation = function(target, animationEffect, timingInput) {
   } finally {
     exitModifyCurrentAnimationState(null);
   }
-  this._previousTimeFraction = null;
 };
 
 Animation.prototype = createObject(TimedItem.prototype, {
@@ -1342,8 +1341,7 @@ Animation.prototype = createObject(TimedItem.prototype, {
     if (isDefinedAndNotNull(this.effect) &&
         !(this.target instanceof PseudoElementReference)) {
       if (isEffectCallback(this.effect)) {
-        this.effect(this._timeFraction, this, this._previousTimeFraction);
-        this._previousTimeFraction = this._timeFraction;
+        this.effect(this._timeFraction, this.target, this);
       } else {
         this.effect._sample(this._timeFraction, this.currentIteration,
             this.target, this.underlyingValue);
