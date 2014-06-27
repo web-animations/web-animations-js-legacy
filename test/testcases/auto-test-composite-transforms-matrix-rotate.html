@@ -49,11 +49,11 @@ limitations under the License.
 
 </style>
 
-<div>Right edge of each box should align with black line at end of test.</div>
+<div>The first two divs should rotate 360 degrees.</div>
 <div id="a" class="anim"></div>
 <div id="a" style="top: 50px; left: 200px;" class="expected"></div>
 <div id="b" class="anim"></div>
-<div id="b" style="top: 150px; left: 0px;" class="expected"></div>
+<div id="b" style="top: 150px; left: 100px;" class="expected"></div>
 <div id="c" class="anim"></div>
 <div id="c" style="top: 250px; left: 200px;" class="expected"></div>
 <div id="d" class="anim"></div>
@@ -84,12 +84,21 @@ dt.play(new Animation(divs[0], [
   {transform: "matrix(1,0,0,1,0,0) rotate(0deg)"},
   {transform: "matrix(1,0,0,1,200,0) rotate(360deg)"},
 ], timing));
-dt.play(new Animation(divs[1],
-    [{transform: "rotate(0deg)"}, {transform: "rotate(90deg)"}], timing));
+
+dt.play(new Animation(divs[1], [
+  {transform: "matrix(1,0,0,1,0,0)"},
+  {transform: "matrix(1,0,0,1,100,0)"},
+], timing));
+dt.play(new Animation(divs[1], new KeyframeEffect([
+  {transform: "rotate(0deg)"},
+  {transform: "rotate(360deg)"},
+], "add"), timing));
+
 dt.play(new Animation(divs[2], [
   {transform: "translate(0px, 0px) rotate(0deg)"},
   {transform: "translate(200px, 0px) rotate(90deg)"},
 ], timing));
+
 dt.play(new Animation(divs[3], [
   {transform: "rotate(0deg) translate(0px, 0px)"},
   {transform: "rotate(90deg) translate(200px, 0px)"},
