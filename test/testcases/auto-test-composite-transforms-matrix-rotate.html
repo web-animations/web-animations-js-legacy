@@ -49,7 +49,7 @@ limitations under the License.
 
 </style>
 
-<div>The first two divs should rotate 360 degrees.</div>
+<div>All the squares should rotate 360 degrees except for the third one (since mismatched types cause fallback to matrix decomposition for the rest of the transform chain).</div>
 <div id="a" class="anim"></div>
 <div id="a" style="top: 50px; left: 200px;" class="expected"></div>
 <div id="b" class="anim"></div>
@@ -57,7 +57,7 @@ limitations under the License.
 <div id="c" class="anim"></div>
 <div id="c" style="top: 250px; left: 200px;" class="expected"></div>
 <div id="d" class="anim"></div>
-<div id="d" style="top: 550px; left: 0px;" class="expected"></div>
+<div id="d" style="top: 350px; left: 100px;" class="expected"></div>
 
 <div style="height: 700px;"></div>
 
@@ -95,13 +95,17 @@ dt.play(new Animation(divs[1], new KeyframeEffect([
 ], "add"), timing));
 
 dt.play(new Animation(divs[2], [
-  {transform: "translate(0px, 0px) rotate(0deg)"},
-  {transform: "translate(200px, 0px) rotate(90deg)"},
+  {transform: "scale(1) rotate(0deg)"},
+  {transform: "matrix(1,0,0,1,200,0) rotate(360deg)"},
 ], timing));
 
 dt.play(new Animation(divs[3], [
-  {transform: "rotate(0deg) translate(0px, 0px)"},
-  {transform: "rotate(90deg) translate(200px, 0px)"},
+  {transform: "scale(1)"},
+  {transform: "matrix(1,0,0,1,100,0)"},
 ], timing));
+dt.play(new Animation(divs[3], new KeyframeEffect([
+  {transform: "rotate(0deg)"},
+  {transform: "rotate(360deg)"},
+], "add"), timing));
 
 </script>
