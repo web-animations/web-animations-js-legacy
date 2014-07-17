@@ -3,6 +3,7 @@
 var tests = [
   'auto-test-box-shadow.html',
   'auto-test-calc.html',
+  'auto-test-circular-path.html',
   'auto-test-color.html',
   'auto-test-color-names.html',
   'auto-test-composite-transforms.html',
