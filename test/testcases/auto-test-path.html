@@ -32,19 +32,15 @@ limitations under the License.
   top: 0px;
   left: 0px;
 }
-#e1 {
-  -webkit-transform: translate(87.5px, 87.5px);
-  transform: translate(87.5px, 87.5px);
-}
-#e2 {
+#eTR {
   -webkit-transform: translate(387.5px, 87.5px);
   transform: translate(387.5px, 87.5px);
 }
-#e3 {
+#eBL {
   -webkit-transform: translate(87.5px, 287.5px);
   transform: translate(87.5px, 287.5px);
 }
-#e4, #anim4 {
+#eBR, #animBR {
   -webkit-transform: translate(387.5px, 287.5px);
   transform: translate(387.5px, 287.5px);
 }
@@ -58,68 +54,56 @@ height: 600px;
 </style>
 
 <svg xmlns="http://www.w3.org/2000/svg" version="1.1">
-  <path id=path1 d="M 100,100 a 75,75 0 1,0 150,0 a 75,75 0 1,0 -150,0 " />
-  <path d="M 100,100 a 75,75 0 1,0 150,0 a 75,75 0 1,0 -150,0 "
-      stroke="black" stroke-width="1" fill="none" />
-  <path id=path2 d="M400,100l0,0l0,-50l100,0l86.3325,122.665z" />
+  <path id=pathTR d="M400,100l0,0l0,-50l100,0l86.3325,122.665z" />
   <path d="M400,100l0,0l0,-50l100,0l86.3325,122.665z" stroke="black"
       stroke-width="1" fill="none" />
-  <path id=path3 d="M100,300l0,0l0,-50l100,0l86.3325,122.665z" />
+  <path id=pathBL d="M100,300l0,0l0,-50l100,0l86.3325,122.665z" />
   <path d="M100,300l0,0l0,-50l100,0l86.3325,122.665z" stroke="black"
       stroke-width="1" fill="none" />
-  <path id=path4 d="M400,300l0,0l0,-50l100,0l86.3325,122.665z" />
+  <path id=pathBR d="M400,300l0,0l0,-50l100,0l86.3325,122.665z" />
   <path d="M400,300l0,0l0,-50l100,0l86.3325,122.665z" stroke="black"
       stroke-width="1" fill="none" />
 </svg>
 
-<div id="e1" class="expectation"></div>
-<div id="anim1" class="animation">&rarr;</div>
-<div id="e2" class="expectation"></div>
-<div id="anim2" class="animation">&rarr;</div>
-<div id="e3" class="expectation"></div>
-<div id="anim3" class="animation">&rarr;</div>
-<div id="e4" class="expectation"></div>
-<div id="anim4" class="animation">&rarr;</div>
+<div id="eTR" class="expectation"></div>
+<div id="animTR" class="animation">&rarr;</div>
+<div id="eBL" class="expectation"></div>
+<div id="animBL" class="animation">&rarr;</div>
+<div id="eBR" class="expectation"></div>
+<div id="animBR" class="animation">&rarr;</div>
 
 <script>
 var expected_failures = [
   {
-    browser_configurations: [
-      { firefox: true },
-      { msie: true },
-    ],
-    tests: ['#anim1'],
-    message: 'Doesn\'t quite follow path correctly.',
-  }, {
     browser_configurations: [{ firefox: true }],
     tests: [
-      '#anim2 at t=(0|(1|2|10|11)000)ms',
-      '#anim3 at t=(0|(7|8|10)000)ms',
-      '#anim4 at t=(0|10000)ms',
+      '#animTR at t=(0|(1|2|10|11)000)ms',
+      '#animBL at t=(0|(7|8|10)000)ms',
+      '#animBR at t=(0|10000)ms',
     ],
     message: 'Doesn\'t quite follow path correctly.',
   }, {
     browser_configurations: [{ firefox: true, version: '29|30|31' }],
     tests: [
-      '#anim2 at t=9000ms',
-      '#anim3 at t=5000ms',
-      '#anim4 at t=(3|8|9)000ms',
+      '#animTR at t=9000ms',
+      '#animBL at t=5000ms',
+      '#animBR at t=(3|8|9)000ms',
     ],
     message: 'Doesn\'t quite follow path correctly.',
   }, {
     browser_configurations: [{ firefox: true, version: '31' }],
     tests: [
-      '#anim2',
-      '#anim3',
-      '#anim4 at t=(1|2|7|11)000ms',
+      '#animTR',
+      '#animBL',
+      '#animBR at t=(1|2|7|11)000ms',
     ],
     message: 'SVGPath.getTotalLength() broken in Firefox https://bugzilla.mozilla.org/show_bug.cgi?id=1024926',
   }, {
     browser_configurations: [{ msie: true }],
     tests: [
-      '#anim2 at t=(0|(1|2|3|4|9|10|11)000)ms',
-      '#anim3 at t=(0|(1|3|4|7|8|10|11)000)ms',
-      '#anim4 at t=(0|(1|3|9|10|11)000)ms',
+      '#animTR at t=(0|(1|2|3|4|9|10|11)000)ms',
+      '#animBL at t=(0|(1|3|4|7|8|10|11)000)ms',
+      '#animBR at t=(0|(1|3|9|10|11)000)ms',
     ],
     message: 'Doesn\'t quite follow path correctly.',
   }
@@ -129,34 +113,29 @@ var expected_failures = [
 <script>
 "use strict";
 
-var animFunc1 = new MotionPathEffect(
-    document.querySelector('#path1').pathSegList, 'auto-rotate');
-document.timeline.play(new Animation(document.querySelector("#anim1"),
-    animFunc1, {duration: 10 * 1000, iterations: 2}));
+var animFuncTR = new MotionPathEffect(
+    document.querySelector('#pathTR').pathSegList, 'auto-rotate');
+document.timeline.play(new Animation(document.querySelector("#animTR"),
+    animFuncTR, {duration: 10 * 1000, iterations: 2}));
 
-var animFunc2 = new MotionPathEffect(
-    document.querySelector('#path2').pathSegList, 'auto-rotate');
-document.timeline.play(new Animation(document.querySelector("#anim2"),
-    animFunc2, {duration: 10 * 1000, iterations: 2}));
-
-var animFunc3 = new MotionPathEffect(
-    document.querySelector('#path3').pathSegList, 'auto-rotate');
+var animFuncBL = new MotionPathEffect(
+    document.querySelector('#pathBL').pathSegList, 'auto-rotate');
 document.timeline.play(new Animation(
-    document.querySelector("#anim3"), animFunc3,
+    document.querySelector("#animBL"), animFuncBL,
     {duration: 10 * 1000, iterations: 2, easing: "paced"}));
 
-var animFunc4KeyFrames = new KeyframeEffect(
+var animFuncBRKeyFrames = new KeyframeEffect(
     [{transform: "translate(387.5px, 287.5px) rotate(180deg)"}], "replace");
-var animFunc4Path = new MotionPathEffect(
-    document.querySelector('#path4').pathSegList, 'auto-rotate');
-var anim4 = new Animation(document.querySelector("#anim4"), animFunc4Path,
+var animFuncBRPath = new MotionPathEffect(
+    document.querySelector('#pathBR').pathSegList, 'auto-rotate');
+var animBR = new Animation(document.querySelector("#animBR"), animFuncBRPath,
     {duration: 10 * 1000, iterations: 2, easing: "paced"});
-document.timeline.play(anim4);
+document.timeline.play(animBR);
 
 testharness_timeline.schedule(function() {
-    anim4.effect = animFunc4KeyFrames;
+    animBR.effect = animFuncBRKeyFrames;
 }, 3000);
 testharness_timeline.schedule(function() {
-    anim4.effect = animFunc4Path;
+    animBR.effect = animFuncBRPath;
 }, 6000);
 </script>

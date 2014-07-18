@@ -1882,11 +1882,25 @@ var clamp = function(x, min, max) {
 
 /** @constructor */
 var MotionPathEffect = function(path, autoRotate, angle, composite) {
+  var iterationComposite = undefined;
+  var options = autoRotate;
+  if (typeof options == 'string' || options instanceof String ||
+      angle || composite) {
+    // FIXME: add deprecation warning - please pass an options dictionary to
+    // MotionPathEffect constructor
+  } else if (options) {
+    autoRotate = options.autoRotate;
+    angle = options.angle;
+    composite = options.composite;
+    iterationComposite = options.iterationComposite;
+  }
+
   enterModifyCurrentAnimationState();
   try {
     AnimationEffect.call(this, constructorToken);
 
     this.composite = composite;
+    this.iterationComposite = iterationComposite;
 
     // TODO: path argument is not in the spec -- seems useful since
     // SVGPathSegList doesn't have a constructor.
@@ -1918,12 +1932,30 @@ MotionPathEffect.prototype = createObject(AnimationEffect.prototype, {
       exitModifyCurrentAnimationState(repeatLastTick);
     }
   },
+  get iterationComposite() {
+    return this._iterationComposite;
+  },
+  set iterationComposite(value) {
+    enterModifyCurrentAnimationState();
+    try {
+      // Use the default value if an invalid string is specified.
+      this._iterationComposite =
+          value === 'accumulate' ? 'accumulate' : 'replace';
+      this._updateOffsetPerIteration();
+    } finally {
+      exitModifyCurrentAnimationState(repeatLastTick);
+    }
+  },
   _sample: function(timeFraction, currentIteration, target) {
     // TODO: Handle accumulation.
     var lengthAtTimeFraction = this._lengthAtTimeFraction(timeFraction);
     var point = this._path.getPointAtLength(lengthAtTimeFraction);
     var x = point.x - target.offsetWidth / 2;
     var y = point.y - target.offsetHeight / 2;
+    if (currentIteration !== 0 && this._offsetPerIteration) {
+      x += this._offsetPerIteration.x * currentIteration;
+      y += this._offsetPerIteration.y * currentIteration;
+    }
     // TODO: calc(point.x - 50%) doesn't work?
     var value = [{t: 'translate', d: [{px: x}, {px: y}]}];
     var angle = this.angle;
@@ -1948,6 +1980,16 @@ MotionPathEffect.prototype = createObject(AnimationEffect.prototype, {
     var index = clamp(Math.floor(scaledFraction), 0, segmentCount);
     return this._cumulativeLengths[index] + ((scaledFraction % 1) * (
         this._cumulativeLengths[index + 1] - this._cumulativeLengths[index]));
+  },
+  _updateOffsetPerIteration: function() {
+    if (this.iterationComposite === 'accumulate' &&
+        this._cumulativeLengths &&
+        this._cumulativeLengths.length > 0) {
+      this._offsetPerIteration = this._path.getPointAtLength(
+          this._cumulativeLengths[this._cumulativeLengths.length - 1]);
+    } else {
+      this._offsetPerIteration = null;
+    }
   },
   clone: function() {
     return new MotionPathEffect(this._path.getAttribute('d'));
@@ -1997,6 +2039,7 @@ MotionPathEffect.prototype = createObject(AnimationEffect.prototype, {
         }
       }
       this._cumulativeLengths = cumulativeLengths;
+      this._updateOffsetPerIteration();
     } finally {
       exitModifyCurrentAnimationState(repeatLastTick);
     }
