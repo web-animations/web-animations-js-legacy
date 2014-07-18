@@ -25,12 +25,6 @@ limitations under the License.
 <script>
 "use strict";
 
-var expected_failures = [{
-  browser_configurations: [{ firefox: true, version: '31' }],
-  tests: ['range between bounds'],
-  message: 'MotionPathEffect broken in Firefox https://bugzilla.mozilla.org/show_bug.cgi?id=1024926',
-}];
-
 var PacedTimingFunction = _WebAnimationsTestingUtilities._pacedTimingFunction;
 
 var effect =
