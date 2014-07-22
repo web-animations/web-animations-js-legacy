@@ -409,7 +409,6 @@ var AnimationPlayer = function(token, source, timeline) {
     this._hasTicked = false;
 
     this.source = source;
-    this._checkForLegacyHandlers();
     this._lastCurrentTime = undefined;
     this._finishedFlag = false;
     initializeEventTarget(this);
@@ -437,7 +436,6 @@ AnimationPlayer.prototype = {
         this._update();
         maybeRestartAnimation();
       }
-      this._checkForLegacyHandlers();
     } finally {
       exitModifyCurrentAnimationState(repeatLastTick);
     }
@@ -691,25 +689,7 @@ AnimationPlayer.prototype = {
       this._lastCurrentTime = 0;
     }
 
-    if (this._needsLegacyHandlerPass) {
-      var timeDelta = this._unlimitedCurrentTime - this._lastCurrentTime;
-      if (timeDelta > 0) {
-        this.source._generateLegacyEvents(
-            this._lastCurrentTime, this._unlimitedCurrentTime,
-            this.timeline.currentTime, 1);
-      }
-    }
-
     this._lastCurrentTime = this._unlimitedCurrentTime;
-  },
-  // These two legacy methods are for deprecated TimedItem event handling and
-  // should be removed once we stop supporting it.
-  _legacyHandlerAdded: function() {
-    this._needsLegacyHandlerPass = true;
-  },
-  _checkForLegacyHandlers: function() {
-    this._needsLegacyHandlerPass = this.source !== null &&
-        this.source._hasLegacyEventHandlers();
   },
   _registerOnTimeline: function() {
     if (!this._registeredOnTimeline) {
@@ -1096,13 +1076,6 @@ TimedItem.prototype = {
   _hasFutureEffect: function() {
     return this._isCurrent() || this._fill !== 'none';
   },
-  _hasLegacyEventHandlers: function() {
-    return hasEventHandlersForEvent(this, 'start') ||
-        hasEventHandlersForEvent(this, 'iteration') ||
-        hasEventHandlersForEvent(this, 'end') ||
-        hasEventHandlersForEvent(this, 'cancel');
-  },
-  _generateChildLegacyEventsForRange: function() { },
   _toSubRanges: function(fromTime, toTime, iterationTimes) {
     if (fromTime > toTime) {
       var revRanges = this._toSubRanges(toTime, fromTime, iterationTimes);
@@ -1131,96 +1104,6 @@ TimedItem.prototype = {
     }
     ranges.push([currentStart, toTime]);
     return {start: skipped, delta: 1, ranges: ranges};
-  },
-  _generateLegacyEvents: function(fromTime, toTime, globalTime, deltaScale) {
-    function toGlobal(time) {
-      return (globalTime - (toTime - (time / deltaScale)));
-    }
-    var firstIteration = Math.floor(this.timing.iterationStart);
-    var lastIteration = Math.floor(this.timing.iterationStart +
-        this.timing.iterations);
-    if (lastIteration === this.timing.iterationStart +
-        this.timing.iterations) {
-      lastIteration -= 1;
-    }
-    var startTime = this.startTime + this.timing.delay;
-
-    if (hasEventHandlersForEvent(this, 'start')) {
-      // Did we pass the start of this animation in the forward direction?
-      if (fromTime <= startTime && toTime > startTime) {
-        callEventHandlers(this, 'start',
-            new TimingEvent(
-                constructorToken, this, 'start', this.timing.delay,
-                toGlobal(startTime), firstIteration));
-      // Did we pass the end of this animation in the reverse direction?
-      } else if (fromTime > this.endTime && toTime <= this.endTime) {
-        callEventHandlers(this, 'start',
-            new TimingEvent(
-                constructorToken, this, 'start', this.endTime - this.startTime,
-                toGlobal(this.endTime), lastIteration));
-      }
-    }
-
-    // Calculate a list of uneased iteration times.
-    var iterationTimes = [];
-    for (var i = firstIteration + 1; i <= lastIteration; i++) {
-      iterationTimes.push(i - this.timing.iterationStart);
-    }
-    iterationTimes = iterationTimes.map(function(i) {
-      return i * this.duration / this.timing.playbackRate + startTime;
-    }.bind(this));
-
-    // Determine the impacted subranges.
-    var clippedFromTime;
-    var clippedToTime;
-    if (fromTime < toTime) {
-      clippedFromTime = Math.max(fromTime, startTime);
-      clippedToTime = Math.min(toTime, this.endTime);
-    } else {
-      clippedFromTime = Math.min(fromTime, this.endTime);
-      clippedToTime = Math.max(toTime, startTime);
-    }
-    var subranges = this._toSubRanges(
-        clippedFromTime, clippedToTime, iterationTimes);
-
-    for (var i = 0; i < subranges.ranges.length; i++) {
-      var currentIter = subranges.start + i * subranges.delta;
-      if (i > 0 && hasEventHandlersForEvent(this, 'iteration')) {
-        var iterTime = subranges.ranges[i][0];
-        callEventHandlers(this, 'iteration',
-            new TimingEvent(
-                constructorToken, this, 'iteration', iterTime - this.startTime,
-                toGlobal(iterTime), currentIter));
-      }
-
-      var iterFraction;
-      if (subranges.delta > 0) {
-        iterFraction = this.timing.iterationStart % 1;
-      } else {
-        iterFraction = 1 -
-            (this.timing.iterationStart + this.timing.iterations) % 1;
-      }
-      this._generateChildLegacyEventsForRange(
-          subranges.ranges[i][0], subranges.ranges[i][1],
-          fromTime, toTime, currentIter - iterFraction,
-          globalTime, deltaScale * this.timing.playbackRate);
-    }
-
-    if (hasEventHandlersForEvent(this, 'end')) {
-      // Did we pass the end of this animation in the forward direction?
-      if (fromTime < this.endTime && toTime >= this.endTime) {
-        callEventHandlers(this, 'end',
-            new TimingEvent(
-                constructorToken, this, 'end', this.endTime - this.startTime,
-                toGlobal(this.endTime), lastIteration));
-      // Did we pass the start of this animation in the reverse direction?
-      } else if (fromTime >= startTime && toTime < startTime) {
-        callEventHandlers(this, 'end',
-            new TimingEvent(
-                constructorToken, this, 'end', this.timing.delay,
-                toGlobal(startTime), firstIteration));
-      }
-    }
   }
 };
 
@@ -1228,53 +1111,6 @@ defineDeprecatedProperty(TimedItem.prototype, 'specified', function() {
   deprecated('specified', '2014-04-16', 'Please use timing instead.');
   return this.timing;
 });
-var deprecatedTimedItemEvents = function() {
-  deprecated('TimedItem events', '2014-04-22',
-      'Please use the AnimationPlayer finish event instead.', true);
-};
-['start', 'iteration', 'end', 'cancel'].forEach(function(eventName) {
-  defineDeprecatedProperty(TimedItem.prototype, 'on' + eventName,
-      function() {
-        deprecatedTimedItemEvents();
-        return getOnEventHandler(this, eventName);
-      },
-      function(handler) {
-        deprecatedTimedItemEvents();
-        setOnEventHandler(this, eventName, handler);
-        if (this.player) {
-          if (typeof func === 'function') {
-            this.player._legacyHandlerAdded();
-          } else {
-            this.player._checkForLegacyHandlers();
-          }
-        }
-      });
-});
-defineDeprecatedProperty(TimedItem.prototype, 'addEventListener', function() {
-  deprecatedTimedItemEvents();
-  return function(type, handler) {
-    if (type !== 'start' &&
-        type !== 'iteration' &&
-        type !== 'end' &&
-        type !== 'cancel') {
-      return;
-    }
-    addEventHandler(this, type, handler);
-    if (this.player) {
-      this.player._legacyHandlerAdded();
-    }
-  }
-});
-defineDeprecatedProperty(TimedItem.prototype, 'removeEventListener',
-    function() {
-      deprecatedTimedItemEvents();
-      return function(type, handler) {
-        removeEventHandler(this, type, handler);
-        if (this.player) {
-          this.player._checkForLegacyHandlers();
-        }
-      }
-    });
 
 var TimingEvent = function(
     token, target, type, localTime, timelineTime, iterationIndex, seeked) {
@@ -1476,10 +1312,6 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
     // Update child start times before walking down.
     this._updateChildStartTimes();
 
-    if (this.player) {
-      this.player._checkForLegacyHandlers();
-    }
-
     this._isInChildrenStateModified = false;
   },
   _updateInheritedTime: function(inheritedTime) {
@@ -1630,41 +1462,6 @@ TimingGroup.prototype = createObject(TimedItem.prototype, {
     return this.type + ' ' + this.startTime + '-' + this.endTime + ' (' +
         this.localTime + ') ' + ' [' +
         this._children.map(function(a) { return a.toString(); }) + ']';
-  },
-  _hasLegacyEventHandlers: function() {
-    return TimedItem.prototype._hasLegacyEventHandlers.call(this) || (
-        this._children.length > 0 &&
-        this._children.reduce(
-            function(a, b) { return a || b._hasLegacyEventHandlers(); },
-            false));
-  },
-  _generateChildLegacyEventsForRange: function(localStart, localEnd, rangeStart,
-      rangeEnd, iteration, globalTime, deltaScale) {
-    var start;
-    var end;
-
-    if (localEnd - localStart > 0) {
-      start = Math.max(rangeStart, localStart);
-      end = Math.min(rangeEnd, localEnd);
-      if (start >= end) {
-        return;
-      }
-    } else {
-      start = Math.min(rangeStart, localStart);
-      end = Math.max(rangeEnd, localEnd);
-      if (start <= end) {
-        return;
-      }
-    }
-
-    var endDelta = rangeEnd - end;
-    start -= iteration * this.duration / deltaScale;
-    end -= iteration * this.duration / deltaScale;
-
-    for (var i = 0; i < this._children.length; i++) {
-      this._children[i]._generateLegacyEvents(
-          start, end, globalTime - endDelta, deltaScale);
-    }
   }
 });
 
