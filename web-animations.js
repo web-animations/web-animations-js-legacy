@@ -1107,11 +1107,6 @@ TimedItem.prototype = {
   }
 };
 
-defineDeprecatedProperty(TimedItem.prototype, 'specified', function() {
-  deprecated('specified', '2014-04-16', 'Please use timing instead.');
-  return this.timing;
-});
-
 var TimingEvent = function(
     token, target, type, localTime, timelineTime, iterationIndex, seeked) {
   if (token !== constructorToken) {
@@ -5453,11 +5448,5 @@ window._WebAnimationsTestingUtilities = {
   _prefixProperty: prefixProperty,
   _propertyIsSVGAttrib: propertyIsSVGAttrib
 };
-
-defineDeprecatedProperty(window, 'Timeline', function() {
-  deprecated('Timeline', '2014-04-08',
-      'Please use AnimationTimeline instead.');
-  return AnimationTimeline;
-});
 
 })();
