@@ -4425,9 +4425,14 @@ var pathType = {
     var toTotalLength = to.path.getTotalLength();
     var points = [];
     for (var i = 0; i < sampleFractions.length; ++i) {
-      var fromPoint = from.path.getPointAtLength(fromTotalLength * sampleFractions[i]);
-      var toPoint = to.path.getPointAtLength(toTotalLength * sampleFractions[i]);
-      points.push({x: interp(fromPoint.x, toPoint.x, f), y: interp(fromPoint.y, toPoint.y, f)});
+      var fromPoint = from.path.getPointAtLength(
+          fromTotalLength * sampleFractions[i]);
+      var toPoint = to.path.getPointAtLength(
+          toTotalLength * sampleFractions[i]);
+      points.push({
+        x: interp(fromPoint.x, toPoint.x, f),
+        y: interp(fromPoint.y, toPoint.y, f)
+      });
     }
     return {points: points};
   },
@@ -4438,7 +4443,8 @@ var pathType = {
     // FIXME: It would be good to use PathSegList API on the target directly,
     // rather than generating this string, but that would require a hack to
     // setValue().
-    ASSERT_ENABLED && assert(svgMode, 'Path type should only be used with SVG \'d\' attribute');
+    ASSERT_ENABLED && assert(svgMode,
+        'Path type should only be used with SVG \'d\' attribute');
     if (value.path)
       return value.path.getAttribute('d');
     var ret = 'M' + pathType.pointToString(value.points[0]);
