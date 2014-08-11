@@ -4551,6 +4551,7 @@ var transformType = {
 };
 
 var propertyTypes = {
+  azimuth: numberType,
   backgroundColor: colorType,
   backgroundPosition: positionListType,
   borderBottomColor: colorType,
@@ -4574,6 +4575,7 @@ var propertyTypes = {
   cy: lengthType,
   dx: lengthType,
   dy: lengthType,
+  elevation: numberType,
   fill: colorType,
   floodColor: colorType,
 
@@ -4582,9 +4584,14 @@ var propertyTypes = {
   fontWeight: typeWithKeywords(['lighter', 'bolder'], fontWeightType),
 
   height: percentLengthAutoType,
+  k1: numberType,
+  k2: numberType,
+  k3: numberType,
+  k4: numberType,
   left: percentLengthAutoType,
   letterSpacing: typeWithKeywords(['normal'], lengthType),
   lightingColor: colorType,
+  limitingConeAngle: numberType,
   lineHeight: percentLengthType, // TODO: Should support numberType as well.
   marginBottom: lengthAutoType,
   marginLeft: lengthAutoType,
@@ -4612,8 +4619,17 @@ var propertyTypes = {
   paddingTop: lengthType,
   perspective: typeWithKeywords(['none'], lengthType),
   perspectiveOrigin: originType,
+  pointsAtX: numberType,
+  pointsAtY: numberType,
+  pointsAtZ: numberType,
   r: lengthType,
+  refX: lengthType,
+  refY: lengthType,
+  rx: lengthType,
+  ry: lengthType,
   right: percentLengthAutoType,
+  scale: numberType,
+  startOffset: lengthType,
   stopColor: colorType,
   stroke: colorType,
   textIndent: typeWithKeywords(['each-line', 'hanging'], percentLengthType),
@@ -4643,25 +4659,51 @@ var propertyTypes = {
   ], percentLengthType),
   wordSpacing: typeWithKeywords(['normal'], percentLengthType),
   x: lengthType,
+  x1: lengthType,
+  x2: lengthType,
   y: lengthType,
+  y1: lengthType,
+  y2: lengthType,
+  z: lengthType,
   zIndex: typeWithKeywords(['auto'], integerType)
 };
 
 var svgProperties = {
+  'azimuth': 1,
   'cx': 1,
   'cy': 1,
   'dx': 1,
   'dy': 1,
+  'elevation': 1,
   'fill': 1,
   'floodColor': 1,
   'height': 1,
+  'k1': 1,
+  'k2': 1,
+  'k3': 1,
+  'k4': 1,
   'lightingColor': 1,
+  'limitingConeAngle': 1,
+  'pointsAtX': 1,
+  'pointsAtY': 1,
+  'pointsAtZ': 1,
   'r': 1,
+  'refX': 1,
+  'refY': 1,
+  'rx': 1,
+  'ry': 1,
+  'scale': 1,
+  'startOffset': 1,
   'stopColor': 1,
   'stroke': 1,
   'width': 1,
   'x': 1,
-  'y': 1
+  'x1': 1,
+  'x2': 1,
+  'y': 1,
+  'y1': 1,
+  'y2': 1,
+  'z': 1
 };
 
 var borderWidthAliases = {
