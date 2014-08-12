@@ -135,7 +135,7 @@ function startGeneratingExpectations() {
           return;
       }
 
-      testWindow.testharness_timeline.setTime(t * 1000.0);
+      testWindow.testharness_timeline.setTime(t);
 
       // Update the endTime as it can change dependent on the running animations
       // and modifications to them.

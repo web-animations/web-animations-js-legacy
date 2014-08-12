@@ -4385,6 +4385,81 @@ var transformType = {
   }
 };
 
+var pathType = {
+  // Properties ...
+  // - path: The target path element
+  // - points: The absolute points to set on the path
+  // - cachedCumulativeLengths: The lengths at the end of each segment
+  add: function() { throw 'Addition not supported for path attribute' },
+  cumulativeLengths: function(value) {
+    if (isDefinedAndNotNull(value.cachedCumulativeLengths))
+      return value.cachedCumulativeLengths;
+    var path = value.path.cloneNode(true);
+    var cumulativeLengths = [];
+    while (path.pathSegList.numberOfItems > 0) {
+      // TODO: It would be good to skip moves here and when generating points.
+      cumulativeLengths.unshift(path.getTotalLength());
+      path.pathSegList.removeItem(path.pathSegList.numberOfItems - 1);
+    }
+    value.cachedCumulativeLengths = cumulativeLengths;
+    return value.cachedCumulativeLengths;
+  },
+  appendFractions: function(fractions, cumulativeLengths) {
+    ASSERT_ENABLED && assert(cumulativeLengths[0] === 0);
+    var totalLength = cumulativeLengths[cumulativeLengths.length - 1];
+    for (var i = 1; i < cumulativeLengths.length - 1; ++i)
+      fractions.push(cumulativeLengths[i] / totalLength);
+  },
+  interpolate: function(from, to, f) {
+    // FIXME: Handle non-linear path segments.
+    // Get the fractions at which we need to sample.
+    var sampleFractions = [0, 1];
+    pathType.appendFractions(sampleFractions, pathType.cumulativeLengths(from));
+    pathType.appendFractions(sampleFractions, pathType.cumulativeLengths(to));
+    sampleFractions.sort();
+    ASSERT_ENABLED && assert(sampleFractions[0] === 0);
+    ASSERT_ENABLED && assert(sampleFractions[sampleFractions.length - 1] === 1);
+
+    // FIXME: Cache the 'from' and 'to' points.
+    var fromTotalLength = from.path.getTotalLength();
+    var toTotalLength = to.path.getTotalLength();
+    var points = [];
+    for (var i = 0; i < sampleFractions.length; ++i) {
+      var fromPoint = from.path.getPointAtLength(
+          fromTotalLength * sampleFractions[i]);
+      var toPoint = to.path.getPointAtLength(
+          toTotalLength * sampleFractions[i]);
+      points.push({
+        x: interp(fromPoint.x, toPoint.x, f),
+        y: interp(fromPoint.y, toPoint.y, f)
+      });
+    }
+    return {points: points};
+  },
+  pointToString: function(point) {
+    return point.x + ',' + point.y;
+  },
+  toCssValue: function(value, svgMode) {
+    // FIXME: It would be good to use PathSegList API on the target directly,
+    // rather than generating this string, but that would require a hack to
+    // setValue().
+    ASSERT_ENABLED && assert(svgMode,
+        'Path type should only be used with SVG \'d\' attribute');
+    if (value.path)
+      return value.path.getAttribute('d');
+    var ret = 'M' + pathType.pointToString(value.points[0]);
+    for (var i = 1; i < value.points.length; ++i)
+      ret += 'L' + pathType.pointToString(value.points[i]);
+    return ret;
+  },
+  fromCssValue: function(value) {
+    var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    if (value)
+      path.setAttribute('d', value);
+    return {path: path};
+  }
+};
+
 var propertyTypes = {
   backgroundColor: colorType,
   backgroundPosition: positionListType,
@@ -4407,6 +4482,7 @@ var propertyTypes = {
   color: colorType,
   cx: lengthType,
   cy: lengthType,
+  d: pathType,
   dx: lengthType,
   dy: lengthType,
   fill: colorType,
@@ -4485,6 +4561,7 @@ var propertyTypes = {
 var svgProperties = {
   'cx': 1,
   'cy': 1,
+  'd': 1,
   'dx': 1,
   'dy': 1,
   'fill': 1,
