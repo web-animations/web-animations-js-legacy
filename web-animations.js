@@ -288,6 +288,16 @@ AnimationTimeline.prototype = {
       player.pause();
       player.currentTime = pauseAt;
     });
+  },
+  _freezeClockForTesting: function(pauseAt) {
+    delete this.currentTime;
+    Object.defineProperty(this, 'currentTime', {
+      configurable: true,
+      enumerable: true,
+      get: function() {
+        return pauseAt;
+      }
+    });
   }
 };
 
