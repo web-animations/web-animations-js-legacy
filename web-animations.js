@@ -93,6 +93,11 @@ var abstractMethod = function() {
   throw 'Abstract method not implemented.';
 };
 
+// A notification email must be sent for all feature deprecations to the mailing
+// list: web-animations-changes@googlegroups.com
+// Email template: http://goo.gl/83xFXS
+// Add a calendar entry for web-animations-eng on the cutoff date (3 months
+// later) to remove the deprecated code.
 var deprecated = function(name, deprecationDate, advice, plural) {
   if (deprecationsSilenced[name]) {
     return;
