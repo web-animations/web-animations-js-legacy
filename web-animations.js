@@ -4527,6 +4527,8 @@ var propertyTypes = {
   right: percentLengthAutoType,
   stopColor: colorType,
   stroke: colorType,
+  strokeDashoffset: lengthType,
+  strokeWidth: lengthType,
   textIndent: typeWithKeywords(['each-line', 'hanging'], percentLengthType),
   textShadow: shadowType,
   top: percentLengthAutoType,
