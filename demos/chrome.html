@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+
+<html>
+  <style>
+    body {
+        overflow: hidden;
+    }
+
+    #chrome {
+      position: absolute;
+      left: 50%;
+      margin-left: -309px;
+      top: 20px;
+      width: 617px;
+      height: 617px;
+    }
+
+    #red,
+    #yellow,
+    #green,
+    #green2 {
+      position: absolute;
+      width: 55%;
+      height: 80.9%;
+    }
+    #green {
+      -webkit-transform: rotate(-240deg);
+      top: 124px;
+      left: -33px;
+      background: -webkit-radial-gradient(left top, ellipse cover, #57c35d 62%,#429e51 75%);
+    }
+    #red {
+      -webkit-transform: rotate(-120deg);
+      top: -123px;
+      left: 170px;
+      background: -webkit-radial-gradient(100% 50%, ellipse cover, #f48268 0%,#eb3831 60%);
+    }
+    #yellow {
+      top: 174px;
+      left: 284px;
+      background: -webkit-radial-gradient(left top, ellipse cover, #fdd901 60%,#e2b22a 70%);
+    }
+    #green2 {
+      background: transparent;
+      width: 0px;
+      height: 0px;
+      left: 266px;
+      top: 353px;
+      border-top: 293px solid #5bc15b;
+      border-right: 170px solid transparent;
+    }
+
+    #red .after,
+    #yellow .after,
+    #green2 .after {
+      position: absolute;
+      width: 0;
+      height: 0;
+      border-top: 85px solid rgba(0,0,0,.05);
+      border-right: 331px solid transparent;
+    }
+    #green2 .after {
+      -webkit-transform: translateX(-118px) translateY(-208px) rotate(120deg);
+    }
+
+    #mask {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      box-shadow:
+        2px 12px 30px rgba(0,0,0,.24),
+        0 0 0 2000px white
+        ;
+      border-radius: 50%;
+      z-index: 20;
+    }
+
+    #dot {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      margin: -22.12% 0 0 -22.12%;
+      width: 44.24%;
+      height: 44.24%;
+      background: #eef3f9;
+      border-radius: 50%;
+      z-index: 10;
+    }
+    #dot:after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      margin: -42.67% 0 0 -42.67%;
+      width: 85.35%;
+      height: 85.35%;
+      background: -webkit-radial-gradient(center, ellipse cover, #90c0e4 0%,#0a72a7 100%);
+      background-position: 50% 100%;
+      background-size: 180%;
+      border-radius: 50%;
+      z-index: 11;
+    }
+
+
+    #chrome.exploded #green {
+      -webkit-transform: rotate(-240deg) translateX(1000px);
+    }
+    #chrome.exploded #red {
+      -webkit-transform: rotate(-120deg) translateX(1000px);
+    }
+    #chrome.exploded #yellow {
+      -webkit-transform: translateX(1000px);
+    }
+    #chrome.exploded #green2 {
+      -webkit-transform: translateY(1000px);
+    }
+    #chrome.exploded div .after {
+      border-right-width: 0px;
+    }
+    #chrome.exploded #mask {
+      -webkit-transform: scale(3);
+    }
+    #chrome.exploded #dot {
+      -webkit-transform: scale(0.0001);
+    }
+  </style>
+  <script src="../web-animations.js"></script>
+  <body>
+    <!-- Stolen from http://codepen.io/Dreamdealer/pen/nAGrf -->
+    <div id="chrome" class="exploded">
+      <div id="green"></div>
+      <div id="red"><div class="after"></div></div>
+      <div id="yellow"><div class="after"></div></div>
+      <div id="green2"><div class="after"></div></div>
+      <div id="mask"></div>
+      <div id="dot"></div>
+    </div>
+  </body>
+  <script>
+    function getFakePseudo(tag) {
+      var tags = tag.split(':');
+      return document.getElementById(tags[0]).getElementsByClassName(tags[1])[0];
+    }
+    var timing = {
+      duration: 1.5,
+      easing: 'ease',
+    };
+    document.timeline.play(new ParGroup([
+      // Bring in blocks
+      new ParGroup([
+        new Animation(document.getElementById('green'), {transform: 'rotate(-240deg) translateX(0)'}, timing),
+        new Animation(document.getElementById('red'), {transform: 'rotate(-120deg) translateX(0)'}, timing),
+        new Animation(document.getElementById('yellow'), {transform: 'translateX(0)'}, timing),
+        new Animation(document.getElementById('green2'), {transform: 'translateY(0)'}, timing),
+      ]),
+      new ParGroup([
+        // Add triangles
+        new ParGroup([
+          new Animation(getFakePseudo('red:after'), {borderRightWidth: '331px'}, timing),
+          new Animation(getFakePseudo('yellow:after'), {borderRightWidth: '331px'}, timing),
+          // TODO: Make htis match the other triangles
+          new Animation(getFakePseudo('green2:after'), {borderRightWidth: '331px'}, timing),
+        ]),
+        // Clip and dot
+        new ParGroup([
+          new Animation(document.getElementById('mask'), {transform: 'scale(1)'}, timing),
+          new Animation(document.getElementById('dot'), {transform: 'scale(1)'}, timing),
+        ]),
+      ], {delay: timing.duration * 0.6}),
+    ]));
+    document.addEventListener('click', function() {
+      document.getElementById('chrome').classList.toggle('exploded');
+    });
+  </script>
+</html>
