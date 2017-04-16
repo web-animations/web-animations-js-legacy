@@ -7,6 +7,7 @@ var tests = [
   'auto-test-color.html',
   'auto-test-color-names.html',
   'auto-test-composite-transforms.html',
+  'auto-test-composite-transforms-matrix-rotate.html',
   'auto-test-compositor.html',
   'auto-test-delay.html',
   'auto-test-element-animate.html',
