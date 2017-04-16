@@ -4246,11 +4246,17 @@ var transformType = {
     var out = [];
     for (var i = 0; i < Math.min(from.length, to.length); i++) {
       if (from[i].t !== to[i].t || isMatrix(from[i])) {
-        break;
+        var fromDecomposed = decomposeMatrix(convertToMatrix([from[i]]));
+        var toDecomposed = decomposeMatrix(convertToMatrix([to[i]]));
+        out.push(interpolateDecomposedTransformsWithMatrices(
+            fromDecomposed, toDecomposed, f));
+      } else {
+        out.push(interpTransformValue(from[i], to[i], f));
       }
-      out.push(interpTransformValue(from[i], to[i], f));
     }
 
+    /*
+    // Decomposing all later rules would break interpolation of rotate(0deg) to rotate(360deg)
     if (i < Math.min(from.length, to.length) ||
         from.some(isMatrix) || to.some(isMatrix)) {
       if (from.decompositionPair !== to) {
@@ -4261,10 +4267,9 @@ var transformType = {
         to.decompositionPair = from;
         to.decomposition = decomposeMatrix(convertToMatrix(to.slice(i)));
       }
-      out.push(interpolateDecomposedTransformsWithMatrices(
-          from.decomposition, to.decomposition, f));
       return out;
     }
+    */
 
     for (; i < from.length; i++) {
       out.push(interpTransformValue(from[i], {t: null, d: null}, f));
